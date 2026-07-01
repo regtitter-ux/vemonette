@@ -158,12 +158,13 @@ section { padding: 70px 0; }
 .bal-v { color: #fff; font-weight: 600; font-family: "Space Grotesk"; font-size: 17px; }
 .bal-v.muted { color: #b5bac1; font-weight: 500; font-size: 13px; font-family: "Inter"; }
 
-/* Ephemeral messages ("only you can see this") */
-.eph { opacity: 0; transform: translateY(6px); transition: opacity 0.35s ease, transform 0.35s ease; }
-.eph-only { color: #949ba4; font-size: 11.5px; margin-bottom: 5px; padding-left: 2px; }
+/* Ephemeral messages — rendered like a real Discord message with a note underneath */
+.eph { opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease; }
+.eph-slot { position: relative; min-height: 96px; } /* reserves space; ad/success overlap here */
+.eph-slot .eph { position: absolute; top: 0; left: 0; right: 0; }
+.eph-body { color: #dbdee1; font-size: 13.5px; line-height: 1.5; }
+.eph-note { color: #949ba4; font-size: 11.5px; margin-top: 5px; }
 .eph-dismiss { color: #5a6bef; }
-.eph-row { display: flex; gap: 9px; align-items: flex-start; }
-.eph-body { color: #dbdee1; font-size: 13.5px; line-height: 1.5; padding-top: 1px; }
 .link { color: #00a8fc; }
 .link:hover { text-decoration: underline; }
 .mention { color: #c9cdfb; background: rgba(88, 101, 242, 0.28); padding: 0 3px; border-radius: 4px; font-weight: 500; }

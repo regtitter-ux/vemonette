@@ -95,21 +95,21 @@ document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
 (function verifySim() {
   const root = document.getElementById('simVerify');
   if (!root) return;
-  const dsc = root.querySelector('.dsc');
+  const body = root.querySelector('.dsc-body'); // cursor's positioned ancestor
   const cursor = document.getElementById('cursor1');
   const btn = document.getElementById('verifBtn');
 
   // Place the cursor at the centre of a target element (accurate, layout-based).
   const moveTo = (el) => {
-    const d = dsc.getBoundingClientRect();
+    const d = body.getBoundingClientRect();
     const r = el.getBoundingClientRect();
     cursor.style.left = (r.left - d.left + r.width / 2) + 'px';
     cursor.style.top = (r.top - d.top + r.height / 2) + 'px';
   };
   const idle = () => {
-    const d = dsc.getBoundingClientRect();
-    cursor.style.left = (d.width * 0.8) + 'px';
-    cursor.style.top = (d.height * 0.85) + 'px';
+    const d = body.getBoundingClientRect();
+    cursor.style.left = (d.width * 0.82) + 'px';
+    cursor.style.top = (d.height * 0.82) + 'px';
   };
   const press = () => {
     cursor.classList.add('click');
