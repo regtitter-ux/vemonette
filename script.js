@@ -94,23 +94,37 @@ document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
 /* ---------- Simulation 1: user verification ---------- */
 (function verifySim() {
   const root = document.getElementById('simVerify');
+  if (!root) return;
+  const dsc = root.querySelector('.dsc');
   const cursor = document.getElementById('cursor1');
   const btn = document.getElementById('verifBtn');
-  if (!root) return;
 
-  const overBtn = () => { cursor.style.left = '30%'; cursor.style.top = '46%'; };
-  const away = () => { cursor.style.left = '70%'; cursor.style.top = '70%'; };
-  const press = () => { cursor.classList.add('click'); btn.classList.add('pressed'); setTimeout(() => { cursor.classList.remove('click'); btn.classList.remove('pressed'); }, 400); };
+  // Place the cursor at the centre of a target element (accurate, layout-based).
+  const moveTo = (el) => {
+    const d = dsc.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    cursor.style.left = (r.left - d.left + r.width / 2) + 'px';
+    cursor.style.top = (r.top - d.top + r.height / 2) + 'px';
+  };
+  const idle = () => {
+    const d = dsc.getBoundingClientRect();
+    cursor.style.left = (d.width * 0.8) + 'px';
+    cursor.style.top = (d.height * 0.85) + 'px';
+  };
+  const press = () => {
+    cursor.classList.add('click');
+    btn.classList.add('pressed');
+    setTimeout(() => { cursor.classList.remove('click'); btn.classList.remove('pressed'); }, 380);
+  };
 
-  // [step, delay-before-next-ms, action]
   const timeline = [
-    { step: 0, wait: 1100, act: away },
-    { step: 1, wait: 900, act: overBtn },
-    { step: 1, wait: 500, act: press },
-    { step: 2, wait: 2400, act: away },        // ad shown
-    { step: 3, wait: 700, act: overBtn },
-    { step: 3, wait: 500, act: press },
-    { step: 4, wait: 2600, act: away },        // success + role
+    { step: 0, wait: 1000, act: idle },
+    { step: 1, wait: 780, act: () => moveTo(btn) },
+    { step: 1, wait: 520, act: press },
+    { step: 2, wait: 2400, act: idle },          // ad shown
+    { step: 3, wait: 780, act: () => moveTo(btn) },
+    { step: 3, wait: 520, act: press },
+    { step: 4, wait: 2600, act: idle },          // success + role
   ];
 
   let i = 0;
@@ -121,38 +135,37 @@ document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
     i = (i + 1) % timeline.length;
     setTimeout(run, t.wait);
   }
-  run();
+  // Start once layout/fonts have settled so cursor targeting is accurate.
+  requestAnimationFrame(() => setTimeout(run, 300));
 })();
 
-/* ---------- Simulation 2: admin /v3 + /bal ---------- */
+/* ---------- Simulation 2: admin /verification + /bal ---------- */
 (function adminSim() {
   const root = document.getElementById('simAdmin');
+  if (!root) return;
   const chip = document.getElementById('cmdChip');
   const opt = document.getElementById('cmdOpt');
   const balValue = document.getElementById('balValue');
-  if (!root) return;
 
-  function setCmd(cmd, withOpt) {
-    chip.textContent = cmd;
-    opt.style.display = withOpt ? '' : 'none';
+  const setCmd = (cmd, withOpt) => { chip.textContent = cmd; chip.style.opacity = 1; opt.style.opacity = withOpt ? 1 : 0; };
+  const clearCmd = () => { chip.style.opacity = 0; opt.style.opacity = 0; };
+
+  let tickIv;
+  function tickBalance() {
+    let v = 12.4;
+    balValue.textContent = '$12.40';
+    clearInterval(tickIv);
+    tickIv = setInterval(() => { v += 0.1; balValue.textContent = '$' + v.toFixed(2); }, 300);
+    setTimeout(() => clearInterval(tickIv), 2400);
   }
 
   const timeline = [
-    { step: 0, wait: 1100, act: () => setCmd('/v3', true) },   // typing /v3 role:@Member
-    { step: 1, wait: 1400, act: null },                         // command shown in composer
-    { step: 2, wait: 2600, act: null },                         // card posted + created
-    { step: 3, wait: 1100, act: () => setCmd('/bal', false) },  // typing /bal
-    { step: 4, wait: 3000, act: () => tickBalance() },          // balance embed
+    { step: 0, wait: 1200, act: () => setCmd('/verification', true) }, // typing the command
+    { step: 1, wait: 1300, act: null },                                // command shown
+    { step: 2, wait: 2600, act: clearCmd },                            // card posted (scene A)
+    { step: 3, wait: 1300, act: () => setCmd('/bal', false) },         // typing /bal
+    { step: 4, wait: 3000, act: () => { clearCmd(); tickBalance(); } },// balance (scene B)
   ];
-
-  function tickBalance() {
-    let v = 12.4;
-    const iv = setInterval(() => {
-      v += 0.1;
-      balValue.textContent = '$' + v.toFixed(2);
-    }, 260);
-    setTimeout(() => clearInterval(iv), 2600);
-  }
 
   let i = 0;
   function run() {

@@ -128,32 +128,38 @@
             <div class="dsc">
               <div class="dsc-bar"><span class="hash">#</span> verify</div>
               <div class="dsc-body">
-                <div class="dsc-row">
-                  <div class="dsc-av bot">V</div>
-                  <div class="dsc-content">
-                    <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span><span class="dsc-time">17:29</span></div>
-                    <div class="embed">
-                      <div class="embed-author"><span class="embed-ic">M</span> Miku Tag</div>
-                      <div class="embed-title">Get verified!</div>
-                      <div class="embed-desc">To gain full access to the server, you must complete verification. Click the button.</div>
-                      <button class="dsc-btn" id="verifBtn">🔐 Start Verification</button>
+                <div class="dsc-feed">
+                  <div class="dsc-row">
+                    <div class="dsc-av bot">V</div>
+                    <div class="dsc-content">
+                      <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span><span class="dsc-time">Today at 17:29</span></div>
+                      <div class="embed">
+                        <div class="embed-author"><span class="embed-ic">M</span> Miku Tag</div>
+                        <div class="embed-title">Get verified!</div>
+                        <div class="embed-desc">To gain full access to the server, you must complete verification. Click the button below.</div>
+                        <button class="dsc-btn" id="verifBtn">🔐 Start Verification</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="eph eph-ad">
+                    <div class="eph-only">🔒 Only you can see this · <span class="eph-dismiss">Dismiss message</span></div>
+                    <div class="eph-row">
+                      <div class="dsc-av bot sm">V</div>
+                      <div class="eph-body">To verify, join the server <span class="link">discord.gg/mikutag</span> — then click the button again.</div>
+                    </div>
+                  </div>
+
+                  <div class="eph eph-ok">
+                    <div class="eph-only">🔒 Only you can see this · <span class="eph-dismiss">Dismiss message</span></div>
+                    <div class="eph-row">
+                      <div class="dsc-av bot sm">V</div>
+                      <div class="eph-body">✅ <b>Success!</b> You now have the <span class="role-chip">Verified</span> role.</div>
                     </div>
                   </div>
                 </div>
-
-                <div class="eph eph-ad">
-                  <span class="eph-only">Only you can see this</span>
-                  <div class="eph-text">To verify, join the server: <span class="link">discord.gg/mikutag</span><br />— then click the button again.</div>
-                </div>
-
-                <div class="eph eph-ok">
-                  <span class="eph-only">Only you can see this</span>
-                  <div class="eph-text">✅ <b>Success!</b> Access granted</div>
-                </div>
-
-                <div class="role-toast">Role added <span class="role-chip">Verified</span></div>
+                <span class="cursor" id="cursor1"></span>
               </div>
-              <span class="cursor" id="cursor1"></span>
             </div>
           </div>
         </figure>
@@ -162,7 +168,7 @@
         <figure class="sim-card">
           <figcaption class="sim-cap">
             <span class="sim-badge alt">What you control</span>
-            <h3>Post <code>/v3</code> &amp; check balance</h3>
+            <h3>Post <code>/verification</code> &amp; check balance</h3>
             <p>Drop the verification card once, then watch the balance with <code>/bal</code>.</p>
           </figcaption>
 
@@ -170,33 +176,42 @@
             <div class="dsc">
               <div class="dsc-bar"><span class="hash">#</span> welcome</div>
               <div class="dsc-body">
-                <div class="dsc-row admin-card">
-                  <div class="dsc-av bot">V</div>
-                  <div class="dsc-content">
-                    <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span></div>
-                    <div class="embed">
-                      <div class="embed-title">Get verified!</div>
-                      <div class="embed-desc">Click the button to unlock the server.</div>
-                      <button class="dsc-btn">🔐 Start Verification</button>
+                <!-- scene A: posting the card -->
+                <div class="scene scene-post">
+                  <div class="dsc-row">
+                    <div class="dsc-av bot">V</div>
+                    <div class="dsc-content">
+                      <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span><span class="dsc-time">Today at 17:31</span></div>
+                      <div class="embed">
+                        <div class="embed-title">Get verified!</div>
+                        <div class="embed-desc">Click the button to unlock the server.</div>
+                        <button class="dsc-btn">🔐 Start Verification</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="eph eph-created">
+                    <div class="eph-only">🔒 Only you can see this</div>
+                    <div class="eph-row">
+                      <div class="dsc-av bot sm">V</div>
+                      <div class="eph-body">✅ Verification card created — grants <span class="mention">@Member</span></div>
                     </div>
                   </div>
                 </div>
 
-                <div class="eph eph-created">
-                  <span class="eph-only">Only you can see this</span>
-                  <div class="eph-text">✅ Verification card created — grants <span class="mention">@Member</span></div>
-                </div>
-
-                <div class="dsc-row balance-card">
-                  <div class="dsc-av bot">V</div>
-                  <div class="dsc-content">
-                    <div class="embed embed-green">
-                      <div class="embed-title">Your balance</div>
-                      <div class="bal-field"><span class="bal-k">Balance</span><span class="bal-v" id="balValue">$12.40</span></div>
-                      <div class="bal-field"><span class="bal-k">Payment details</span><span class="bal-v muted">USDT TRC-20 · TX…8f2a</span></div>
-                      <div class="dsc-actions">
-                        <button class="dsc-btn ghost">Edit details</button>
-                        <button class="dsc-btn ghost">History</button>
+                <!-- scene B: checking balance -->
+                <div class="scene scene-bal">
+                  <div class="dsc-row">
+                    <div class="dsc-av bot">V</div>
+                    <div class="dsc-content">
+                      <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span><span class="dsc-time">Today at 17:32</span></div>
+                      <div class="embed embed-green">
+                        <div class="embed-title">Your balance</div>
+                        <div class="bal-field"><span class="bal-k">Balance</span><span class="bal-v" id="balValue">$12.40</span></div>
+                        <div class="bal-field"><span class="bal-k">Payment details</span><span class="bal-v muted">USDT ERC20 · 0x9f…8f2a</span></div>
+                        <div class="dsc-actions">
+                          <button class="dsc-btn ghost">Edit details</button>
+                          <button class="dsc-btn ghost">History</button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -204,7 +219,7 @@
               </div>
 
               <div class="composer">
-                <span class="cmd-chip" id="cmdChip">/v3</span>
+                <span class="cmd-chip" id="cmdChip">/verification</span>
                 <span class="cmd-opt" id="cmdOpt">role: <span class="mention">@Member</span></span>
                 <span class="composer-caret"></span>
               </div>
