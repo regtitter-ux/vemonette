@@ -1,0 +1,166 @@
+/* ---------- Server feed data (fallback numbers from web research + API) ---------- */
+const SERVERS = [
+  { code: 'mikutag', name: 'MIKU TAG・CHAT・SOCIAL', members: 230357, color: '#39c5bb', accent: 'linear-gradient(150deg,#39c5bb,#2f8f9c)', letter: 'M', id: '1369047464073498776', icon: 'dfab23ce3751ac4872b859eac2151ea8' },
+  { code: 'yaoitag', name: 'YA0I TAG・CHAT・SOCIAL', members: 175561, color: '#e63b7a', accent: 'linear-gradient(150deg,#e63b7a,#7c2d6b)', letter: 'Y', id: '1369363539332042853', icon: 'a_355f16ede56cb094740b46546eee0a73' },
+  { code: 'tagyuri', name: 'YURI TAG・CHAT・SOCIAL', members: 132614, color: '#a855f7', accent: 'linear-gradient(150deg,#a855f7,#5b2ea6)', letter: 'Y', id: '1369076925389078609', icon: '113818409cc1ab5871354f52a7e36283' },
+  { code: 'teto', name: 'TETO TAG・CHAT・SOCIAL', members: 65274, color: '#d1004b', accent: 'linear-gradient(150deg,#d1004b,#7a0030)', letter: 'T', id: '1369106099608748102', icon: 'a_9421492e28203f89f5003ea2ee618537' },
+  { code: 'ggif', name: 'GIFLAND СНГ', members: 50897, color: '#5865f2', accent: 'linear-gradient(150deg,#5865f2,#333a99)', letter: 'G', id: '972405591140085791', icon: 'a_096abac0dd6b01694ef7aaceaf24e613' },
+];
+
+const fmt = (n) => (n == null ? '—' : n.toLocaleString('en-US'));
+
+const BADGE = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function iconUrl(id, icon) {
+  if (!id || !icon) return null;
+  const ext = icon.startsWith('a_') ? 'gif' : 'png';
+  return `https://cdn.discordapp.com/icons/${id}/${icon}.${ext}?size=128`;
+}
+
+function cardHTML(s) {
+  const img = iconUrl(s.id, s.icon);
+  const ic = img
+    ? `<span class="scard-ic"><img src="${img}" alt="" loading="lazy" /></span>`
+    : `<span class="scard-ic" style="background:${s.accent}">${s.letter}</span>`;
+  return `
+    <a class="scard" href="https://discord.gg/${s.code}" target="_blank" rel="noopener" data-code="${s.code}">
+      ${ic}
+      <div class="scard-info">
+        <div class="scard-name">${s.name}</div>
+        <div class="scard-members"><span class="online-dot">●</span> <span data-role="members">${fmt(s.members)} members</span></div>
+      </div>
+    </a>`;
+}
+
+/* Two rows (top scrolls left, bottom scrolls right), each duplicated for a seamless loop */
+const rowTop = document.getElementById('rowTop');
+const rowBottom = document.getElementById('rowBottom');
+const topHTML = SERVERS.map(cardHTML).join('');
+const bottomHTML = [...SERVERS].reverse().map(cardHTML).join('');
+rowTop.innerHTML = topHTML + topHTML;
+rowBottom.innerHTML = bottomHTML + bottomHTML;
+
+/* Try to refresh counts live from the visitor's browser (Discord invite API allows CORS). */
+async function refreshLive() {
+  await Promise.all(SERVERS.map(async (s) => {
+    try {
+      const r = await fetch(`https://discord.com/api/v9/invites/${s.code}?with_counts=true`);
+      if (!r.ok) return;
+      const d = await r.json();
+      const members = d.approximate_member_count;
+      const g = d.guild || {};
+      const img = iconUrl(g.id, g.icon);
+      document.querySelectorAll(`.scard[data-code="${s.code}"]`).forEach((card) => {
+        if (members != null) card.querySelector('[data-role="members"]').textContent = `${fmt(members)} members`;
+        if (img) {
+          const holder = card.querySelector('.scard-ic');
+          holder.style.background = 'transparent';
+          holder.innerHTML = `<img src="${img}" alt="" />`;
+        }
+      });
+    } catch (_) { /* offline / blocked → keep fallback numbers */ }
+  }));
+}
+refreshLive();
+
+/* ---------- Count-up numbers ---------- */
+function animateCount(el) {
+  const target = +el.dataset.count;
+  const prefix = el.dataset.prefix || '';
+  const suffix = el.dataset.suffix || '';
+  const dur = 1600;
+  const start = performance.now();
+  function tick(now) {
+    const p = Math.min(1, (now - start) / dur);
+    const eased = 1 - Math.pow(1 - p, 3);
+    let val = Math.round(target * eased);
+    let text;
+    if (suffix === 'k+') text = prefix + Math.round(val / 1000) + 'k+';
+    else if (target >= 1000) text = prefix + val.toLocaleString('en-US');
+    else text = prefix + val + suffix;
+    el.textContent = text;
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (e.isIntersecting) { animateCount(e.target); io.unobserve(e.target); }
+  });
+}, { threshold: 0.5 });
+document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
+
+/* ---------- Simulation 1: user verification ---------- */
+(function verifySim() {
+  const root = document.getElementById('simVerify');
+  const cursor = document.getElementById('cursor1');
+  const btn = document.getElementById('verifBtn');
+  if (!root) return;
+
+  const overBtn = () => { cursor.style.left = '30%'; cursor.style.top = '46%'; };
+  const away = () => { cursor.style.left = '70%'; cursor.style.top = '70%'; };
+  const press = () => { cursor.classList.add('click'); btn.classList.add('pressed'); setTimeout(() => { cursor.classList.remove('click'); btn.classList.remove('pressed'); }, 400); };
+
+  // [step, delay-before-next-ms, action]
+  const timeline = [
+    { step: 0, wait: 1100, act: away },
+    { step: 1, wait: 900, act: overBtn },
+    { step: 1, wait: 500, act: press },
+    { step: 2, wait: 2400, act: away },        // ad shown
+    { step: 3, wait: 700, act: overBtn },
+    { step: 3, wait: 500, act: press },
+    { step: 4, wait: 2600, act: away },        // success + role
+  ];
+
+  let i = 0;
+  function run() {
+    const t = timeline[i];
+    root.setAttribute('data-step', t.step);
+    if (t.act) t.act();
+    i = (i + 1) % timeline.length;
+    setTimeout(run, t.wait);
+  }
+  run();
+})();
+
+/* ---------- Simulation 2: admin /v3 + /bal ---------- */
+(function adminSim() {
+  const root = document.getElementById('simAdmin');
+  const chip = document.getElementById('cmdChip');
+  const opt = document.getElementById('cmdOpt');
+  const balValue = document.getElementById('balValue');
+  if (!root) return;
+
+  function setCmd(cmd, withOpt) {
+    chip.textContent = cmd;
+    opt.style.display = withOpt ? '' : 'none';
+  }
+
+  const timeline = [
+    { step: 0, wait: 1100, act: () => setCmd('/v3', true) },   // typing /v3 role:@Member
+    { step: 1, wait: 1400, act: null },                         // command shown in composer
+    { step: 2, wait: 2600, act: null },                         // card posted + created
+    { step: 3, wait: 1100, act: () => setCmd('/bal', false) },  // typing /bal
+    { step: 4, wait: 3000, act: () => tickBalance() },          // balance embed
+  ];
+
+  function tickBalance() {
+    let v = 12.4;
+    const iv = setInterval(() => {
+      v += 0.1;
+      balValue.textContent = '$' + v.toFixed(2);
+    }, 260);
+    setTimeout(() => clearInterval(iv), 2600);
+  }
+
+  let i = 0;
+  function run() {
+    const t = timeline[i];
+    root.setAttribute('data-step', t.step);
+    if (t.act) t.act();
+    i = (i + 1) % timeline.length;
+    setTimeout(run, t.wait);
+  }
+  run();
+})();
