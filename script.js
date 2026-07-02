@@ -23,7 +23,7 @@ function cardHTML(s) {
   const src = s.img || iconUrl(s.id, s.icon);
   // image fills the icon; if it fails to load, fall back to the coloured letter
   const ic = src
-    ? `<span class="scard-ic"><img src="${src}" alt="" loading="lazy" onerror="const p=this.parentElement;p.style.background='${s.color}';p.textContent='${s.letter}'" /></span>`
+    ? `<span class="scard-ic"><img src="${src}" alt="" loading="lazy" decoding="async" onerror="const p=this.parentElement;p.style.background='${s.color}';p.textContent='${s.letter}'" /></span>`
     : `<span class="scard-ic" style="background:${s.color}">${s.letter}</span>`;
   return `
     <div class="scard" data-code="${s.code || s.id}">
@@ -66,7 +66,9 @@ async function refreshLive() {
     } catch (_) { /* offline / blocked → keep fallback numbers */ }
   }));
 }
-refreshLive();
+/* Don't block initial render — run the live refresh once the page is idle. */
+if ('requestIdleCallback' in window) requestIdleCallback(() => refreshLive(), { timeout: 3000 });
+else window.addEventListener('load', () => setTimeout(refreshLive, 1000));
 
 /* ---------- Count-up numbers ---------- */
 function animateCount(el) {
