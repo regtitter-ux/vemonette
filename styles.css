@@ -21,7 +21,8 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
 body {
   font-family: "Roboto", system-ui, -apple-system, sans-serif;
@@ -108,7 +109,7 @@ section[id] { scroll-margin-top: 82px; }
 
 /* Server feed / marquee */
 .feed-section { padding-top: 40px; }
-.marquee { position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 16px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
+.marquee { position: relative; max-width: var(--maxw); margin: 0 auto; overflow: hidden; display: flex; flex-direction: column; gap: 16px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent); }
 .marquee-row { overflow: hidden; }
 .marquee-track { display: flex; gap: 16px; width: max-content; animation: scroll 55s linear infinite; }
 .marquee-track.reverse { animation: scrollRev 64s linear infinite; }
