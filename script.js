@@ -143,7 +143,7 @@ const RU = {
   faq_a4: 'После настройки — один раз опубликовать карточку верификации. Всё остальное (проверка, реклама, подсчёт и выплаты) бот делает сам.',
   connect_h2: 'Есть другие вопросы?',
   connect_p: 'Свяжитесь с нами в Discord<br />Спрашивайте что угодно: настройка, сроки, нюансы.',
-  connect_btn: 'Написать в Discord — @allanwdc',
+  connect_btn: 'Сервер поддержки',
 };
 
 // Capture the original English content once, then translate on demand.
