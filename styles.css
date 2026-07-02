@@ -59,7 +59,7 @@ main, .nav, .footer { position: relative; z-index: 1; }
 /* Nav */
 .nav { max-width: var(--maxw); margin: 0 auto; padding: 22px 24px; display: flex; align-items: center; gap: 24px; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
-.brand-mark { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; font-family: "Space Grotesk"; background: linear-gradient(150deg, var(--blurple-2), var(--pink)); color: #fff; box-shadow: 0 6px 18px -6px rgba(124, 132, 255, 0.8); }
+.brand-mark { width: 32px; height: 32px; border-radius: 9px; display: block; filter: drop-shadow(0 6px 16px rgba(124, 132, 255, 0.45)); }
 .brand-name { font-family: "Space Grotesk"; letter-spacing: -0.02em; }
 .nav-links { display: flex; gap: 26px; margin-left: auto; color: var(--muted); font-weight: 500; font-size: 15px; }
 .nav-links a:hover { color: var(--text); }
