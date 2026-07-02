@@ -146,7 +146,8 @@ section[id] { scroll-margin-top: 82px; }
 
 .dsc-row { display: flex; gap: 13px; }
 .dsc-av { width: 40px; height: 40px; border-radius: 50%; flex: none; display: grid; place-items: center; font-weight: 700; color: #fff; }
-.dsc-av.bot { background: #5865f2; }
+.dsc-av.bot { background: #1b2230; }
+.dsc-av img, .embed-ic img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: block; }
 .dsc-av.sm { width: 22px; height: 22px; font-size: 11px; }
 .dsc-content { min-width: 0; }
 .dsc-head { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
