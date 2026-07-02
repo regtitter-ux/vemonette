@@ -307,3 +307,51 @@ section[id] { scroll-margin-top: 82px; }
   .hero-stats { gap: 12px; }
   .stat { min-width: 140px; padding: 18px; }
 }
+
+/* Phones */
+@media (max-width: 560px) {
+  /* tighter gutters everywhere */
+  .nav-inner { padding: 11px 16px; gap: 12px; }
+  .brand-name { font-size: 18px; }
+  .hero { padding: 40px 16px 30px; }
+  .section-head, .intro-body, .faq, .sim-grid, .steps, .pay-inner, .footer,
+  .connect-section, .connect-box { padding-left: 16px; padding-right: 16px; }
+  section { padding: 46px 0; }
+  section[id] { scroll-margin-top: 66px; }
+
+  /* hero */
+  .hero h1 { font-size: clamp(30px, 8.5vw, 46px); }
+  .pill { margin-bottom: 20px; font-size: 12px; }
+  .hero-stats { gap: 10px; margin-top: 30px; width: 100%; }
+  .stat { flex: 0 1 calc(50% - 6px); min-width: 0; padding: 15px 10px; text-align: center; }
+  .stat-num { font-size: 20px; }
+  .stat-label { font-size: 10.5px; letter-spacing: 0.03em; }
+
+  /* section titles */
+  .section-head { margin-bottom: 28px; }
+  .section-head p, .intro-body p { font-size: 15.5px; }
+
+  /* server cards a touch smaller */
+  .scard { width: 264px; padding: 12px 14px; gap: 12px; }
+  .scard-ic { width: 46px; height: 46px; border-radius: 12px; font-size: 19px; }
+  .scard-name { font-size: 15px; }
+  .scard-members { font-size: 12.5px; }
+
+  /* simulations — smaller so Discord mock never overflows */
+  .sim-card { padding: 15px; border-radius: 16px; }
+  .sim-cap h3 { font-size: 18px; }
+  .sim-cap p { font-size: 14px; }
+  .dsc { height: 360px; font-size: 13px; }
+  .dsc-feed, .scene { padding: 13px; gap: 12px; }
+  .dsc-row { gap: 10px; }
+  .dsc-av { width: 36px; height: 36px; }
+  .composer { margin: 0 12px 12px; padding: 10px 12px; }
+
+  /* pay figures */
+  .figure-big .fx { font-size: 42px; }
+
+  /* connect */
+  .connect-box { padding: 32px 20px; border-radius: 18px; }
+  .connect-box p { font-size: 15px; }
+  .btn-discord { width: 100%; justify-content: center; }
+}
