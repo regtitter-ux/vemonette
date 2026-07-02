@@ -107,8 +107,8 @@ const RU = {
   stat2_label: 'Фиксированно за 100 кликов',
   stat3_label: 'продано кликов',
   what_h2: 'Что такое Vemonette',
-  what_p1: 'Vemonette создаёт <b>персонального бота-верификатора</b> для крупных Discord-серверов. Участники проходят проверку в два клика, а сервер защищён от рейдов и селфботов.',
-  what_p2: 'Вдобавок инструмент даёт <b>дополнительный способ заработка</b>: во время верификации бот показывает рекламу, и вы получаете деньги за каждый её просмотр.',
+  what_p1: 'Vemonette создаёт персонального бота-верификатора для крупных Discord-серверов: участники проходят проверку в два клика, а вы получаете оплату за показы рекламы',
+  what_p2: '',
   chip1: '🛡️ Защищает сервер', chip2: '⚡ Два клика для участников', chip3: '💸 Платит за клики',
   how_h2: 'Как это работает',
   how_sub: 'Три шага — дальше всё само.',
@@ -156,7 +156,9 @@ function setLang(lang) {
   const dict = lang === 'ru' ? RU : EN;
   document.querySelectorAll('[data-i18n]').forEach((el) => {
     const v = dict[el.dataset.i18n];
-    if (v != null) el.innerHTML = v;
+    if (v == null) return;
+    el.innerHTML = v;
+    el.style.display = v === '' ? 'none' : ''; // hide items with no translation
   });
   document.documentElement.lang = lang;
   try { localStorage.setItem('vemonette-lang', lang); } catch (_) {}
@@ -167,11 +169,11 @@ document.querySelectorAll('#langSwitch button').forEach((b) => {
   b.addEventListener('click', () => setLang(b.dataset.lang));
 });
 
+// Default to English; only honour an explicit choice the user made before.
 let startLang = 'en';
 try {
   const saved = localStorage.getItem('vemonette-lang');
   if (saved === 'ru' || saved === 'en') startLang = saved;
-  else if ((navigator.language || '').toLowerCase().startsWith('ru')) startLang = 'ru';
 } catch (_) {}
 setLang(startLang);
 
