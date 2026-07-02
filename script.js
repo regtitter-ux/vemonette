@@ -23,8 +23,8 @@ function cardHTML(s) {
   const src = s.img || iconUrl(s.id, s.icon);
   // image fills the icon; if it fails to load, fall back to the coloured letter
   const ic = src
-    ? `<span class="scard-ic"><img src="${src}" alt="" loading="lazy" onerror="const p=this.parentElement;p.style.background='${s.accent}';p.textContent='${s.letter}'" /></span>`
-    : `<span class="scard-ic" style="background:${s.accent}">${s.letter}</span>`;
+    ? `<span class="scard-ic"><img src="${src}" alt="" loading="lazy" onerror="const p=this.parentElement;p.style.background='${s.color}';p.textContent='${s.letter}'" /></span>`
+    : `<span class="scard-ic" style="background:${s.color}">${s.letter}</span>`;
   return `
     <div class="scard" data-code="${s.code || s.id}">
       ${ic}
