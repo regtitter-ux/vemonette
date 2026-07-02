@@ -168,11 +168,17 @@ document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
 
   let tickIv;
   function tickBalance() {
-    let v = 12.4;
-    balValue.textContent = '$12.40';
+    let v = 9.0;
+    balValue.textContent = '$9.00';
     clearInterval(tickIv);
-    tickIv = setInterval(() => { v += 0.1; balValue.textContent = '$' + v.toFixed(2); }, 300);
-    setTimeout(() => clearInterval(tickIv), 2400);
+    tickIv = setInterval(() => {
+      v = Math.round((v + 0.1) * 100) / 100;
+      balValue.textContent = '$' + v.toFixed(2);
+      if (v >= 10) { // hit the $10 threshold -> withdrawal filed, balance resets to $0
+        clearInterval(tickIv);
+        setTimeout(() => { balValue.textContent = '$0.00'; }, 650);
+      }
+    }, 190);
   }
 
   const reset = () => { toast.classList.remove('shown'); barServer(); clearCmd(); idle(); };
@@ -182,7 +188,7 @@ document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
     { step: 1, wait: 1300, act: null },                                              // command shown
     { step: 2, wait: 2300, act: clearCmd },                                          // card posted (scene A)
     { step: 3, wait: 1200, act: () => setCmd('/bal', false) },                       // typing /bal
-    { step: 4, wait: 2500, act: () => { clearCmd(); tickBalance(); } },              // balance (scene B)
+    { step: 4, wait: 3100, act: () => { clearCmd(); tickBalance(); } },              // balance grows 9 -> 10, resets to 0
     { step: 5, wait: 1500, act: () => { toast.classList.add('shown'); moveTo(toast); } }, // DM notification + reach
     { step: 5, wait: 560, act: press },                                              // click the notification
     { step: 6, wait: 3600, act: () => { toast.classList.remove('shown'); barDM(); } }, // open DM (scene C)
