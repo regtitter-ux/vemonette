@@ -81,7 +81,7 @@ function animateCount(el) {
     let val = Math.round(target * eased);
     let text;
     if (suffix === 'k+') text = prefix + Math.round(val / 1000) + 'k+';
-    else if (target >= 1000) text = prefix + val.toLocaleString('en-US');
+    else if (target >= 1000) text = prefix + val.toLocaleString('en-US') + suffix;
     else text = prefix + val + suffix;
     el.textContent = text;
     if (p < 1) requestAnimationFrame(tick);
