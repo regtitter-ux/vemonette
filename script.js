@@ -100,7 +100,7 @@ document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
 const RU = {
   nav_what: 'О сервисе', nav_how: 'Как это работает', nav_numbers: 'Цифры', nav_faq: 'Вопросы', nav_contact: 'Связаться',
   hero_pill: 'Двухминутный обзор для будущих партнёров',
-  hero_h1: 'Верификация,<br /><span class="grad">за которую платят</span>',
+  hero_h1: 'Верификация,<br /><span class="grad">за которую вам платят</span>',
   hero_sub: 'Краткий и честный обзор: что делает Vemonette, как это работает и какие за этим цифры.',
   hero_cta: 'Читать ↓',
   stat1_label: 'Уже выплачено партнёрам',
