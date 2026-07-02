@@ -337,15 +337,25 @@ section[id] { scroll-margin-top: 82px; }
   .scard-name { font-size: 15px; }
   .scard-members { font-size: 12.5px; }
 
-  /* simulations — smaller so Discord mock never overflows */
+  /* simulations — taller box + smaller content so nothing clips when text wraps */
   .sim-card { padding: 15px; border-radius: 16px; }
   .sim-cap h3 { font-size: 18px; }
   .sim-cap p { font-size: 14px; }
-  .dsc { height: 360px; font-size: 13px; }
-  .dsc-feed, .scene { padding: 13px; gap: 12px; }
-  .dsc-row { gap: 10px; }
-  .dsc-av { width: 36px; height: 36px; }
-  .composer { margin: 0 12px 12px; padding: 10px 12px; }
+  .dsc { height: 470px; font-size: 12.5px; }
+  .dsc-feed, .scene { padding: 12px; gap: 10px; }
+  .dsc-row { gap: 9px; }
+  .dsc-av { width: 34px; height: 34px; }
+  .composer { margin: 0 12px 12px; padding: 9px 11px; min-height: 42px; }
+  /* compact message bodies so they take fewer lines */
+  .embed { padding: 10px 12px 12px; }
+  .embed-desc { font-size: 12.5px; margin-bottom: 10px; }
+  .embed-title { font-size: 14px; }
+  .dsc-btn { padding: 8px 13px; font-size: 12.5px; }
+  .eph-body { font-size: 12.5px; }
+  .eph-slot { min-height: 84px; }
+  .wallet-shot { padding: 11px; }
+  .ws-amount { font-size: 19px; margin: 9px 0 8px; }
+  .dm-text { font-size: 12.5px; margin-bottom: 6px; }
 
   /* pay figures */
   .figure-big .fx { font-size: 42px; }
