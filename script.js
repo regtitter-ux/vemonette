@@ -5,6 +5,8 @@ const SERVERS = [
   { code: 'tagyuri', name: 'YURI TAG・CHAT・SOCIAL', members: 132614, color: '#a855f7', accent: 'linear-gradient(150deg,#a855f7,#5b2ea6)', letter: 'Y', id: '1369076925389078609', icon: '113818409cc1ab5871354f52a7e36283' },
   { code: 'teto', name: 'TETO TAG・CHAT・SOCIAL', members: 65274, color: '#d1004b', accent: 'linear-gradient(150deg,#d1004b,#7a0030)', letter: 'T', id: '1369106099608748102', icon: 'a_9421492e28203f89f5003ea2ee618537' },
   { code: 'ggif', name: 'GIFLAND СНГ', members: 50897, color: '#5865f2', accent: 'linear-gradient(150deg,#5865f2,#333a99)', letter: 'G', id: '972405591140085791', icon: 'a_096abac0dd6b01694ef7aaceaf24e613' },
+  { code: 'guilds', name: 'Guild Tags | 55k+ Guilds Server Tags', members: 55000, color: '#8b5cf6', accent: 'linear-gradient(150deg,#8b5cf6,#4c2d8f)', letter: 'G', id: '1350945944379850862' },
+  { code: 'S7ftaq8qN', name: 'Server Tags', members: null, color: '#f59e0b', accent: 'linear-gradient(150deg,#f59e0b,#a85d06)', letter: 'S' },
 ];
 
 const fmt = (n) => (n == null ? '—' : n.toLocaleString('en-US'));
@@ -52,6 +54,7 @@ async function refreshLive() {
       const img = iconUrl(g.id, g.icon);
       document.querySelectorAll(`.scard[data-code="${s.code}"]`).forEach((card) => {
         if (members != null) card.querySelector('[data-role="members"]').textContent = `${fmt(members)} members`;
+        if (g.name) card.querySelector('.scard-name').textContent = g.name;
         if (img) {
           const holder = card.querySelector('.scard-ic');
           holder.style.background = 'transparent';
