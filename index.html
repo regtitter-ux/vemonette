@@ -7,7 +7,7 @@
   <meta name="description" content="A short, factual guide to Vemonette: personal verification bots for large Discord servers, with an optional layer that pays $1 per 100 verified clicks. $50k+ already paid out." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -23,43 +23,47 @@
       <span class="brand-name">Vemonette</span>
     </a>
     <nav class="nav-links">
-      <a href="#what">What it is</a>
-      <a href="#how">How it works</a>
-      <a href="#numbers">Numbers</a>
-      <a href="#faq">FAQ</a>
+      <a href="#what" data-i18n="nav_what">What it is</a>
+      <a href="#how" data-i18n="nav_how">How it works</a>
+      <a href="#numbers" data-i18n="nav_numbers">Numbers</a>
+      <a href="#faq" data-i18n="nav_faq">FAQ</a>
     </nav>
-    <a href="#connect" class="btn btn-ghost nav-cta">Contact</a>
+    <a href="#connect" class="btn btn-ghost nav-cta" data-i18n="nav_contact">Contact</a>
+    <div class="lang-switch" id="langSwitch">
+      <button data-lang="en">EN</button>
+      <button data-lang="ru">RU</button>
+    </div>
   </header>
 
   <main id="top">
     <!-- HERO -->
     <section class="hero">
       <div class="hero-inner">
-        <span class="pill"><span class="dot"></span> A 2-minute read for prospective partners</span>
-        <h1>
+        <span class="pill"><span class="dot"></span> <span data-i18n="hero_pill">A 2-minute read for prospective partners</span></span>
+        <h1 data-i18n="hero_h1">
           Verification for which<br />
           <span class="grad">you get paid</span>
         </h1>
-        <p class="hero-sub">
+        <p class="hero-sub" data-i18n="hero_sub">
           This is a short, factual overview of what Vemonette does, how it works, and the
           numbers behind it.
         </p>
         <div class="hero-cta">
-          <a href="#what" class="btn btn-ghost">Start reading ↓</a>
+          <a href="#what" class="btn btn-ghost" data-i18n="hero_cta">Start reading ↓</a>
         </div>
 
         <div class="hero-stats">
           <div class="stat">
             <span class="stat-num" data-count="50000" data-prefix="$" data-suffix="k+">$50k+</span>
-            <span class="stat-label">Already paid to partners</span>
+            <span class="stat-label" data-i18n="stat1_label">Already paid to partners</span>
           </div>
           <div class="stat">
             <span class="stat-num">$1 / 100</span>
-            <span class="stat-label">Flat rate per 100 clicks</span>
+            <span class="stat-label" data-i18n="stat2_label">Flat rate per 100 clicks</span>
           </div>
           <div class="stat">
             <span class="stat-num">5,000,000+</span>
-            <span class="stat-label">clicks sold</span>
+            <span class="stat-label" data-i18n="stat3_label">clicks sold</span>
           </div>
         </div>
       </div>
@@ -68,21 +72,21 @@
     <!-- WHAT IT IS -->
     <section id="what" class="intro-section">
       <div class="section-head">
-        <h2>What Vemonette is</h2>
+        <h2 data-i18n="what_h2">What Vemonette is</h2>
       </div>
       <div class="intro-body">
-        <p>
+        <p data-i18n="what_p1">
           Vemonette builds a <b>personal verification bot</b> for large Discord servers. Members
           verify in one click, and your server stays protected from raids and self-bots.
         </p>
-        <p>
+        <p data-i18n="what_p2">
           In addition, the tool provides an <b>additional way to earn money</b>: during
           verification, the bot displays advertisements, and you are paid for each ad view.
         </p>
         <div class="chips">
-          <span class="chip">🛡️ Protects your server</span>
-          <span class="chip">⚡ One click for members</span>
-          <span class="chip">💸 Pays you for clicks</span>
+          <span class="chip" data-i18n="chip1">🛡️ Protects your server</span>
+          <span class="chip" data-i18n="chip2">⚡ One click for members</span>
+          <span class="chip" data-i18n="chip3">💸 Pays you for clicks</span>
         </div>
       </div>
     </section>
@@ -90,37 +94,37 @@
     <!-- HOW IT WORKS -->
     <section id="how" class="how-section">
       <div class="section-head">
-        <h2>How it works</h2>
-        <p>Three steps — then it runs itself.</p>
+        <h2 data-i18n="how_h2">How it works</h2>
+        <p data-i18n="how_sub">Three steps — then it runs itself.</p>
       </div>
 
       <div class="steps">
         <div class="step">
           <span class="step-n">1</span>
-          <h3>Your bot is set up</h3>
-          <p>We build and host a verification bot styled for your server. Free, about 10 minutes, nothing to maintain.</p>
+          <h3 data-i18n="step1_h3">Your bot is set up</h3>
+          <p data-i18n="step1_p">We build and host a verification bot styled for your server. Free, about 10 minutes, nothing to maintain.</p>
         </div>
         <div class="step">
           <span class="step-n">2</span>
-          <h3>Members verify as usual</h3>
-          <p>One click, a short sponsor message, one more click. The same flow they already expect — no extra hoops.</p>
+          <h3 data-i18n="step2_h3">Members verify as usual</h3>
+          <p data-i18n="step2_p">One click, a short sponsor message, one more click. The same flow they already expect — no extra hoops.</p>
         </div>
         <div class="step">
           <span class="step-n">3</span>
-          <h3>You earn, automatically</h3>
-          <p>$1 per 100 verified clicks. At $10 the bot files a payout to your details — you don't lift a finger.</p>
+          <h3 data-i18n="step3_h3">You earn, automatically</h3>
+          <p data-i18n="step3_p">$1 per 100 verified clicks. At $10 the bot files a payout to your details — you don't lift a finger.</p>
         </div>
       </div>
 
-      <p class="how-note">Here's both sides, running live:</p>
+      <p class="how-note" data-i18n="how_note">Here's both sides, running live:</p>
 
       <div class="sim-grid">
         <!-- SIM 1: user verification -->
         <figure class="sim-card">
           <figcaption class="sim-cap">
-            <span class="sim-badge">What members see</span>
-            <h3>Passing verification</h3>
-            <p>A member clicks, sees a short message, confirms — and gets access.</p>
+            <span class="sim-badge" data-i18n="sim1_badge">What members see</span>
+            <h3 data-i18n="sim1_h3">Passing verification</h3>
+            <p data-i18n="sim1_p">A member clicks, sees a short message, confirms — and gets access.</p>
           </figcaption>
 
           <div class="device" id="simVerify" data-step="0">
@@ -173,9 +177,9 @@
         <!-- SIM 2: admin create + balance -->
         <figure class="sim-card">
           <figcaption class="sim-cap">
-            <span class="sim-badge alt">What you control</span>
-            <h3>Post <code>/verification</code> &amp; check balance</h3>
-            <p>Drop the verification card once, then watch the balance with <code>/bal</code>.</p>
+            <span class="sim-badge alt" data-i18n="sim2_badge">What you control</span>
+            <h3 data-i18n="sim2_h3">Post <code>/verification</code> &amp; check balance</h3>
+            <p data-i18n="sim2_p">Drop the verification card once, then watch the balance with <code>/bal</code>.</p>
           </figcaption>
 
           <div class="device" id="simAdmin" data-step="0">
@@ -277,20 +281,20 @@
     <section id="numbers" class="pay-section">
       <div class="pay-inner">
         <div class="pay-copy">
-          <h2>The numbers</h2>
-          <p>Flat rate, transparent counting, direct payouts. The facts that matter, in one place.</p>
+          <h2 data-i18n="num_h2">The numbers</h2>
+          <p data-i18n="num_p">Flat rate, transparent counting, direct payouts. The facts that matter, in one place.</p>
           <ul class="checks">
-            <li><b>$1</b> per 100 verified clicks — flat, no tiers, no fine print</li>
-            <li>Payout is filed automatically the moment you reach <b>$10</b></li>
-            <li>Only real, completed verifications count</li>
-            <li>Withdraw to card, crypto, or wallet</li>
+            <li data-i18n="check1"><b>$1</b> per 100 verified clicks — flat, no tiers, no fine print</li>
+            <li data-i18n="check2">Payout is filed automatically the moment you reach <b>$10</b></li>
+            <li data-i18n="check3">Only real, completed verifications count</li>
+            <li data-i18n="check4">Withdraw to card, crypto, or wallet</li>
           </ul>
         </div>
         <div class="pay-figures">
-          <div class="figure-big"><span class="fx" data-count="50000" data-prefix="$">$0</span><span>paid to partners so far</span></div>
+          <div class="figure-big"><span class="fx" data-count="50000" data-prefix="$">$0</span><span data-i18n="fig_big_label">paid to partners so far</span></div>
           <div class="figure-row">
-            <div class="figure"><span>5,000,000+</span><span>clicks sold</span></div>
-            <div class="figure"><span>$1</span><span>per 100 clicks</span></div>
+            <div class="figure"><span>5,000,000+</span><span data-i18n="fig1_label">clicks sold</span></div>
+            <div class="figure"><span>$1</span><span data-i18n="fig2_label">per 100 clicks</span></div>
           </div>
         </div>
       </div>
@@ -299,8 +303,8 @@
     <!-- SERVER FEED -->
     <section id="servers" class="feed-section">
       <div class="section-head">
-        <h2>Communities already on it</h2>
-        <p>Live member counts, straight from Discord.</p>
+        <h2 data-i18n="servers_h2">Communities already on it</h2>
+        <p data-i18n="servers_p">Live member counts, straight from Discord.</p>
       </div>
       <div class="marquee" id="marquee">
         <div class="marquee-row"><div class="marquee-track" id="rowTop"><!-- injected --></div></div>
@@ -311,28 +315,28 @@
     <!-- FAQ -->
     <section id="faq" class="faq-section">
       <div class="section-head">
-        <h2>Questions partners usually ask</h2>
+        <h2 data-i18n="faq_h2">Questions partners usually ask</h2>
       </div>
       <div class="faq">
         <details class="faq-item">
-          <summary>Will this bother my members?</summary>
-          <p>No. It's the same one-click verification, with one short sponsor line before access. No forced redirects, no spam, no extra steps beyond what verification already needs.</p>
+          <summary data-i18n="faq_q1">Will this bother my members?</summary>
+          <p data-i18n="faq_a1">No. It's the same one-click verification, with one short sponsor line before access. No forced redirects, no spam, no extra steps beyond what verification already needs.</p>
         </details>
         <details class="faq-item">
-          <summary>How are clicks counted?</summary>
-          <p>Only completed verifications where the sponsor line was actually shown.</p>
+          <summary data-i18n="faq_q2">How are clicks counted?</summary>
+          <p data-i18n="faq_a2">Only completed verifications where the sponsor line was actually shown.</p>
         </details>
         <details class="faq-item">
-          <summary>When and how am I paid?</summary>
-          <p>Automatically. The moment your balance reaches $10, a payout request is created and sent to your details — card, crypto, or wallet.</p>
+          <summary data-i18n="faq_q3">When and how am I paid?</summary>
+          <p data-i18n="faq_a3">Automatically. The moment your balance reaches $10, a payout request is created and sent to your details — card, crypto, or wallet.</p>
         </details>
         <details class="faq-item">
-          <summary>What do I actually have to do?</summary>
-          <p>After setup, post the verification card once. The bot handles verification, sponsors, counting and payouts on its own.</p>
+          <summary data-i18n="faq_q4">What do I actually have to do?</summary>
+          <p data-i18n="faq_a4">After setup, post the verification card once. The bot handles verification, sponsors, counting and payouts on its own.</p>
         </details>
         <details class="faq-item">
-          <summary>Is my server big enough?</summary>
-          <p>It scales with real joins, so active communities benefit most — but there's no hard minimum.</p>
+          <summary data-i18n="faq_q5">Is my server big enough?</summary>
+          <p data-i18n="faq_a5">It scales with real joins, so active communities benefit most — but there's no hard minimum.</p>
         </details>
       </div>
     </section>
@@ -340,9 +344,9 @@
     <!-- CONNECT (soft close) -->
     <section id="connect" class="connect-section">
       <div class="connect-box">
-        <h2>If it sounds useful</h2>
-        <p>The easiest next step is a short, no-commitment chat. Ask anything — setup, timing, edge cases.</p>
-        <a href="https://discord.com/users/833442190427684914" target="_blank" rel="noopener" class="btn btn-primary btn-lg">Message on Discord — @allanwdc</a>
+        <h2 data-i18n="connect_h2">If it sounds useful</h2>
+        <p data-i18n="connect_p">The easiest next step is a short, no-commitment chat. Ask anything — setup, timing, edge cases.</p>
+        <a href="https://discord.com/users/833442190427684914" target="_blank" rel="noopener" class="btn btn-primary btn-lg" data-i18n="connect_btn">Message on Discord — @allanwdc</a>
       </div>
     </section>
   </main>
