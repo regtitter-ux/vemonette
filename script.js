@@ -5,7 +5,7 @@ const SERVERS = [
   { code: 'tagyuri', name: 'YURI TAG・CHAT・SOCIAL', members: 132614, color: '#a855f7', accent: 'linear-gradient(150deg,#a855f7,#5b2ea6)', letter: 'Y', id: '1369076925389078609', icon: '113818409cc1ab5871354f52a7e36283' },
   { code: 'teto', name: 'TETO TAG・CHAT・SOCIAL', members: 65274, color: '#d1004b', accent: 'linear-gradient(150deg,#d1004b,#7a0030)', letter: 'T', id: '1369106099608748102', icon: 'a_9421492e28203f89f5003ea2ee618537' },
   { code: 'ggif', name: 'GIFLAND СНГ', members: 50897, color: '#5865f2', accent: 'linear-gradient(150deg,#5865f2,#333a99)', letter: 'G', id: '972405591140085791', icon: 'a_096abac0dd6b01694ef7aaceaf24e613' },
-  { name: 'Guild Tags | 55k+ Guilds Server Tags', members: 71156, color: '#8b5cf6', accent: 'linear-gradient(150deg,#8b5cf6,#4c2d8f)', letter: 'G', id: '724948162101293056', link: 'https://top.gg/discord/servers/724948162101293056', img: 'assets/gtl.png' },
+  { name: 'Guild Tags | 55k+ Guilds Server Tags', members: 71156, color: '#8b5cf6', accent: 'linear-gradient(150deg,#8b5cf6,#4c2d8f)', letter: 'G', id: '724948162101293056', link: 'https://top.gg/discord/servers/724948162101293056', img: 'assets/gtl.svg' },
   { code: 'S7ftaq8qN', name: 'Server Tags', members: null, color: '#f59e0b', accent: 'linear-gradient(150deg,#f59e0b,#a85d06)', letter: 'S' },
 ];
 
@@ -21,8 +21,10 @@ function iconUrl(id, icon) {
 
 function cardHTML(s) {
   const src = s.img || iconUrl(s.id, s.icon);
-  // letter sits behind; the image covers it, and falls back to the letter if it fails to load
-  const ic = `<span class="scard-ic" style="background:${s.accent}">${s.letter}${src ? `<img src="${src}" alt="" loading="lazy" onerror="this.remove()" />` : ''}</span>`;
+  // image fills the icon; if it fails to load, fall back to the coloured letter
+  const ic = src
+    ? `<span class="scard-ic"><img src="${src}" alt="" loading="lazy" onerror="const p=this.parentElement;p.style.background='${s.accent}';p.textContent='${s.letter}'" /></span>`
+    : `<span class="scard-ic" style="background:${s.accent}">${s.letter}</span>`;
   const href = s.link || `https://discord.gg/${s.code}`;
   return `
     <a class="scard" href="${href}" target="_blank" rel="noopener" data-code="${s.code || s.id}">
