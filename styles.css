@@ -174,7 +174,7 @@ section[id] { scroll-margin-top: 82px; }
 .bal-v { color: #fff; font-weight: 700; font-size: 17px; }
 .bal-v.muted { color: #b5bac1; font-weight: 500; font-size: 13px; }
 
-.eph { opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease; }
+.eph { opacity: 0; transform: translateY(6px); transition: opacity 0.3s ease, transform 0.3s ease; background: rgba(88, 101, 242, 0.06); border-left: 3px solid #5865f2; border-radius: 2px; padding: 6px 12px 8px; }
 .eph-slot { position: relative; min-height: 96px; }
 .eph-slot .eph { position: absolute; top: 0; left: 0; right: 0; display: none; opacity: 1; transform: none; }
 .eph-body { color: #dbdee1; font-size: 13.5px; line-height: 1.5; }
