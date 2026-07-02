@@ -139,16 +139,32 @@ document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
   requestAnimationFrame(() => setTimeout(run, 300));
 })();
 
-/* ---------- Simulation 2: admin /verification + /bal ---------- */
+/* ---------- Simulation 2: admin /verification -> /bal -> DM payout ---------- */
 (function adminSim() {
   const root = document.getElementById('simAdmin');
   if (!root) return;
+  const body = root.querySelector('.dsc-body');
+  const bar = root.querySelector('.dsc-bar');
   const chip = document.getElementById('cmdChip');
   const opt = document.getElementById('cmdOpt');
   const balValue = document.getElementById('balValue');
+  const toast = document.getElementById('dmToast');
+  const cursor = document.getElementById('cursorAdmin');
 
-  const setCmd = (cmd, withOpt) => { chip.textContent = cmd; chip.style.opacity = 1; opt.style.opacity = withOpt ? 1 : 0; };
-  const clearCmd = () => { chip.style.opacity = 0; opt.style.opacity = 0; };
+  // display-toggle so a hidden option doesn't reserve space (keeps the caret tight)
+  const setCmd = (cmd, withOpt) => { chip.textContent = cmd; chip.style.display = ''; opt.style.display = withOpt ? '' : 'none'; };
+  const clearCmd = () => { chip.style.display = 'none'; opt.style.display = 'none'; };
+
+  const moveTo = (el) => {
+    const d = body.getBoundingClientRect(), r = el.getBoundingClientRect();
+    cursor.style.left = (r.left - d.left + r.width / 2) + 'px';
+    cursor.style.top = (r.top - d.top + r.height / 2) + 'px';
+  };
+  const idle = () => { const d = body.getBoundingClientRect(); cursor.style.left = (d.width * 0.85) + 'px'; cursor.style.top = (d.height * 0.9) + 'px'; };
+  const press = () => { cursor.classList.add('click'); setTimeout(() => cursor.classList.remove('click'), 380); };
+
+  const barServer = () => { bar.innerHTML = '<span class="hash">#</span> welcome'; };
+  const barDM = () => { bar.innerHTML = '<span class="hash">@</span> Verification'; };
 
   let tickIv;
   function tickBalance() {
@@ -159,12 +175,17 @@ document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
     setTimeout(() => clearInterval(tickIv), 2400);
   }
 
+  const reset = () => { toast.classList.remove('shown'); barServer(); clearCmd(); idle(); };
+
   const timeline = [
-    { step: 0, wait: 1200, act: () => setCmd('/verification', true) }, // typing the command
-    { step: 1, wait: 1300, act: null },                                // command shown
-    { step: 2, wait: 2600, act: clearCmd },                            // card posted (scene A)
-    { step: 3, wait: 1300, act: () => setCmd('/bal', false) },         // typing /bal
-    { step: 4, wait: 3000, act: () => { clearCmd(); tickBalance(); } },// balance (scene B)
+    { step: 0, wait: 1200, act: () => { reset(); setCmd('/verification', true); } }, // typing command
+    { step: 1, wait: 1300, act: null },                                              // command shown
+    { step: 2, wait: 2300, act: clearCmd },                                          // card posted (scene A)
+    { step: 3, wait: 1200, act: () => setCmd('/bal', false) },                       // typing /bal
+    { step: 4, wait: 2500, act: () => { clearCmd(); tickBalance(); } },              // balance (scene B)
+    { step: 5, wait: 1500, act: () => { toast.classList.add('shown'); moveTo(toast); } }, // DM notification + reach
+    { step: 5, wait: 560, act: press },                                              // click the notification
+    { step: 6, wait: 3600, act: () => { toast.classList.remove('shown'); barDM(); } }, // open DM (scene C)
   ];
 
   let i = 0;
@@ -175,5 +196,6 @@ document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
     i = (i + 1) % timeline.length;
     setTimeout(run, t.wait);
   }
-  run();
+  clearCmd();
+  requestAnimationFrame(() => setTimeout(run, 320));
 })();
