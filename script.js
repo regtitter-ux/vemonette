@@ -176,6 +176,23 @@ try {
 } catch (_) {}
 setLang(startLang);
 
+/* ---------- Nav scroll-spy: highlight the section in view ---------- */
+(function scrollSpy() {
+  const links = [...document.querySelectorAll('.nav-links a[href^="#"]')];
+  const targets = links.map((a) => ({ a, sec: document.querySelector(a.getAttribute('href')) })).filter((t) => t.sec);
+  if (!targets.length) return;
+  function update() {
+    let current = targets[0];
+    for (const t of targets) {
+      if (t.sec.getBoundingClientRect().top <= 120) current = t;
+    }
+    links.forEach((a) => a.classList.toggle('active', a === current.a));
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
+
 /* ---------- Simulation 1: user verification ---------- */
 (function verifySim() {
   const root = document.getElementById('simVerify');
