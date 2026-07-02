@@ -234,7 +234,7 @@ section[id] { scroll-margin-top: 82px; }
 /* Steps */
 .steps { max-width: var(--maxw); margin: 0 auto 40px; padding: 0 24px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .step { position: relative; background: var(--panel); border: 1px solid var(--stroke); border-radius: 16px; padding: 26px 24px; }
-.step-n { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; font-weight: 800; font-size: 18px; color: #06121c; background: var(--blue); margin-bottom: 16px; box-shadow: 0 8px 20px -8px rgba(34, 168, 240, 0.8); }
+.step-n { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 9px; font-weight: 700; font-size: 14px; color: var(--blue-2); background: rgba(34, 168, 240, 0.12); border: 1px solid rgba(34, 168, 240, 0.22); margin-bottom: 16px; }
 .step h3 { font-size: 15px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.03em; }
 .step p { color: var(--muted); font-size: 15px; line-height: 1.6; }
 .how-note { text-align: center; color: var(--muted); font-size: 15px; margin: 8px 0 26px; }
