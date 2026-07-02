@@ -25,15 +25,14 @@ function cardHTML(s) {
   const ic = src
     ? `<span class="scard-ic"><img src="${src}" alt="" loading="lazy" onerror="const p=this.parentElement;p.style.background='${s.accent}';p.textContent='${s.letter}'" /></span>`
     : `<span class="scard-ic" style="background:${s.accent}">${s.letter}</span>`;
-  const href = s.link || `https://discord.gg/${s.code}`;
   return `
-    <a class="scard" href="${href}" target="_blank" rel="noopener" data-code="${s.code || s.id}">
+    <div class="scard" data-code="${s.code || s.id}">
       ${ic}
       <div class="scard-info">
         <div class="scard-name">${s.name}</div>
         <div class="scard-members"><span class="online-dot">●</span> <span data-role="members">${fmt(s.members)} members</span></div>
       </div>
-    </a>`;
+    </div>`;
 }
 
 /* Two rows (top scrolls left, bottom scrolls right), each duplicated for a seamless loop */
