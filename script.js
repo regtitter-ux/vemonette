@@ -122,7 +122,7 @@ const RU = {
   sim1_badge: 'Что видят участники', sim1_h3: 'Прохождение верификации',
   sim1_p: 'Участник кликает, видит короткое сообщение, подтверждает — и получает доступ.',
   sim2_badge: 'Что контролируете вы',
-  sim2_h3: 'Команда <code>/verification</code> и баланс',
+  sim2_h3: 'Команда <code>/verify</code> и баланс',
   sim2_p: 'Один раз публикуете карточку верификации, затем следите за балансом через <code>/bal</code>.',
   num_h2: 'Цифры',
   num_p: 'Фиксированная ставка, прозрачный подсчёт, прямые выплаты. Всё важное — в одном месте.',
@@ -285,7 +285,7 @@ setLang(startLang);
   const reset = () => { toast.classList.remove('shown'); barServer(); clearCmd(); idle(); };
 
   const timeline = [
-    { step: 0, wait: 1200, act: () => { reset(); setCmd('/verification', true); } }, // typing command
+    { step: 0, wait: 1200, act: () => { reset(); setCmd('/verify', true); } }, // typing command
     { step: 1, wait: 1300, act: null },                                              // command shown
     { step: 2, wait: 2300, act: clearCmd },                                          // card posted (scene A)
     { step: 3, wait: 1200, act: () => setCmd('/bal', false) },                       // typing /bal
