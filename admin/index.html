@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Vemoni · Admin</title>
+  <link rel="stylesheet" href="./admin.css" />
+  <script>
+    // Update this to your bot's public HTTPS URL (Railway domain or custom).
+    // Everything under /admin/* is served from there.
+    window.__VEMONI_API_BASE__ = 'https://verified-production.up.railway.app';
+  </script>
+</head>
+<body>
+
+<div id="login" class="login">
+  <form class="login-card" id="login-form">
+    <div class="brand">Vemoni · Admin</div>
+    <div class="hint">Введи 6-значный код из Google Authenticator / Authy.</div>
+    <input id="code" inputmode="numeric" pattern="\d{6}" maxlength="6" autocomplete="one-time-code"
+           placeholder="000000" autofocus required />
+    <button type="submit" class="btn primary">Войти</button>
+    <div class="err" id="login-err" hidden></div>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <aside class="sidebar">
+    <div class="brand-sm">Vemoni · Admin</div>
+    <nav class="tabs">
+      <button data-tab="stats" class="tab active">Статистика</button>
+      <button data-tab="ads" class="tab">Реклама</button>
+      <button data-tab="templates" class="tab">Шаблоны</button>
+      <button data-tab="toggle" class="tab">Кран</button>
+    </nav>
+    <button id="logout" class="btn ghost sm">Выйти</button>
+  </aside>
+
+  <main class="content">
+    <!-- Stats -->
+    <section class="pane" data-pane="stats">
+      <h1>Статистика</h1>
+      <div class="cards" id="stat-cards"></div>
+      <h2>По серверам</h2>
+      <div class="table-wrap"><table class="stat-table" id="stat-table"></table></div>
+    </section>
+
+    <!-- Ads (owner's serverAds + global advText, raw input) -->
+    <section class="pane" data-pane="ads" hidden>
+      <h1>Реклама
+        <button class="btn primary sm" id="ad-add">＋ Реклама для сервера</button>
+      </h1>
+      <div class="row-title">Глобальная (для всех серверов)</div>
+      <div class="ad-editor" id="ad-global"></div>
+      <div class="row-title">По серверам <span class="muted">— перекрывает глобальную</span></div>
+      <div class="ad-list" id="ad-servers"></div>
+    </section>
+
+    <!-- Templates (adtemplates.json — global + per-server) -->
+    <section class="pane" data-pane="templates" hidden>
+      <h1>Шаблоны рекламы
+        <button class="btn primary sm" id="tpl-add">＋ Шаблон для сервера</button>
+      </h1>
+      <p class="muted">Шаблон подставляется вокруг ссылки <code>{link}</code> при показе. Меняешь шаблон — обновление сразу видно на всех верификациях, ничего заново не запускать.</p>
+      <div class="row-title">Глобальный (fallback)</div>
+      <div class="tpl-editor" id="tpl-global"></div>
+      <div class="row-title">По серверам</div>
+      <div class="tpl-list" id="tpl-servers"></div>
+    </section>
+
+    <!-- Ads-off toggle -->
+    <section class="pane" data-pane="toggle" hidden>
+      <h1>Кран рекламы</h1>
+      <p class="muted">Когда включён — верификация проходит **без рекламы и без начислений баланса** никому. Полезно, когда нет заказов и не хочется терять деньги на выплатах.</p>
+      <div class="toggle-card">
+        <label class="switch">
+          <input type="checkbox" id="ads-off" />
+          <span class="slider"></span>
+        </label>
+        <div class="switch-labels">
+          <div class="switch-state" id="switch-state">…</div>
+          <div class="switch-since muted" id="switch-since"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="./admin.js"></script>
+</body>
+</html>
