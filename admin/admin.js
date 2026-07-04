@@ -115,6 +115,46 @@ async function enterApp() {
     $('#login').hidden = true;
     $('#app').hidden = false;
     await refresh();
+    startLiveRefresh();
+}
+
+// ---------- Live refresh ----------
+// Poll /state every 3s so numbers stay fresh without a manual reload.
+// Guards:
+//   - Skip while the browser tab is backgrounded (document.hidden).
+//   - Skip while an input/textarea/select is focused so we don't wipe
+//     text the user is in the middle of typing (a full refresh rebuilds
+//     the editor's textarea and loses caret + unsaved content).
+//   - Skip while a modal is open — editing inside a modal shouldn't be
+//     interrupted; the next tick after it closes resyncs everything.
+const LIVE_REFRESH_MS = 3000;
+let liveRefreshT;
+
+function isEditingSomething() {
+    const el = document.activeElement;
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+}
+function anyModalOpen() {
+    return !$('#bal-modal').hidden || !$('#server-ad-modal').hidden;
+}
+async function liveTick() {
+    if (document.hidden || isEditingSomething() || anyModalOpen()) return;
+    await refresh();
+    // If the Balances tab is currently showing, also refresh its table so
+    // its numbers (balance, verifications) stay in sync too.
+    const balPane = document.querySelector('.pane[data-pane="balances"]');
+    if (balPane && !balPane.hidden) await loadBalances();
+}
+function startLiveRefresh() {
+    clearInterval(liveRefreshT);
+    liveRefreshT = setInterval(() => liveTick().catch(() => null), LIVE_REFRESH_MS);
+    // Fire an immediate tick when the tab regains visibility so returning
+    // to it after a while doesn't leave you staring at stale numbers.
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) liveTick().catch(() => null);
+    });
 }
 
 // ---------- Render: stats ----------
