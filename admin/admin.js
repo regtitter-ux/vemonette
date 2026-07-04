@@ -4,15 +4,26 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
 // ---------- HTTP helpers (credentials: include so the session cookie flows) ----------
 async function api(path, opts = {}) {
-    const res = await fetch(API + path, {
-        credentials: 'include',
-        headers: opts.body ? { 'Content-Type': 'application/json' } : {},
-        ...opts
-    });
+    let res;
+    try {
+        res = await fetch(API + path, {
+            credentials: 'include',
+            headers: opts.body ? { 'Content-Type': 'application/json' } : {},
+            ...opts
+        });
+    } catch (err) {
+        // Network-level failure — usually CORS block, DNS miss, or mixed
+        // content. Surface it clearly in the console so it's diagnosable
+        // from DevTools instead of hanging silently.
+        console.error('[admin] fetch failed:', API + path, err);
+        throw new Error(`Не могу достучаться до ${API} — открой DevTools → Console/Network, там точная причина (обычно CORS или неверный URL).`);
+    }
     let body = null;
     try { body = await res.json(); } catch {}
     return { ok: res.ok, status: res.status, body };
 }
+
+console.info('[admin] API base:', API);
 const get = (p) => api(p);
 const post = (p, obj) => api(p, { method: 'POST', body: obj ? JSON.stringify(obj) : undefined });
 const put  = (p, obj) => api(p, { method: 'PUT',  body: JSON.stringify(obj || {}) });
