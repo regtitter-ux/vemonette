@@ -345,15 +345,81 @@ function renderBalTable(users) {
     });
 }
 
+let currentDetailUserId = null;
+
 async function openBalDetail(userId) {
     $('#bal-modal-body').innerHTML = '<div class="modal-body muted">Загрузка…</div>';
     $('#bal-modal').hidden = false;
+    currentDetailUserId = userId;
     const { ok, body } = await get('/balances/' + encodeURIComponent(userId));
     if (!ok) {
         $('#bal-modal-body').innerHTML = `<div class="modal-body">${escapeHtml(body?.error || 'Ошибка загрузки')}</div>`;
         return;
     }
     $('#bal-modal-body').innerHTML = balDetailHtml(body);
+    wireBalDetailControls(userId);
+}
+
+// PUT one field, reload the detail on success, refresh the list underneath.
+async function editBalanceField(userId, field, payload, successMsg) {
+    const { ok, body } = await put(`/balances/${encodeURIComponent(userId)}/${field}`, payload);
+    if (!ok) { toast(body?.error || 'Не удалось сохранить', 'err'); return false; }
+    toast(successMsg || 'Сохранено');
+    await openBalDetail(userId);   // re-render with fresh data
+    loadBalances();                // refresh the table underneath
+    return true;
+}
+
+function wireBalDetailControls(userId) {
+    const apply = (act) => {
+        const btn = $(`[data-edit-act="${act}"]`);
+        return btn;
+    };
+
+    const balBtn = apply('balance');
+    if (balBtn) balBtn.onclick = () => {
+        const raw = $('[data-edit="balance"]').value.trim().replace(',', '.');
+        const m = raw.match(/^([+-])\s*(\d+(?:\.\d+)?)$/);
+        if (!m) { toast('Введи число с + или -, например +50 или -20', 'err'); return; }
+        const delta = (m[1] === '-' ? -1 : 1) * Number(m[2]);
+        editBalanceField(userId, 'balance', { delta }, `Баланс изменён на ${m[1]}$${m[2]}`);
+    };
+
+    const bidBtn = apply('bid');
+    if (bidBtn) bidBtn.onclick = () => {
+        const bid = Number($('[data-edit="bid"]').value.replace(',', '.'));
+        if (!Number.isFinite(bid) || bid < 0) { toast('Bid — число ≥ 0', 'err'); return; }
+        editBalanceField(userId, 'bid', { bid }, 'Bid сохранён');
+    };
+
+    const jbidBtn = apply('joinbid');
+    if (jbidBtn) jbidBtn.onclick = () => {
+        const joinBid = Number($('[data-edit="joinBid"]').value.replace(',', '.'));
+        if (!Number.isFinite(joinBid) || joinBid < 0) { toast('Join bid — число ≥ 0', 'err'); return; }
+        editBalanceField(userId, 'joinbid', { joinBid }, 'Join bid сохранён');
+    };
+
+    const autoCb = $('[data-edit="autoPayout"]');
+    if (autoCb) autoCb.onchange = async (e) => {
+        const off = !e.target.checked;
+        const { ok, body } = await put(`/balances/${encodeURIComponent(userId)}/autopayout`, { autoPayout: e.target.checked });
+        if (!ok) { e.target.checked = off; toast(body?.error || 'Не удалось переключить', 'err'); return; }
+        toast(e.target.checked ? 'Auto-payout включён' : 'Auto-payout выключен');
+        loadBalances();
+    };
+
+    const reqBtn = apply('requisites');
+    if (reqBtn) reqBtn.onclick = () => {
+        const requisites = $('[data-edit="requisites"]').value;
+        editBalanceField(userId, 'requisites', { requisites }, 'Реквизиты сохранены');
+    };
+
+    const refsBtn = apply('referrals');
+    if (refsBtn) refsBtn.onclick = () => {
+        const refs = $('[data-edit="referrals"]').value
+            .split(/[\s,]+/).map((x) => x.trim()).filter(Boolean);
+        editBalanceField(userId, 'referrals', { referrals: refs }, 'Список рефералов сохранён');
+    };
 }
 
 function balDetailHtml(u) {
@@ -392,21 +458,52 @@ function balDetailHtml(u) {
         <div class="kv-grid">
           ${kv('Баланс', money(u.balance))}
           ${kv('Всего выведено', money(u.withdrawnTotal))}
-          ${kv('Bid ($/100 clicks)', '$' + u.bid.toFixed(2))}
-          ${kv('Join bid ($/100 joins)', '$' + u.joinBid.toFixed(2))}
           ${kv('Реф-бонус в пуле', money(u.refBonusAccrued))}
-          ${kv('Auto-payout', u.autoPayout ? 'Вкл' : 'Выкл')}
           ${kv('Реферер', u.referrer || '—', true)}
-          ${kv('Рефералов', u.referrals.length)}
           ${kv('Bot ID', u.botId || '—', true)}
         </div>
 
-        <h3>Реквизиты</h3>
-        <div class="req">${u.requisites ? escapeHtml(u.requisites) : '<span class="muted">Не заданы.</span>'}</div>
-
-        ${u.referrals.length ? `
-        <h3>Приглашённые (${u.referrals.length})</h3>
-        <div class="req">${u.referrals.map(escapeHtml).join('\n')}</div>` : ''}
+        <h3>Настройки</h3>
+        <div class="settings-grid">
+          <div class="setting">
+            <label>Изменить баланс</label>
+            <div class="row">
+              <input type="text" data-edit="balance" placeholder="+50 или -20" />
+              <button class="btn primary sm" data-edit-act="balance">Применить</button>
+            </div>
+          </div>
+          <div class="setting">
+            <label>Bid ($/100 clicks)</label>
+            <div class="row">
+              <input type="number" step="0.01" min="0" data-edit="bid" value="${u.bid.toFixed(2)}" />
+              <button class="btn primary sm" data-edit-act="bid">Сохранить</button>
+            </div>
+          </div>
+          <div class="setting">
+            <label>Join bid ($/100 joins)</label>
+            <div class="row">
+              <input type="number" step="0.01" min="0" data-edit="joinBid" value="${u.joinBid.toFixed(2)}" />
+              <button class="btn primary sm" data-edit-act="joinbid">Сохранить</button>
+            </div>
+          </div>
+          <div class="setting autopay">
+            <label>Auto-payout (USDT-check)</label>
+            <label class="switch positive">
+              <input type="checkbox" data-edit="autoPayout" ${u.autoPayout ? 'checked' : ''} />
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="setting wide">
+            <label>Реквизиты</label>
+            <textarea data-edit="requisites" placeholder="USDT ERC20 0x…">${escapeHtml(u.requisites)}</textarea>
+            <div class="row"><span class="spacer" style="flex:1"></span><button class="btn primary sm" data-edit-act="requisites">Сохранить</button></div>
+          </div>
+          <div class="setting wide">
+            <label>Приглашённые (${u.referrals.length}) — по одному ID на строку</label>
+            <textarea data-edit="referrals" placeholder="743913502997086219&#10;833442190427684914">${escapeHtml(u.referrals.join('\n'))}</textarea>
+            <div class="row"><span class="spacer" style="flex:1"></span><button class="btn primary sm" data-edit-act="referrals">Сохранить</button></div>
+          </div>
+        </div>
 
         <h3>Верификации ${u.verifications.all.total.toLocaleString()} · час ${u.verifications.all.hour} · день ${u.verifications.all.day} · неделя ${u.verifications.all.week} · месяц ${u.verifications.all.month}</h3>
         <div class="table-wrap"><table class="stat-table">
