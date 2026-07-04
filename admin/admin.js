@@ -467,24 +467,18 @@ function balDetailHtml(u) {
         <div class="settings-grid">
           <div class="setting">
             <label>Изменить баланс</label>
-            <div class="row">
-              <input type="text" data-edit="balance" placeholder="+50 или -20" />
-              <button class="btn primary sm" data-edit-act="balance">Применить</button>
-            </div>
+            <input type="text" data-edit="balance" placeholder="+50 или -20" />
+            <div class="actions-row"><button class="btn primary sm" data-edit-act="balance">Применить</button></div>
           </div>
           <div class="setting">
             <label>Bid ($/100 clicks)</label>
-            <div class="row">
-              <input type="number" step="0.01" min="0" data-edit="bid" value="${u.bid.toFixed(2)}" />
-              <button class="btn primary sm" data-edit-act="bid">Сохранить</button>
-            </div>
+            <input type="number" step="0.01" min="0" data-edit="bid" value="${u.bid.toFixed(2)}" />
+            <div class="actions-row"><button class="btn primary sm" data-edit-act="bid">Сохранить</button></div>
           </div>
           <div class="setting">
             <label>Join bid ($/100 joins)</label>
-            <div class="row">
-              <input type="number" step="0.01" min="0" data-edit="joinBid" value="${u.joinBid.toFixed(2)}" />
-              <button class="btn primary sm" data-edit-act="joinbid">Сохранить</button>
-            </div>
+            <input type="number" step="0.01" min="0" data-edit="joinBid" value="${u.joinBid.toFixed(2)}" />
+            <div class="actions-row"><button class="btn primary sm" data-edit-act="joinbid">Сохранить</button></div>
           </div>
           <div class="setting autopay">
             <label>Auto-payout (USDT-check)</label>
@@ -496,12 +490,12 @@ function balDetailHtml(u) {
           <div class="setting wide">
             <label>Реквизиты</label>
             <textarea data-edit="requisites" placeholder="USDT ERC20 0x…">${escapeHtml(u.requisites)}</textarea>
-            <div class="row"><span class="spacer" style="flex:1"></span><button class="btn primary sm" data-edit-act="requisites">Сохранить</button></div>
+            <div class="actions-row"><button class="btn primary sm" data-edit-act="requisites">Сохранить</button></div>
           </div>
           <div class="setting wide">
             <label>Приглашённые (${u.referrals.length}) — по одному ID на строку</label>
             <textarea data-edit="referrals" placeholder="743913502997086219&#10;833442190427684914">${escapeHtml(u.referrals.join('\n'))}</textarea>
-            <div class="row"><span class="spacer" style="flex:1"></span><button class="btn primary sm" data-edit-act="referrals">Сохранить</button></div>
+            <div class="actions-row"><button class="btn primary sm" data-edit-act="referrals">Сохранить</button></div>
           </div>
         </div>
 
