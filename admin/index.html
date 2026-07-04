@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="./admin.css?v=6" />
+  <link rel="stylesheet" href="./admin.css?v=7" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -31,7 +31,6 @@
     <nav class="tabs">
       <button data-tab="stats" class="tab active">Статистика</button>
       <button data-tab="balances" class="tab">Балансы</button>
-      <button data-tab="ads" class="tab">Реклама</button>
       <button data-tab="templates" class="tab">Шаблоны</button>
       <button data-tab="toggle" class="tab">Кран</button>
     </nav>
@@ -43,6 +42,10 @@
     <section class="pane" data-pane="stats">
       <h1>Статистика</h1>
       <div class="cards" id="stat-cards"></div>
+
+      <h2>Глобальная реклама</h2>
+      <div id="stats-global-ad"></div>
+
       <h2>По серверам</h2>
       <div class="table-wrap"><table class="stat-table" id="stat-table"></table></div>
     </section>
@@ -68,17 +71,6 @@
         <button class="btn ghost sm" id="bal-dir" data-dir="desc">↓ desc</button>
       </div>
       <div class="table-wrap"><table class="stat-table" id="bal-table"></table></div>
-    </section>
-
-    <!-- Ads (owner's serverAds + global advText, raw input) -->
-    <section class="pane" data-pane="ads" hidden>
-      <h1>Реклама
-        <button class="btn primary sm" id="ad-add">＋ Реклама для сервера</button>
-      </h1>
-      <div class="row-title">Глобальная (для всех серверов)</div>
-      <div class="ad-editor" id="ad-global"></div>
-      <div class="row-title">По серверам <span class="muted">— перекрывает глобальную</span></div>
-      <div class="ad-list" id="ad-servers"></div>
     </section>
 
     <!-- Templates (adtemplates.json — global + per-server) -->
@@ -111,6 +103,13 @@
   </main>
 </div>
 
+<div id="server-ad-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <button class="modal-close" id="server-ad-modal-close" aria-label="Close">✕</button>
+    <div id="server-ad-modal-body">Загрузка…</div>
+  </div>
+</div>
+
 <div id="bal-modal" class="modal-overlay" hidden>
   <div class="modal">
     <button class="modal-close" id="bal-modal-close" aria-label="Close">✕</button>
@@ -120,6 +119,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="./admin.js?v=6"></script>
+<script src="./admin.js?v=7"></script>
 </body>
 </html>

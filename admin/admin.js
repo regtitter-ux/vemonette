@@ -106,7 +106,7 @@ async function refresh() {
     if (!ok) { toast(body?.error || 'Не удалось загрузить состояние', 'err'); return; }
     state = body;
     renderStats();
-    renderAds();
+    renderGlobalAd();
     renderTemplates();
     renderToggle();
 }
@@ -133,88 +133,137 @@ function renderStats() {
         `<div class="stat-card"><div class="k">${escapeHtml(c.k)}</div><div class="v">${escapeHtml(c.v)}</div></div>`
     ).join('');
 
-    const rows = s.perGuild.map((g) => `
-        <tr>
-            <td>${escapeHtml(g.name || 'Unknown Server')} <span class="gid">${g.gid}</span></td>
-            <td class="num">${g.hour}</td>
-            <td class="num">${g.day}</td>
-            <td class="num">${g.week}</td>
-            <td class="num">${g.month}</td>
-            <td class="num"><b>${g.total}</b></td>
-        </tr>`).join('');
+    // Fast lookup: gid → owner's per-server ad text.
+    const adByGid = new Map(state.ads.servers.map((a) => [a.gid, a]));
+    const offByGid = state.serverAdsOff || {};
+
+    const rows = s.perGuild.map((g) => {
+        const off = Boolean(offByGid[g.gid]);
+        const hasPersonal = adByGid.has(g.gid);
+        const chip = off
+            ? '<span class="chip red">Выкл</span>'
+            : hasPersonal
+                ? '<span class="chip blue">Персональная</span>'
+                : '<span class="chip">Глобал</span>';
+        const kranBtn = off
+            ? `<button class="btn-mini off" data-act="kran-on" data-gid="${g.gid}">Кран: Выкл</button>`
+            : `<button class="btn-mini on" data-act="kran-off" data-gid="${g.gid}">Кран: Вкл</button>`;
+        const adBtn = `<button class="btn-mini" data-act="ad-edit" data-gid="${g.gid}">Реклама…</button>`;
+        return `
+            <tr>
+                <td>${escapeHtml(g.name || 'Unknown Server')} <span class="gid">${g.gid}</span></td>
+                <td>${chip}</td>
+                <td class="num">${g.hour}</td>
+                <td class="num">${g.day}</td>
+                <td class="num">${g.week}</td>
+                <td class="num">${g.month}</td>
+                <td class="num"><b>${g.total}</b></td>
+                <td><div class="actions">${kranBtn} ${adBtn}</div></td>
+            </tr>`;
+    }).join('');
     $('#stat-table').innerHTML = `
         <thead><tr>
-            <th>Сервер</th><th class="num">1h</th><th class="num">1d</th><th class="num">7d</th><th class="num">30d</th><th class="num">Всего</th>
+            <th>Сервер</th><th>Реклама</th>
+            <th class="num">1h</th><th class="num">1d</th><th class="num">7d</th><th class="num">30d</th><th class="num">Всего</th>
+            <th>Действия</th>
         </tr></thead>
-        <tbody>${rows || '<tr><td colspan="6" class="muted">Данных пока нет</td></tr>'}</tbody>
+        <tbody>${rows || '<tr><td colspan="8" class="muted">Данных пока нет</td></tr>'}</tbody>
     `;
+    wireStatsActions();
 }
 
-// ---------- Render: ads ----------
-function renderAds() {
+function wireStatsActions() {
+    $$('#stat-table [data-act]').forEach((btn) => {
+        const gid = btn.dataset.gid;
+        const act = btn.dataset.act;
+        btn.onclick = async () => {
+            if (act === 'kran-off' || act === 'kran-on') {
+                const off = act === 'kran-off';
+                const { ok, body } = await put('/server-ads-off', { gid, off });
+                if (ok) { toast(off ? 'Кран сервера закрыт' : 'Кран сервера открыт'); refresh(); }
+                else toast(body?.error || 'Не удалось переключить', 'err');
+            } else if (act === 'ad-edit') {
+                openServerAdModal(gid);
+            }
+        };
+    });
+}
+
+// ---------- Global ad editor (moved from the old Ads tab, now under Stats) ----------
+function renderGlobalAd() {
     const a = state.ads;
-    $('#ad-global').innerHTML = adEditor({ gid: null, text: a.default, updatedAt: a.defaultAt, isGlobal: true });
-    $('#ad-servers').innerHTML = a.servers.length
-        ? a.servers.map((s) => `<div class="card">${adEditor({ gid: s.gid, name: s.name, text: s.text, updatedAt: s.updatedAt })}</div>`).join('')
-        : '<div class="muted">Нет per-server реклам. Нажми «＋ Реклама для сервера».</div>';
-
-    wireAdEditors();
-}
-
-function adEditor({ gid, name, text, updatedAt, isGlobal }) {
-    const label = isGlobal ? 'Глобальная реклама' : (name || 'Unknown Server');
-    const gidChip = isGlobal ? '' : `<span class="gid">${escapeHtml(gid)}</span>`;
-    const gidInput = isGlobal ? '' : `<input type="hidden" data-field="gid" value="${escapeHtml(gid)}" />`;
-    const stamp = updatedAt ? `<span class="muted"> · ${escapeHtml(relTime(updatedAt))}</span>` : '';
-    const idAttr = `data-editor="ad" data-key="${escapeHtml(gid || 'global')}"`;
-    return `
-      <div class="ad-editor" ${idAttr}>
+    const stamp = a.defaultAt ? `<span class="muted"> · ${escapeHtml(relTime(a.defaultAt))}</span>` : '';
+    $('#stats-global-ad').innerHTML = `
+      <div class="ad-editor" data-editor="ad-global">
         <div class="row">
-          <div class="label">${escapeHtml(label)}</div>${gidChip}${stamp}
+          <div class="label">Глобальная реклама — показывается на любом сервере, где нет персональной</div>${stamp}
         </div>
-        <textarea data-field="text" placeholder="Ссылка-приглашение или готовый текст">${escapeHtml(text)}</textarea>
-        ${gidInput}
+        <textarea data-field="text" placeholder="Ссылка-приглашение или готовый текст">${escapeHtml(a.default)}</textarea>
         <div class="actions">
           <button class="btn primary sm" data-act="save">Сохранить</button>
-          ${isGlobal ? '' : '<button class="btn danger sm" data-act="del">Удалить</button>'}
-          <span class="spacer"></span>
-          <span class="muted" data-field="hint">{link} подставляется из шаблона при показе.</span>
+          <button class="btn danger sm" data-act="del">Очистить</button>
+          <span class="spacer" style="flex:1"></span>
+          <span class="muted">{link} подставляется из шаблона при показе.</span>
         </div>
       </div>`;
+    const ed = $('[data-editor="ad-global"]');
+    ed.querySelector('[data-act="save"]').onclick = async () => {
+        const text = ed.querySelector('[data-field="text"]').value;
+        const { ok, body } = await put('/ad', { text });
+        if (ok) { toast('Глобальная реклама сохранена'); refresh(); }
+        else toast(body?.error || 'Не удалось сохранить', 'err');
+    };
+    ed.querySelector('[data-act="del"]').onclick = async () => {
+        if (!confirm('Очистить глобальную рекламу?')) return;
+        const { ok, body } = await del('/ad', {});
+        if (ok) { toast('Глобальная реклама очищена'); refresh(); }
+        else toast(body?.error || 'Не удалось очистить', 'err');
+    };
 }
 
-function wireAdEditors() {
-    $$('[data-editor="ad"]').forEach((ed) => {
-        ed.querySelector('[data-act="save"]').onclick = async () => {
-            const gidEl = ed.querySelector('[data-field="gid"]');
-            const text = ed.querySelector('[data-field="text"]').value;
-            const payload = { text };
-            if (gidEl) payload.gid = gidEl.value;
-            const { ok, body } = await put('/ad', payload);
-            if (ok) { toast('Реклама сохранена'); refresh(); }
-            else toast(body?.error || 'Не удалось сохранить', 'err');
-        };
-        const delBtn = ed.querySelector('[data-act="del"]');
-        if (delBtn) delBtn.onclick = async () => {
-            const gidEl = ed.querySelector('[data-field="gid"]');
-            if (!confirm('Удалить рекламу для этого сервера?')) return;
-            const { ok, body } = await del('/ad', { gid: gidEl ? gidEl.value : null });
-            if (ok) { toast('Удалено'); refresh(); }
-            else toast(body?.error || 'Не удалось удалить', 'err');
-        };
-    });
+// ---------- Per-server ad editor modal ----------
+function openServerAdModal(gid) {
+    const ad = state.ads.servers.find((a) => a.gid === gid);
+    const guildEntry = state.stats.perGuild.find((g) => g.gid === gid);
+    const name = ad?.name || guildEntry?.name || 'Unknown Server';
+    const text = ad?.text || '';
+    const stamp = ad?.updatedAt ? escapeHtml(relTime(ad.updatedAt)) : '';
+    $('#server-ad-modal-body').innerHTML = `
+      <div class="modal-body">
+        <h2>${escapeHtml(name)} <span class="uid">${escapeHtml(gid)}</span></h2>
+        <p class="muted" style="margin-bottom:12px;">
+          Персональная реклама этого сервера. Если оставить пустым и удалить — юзеры увидят глобальную.
+          ${stamp ? `Последнее обновление: ${stamp}.` : ''}
+        </p>
+        <div class="setting wide">
+          <label>Текст рекламы</label>
+          <textarea data-field="server-ad-text" placeholder="Ссылка-приглашение или готовый текст">${escapeHtml(text)}</textarea>
+          <div class="actions-row">
+            <button class="btn ghost sm" data-act="del" ${text ? '' : 'disabled'}>Удалить</button>
+            <button class="btn primary sm" data-act="save">Сохранить</button>
+          </div>
+        </div>
+      </div>`;
+    $('#server-ad-modal').hidden = false;
+
+    const saveBtn = $('#server-ad-modal-body [data-act="save"]');
+    const delBtn = $('#server-ad-modal-body [data-act="del"]');
+    saveBtn.onclick = async () => {
+        const newText = $('#server-ad-modal-body [data-field="server-ad-text"]').value;
+        const { ok, body } = await put('/ad', { gid, text: newText });
+        if (ok) { toast('Реклама сервера сохранена'); $('#server-ad-modal').hidden = true; refresh(); }
+        else toast(body?.error || 'Не удалось сохранить', 'err');
+    };
+    delBtn.onclick = async () => {
+        if (!confirm('Удалить персональную рекламу этого сервера? Юзеры будут видеть глобальную.')) return;
+        const { ok, body } = await del('/ad', { gid });
+        if (ok) { toast('Реклама сервера удалена'); $('#server-ad-modal').hidden = true; refresh(); }
+        else toast(body?.error || 'Не удалось удалить', 'err');
+    };
 }
 
-$('#ad-add').onclick = () => {
-    const gid = prompt('ID сервера (17–20 цифр):');
-    if (!gid) return;
-    if (!/^\d{17,20}$/.test(gid.trim())) { toast('Неверный ID', 'err'); return; }
-    const text = prompt('Реклама (ссылка или готовый текст):') || '';
-    put('/ad', { gid: gid.trim(), text }).then(({ ok, body }) => {
-        if (ok) { toast('Добавлено'); refresh(); }
-        else toast(body?.error || 'Не удалось добавить', 'err');
-    });
-};
+$('#server-ad-modal-close').addEventListener('click', () => { $('#server-ad-modal').hidden = true; });
+$('#server-ad-modal').addEventListener('click', (e) => { if (e.target.id === 'server-ad-modal') $('#server-ad-modal').hidden = true; });
 
 // ---------- Render: templates ----------
 function renderTemplates() {
