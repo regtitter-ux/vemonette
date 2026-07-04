@@ -296,6 +296,153 @@ $('#ads-off').addEventListener('change', async (e) => {
     else { e.target.checked = !off; toast(body?.error || 'Не удалось переключить', 'err'); }
 });
 
+// ---------- Balances ----------
+const balFilters = { q: '', has: 'all', sort: 'balance', dir: 'desc' };
+let balDebounce;
+
+function renderBalTotal(total) {
+    $('#bal-total').textContent = total != null ? `· ${total} юзеров` : '';
+}
+
+async function loadBalances() {
+    const qs = new URLSearchParams(balFilters).toString();
+    const { ok, body } = await get('/balances?' + qs);
+    if (!ok) { toast(body?.error || 'Не удалось загрузить балансы', 'err'); return; }
+    renderBalTotal(body.total);
+    renderBalTable(body.users);
+}
+
+function renderBalTable(users) {
+    const rows = users.map((u) => {
+        const bChip = u.balance > 0 ? 'green' : u.balance < 0 ? 'red' : '';
+        const reqBadge = u.hasRequisites ? '<span class="chip green">Реквизиты</span>' : '<span class="chip">Нет реквизитов</span>';
+        const auto = u.autoPayout ? '<span class="chip blue">Auto</span>' : '';
+        return `
+          <tr class="clickable" data-uid="${escapeHtml(u.userId)}">
+            <td>
+              <span class="uid">${escapeHtml(u.userId)}</span><br>
+              ${reqBadge} ${auto}
+            </td>
+            <td class="num"><span class="chip ${bChip}">$${u.balance.toFixed(2)}</span></td>
+            <td class="num">$${u.withdrawnTotal.toFixed(2)}</td>
+            <td class="num">${u.verifications.toLocaleString()}</td>
+            <td class="num">${u.referralsCount}</td>
+            <td class="num">$${u.bid.toFixed(2)}</td>
+          </tr>`;
+    }).join('');
+    $('#bal-table').innerHTML = `
+      <thead><tr>
+        <th>Юзер</th>
+        <th class="num">Баланс</th>
+        <th class="num">Выведено</th>
+        <th class="num">Верифаций</th>
+        <th class="num">Рефералов</th>
+        <th class="num">Bid</th>
+      </tr></thead>
+      <tbody>${rows || '<tr><td colspan="6" class="muted">Ничего не найдено под этот фильтр.</td></tr>'}</tbody>`;
+    $$('#bal-table tr[data-uid]').forEach((tr) => {
+        tr.onclick = () => openBalDetail(tr.dataset.uid);
+    });
+}
+
+async function openBalDetail(userId) {
+    $('#bal-modal-body').innerHTML = '<div class="modal-body muted">Загрузка…</div>';
+    $('#bal-modal').hidden = false;
+    const { ok, body } = await get('/balances/' + encodeURIComponent(userId));
+    if (!ok) {
+        $('#bal-modal-body').innerHTML = `<div class="modal-body">${escapeHtml(body?.error || 'Ошибка загрузки')}</div>`;
+        return;
+    }
+    $('#bal-modal-body').innerHTML = balDetailHtml(body);
+}
+
+function balDetailHtml(u) {
+    const kv = (k, v, mono) => `<div class="kv"><span class="k">${escapeHtml(k)}</span><span class="v${mono ? ' mono' : ''}">${escapeHtml(v)}</span></div>`;
+    const money = (n) => '$' + Number(n || 0).toFixed(2);
+
+    const perGuild = u.verifications.perGuild.length
+        ? u.verifications.perGuild.map((g) => `
+            <tr>
+              <td>${escapeHtml(g.name || 'Unknown Server')} <span class="gid">${g.gid}</span></td>
+              <td class="num">${g.hour}</td>
+              <td class="num">${g.day}</td>
+              <td class="num">${g.week}</td>
+              <td class="num">${g.month}</td>
+              <td class="num"><b>${g.total}</b></td>
+            </tr>`).join('')
+        : '<tr><td colspan="6" class="muted">Пока пусто.</td></tr>';
+
+    const wdList = u.withdrawals.length
+        ? u.withdrawals.map((w) => `
+            <div class="wd-row ${escapeHtml(w.status)}">
+              <div>
+                <span class="chip ${w.status === 'completed' ? 'green' : 'chip'}">${escapeHtml(w.status)}</span>
+                ${w.method ? `<span class="muted"> · ${escapeHtml(w.method)}</span>` : ''}
+                ${w.requisites ? `<div class="muted" style="font-size:12px;margin-top:4px;font-family:ui-monospace,Menlo,monospace;">${escapeHtml(w.requisites.slice(0, 100))}</div>` : ''}
+              </div>
+              <div class="amount">${money(w.amount)}</div>
+              <div class="date">${escapeHtml(relTime(w.completedAt || w.createdAt))}</div>
+            </div>`).join('')
+        : '<div class="muted">Выводов не было.</div>';
+
+    return `
+      <div class="modal-body">
+        <h2>Юзер <span class="uid">${escapeHtml(u.userId)}</span></h2>
+
+        <div class="kv-grid">
+          ${kv('Баланс', money(u.balance))}
+          ${kv('Всего выведено', money(u.withdrawnTotal))}
+          ${kv('Bid ($/100 clicks)', '$' + u.bid.toFixed(2))}
+          ${kv('Join bid ($/100 joins)', '$' + u.joinBid.toFixed(2))}
+          ${kv('Реф-бонус в пуле', money(u.refBonusAccrued))}
+          ${kv('Auto-payout', u.autoPayout ? 'Вкл' : 'Выкл')}
+          ${kv('Реферер', u.referrer || '—', true)}
+          ${kv('Рефералов', u.referrals.length)}
+          ${kv('Bot ID', u.botId || '—', true)}
+        </div>
+
+        <h3>Реквизиты</h3>
+        <div class="req">${u.requisites ? escapeHtml(u.requisites) : '<span class="muted">Не заданы.</span>'}</div>
+
+        ${u.referrals.length ? `
+        <h3>Приглашённые (${u.referrals.length})</h3>
+        <div class="req">${u.referrals.map(escapeHtml).join('\n')}</div>` : ''}
+
+        <h3>Верификации ${u.verifications.all.total.toLocaleString()} · час ${u.verifications.all.hour} · день ${u.verifications.all.day} · неделя ${u.verifications.all.week} · месяц ${u.verifications.all.month}</h3>
+        <div class="table-wrap"><table class="stat-table">
+          <thead><tr>
+            <th>Сервер</th><th class="num">1h</th><th class="num">1d</th><th class="num">7d</th><th class="num">30d</th><th class="num">Всего</th>
+          </tr></thead>
+          <tbody>${perGuild}</tbody>
+        </table></div>
+
+        <h3>История выводов</h3>
+        ${wdList}
+      </div>`;
+}
+
+$('#bal-q').addEventListener('input', (e) => {
+    balFilters.q = e.target.value.trim();
+    clearTimeout(balDebounce);
+    balDebounce = setTimeout(loadBalances, 250);
+});
+$('#bal-has').addEventListener('change', (e) => { balFilters.has = e.target.value; loadBalances(); });
+$('#bal-sort').addEventListener('change', (e) => { balFilters.sort = e.target.value; loadBalances(); });
+$('#bal-dir').addEventListener('click', (e) => {
+    const btn = e.currentTarget;
+    const next = btn.dataset.dir === 'desc' ? 'asc' : 'desc';
+    btn.dataset.dir = next;
+    btn.textContent = next === 'desc' ? '↓ desc' : '↑ asc';
+    balFilters.dir = next;
+    loadBalances();
+});
+$('#bal-modal-close').addEventListener('click', () => { $('#bal-modal').hidden = true; });
+$('#bal-modal').addEventListener('click', (e) => { if (e.target.id === 'bal-modal') $('#bal-modal').hidden = true; });
+
+// Load balances when the tab is first opened, and re-fetch on every open so
+// numbers stay fresh without a full page refresh.
+document.querySelector('[data-tab="balances"]').addEventListener('click', loadBalances);
+
 // ---------- Boot ----------
 (async () => {
     if (await checkAuth()) enterApp();

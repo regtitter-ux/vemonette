@@ -172,6 +172,73 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .switch-state { font-weight: 800; font-size: 18px; }
 .switch-since { font-size: 13px; }
 
+/* --- Filters bar --- */
+.filters {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;
+  background: var(--panel); border: 1px solid var(--stroke);
+  border-radius: 10px; padding: 12px 14px;
+}
+.filters input, .filters select {
+  background: var(--bg); color: var(--text);
+  border: 1px solid var(--stroke-2); border-radius: 8px;
+  padding: 8px 12px; font-size: 13.5px; font-family: inherit;
+}
+.filters input { flex: 1 1 200px; min-width: 160px; }
+.filters input:focus, .filters select:focus { outline: none; border-color: var(--blue); }
+.filters select { min-width: 160px; cursor: pointer; }
+
+/* Balance table extras */
+.stat-table tr.clickable { cursor: pointer; transition: background 0.12s; }
+.stat-table tr.clickable:hover td { background: rgba(34,168,240,0.06); }
+.stat-table td .uid { color: var(--muted); font-size: 12px; font-family: ui-monospace, Menlo, monospace; margin-left: 4px; }
+.stat-table .chip {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
+  background: rgba(255,255,255,0.06); color: var(--muted);
+}
+.stat-table .chip.green { background: rgba(87,242,135,0.14); color: var(--green); }
+.stat-table .chip.red   { background: rgba(237,66,69,0.14);  color: var(--red); }
+.stat-table .chip.blue  { background: rgba(34,168,240,0.14); color: var(--blue-2); }
+
+.sm { font-size: 12.5px; font-weight: 500; }
+
+.pane h1 .muted.sm { font-size: 14px; font-weight: 500; }
+
+/* --- Balance detail modal --- */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(4,8,15,0.7); backdrop-filter: blur(3px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.modal {
+  background: var(--panel); border: 1px solid var(--stroke-2);
+  border-radius: 14px; max-width: 780px; width: 100%;
+  max-height: 90vh; overflow: auto; position: relative;
+  box-shadow: 0 40px 80px -20px rgba(0,0,0,0.7);
+}
+.modal-close {
+  position: absolute; top: 12px; right: 14px; z-index: 1;
+  background: transparent; border: none; color: var(--muted);
+  font-size: 20px; cursor: pointer; padding: 6px 10px; border-radius: 6px;
+}
+.modal-close:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+.modal-body { padding: 24px 28px; }
+.modal h2 { font-size: 20px; margin-bottom: 12px; }
+.modal h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; margin: 18px 0 10px; }
+.modal .kv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px 20px; margin-bottom: 6px; }
+.modal .kv { display: flex; flex-direction: column; gap: 2px; }
+.modal .kv .k { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; }
+.modal .kv .v { font-weight: 700; font-size: 14.5px; word-break: break-all; }
+.modal .kv .v.mono { font-family: ui-monospace, Menlo, monospace; font-weight: 500; }
+.modal .req { background: var(--bg); border: 1px solid var(--stroke-2); border-radius: 8px; padding: 10px 12px; font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; white-space: pre-wrap; word-break: break-word; }
+.wd-row { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--stroke); font-size: 13.5px; }
+.wd-row:last-child { border-bottom: none; }
+.wd-row .amount { font-weight: 800; font-variant-numeric: tabular-nums; }
+.wd-row .date { color: var(--muted); font-size: 12px; }
+.wd-row.completed .amount { color: var(--green); }
+.wd-row.processing .amount { color: var(--amber); }
+
 /* --- Toast --- */
 .toast {
   position: fixed; bottom: 24px; right: 24px; z-index: 100;

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="./admin.css?v=3" />
+  <link rel="stylesheet" href="./admin.css?v=4" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -30,6 +30,7 @@
     <div class="brand-sm">Vemoni · Admin</div>
     <nav class="tabs">
       <button data-tab="stats" class="tab active">Статистика</button>
+      <button data-tab="balances" class="tab">Балансы</button>
       <button data-tab="ads" class="tab">Реклама</button>
       <button data-tab="templates" class="tab">Шаблоны</button>
       <button data-tab="toggle" class="tab">Кран</button>
@@ -44,6 +45,29 @@
       <div class="cards" id="stat-cards"></div>
       <h2>По серверам</h2>
       <div class="table-wrap"><table class="stat-table" id="stat-table"></table></div>
+    </section>
+
+    <!-- Balances (per-user aggregates + drill-down) -->
+    <section class="pane" data-pane="balances" hidden>
+      <h1>Балансы <span class="muted sm" id="bal-total"></span></h1>
+      <div class="filters">
+        <input id="bal-q" placeholder="Поиск по ID юзера…" />
+        <select id="bal-has">
+          <option value="all">Все</option>
+          <option value="positive">Положительные</option>
+          <option value="zero">Нулевые</option>
+          <option value="negative">Отрицательные</option>
+        </select>
+        <select id="bal-sort">
+          <option value="balance">Сорт: баланс</option>
+          <option value="withdrawn">Сорт: выведено</option>
+          <option value="verifications">Сорт: верификации</option>
+          <option value="referrals">Сорт: рефералы</option>
+          <option value="bid">Сорт: bid</option>
+        </select>
+        <button class="btn ghost sm" id="bal-dir" data-dir="desc">↓ desc</button>
+      </div>
+      <div class="table-wrap"><table class="stat-table" id="bal-table"></table></div>
     </section>
 
     <!-- Ads (owner's serverAds + global advText, raw input) -->
@@ -87,8 +111,15 @@
   </main>
 </div>
 
+<div id="bal-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <button class="modal-close" id="bal-modal-close" aria-label="Close">✕</button>
+    <div id="bal-modal-body">Загрузка…</div>
+  </div>
+</div>
+
 <div id="toast" class="toast" hidden></div>
 
-<script src="./admin.js?v=2"></script>
+<script src="./admin.js?v=4"></script>
 </body>
 </html>
