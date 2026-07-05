@@ -281,6 +281,7 @@ function renderAdStats() {
 
     list.className = 'ad-stat-list';
     list.innerHTML = creatives.map(adCreativeCard).join('');
+    wireCreativeLimits();
 }
 
 function adCreativeCard(c) {
@@ -291,13 +292,35 @@ function adCreativeCard(c) {
         `<span class="chip">${escapeHtml(g.name || 'Unknown')} · ${g.count}</span>`
     ).join(' ');
     const moreGuilds = c.guilds.length > 8 ? ` <span class="muted">…и ещё ${c.guilds.length - 8}</span>` : '';
+
+    const statusChips =
+        (c.active ? ' <span class="chip green">Сейчас показывается</span>' : '') +
+        (c.joinMode ? ' <span class="chip blue">Проверка на заход</span>' : '');
+
+    // Join-limit controls — only for creatives that are on air AND in
+    // join-check mode. Counter is net joins (leavers freed their slots).
+    let limitBlock = '';
+    if (c.active && c.joinMode) {
+        const capped = c.limit > 0 && c.total >= c.limit;
+        const counter = c.limit > 0
+            ? `<span class="chip ${capped ? 'red' : 'green'}">Заходы: ${c.total} / ${c.limit}${capped ? ' — лимит достигнут, реклама скрыта' : ''}</span>`
+            : `<span class="chip">Заходы: ${c.total} · без лимита</span>`;
+        limitBlock = `
+        <div class="ad-limit-row" data-limit-key="${escapeHtml(c.key)}">
+          ${counter}
+          <input type="number" min="0" step="1" data-limit-input placeholder="лимит, 0 = убрать" value="${c.limit || ''}" />
+          <button class="btn-mini" data-limit-save>Сохранить лимит</button>
+        </div>`;
+    }
+
     return `
       <div class="ad-stat-card">
         <div class="ad-stat-head">
           <div class="ad-stat-badge">
             <span class="chip blue">Креатив</span>
             <strong>#${escapeHtml(c.key)}</strong>
-            <span class="gid">на ${c.guilds.length} серв${c.guilds.length === 1 ? 'ере' : c.guilds.length < 5 ? 'ерах' : 'ерах'}</span>
+            <span class="gid">на ${c.guilds.length} серв${c.guilds.length === 1 ? 'ере' : 'ерах'}</span>
+            ${statusChips}
           </div>
           <div class="ad-stat-numbers">
             <span class="stat-pill"><em>1h</em>${c.hour}</span>
@@ -308,11 +331,26 @@ function adCreativeCard(c) {
           </div>
         </div>
         <pre class="ad-text-preview">${escapeHtml(preview)}</pre>
+        ${limitBlock}
         <div class="ad-stat-foot muted">
           ${guildChips}${moreGuilds}
           ${first ? ` · Впервые: ${first}` : ''}${last ? ` · Последний показ: ${last}` : ''}
         </div>
       </div>`;
+}
+
+function wireCreativeLimits() {
+    $$('[data-limit-key]').forEach((row) => {
+        const key = row.dataset.limitKey;
+        row.querySelector('[data-limit-save]').onclick = async () => {
+            const raw = row.querySelector('[data-limit-input]').value.trim();
+            const limit = raw === '' ? 0 : Math.floor(Number(raw));
+            if (!Number.isFinite(limit) || limit < 0) { toast('Лимит — целое число ≥ 0', 'err'); return; }
+            const { ok, body } = await put('/creative-limit', { key, limit });
+            if (ok) { toast(limit > 0 ? `Лимит ${limit} установлен` : 'Лимит снят'); refresh(); }
+            else toast(body?.error || 'Не удалось сохранить лимит', 'err');
+        };
+    });
 }
 
 // ---------- Per-server ad editor modal ----------
