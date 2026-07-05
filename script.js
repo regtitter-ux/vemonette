@@ -8,6 +8,7 @@ const SERVERS = [
   { name: 'Guild Tags | 55k+ Guilds Server Tags', members: 71156, color: '#8b5cf6', accent: 'linear-gradient(150deg,#8b5cf6,#4c2d8f)', letter: 'G', id: '724948162101293056', link: 'https://top.gg/discord/servers/724948162101293056', img: 'assets/gtl.svg' },
   { code: 'S7ftaq8qN', name: 'Server Tags', members: null, color: '#f59e0b', accent: 'linear-gradient(150deg,#f59e0b,#a85d06)', letter: 'S' },
   { code: 'lovecat', name: 'lovecat', members: null, color: '#f472b6', accent: 'linear-gradient(150deg,#f472b6,#8f2d5c)', letter: 'L' },
+  { code: '9eAUqwcuC', name: 'Server', members: null, color: '#22d3ee', accent: 'linear-gradient(150deg,#22d3ee,#0e6d80)', letter: 'S' },
 ];
 
 const fmt = (n) => (n == null ? '—' : n.toLocaleString('en-US'));
