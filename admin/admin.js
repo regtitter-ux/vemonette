@@ -107,6 +107,7 @@ async function refresh() {
     state = body;
     renderStats();
     renderGlobalAd();
+    renderAdStats();
     renderTemplates();
     renderToggle();
 }
@@ -259,6 +260,89 @@ function renderGlobalAd() {
         if (ok) { toast('Глобальная реклама очищена'); refresh(); }
         else toast(body?.error || 'Не удалось очистить', 'err');
     };
+}
+
+// ---------- Ad statistics — per-ad verification counts across time windows ----------
+function renderAdStats() {
+    const list = $('#adstats-list');
+    if (!list) return;
+    const perGuild = state.stats.perGuild;
+    const personalGids = new Set(state.ads.servers.map((a) => a.gid));
+    const offGids = new Set(
+        Object.entries(state.serverAdsOff || {}).filter(([, v]) => v).map(([g]) => g)
+    );
+    const globalAdsOff = Boolean(state.adsOff);
+    const emptyCounts = { hour: 0, day: 0, week: 0, month: 0, total: 0 };
+
+    const cards = [];
+
+    // Global ad: sums counts across every guild that would inherit it right
+    // now — i.e. no per-server ad, no kran-off flag, and the global kran is
+    // open. If globalAdsOff is on, we still show the ad text but count 0.
+    if (state.ads.default && state.ads.default.trim()) {
+        const applies = perGuild.filter((g) => !personalGids.has(g.gid) && !offGids.has(g.gid));
+        const counts = globalAdsOff
+            ? { ...emptyCounts }
+            : applies.reduce((sum, g) => ({
+                hour: sum.hour + g.hour, day: sum.day + g.day, week: sum.week + g.week,
+                month: sum.month + g.month, total: sum.total + g.total
+            }), { ...emptyCounts });
+        cards.push(adStatCard({
+            kind: 'global',
+            title: 'Глобальная реклама',
+            subtitle: globalAdsOff
+                ? `Кран закрыт глобально · применялась бы на ${applies.length} серверах`
+                : `Действует на ${applies.length} серверах`,
+            text: state.ads.default,
+            updatedAt: state.ads.defaultAt,
+            counts
+        }));
+    }
+
+    // Per-server ads — each one attributes only to its own guild.
+    for (const a of state.ads.servers) {
+        const g = perGuild.find((x) => x.gid === a.gid);
+        const off = offGids.has(a.gid) || globalAdsOff;
+        const counts = off ? { ...emptyCounts } : (g ? { hour: g.hour, day: g.day, week: g.week, month: g.month, total: g.total } : { ...emptyCounts });
+        cards.push(adStatCard({
+            kind: 'server',
+            title: a.name || 'Unknown Server',
+            subtitle: off
+                ? `${a.gid} · кран закрыт — реклама не показывается`
+                : a.gid,
+            text: a.text,
+            updatedAt: a.updatedAt,
+            counts
+        }));
+    }
+
+    list.className = 'ad-stat-list';
+    list.innerHTML = cards.join('') || '<div class="muted">Пока нет ни одной активной рекламы.</div>';
+}
+
+function adStatCard({ kind, title, subtitle, text, updatedAt, counts }) {
+    const chip = kind === 'global' ? '<span class="chip">Глобальная</span>' : '<span class="chip blue">Персональная</span>';
+    const preview = text.length > 800 ? text.slice(0, 800) + '\n…' : text;
+    const stamp = updatedAt ? escapeHtml(relTime(updatedAt)) : '';
+    return `
+      <div class="ad-stat-card">
+        <div class="ad-stat-head">
+          <div class="ad-stat-badge">
+            ${chip}
+            <strong>${escapeHtml(title)}</strong>
+            ${subtitle ? `<span class="gid">${escapeHtml(subtitle)}</span>` : ''}
+          </div>
+          <div class="ad-stat-numbers">
+            <span class="stat-pill"><em>1h</em>${counts.hour}</span>
+            <span class="stat-pill"><em>1d</em>${counts.day}</span>
+            <span class="stat-pill"><em>7d</em>${counts.week}</span>
+            <span class="stat-pill"><em>30d</em>${counts.month}</span>
+            <span class="stat-pill total"><em>Всего</em>${counts.total}</span>
+          </div>
+        </div>
+        <pre class="ad-text-preview">${escapeHtml(preview)}</pre>
+        ${stamp ? `<div class="ad-stat-foot muted">Обновлена ${stamp}</div>` : ''}
+      </div>`;
 }
 
 // ---------- Per-server ad editor modal ----------

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="./admin.css?v=7" />
+  <link rel="stylesheet" href="./admin.css?v=8" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -30,6 +30,7 @@
     <div class="brand-sm">Vemoni · Admin</div>
     <nav class="tabs">
       <button data-tab="stats" class="tab active">Статистика</button>
+      <button data-tab="adstats" class="tab">Стата рекламы</button>
       <button data-tab="balances" class="tab">Балансы</button>
       <button data-tab="templates" class="tab">Шаблоны</button>
       <button data-tab="toggle" class="tab">Кран</button>
@@ -48,6 +49,15 @@
 
       <h2>По серверам</h2>
       <div class="table-wrap"><table class="stat-table" id="stat-table"></table></div>
+    </section>
+
+    <!-- Ad statistics: for every active ad (global + per-server), the
+         verifications attributable to it in every time window. -->
+    <section class="pane" data-pane="adstats" hidden>
+      <h1>Стата рекламы</h1>
+      <p class="muted">Верификации на серверах, где сейчас действует эта реклама, в разбивке по окнам.
+        Серверы с закрытым краном (реклама выкл.) из подсчёта исключаются.</p>
+      <div id="adstats-list"></div>
     </section>
 
     <!-- Balances (per-user aggregates + drill-down) -->
@@ -119,6 +129,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="./admin.js?v=8"></script>
+<script src="./admin.js?v=9"></script>
 </body>
 </html>
