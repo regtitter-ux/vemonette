@@ -262,86 +262,56 @@ function renderGlobalAd() {
     };
 }
 
-// ---------- Ad statistics — per-ad verification counts across time windows ----------
+// ---------- Ad statistics — per-CREATIVE (unique rendered text) ----------
+// Backend attaches an adKey to every verified.json entry generated with an
+// ad shown (see touchCreative in adcreative.js), and returns adCreatives
+// aggregated by that key. Same text on many servers → one card summing
+// them; different text on one server → separate cards.
 function renderAdStats() {
     const list = $('#adstats-list');
     if (!list) return;
-    const perGuild = state.stats.perGuild;
-    const personalGids = new Set(state.ads.servers.map((a) => a.gid));
-    const offGids = new Set(
-        Object.entries(state.serverAdsOff || {}).filter(([, v]) => v).map(([g]) => g)
-    );
-    const globalAdsOff = Boolean(state.adsOff);
-    const emptyCounts = { hour: 0, day: 0, week: 0, month: 0, total: 0 };
+    const creatives = Array.isArray(state.adCreatives) ? state.adCreatives : [];
 
-    const cards = [];
-
-    // Global ad: sums counts across every guild that would inherit it right
-    // now — i.e. no per-server ad, no kran-off flag, and the global kran is
-    // open. If globalAdsOff is on, we still show the ad text but count 0.
-    if (state.ads.default && state.ads.default.trim()) {
-        const applies = perGuild.filter((g) => !personalGids.has(g.gid) && !offGids.has(g.gid));
-        const counts = globalAdsOff
-            ? { ...emptyCounts }
-            : applies.reduce((sum, g) => ({
-                hour: sum.hour + g.hour, day: sum.day + g.day, week: sum.week + g.week,
-                month: sum.month + g.month, total: sum.total + g.total
-            }), { ...emptyCounts });
-        cards.push(adStatCard({
-            kind: 'global',
-            title: 'Глобальная реклама',
-            subtitle: globalAdsOff
-                ? `Кран закрыт глобально · применялась бы на ${applies.length} серверах`
-                : `Действует на ${applies.length} серверах`,
-            text: state.ads.default,
-            updatedAt: state.ads.defaultAt,
-            counts
-        }));
-    }
-
-    // Per-server ads — each one attributes only to its own guild.
-    for (const a of state.ads.servers) {
-        const g = perGuild.find((x) => x.gid === a.gid);
-        const off = offGids.has(a.gid) || globalAdsOff;
-        const counts = off ? { ...emptyCounts } : (g ? { hour: g.hour, day: g.day, week: g.week, month: g.month, total: g.total } : { ...emptyCounts });
-        cards.push(adStatCard({
-            kind: 'server',
-            title: a.name || 'Unknown Server',
-            subtitle: off
-                ? `${a.gid} · кран закрыт — реклама не показывается`
-                : a.gid,
-            text: a.text,
-            updatedAt: a.updatedAt,
-            counts
-        }));
+    if (!creatives.length) {
+        list.className = 'ad-stat-list';
+        list.innerHTML = '<div class="muted">Пока ни одна верификация не была засчитана с рекламой ' +
+            '(либо никто не подтвердился, либо все прошли до включения per-creative трекинга).</div>';
+        return;
     }
 
     list.className = 'ad-stat-list';
-    list.innerHTML = cards.join('') || '<div class="muted">Пока нет ни одной активной рекламы.</div>';
+    list.innerHTML = creatives.map(adCreativeCard).join('');
 }
 
-function adStatCard({ kind, title, subtitle, text, updatedAt, counts }) {
-    const chip = kind === 'global' ? '<span class="chip">Глобальная</span>' : '<span class="chip blue">Персональная</span>';
-    const preview = text.length > 800 ? text.slice(0, 800) + '\n…' : text;
-    const stamp = updatedAt ? escapeHtml(relTime(updatedAt)) : '';
+function adCreativeCard(c) {
+    const preview = c.text.length > 800 ? c.text.slice(0, 800) + '\n…' : c.text;
+    const first = c.firstSeenAt ? escapeHtml(relTime(c.firstSeenAt)) : '';
+    const last  = c.lastSeenAt ? escapeHtml(relTime(c.lastSeenAt)) : '';
+    const guildChips = c.guilds.slice(0, 8).map((g) =>
+        `<span class="chip">${escapeHtml(g.name || 'Unknown')} · ${g.count}</span>`
+    ).join(' ');
+    const moreGuilds = c.guilds.length > 8 ? ` <span class="muted">…и ещё ${c.guilds.length - 8}</span>` : '';
     return `
       <div class="ad-stat-card">
         <div class="ad-stat-head">
           <div class="ad-stat-badge">
-            ${chip}
-            <strong>${escapeHtml(title)}</strong>
-            ${subtitle ? `<span class="gid">${escapeHtml(subtitle)}</span>` : ''}
+            <span class="chip blue">Креатив</span>
+            <strong>#${escapeHtml(c.key)}</strong>
+            <span class="gid">на ${c.guilds.length} серв${c.guilds.length === 1 ? 'ере' : c.guilds.length < 5 ? 'ерах' : 'ерах'}</span>
           </div>
           <div class="ad-stat-numbers">
-            <span class="stat-pill"><em>1h</em>${counts.hour}</span>
-            <span class="stat-pill"><em>1d</em>${counts.day}</span>
-            <span class="stat-pill"><em>7d</em>${counts.week}</span>
-            <span class="stat-pill"><em>30d</em>${counts.month}</span>
-            <span class="stat-pill total"><em>Всего</em>${counts.total}</span>
+            <span class="stat-pill"><em>1h</em>${c.hour}</span>
+            <span class="stat-pill"><em>1d</em>${c.day}</span>
+            <span class="stat-pill"><em>7d</em>${c.week}</span>
+            <span class="stat-pill"><em>30d</em>${c.month}</span>
+            <span class="stat-pill total"><em>Всего</em>${c.total}</span>
           </div>
         </div>
         <pre class="ad-text-preview">${escapeHtml(preview)}</pre>
-        ${stamp ? `<div class="ad-stat-foot muted">Обновлена ${stamp}</div>` : ''}
+        <div class="ad-stat-foot muted">
+          ${guildChips}${moreGuilds}
+          ${first ? ` · Впервые: ${first}` : ''}${last ? ` · Последний показ: ${last}` : ''}
+        </div>
       </div>`;
 }
 
