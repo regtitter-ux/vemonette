@@ -121,6 +121,7 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 }
 .stat-card .k { color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.05em; }
 .stat-card .v { font-size: 24px; font-weight: 800; margin-top: 6px; }
+.stat-card .v .v-sub { font-size: 13px; font-weight: 600; color: var(--muted); white-space: nowrap; }
 
 .table-wrap { overflow-x: auto; }
 .stat-table { width: 100%; border-collapse: collapse; font-size: 14px; }

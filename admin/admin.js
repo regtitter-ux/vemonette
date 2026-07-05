@@ -170,17 +170,21 @@ function startLiveRefresh() {
 // ---------- Render: stats ----------
 function renderStats() {
     const s = state.stats;
+    const g = s.gross || s.all;
+    // Gross up front, net-still-standing dimmed after the slash.
+    const vs = (grossV, netV) =>
+        `${Number(grossV).toLocaleString()} <span class="v-sub">/ ${Number(netV).toLocaleString()} stays</span>`;
     const cards = [
-        { k: 'Всего верифаций', v: s.all.total.toLocaleString() },
-        { k: 'За час',   v: s.all.hour },
-        { k: 'За сутки', v: s.all.day },
-        { k: 'За неделю', v: s.all.week },
-        { k: 'За месяц', v: s.all.month },
+        { k: 'Всего верифаций', html: vs(g.total, s.all.total) },
+        { k: 'За час',   html: vs(g.hour, s.all.hour) },
+        { k: 'За сутки', html: vs(g.day, s.all.day) },
+        { k: 'За неделю', html: vs(g.week, s.all.week) },
+        { k: 'За месяц', html: vs(g.month, s.all.month) },
         { k: 'Долг сервиса', v: '$' + s.outstanding.toFixed(2) },
         { k: 'Активных балансов', v: s.withBalance }
     ];
     $('#stat-cards').innerHTML = cards.map((c) =>
-        `<div class="stat-card"><div class="k">${escapeHtml(c.k)}</div><div class="v">${escapeHtml(c.v)}</div></div>`
+        `<div class="stat-card"><div class="k">${escapeHtml(c.k)}</div><div class="v">${c.html || escapeHtml(c.v)}</div></div>`
     ).join('');
 
     // Fast lookup: gid → owner's per-server ad text.
