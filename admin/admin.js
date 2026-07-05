@@ -122,8 +122,12 @@ async function refresh() {
 }
 
 async function enterApp() {
-    $('#login').hidden = true;
-    $('#app').hidden = false;
+    // Belt and suspenders: also force display via inline styles so a stale
+    // cached stylesheet (without the [hidden] override) can't keep the
+    // login screen stuck on top after a successful 2FA.
+    const login = $('#login'), app = $('#app');
+    login.hidden = true; login.style.display = 'none';
+    app.hidden = false; app.style.display = 'grid';
     await refresh();
     startLiveRefresh();
 }
@@ -206,15 +210,17 @@ function renderStats() {
         const ic = g.icon
             ? `<img class="srv-ic" src="${escapeHtml(g.icon)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=\\'srv-ic srv-ic-fallback\\'>${escapeHtml((g.name || '?')[0].toUpperCase())}</span>'" />`
             : `<span class="srv-ic srv-ic-fallback">${escapeHtml((g.name || '?')[0].toUpperCase())}</span>`;
+        const gr = g.gross || { hour: g.hour, day: g.day, week: g.week, month: g.month, total: g.total };
+        const cell = (grossV, netV) => `${grossV} <span class="v-sub">/ ${netV}</span>`;
         return `
             <tr>
                 <td><div class="srv-cell">${ic}<span>${escapeHtml(g.name || 'Unknown Server')}</span><button class="btn-mini copy-id" data-copy="${g.gid}" title="${g.gid}">Copy ID</button></div></td>
                 <td>${chip}</td>
-                <td class="num">${g.hour}</td>
-                <td class="num">${g.day}</td>
-                <td class="num">${g.week}</td>
-                <td class="num">${g.month}</td>
-                <td class="num"><b>${g.total}</b></td>
+                <td class="num">${cell(gr.hour, g.hour)}</td>
+                <td class="num">${cell(gr.day, g.day)}</td>
+                <td class="num">${cell(gr.week, g.week)}</td>
+                <td class="num">${cell(gr.month, g.month)}</td>
+                <td class="num"><b>${gr.total}</b> <span class="v-sub">/ ${g.total}</span></td>
                 <td><div class="actions">${kranBtn} ${adBtn}</div></td>
             </tr>`;
     }).join('');
