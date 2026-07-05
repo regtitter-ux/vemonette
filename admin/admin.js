@@ -58,6 +58,15 @@ function toast(msg, kind = 'ok') {
     toastT = setTimeout(() => { el.hidden = true; }, 3500);
 }
 
+// Delegated "Copy ID" handler — survives every live-refresh re-render.
+document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-copy]');
+    if (!btn) return;
+    navigator.clipboard.writeText(btn.dataset.copy)
+        .then(() => toast(`ID скопирован: ${btn.dataset.copy}`))
+        .catch(() => toast('Не удалось скопировать', 'err'));
+});
+
 // ---------- Login ----------
 async function checkAuth() {
     const { ok, body } = await get('/whoami');
@@ -190,9 +199,12 @@ function renderStats() {
             ? `<button class="btn-mini off" data-act="kran-on" data-gid="${g.gid}">Кран: Выкл</button>`
             : `<button class="btn-mini on" data-act="kran-off" data-gid="${g.gid}">Кран: Вкл</button>`;
         const adBtn = `<button class="btn-mini" data-act="ad-edit" data-gid="${g.gid}">Реклама…</button>`;
+        const ic = g.icon
+            ? `<img class="srv-ic" src="${escapeHtml(g.icon)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=\\'srv-ic srv-ic-fallback\\'>${escapeHtml((g.name || '?')[0].toUpperCase())}</span>'" />`
+            : `<span class="srv-ic srv-ic-fallback">${escapeHtml((g.name || '?')[0].toUpperCase())}</span>`;
         return `
             <tr>
-                <td>${escapeHtml(g.name || 'Unknown Server')} <span class="gid">${g.gid}</span></td>
+                <td><div class="srv-cell">${ic}<span>${escapeHtml(g.name || 'Unknown Server')}</span><button class="btn-mini copy-id" data-copy="${g.gid}" title="${g.gid}">Copy ID</button></div></td>
                 <td>${chip}</td>
                 <td class="num">${g.hour}</td>
                 <td class="num">${g.day}</td>
