@@ -617,6 +617,8 @@ function renderShares() {
     const fundBtn = $('#share-cards [data-card-action="cryptofund"]');
     if (fundBtn) fundBtn.onclick = openCryptofundModal;
 
+    // Editing shares is owner-only; admins see the list read-only.
+    const canEdit = effRole() === 'owner';
     const rows = sh.holders.map((h) => `
         <tr>
           <td><div class="srv-cell"><span>${escapeHtml(h.username || 'Неизвестный')}</span><button class="btn-mini copy-id" data-copy="${h.userId}" title="${h.userId}">Copy ID</button></div></td>
@@ -626,22 +628,22 @@ function renderShares() {
           <td class="num">$${Number(h.week).toFixed(2)}</td>
           <td class="num">$${Number(h.month).toFixed(2)}</td>
           <td class="num">$${Number(h.earnedTotal).toFixed(2)}</td>
-          <td>
+          ${canEdit ? `<td>
             <div class="ad-limit-row" data-share-uid="${h.userId}" style="margin:0;padding:6px 8px;background:transparent;border:none;">
               <input type="number" min="0" max="100" step="0.5" data-share-pct value="${h.pct}" style="width:80px" />
               <button class="btn-mini" data-share-save>Сохранить %</button>
               <button class="btn-mini off" data-share-del>Убрать</button>
             </div>
-          </td>
+          </td>` : ''}
         </tr>`).join('');
     $('#share-table').innerHTML = `
         <thead><tr>
           <th>Владелец</th><th class="num">Доля</th><th class="num">Баланс</th>
           <th class="num">День</th><th class="num">Неделя</th><th class="num">Месяц</th><th class="num">Всего</th>
-          <th>Действия</th>
+          ${canEdit ? '<th>Действия</th>' : ''}
         </tr></thead>
-        <tbody>${rows || '<tr><td colspan="8" class="muted">Долей пока нет</td></tr>'}</tbody>`;
-    wireShareActions();
+        <tbody>${rows || `<tr><td colspan="${canEdit ? 8 : 7}" class="muted">Долей пока нет</td></tr>`}</tbody>`;
+    if (canEdit) wireShareActions();
 }
 
 async function saveShare(userId, pct) {
