@@ -192,9 +192,7 @@ function renderStats() {
             { k: 'За час',   v: one(n.hour) },
             { k: 'За сутки', v: one(n.day) },
             { k: 'За неделю', v: one(n.week) },
-            { k: 'За месяц', v: one(n.month) },
-            { k: 'Долг сервиса', v: '$' + s.outstanding.toFixed(2) },
-            { k: 'Активных балансов', v: s.withBalance }
+            { k: 'За месяц', v: one(n.month) }
         ];
     } else {
         const g = s.gross || s.all;
@@ -206,9 +204,7 @@ function renderStats() {
             { k: 'За час',   html: vs(g.hour, s.all.hour) },
             { k: 'За сутки', html: vs(g.day, s.all.day) },
             { k: 'За неделю', html: vs(g.week, s.all.week) },
-            { k: 'За месяц', html: vs(g.month, s.all.month) },
-            { k: 'Долг сервиса', v: '$' + s.outstanding.toFixed(2) },
-            { k: 'Активных балансов', v: s.withBalance }
+            { k: 'За месяц', html: vs(g.month, s.all.month) }
         ];
     }
     $('#stat-cards').innerHTML = cards.map((c) =>
@@ -518,6 +514,7 @@ function renderShares() {
         { k: 'Выручка с заходов', v: money(r.total) },
         { k: 'Выплачено партнёрам (заходы)', v: money(c.total) },
         { k: `Эквайринг (${acqPct}%)`, v: money(acq.total) },
+        { k: 'Долг сервиса', v: money(debt) },
         {
             k: 'Баланс Crypto Pay',
             v: cryptoBal == null ? '—' : money(cryptoBal),
