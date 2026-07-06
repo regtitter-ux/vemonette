@@ -194,8 +194,7 @@ function renderStats() {
             { k: 'За неделю', v: one(n.week) },
             { k: 'За месяц', v: one(n.month) },
             { k: 'Долг сервиса', v: '$' + s.outstanding.toFixed(2) },
-            { k: 'Активных балансов', v: s.withBalance },
-            { k: 'Выплачено партнёрам', v: '$' + Number(s.totalPaid || 0).toFixed(2) }
+            { k: 'Активных балансов', v: s.withBalance }
         ];
     } else {
         const g = s.gross || s.all;
@@ -209,8 +208,7 @@ function renderStats() {
             { k: 'За неделю', html: vs(g.week, s.all.week) },
             { k: 'За месяц', html: vs(g.month, s.all.month) },
             { k: 'Долг сервиса', v: '$' + s.outstanding.toFixed(2) },
-            { k: 'Активных балансов', v: s.withBalance },
-            { k: 'Выплачено партнёрам', v: '$' + Number(s.totalPaid || 0).toFixed(2) }
+            { k: 'Активных балансов', v: s.withBalance }
         ];
     }
     $('#stat-cards').innerHTML = cards.map((c) =>
@@ -502,16 +500,18 @@ function renderShares() {
     if (!sh) return;
     $('#share-price').textContent = `$${sh.salePricePer100} / 100`;
 
-    const p = sh.profit, r = sh.revenue, c = sh.partnerCost;
+    const p = sh.profit, r = sh.revenue, c = sh.partnerCost, acq = sh.acquiring || { total: 0 };
     const money = (v) => '$' + Number(v || 0).toFixed(2);
     const pctWarn = Math.abs(sh.totalPct - 100) > 0.001;
+    const acqPct = Math.round((sh.acquiringRate || 0.03) * 100);
     const cards = [
-        { k: 'Доход сервиса (всего)', v: money(p.total) },
+        { k: 'Чистый доход (всего)', v: money(p.total) },
         { k: 'Доход за день', v: money(p.day) },
         { k: 'Доход за неделю', v: money(p.week) },
         { k: 'Доход за месяц', v: money(p.month) },
         { k: 'Выручка с заходов', v: money(r.total) },
         { k: 'Выплачено партнёрам (заходы)', v: money(c.total) },
+        { k: `Эквайринг (${acqPct}%)`, v: money(acq.total) },
         { k: 'Сумма долей', v: `${sh.totalPct}%`, warn: pctWarn }
     ];
     $('#share-cards').innerHTML = cards.map((cd) =>
@@ -520,7 +520,7 @@ function renderShares() {
 
     const rows = sh.holders.map((h) => `
         <tr>
-          <td><div class="srv-cell"><span>${escapeHtml(h.userId)}</span><button class="btn-mini copy-id" data-copy="${h.userId}" title="${h.userId}">Copy ID</button></div></td>
+          <td><div class="srv-cell"><span>${escapeHtml(h.username || 'Неизвестный')}</span><button class="btn-mini copy-id" data-copy="${h.userId}" title="${h.userId}">Copy ID</button></div></td>
           <td class="num"><b>${h.pct}%</b></td>
           <td class="num">$${Number(h.balance).toFixed(2)}</td>
           <td class="num">$${Number(h.day).toFixed(2)}</td>

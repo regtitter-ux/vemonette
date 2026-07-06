@@ -70,7 +70,7 @@
     <!-- Shares (доли) — revenue split among holders -->
     <section class="pane" data-pane="shares" hidden>
       <h1>Доли <button class="btn primary sm" id="share-add">＋ Добавить долю</button></h1>
-      <p class="muted">1% доли = 1% чистого дохода сервиса. Доход = продажа заходов (<span id="share-price">$10 / 100</span> с проверкой на заход) минус выплата партнёрам за эти заходы. Прибыль каждого захода делится по долям и начисляется на баланс — дальше обычная выплата (запрос на вывод от $10 или автовывод).</p>
+      <p class="muted">1% доли = 1% чистого дохода сервиса. Доход = продажа заходов (<span id="share-price">$10 / 100</span> с проверкой на заход) минус выплата партнёрам и эквайринг (3% от выплат). Чистая прибыль каждого захода делится по долям и начисляется на баланс — дальше обычная выплата (запрос на вывод от $10 или автовывод).</p>
       <div class="cards" id="share-cards"></div>
       <h2>Владельцы долей</h2>
       <div class="table-wrap"><table class="stat-table" id="share-table"></table></div>
@@ -145,6 +145,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="./admin.js?v=17"></script>
+<script src="./admin.js?v=19"></script>
 </body>
 </html>
