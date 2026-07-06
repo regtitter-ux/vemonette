@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="./admin.css?v=12" />
+  <link rel="stylesheet" href="./admin.css?v=13" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -41,7 +41,13 @@
   <main class="content">
     <!-- Stats -->
     <section class="pane" data-pane="stats">
-      <h1>Статистика</h1>
+      <h1>Статистика
+        <span class="mode-switch" id="stat-mode">
+          <button data-mode="ads" class="active">С рекламой</button>
+          <button data-mode="noad">Без рекламы</button>
+        </span>
+      </h1>
+      <p class="muted mode-hint" id="stat-mode-hint" hidden>Верификации, прошедшие без показа рекламы — органическая активность серверов. Помогает оценить, сколько заходов (stays) можно продать следующим заказом.</p>
       <div class="cards" id="stat-cards"></div>
 
       <h2>Глобальная реклама</h2>
@@ -129,6 +135,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="./admin.js?v=14"></script>
+<script src="./admin.js?v=16"></script>
 </body>
 </html>

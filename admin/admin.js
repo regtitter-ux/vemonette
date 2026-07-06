@@ -172,21 +172,46 @@ function startLiveRefresh() {
 }
 
 // ---------- Render: stats ----------
+// Two modes: 'ads' (verifications with an ad shown — gross / net stays,
+// the paid-order view) and 'noad' (verifications where NO ad was shown —
+// organic activity, a single count to gauge sellable volume next order).
+let statMode = 'ads';
+
 function renderStats() {
     const s = state.stats;
-    const g = s.gross || s.all;
-    // Gross up front, net-still-standing dimmed after the slash.
-    const vs = (grossV, netV) =>
-        `${Number(grossV).toLocaleString()} <span class="v-sub">/ ${Number(netV).toLocaleString()} stays</span>`;
-    const cards = [
-        { k: 'Всего верифаций', html: vs(g.total, s.all.total) },
-        { k: 'За час',   html: vs(g.hour, s.all.hour) },
-        { k: 'За сутки', html: vs(g.day, s.all.day) },
-        { k: 'За неделю', html: vs(g.week, s.all.week) },
-        { k: 'За месяц', html: vs(g.month, s.all.month) },
-        { k: 'Долг сервиса', v: '$' + s.outstanding.toFixed(2) },
-        { k: 'Активных балансов', v: s.withBalance }
-    ];
+    const noad = statMode === 'noad';
+    $('#stat-mode-hint').hidden = !noad;
+
+    let cards;
+    if (noad) {
+        const n = s.noAd || { hour: 0, day: 0, week: 0, month: 0, total: 0 };
+        const one = (v) => Number(v).toLocaleString();
+        cards = [
+            { k: 'Верифаций без рекламы', v: one(n.total) },
+            { k: 'За час',   v: one(n.hour) },
+            { k: 'За сутки', v: one(n.day) },
+            { k: 'За неделю', v: one(n.week) },
+            { k: 'За месяц', v: one(n.month) },
+            { k: 'Долг сервиса', v: '$' + s.outstanding.toFixed(2) },
+            { k: 'Активных балансов', v: s.withBalance },
+            { k: 'Выплачено партнёрам', v: '$' + Number(s.totalPaid || 0).toFixed(2) }
+        ];
+    } else {
+        const g = s.gross || s.all;
+        // Gross up front, net-still-standing dimmed after the slash.
+        const vs = (grossV, netV) =>
+            `${Number(grossV).toLocaleString()} <span class="v-sub">/ ${Number(netV).toLocaleString()} stays</span>`;
+        cards = [
+            { k: 'Всего верифаций', html: vs(g.total, s.all.total) },
+            { k: 'За час',   html: vs(g.hour, s.all.hour) },
+            { k: 'За сутки', html: vs(g.day, s.all.day) },
+            { k: 'За неделю', html: vs(g.week, s.all.week) },
+            { k: 'За месяц', html: vs(g.month, s.all.month) },
+            { k: 'Долг сервиса', v: '$' + s.outstanding.toFixed(2) },
+            { k: 'Активных балансов', v: s.withBalance },
+            { k: 'Выплачено партнёрам', v: '$' + Number(s.totalPaid || 0).toFixed(2) }
+        ];
+    }
     $('#stat-cards').innerHTML = cards.map((c) =>
         `<div class="stat-card"><div class="k">${escapeHtml(c.k)}</div><div class="v">${c.html || escapeHtml(c.v)}</div></div>`
     ).join('');
@@ -195,7 +220,13 @@ function renderStats() {
     const adByGid = new Map(state.ads.servers.map((a) => [a.gid, a]));
     const offByGid = state.serverAdsOff || {};
 
-    const rows = s.perGuild.map((g) => {
+    // In "без рекламы" mode, sort the table by organic volume so the most
+    // active servers (best sales candidates) float to the top.
+    const guilds = noad
+        ? [...s.perGuild].sort((a, b) => (b.noAd?.total || 0) - (a.noAd?.total || 0))
+        : s.perGuild;
+
+    const rows = guilds.map((g) => {
         const off = Boolean(offByGid[g.gid]);
         const hasPersonal = adByGid.has(g.gid);
         const chip = off
@@ -210,17 +241,31 @@ function renderStats() {
         const ic = g.icon
             ? `<img class="srv-ic" src="${escapeHtml(g.icon)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=\\'srv-ic srv-ic-fallback\\'>${escapeHtml((g.name || '?')[0].toUpperCase())}</span>'" />`
             : `<span class="srv-ic srv-ic-fallback">${escapeHtml((g.name || '?')[0].toUpperCase())}</span>`;
-        const gr = g.gross || { hour: g.hour, day: g.day, week: g.week, month: g.month, total: g.total };
-        const cell = (grossV, netV) => `${grossV} <span class="v-sub">/ ${netV}</span>`;
-        return `
-            <tr>
-                <td><div class="srv-cell">${ic}<span>${escapeHtml(g.name || 'Unknown Server')}</span><button class="btn-mini copy-id" data-copy="${g.gid}" title="${g.gid}">Copy ID</button></div></td>
-                <td>${chip}</td>
+
+        let cells;
+        if (noad) {
+            const n = g.noAd || { hour: 0, day: 0, week: 0, month: 0, total: 0 };
+            cells = `
+                <td class="num">${n.hour}</td>
+                <td class="num">${n.day}</td>
+                <td class="num">${n.week}</td>
+                <td class="num">${n.month}</td>
+                <td class="num"><b>${n.total}</b></td>`;
+        } else {
+            const gr = g.gross || { hour: g.hour, day: g.day, week: g.week, month: g.month, total: g.total };
+            const cell = (grossV, netV) => `${grossV} <span class="v-sub">/ ${netV}</span>`;
+            cells = `
                 <td class="num">${cell(gr.hour, g.hour)}</td>
                 <td class="num">${cell(gr.day, g.day)}</td>
                 <td class="num">${cell(gr.week, g.week)}</td>
                 <td class="num">${cell(gr.month, g.month)}</td>
-                <td class="num"><b>${gr.total}</b> <span class="v-sub">/ ${g.total}</span></td>
+                <td class="num"><b>${gr.total}</b> <span class="v-sub">/ ${g.total}</span></td>`;
+        }
+        return `
+            <tr>
+                <td><div class="srv-cell">${ic}<span>${escapeHtml(g.name || 'Unknown Server')}</span><button class="btn-mini copy-id" data-copy="${g.gid}" title="${g.gid}">Copy ID</button></div></td>
+                <td>${chip}</td>
+                ${cells}
                 <td><div class="actions">${kranBtn} ${adBtn}</div></td>
             </tr>`;
     }).join('');
@@ -234,6 +279,16 @@ function renderStats() {
     `;
     wireStatsActions();
 }
+
+// Wire the С рекламой / Без рекламы switch (once — it lives outside the
+// re-rendered content).
+$$('#stat-mode button').forEach((btn) => {
+    btn.onclick = () => {
+        statMode = btn.dataset.mode;
+        $$('#stat-mode button').forEach((b) => b.classList.toggle('active', b === btn));
+        if (state) renderStats();
+    };
+});
 
 function wireStatsActions() {
     $$('#stat-table [data-act]').forEach((btn) => {
