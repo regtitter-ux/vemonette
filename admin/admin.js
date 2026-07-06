@@ -152,7 +152,7 @@ function isEditingSomething() {
     return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
 }
 function anyModalOpen() {
-    return !$('#bal-modal').hidden || !$('#server-ad-modal').hidden;
+    return !$('#bal-modal').hidden || !$('#server-ad-modal').hidden || !$('#cryptofund-modal').hidden;
 }
 async function liveTick() {
     if (document.hidden || isEditingSomething() || anyModalOpen()) return;
@@ -309,7 +309,7 @@ function renderGlobalAd() {
 
     // Join-limit row for the global creative — only meaningful when there IS
     // a global ad and it has a resolvable rendered key.
-    let limitBlock = '';
+    let limitBlock = '', footer = '';
     if (a.default && a.default.trim() && a.defaultKey) {
         const lim = Number(a.defaultLimit) || 0;
         const cnt = Number(a.defaultCount) || 0;
@@ -322,7 +322,13 @@ function renderGlobalAd() {
           ${counter}
           <input type="number" min="0" step="1" data-limit-input placeholder="лимит, 0 = убрать" value="${lim || ''}" />
           <button class="btn-mini" data-limit-save>Сохранить лимит</button>
+          <button class="btn-mini off" data-limit-reset title="Обнулить счётчик заходов для новой рекламы">Сбросить счётчик</button>
         </div>`;
+        const first = a.defaultFirstAt ? escapeHtml(relTime(a.defaultFirstAt)) : '';
+        const last = a.defaultLastAt ? escapeHtml(relTime(a.defaultLastAt)) : '';
+        if (first || last) {
+            footer = `<div class="ad-stat-foot muted">${first ? `Впервые: ${first}` : ''}${first && last ? ' · ' : ''}${last ? `Последний показ: ${last}` : ''} <span style="opacity:.7">· «Впервые» считается с момента сброса счётчика инвайтов</span></div>`;
+        }
     }
 
     $('#stats-global-ad').innerHTML = `
@@ -338,6 +344,7 @@ function renderGlobalAd() {
           <span class="spacer" style="flex:1"></span>
           <span class="muted">{link} подставляется из шаблона при показе.</span>
         </div>
+        ${footer}
       </div>`;
     const ed = $('[data-editor="ad-global"]');
     ed.querySelector('[data-act="save"]').onclick = async () => {
@@ -391,18 +398,20 @@ function adCreativeCard(c) {
         (c.joinMode ? ' <span class="chip blue">Проверка на заход</span>' : '');
 
     // Join-limit controls — only for creatives that are on air AND in
-    // join-check mode. Counter is net joins (leavers freed their slots).
+    // join-check mode. Counter is net joins since reset (leavers freed slots).
     let limitBlock = '';
     if (c.active && c.joinMode) {
-        const capped = c.limit > 0 && c.total >= c.limit;
+        const cnt = Number(c.limitCount ?? c.total);
+        const capped = c.limit > 0 && cnt >= c.limit;
         const counter = c.limit > 0
-            ? `<span class="chip ${capped ? 'red' : 'green'}">Заходы: ${c.total} / ${c.limit}${capped ? ' — лимит достигнут, реклама скрыта' : ''}</span>`
-            : `<span class="chip">Заходы: ${c.total} · без лимита</span>`;
+            ? `<span class="chip ${capped ? 'red' : 'green'}">Заходы: ${cnt} / ${c.limit}${capped ? ' — лимит достигнут, реклама скрыта' : ''}</span>`
+            : `<span class="chip">Заходы: ${cnt} · без лимита</span>`;
         limitBlock = `
         <div class="ad-limit-row" data-limit-key="${escapeHtml(c.key)}">
           ${counter}
           <input type="number" min="0" step="1" data-limit-input placeholder="лимит, 0 = убрать" value="${c.limit || ''}" />
           <button class="btn-mini" data-limit-save>Сохранить лимит</button>
+          <button class="btn-mini off" data-limit-reset title="Обнулить счётчик заходов для новой рекламы">Сбросить счётчик</button>
         </div>`;
     }
 
@@ -442,6 +451,13 @@ function wireCreativeLimits() {
             const { ok, body } = await put('/creative-limit', { key, limit });
             if (ok) { toast(limit > 0 ? `Лимит ${limit} установлен` : 'Лимит снят'); refresh(); }
             else toast(body?.error || 'Не удалось сохранить лимит', 'err');
+        };
+        const resetBtn = row.querySelector('[data-limit-reset]');
+        if (resetBtn) resetBtn.onclick = async () => {
+            if (!confirm('Обнулить счётчик заходов? Новая реклама начнёт отсчёт с нуля.')) return;
+            const { ok, body } = await post('/creative-reset', { key });
+            if (ok) { toast('Счётчик сброшен'); refresh(); }
+            else toast(body?.error || 'Не удалось сбросить', 'err');
         };
     });
 }
@@ -519,15 +535,19 @@ function renderShares() {
             k: 'Баланс Crypto Pay',
             v: cryptoBal == null ? '—' : money(cryptoBal),
             warn: needTopUp,
+            btn: 'cryptofund',
             note: cryptoBal == null ? 'не настроен' : needTopUp ? `🔴 Пополни: меньше долга ${money(debt)}` : '🟢 Хватает на выплаты'
         },
         { k: 'Сумма долей', v: `${sh.totalPct}%`, warn: pctWarn }
     ];
-    $('#share-cards').innerHTML = cards.map((cd) =>
-        `<div class="stat-card"><div class="k">${escapeHtml(cd.k)}</div>` +
-        `<div class="v"${cd.warn ? ' style="color:var(--amber)"' : ''}>${escapeHtml(cd.v)}</div>` +
-        `${cd.note ? `<div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0;font-size:11.5px">${escapeHtml(cd.note)}</div>` : ''}</div>`
-    ).join('');
+    $('#share-cards').innerHTML = cards.map((cd) => {
+        const btn = cd.btn ? ` <button class="card-add" data-card-action="${cd.btn}" title="Пополнить">＋</button>` : '';
+        return `<div class="stat-card"><div class="k">${escapeHtml(cd.k)}</div>` +
+            `<div class="v"${cd.warn ? ' style="color:var(--amber)"' : ''}>${escapeHtml(cd.v)}${btn}</div>` +
+            `${cd.note ? `<div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0;font-size:11.5px">${escapeHtml(cd.note)}</div>` : ''}</div>`;
+    }).join('');
+    const fundBtn = $('#share-cards [data-card-action="cryptofund"]');
+    if (fundBtn) fundBtn.onclick = openCryptofundModal;
 
     const rows = sh.holders.map((h) => `
         <tr>
@@ -587,6 +607,35 @@ $('#share-add').onclick = () => {
     if (!Number.isFinite(pct) || pct < 0 || pct > 100) { toast('Доля — число 0..100', 'err'); return; }
     saveShare(uid.trim(), pct);
 };
+
+// ---------- Crypto Pay top-up modal ----------
+function openCryptofundModal() {
+    $('#cryptofund-amount').value = '';
+    $('#cryptofund-result').innerHTML = '';
+    $('#cryptofund-modal').hidden = false;
+    $('#cryptofund-amount').focus();
+}
+$('#cryptofund-close').addEventListener('click', () => { $('#cryptofund-modal').hidden = true; });
+$('#cryptofund-modal').addEventListener('click', (e) => { if (e.target.id === 'cryptofund-modal') $('#cryptofund-modal').hidden = true; });
+$('#cryptofund-create').addEventListener('click', async () => {
+    const amount = Number($('#cryptofund-amount').value.replace(',', '.'));
+    if (!Number.isFinite(amount) || amount <= 0) { toast('Введите сумму больше 0', 'err'); return; }
+    $('#cryptofund-result').innerHTML = '<span class="muted">Создаём счёт…</span>';
+    const { ok, body } = await post('/cryptofund', { amount });
+    if (!ok || !body?.url) {
+        $('#cryptofund-result').innerHTML = `<span style="color:var(--red)">${escapeHtml(body?.error || 'Не удалось создать счёт')}</span>`;
+        return;
+    }
+    $('#cryptofund-result').innerHTML = `
+      <div class="req" style="margin-top:6px">
+        <div class="muted" style="margin-bottom:8px">Счёт на $${escapeHtml(body.amount)} готов. Оплати по ссылке из @CryptoBot:</div>
+        <a href="${escapeHtml(body.url)}" target="_blank" rel="noopener" style="color:var(--blue-2);word-break:break-all">${escapeHtml(body.url)}</a>
+        <div class="actions-row" style="margin-top:10px">
+          <button class="btn-mini" data-copy="${escapeHtml(body.url)}">Copy ссылку</button>
+        </div>
+      </div>
+      <div class="muted" style="margin-top:8px;font-size:12px">После оплаты баланс обновится в течение ~минуты.</div>`;
+});
 
 // ---------- Render: templates ----------
 function renderTemplates() {

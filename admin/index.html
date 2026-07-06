@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="./admin.css?v=14" />
+  <link rel="stylesheet" href="./admin.css?v=15" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -136,6 +136,22 @@
   </div>
 </div>
 
+<div id="cryptofund-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <button class="modal-close" id="cryptofund-close" aria-label="Close">✕</button>
+    <div class="modal-body">
+      <h2>Пополнить Crypto Pay</h2>
+      <p class="muted" style="margin-bottom:14px">Создаётся счёт USDT — оплати его из своего @CryptoBot кошелька, и баланс приложения пополнится (комиссия ~3%).</p>
+      <div class="setting wide">
+        <label>Сумма, $</label>
+        <input type="number" id="cryptofund-amount" min="1" step="1" placeholder="например 50" />
+        <div class="actions-row"><button class="btn primary sm" id="cryptofund-create">Создать счёт</button></div>
+      </div>
+      <div id="cryptofund-result"></div>
+    </div>
+  </div>
+</div>
+
 <div id="bal-modal" class="modal-overlay" hidden>
   <div class="modal">
     <button class="modal-close" id="bal-modal-close" aria-label="Close">✕</button>
@@ -145,6 +161,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="./admin.js?v=21"></script>
+<script src="./admin.js?v=23"></script>
 </body>
 </html>
