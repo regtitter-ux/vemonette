@@ -530,13 +530,13 @@ function renderShares() {
         { k: 'Выручка с заходов', v: money(r.total) },
         { k: 'Выплачено партнёрам (заходы)', v: money(c.total) },
         { k: `Эквайринг (${acqPct}%)`, v: money(acq.total) },
-        { k: 'Долг сервиса', v: money(debt) },
+        { k: 'Капитализация', v: money(debt) },
         {
             k: 'Баланс Crypto Pay',
             v: cryptoBal == null ? '—' : money(cryptoBal),
             warn: needTopUp,
             btn: 'cryptofund',
-            note: cryptoBal == null ? 'не настроен' : needTopUp ? `🔴 Пополни: меньше долга ${money(debt)}` : '🟢 Хватает на выплаты'
+            note: cryptoBal == null ? 'не настроен' : needTopUp ? `🔴 Пополни: меньше капитализации ${money(debt)}` : '🟢 Хватает на выплаты'
         },
         { k: 'Сумма долей', v: `${sh.totalPct}%`, warn: pctWarn }
     ];
