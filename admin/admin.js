@@ -521,7 +521,6 @@ function wireCreativeLimits() {
         };
         const resetBtn = row.querySelector('[data-limit-reset]');
         if (resetBtn) resetBtn.onclick = async () => {
-            if (!confirm('Обнулить счётчик заходов? Новая реклама начнёт отсчёт с нуля.')) return;
             const { ok, body } = await post('/creative-reset', { key });
             if (ok) { toast('Счётчик сброшен'); refresh(); }
             else toast(body?.error || 'Не удалось сбросить', 'err');
