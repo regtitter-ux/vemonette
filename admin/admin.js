@@ -117,6 +117,7 @@ async function refresh() {
     renderStats();
     renderGlobalAd();
     renderAdStats();
+    renderShares();
     renderTemplates();
     renderToggle();
 }
@@ -311,12 +312,32 @@ function wireStatsActions() {
 function renderGlobalAd() {
     const a = state.ads;
     const stamp = a.defaultAt ? `<span class="muted"> · ${escapeHtml(relTime(a.defaultAt))}</span>` : '';
+
+    // Join-limit row for the global creative — only meaningful when there IS
+    // a global ad and it has a resolvable rendered key.
+    let limitBlock = '';
+    if (a.default && a.default.trim() && a.defaultKey) {
+        const lim = Number(a.defaultLimit) || 0;
+        const cnt = Number(a.defaultCount) || 0;
+        const capped = lim > 0 && cnt >= lim;
+        const counter = lim > 0
+            ? `<span class="chip ${capped ? 'red' : 'green'}">Заходы: ${cnt} / ${lim}${capped ? ' — лимит достигнут, реклама скрыта' : ''}</span>`
+            : `<span class="chip">Заходы: ${cnt} · без лимита</span>`;
+        limitBlock = `
+        <div class="ad-limit-row" data-limit-key="${escapeHtml(a.defaultKey)}">
+          ${counter}
+          <input type="number" min="0" step="1" data-limit-input placeholder="лимит, 0 = убрать" value="${lim || ''}" />
+          <button class="btn-mini" data-limit-save>Сохранить лимит</button>
+        </div>`;
+    }
+
     $('#stats-global-ad').innerHTML = `
       <div class="ad-editor" data-editor="ad-global">
         <div class="row">
           <div class="label">Глобальная реклама — показывается на любом сервере, где нет персональной</div>${stamp}
         </div>
         <textarea data-field="text" placeholder="Ссылка-приглашение или готовый текст">${escapeHtml(a.default)}</textarea>
+        ${limitBlock}
         <div class="actions">
           <button class="btn primary sm" data-act="save">Сохранить</button>
           <button class="btn danger sm" data-act="del">Очистить</button>
@@ -337,6 +358,7 @@ function renderGlobalAd() {
         if (ok) { toast('Глобальная реклама очищена'); refresh(); }
         else toast(body?.error || 'Не удалось очистить', 'err');
     };
+    wireCreativeLimits();
 }
 
 // ---------- Ad statistics — per-CREATIVE (unique rendered text) ----------
@@ -473,6 +495,87 @@ function openServerAdModal(gid) {
 
 $('#server-ad-modal-close').addEventListener('click', () => { $('#server-ad-modal').hidden = true; });
 $('#server-ad-modal').addEventListener('click', (e) => { if (e.target.id === 'server-ad-modal') $('#server-ad-modal').hidden = true; });
+
+// ---------- Render: shares (доли) ----------
+function renderShares() {
+    const sh = state.shares;
+    if (!sh) return;
+    $('#share-price').textContent = `$${sh.salePricePer100} / 100`;
+
+    const p = sh.profit, r = sh.revenue, c = sh.partnerCost;
+    const money = (v) => '$' + Number(v || 0).toFixed(2);
+    const pctWarn = Math.abs(sh.totalPct - 100) > 0.001;
+    const cards = [
+        { k: 'Доход сервиса (всего)', v: money(p.total) },
+        { k: 'Доход за день', v: money(p.day) },
+        { k: 'Доход за неделю', v: money(p.week) },
+        { k: 'Доход за месяц', v: money(p.month) },
+        { k: 'Выручка с заходов', v: money(r.total) },
+        { k: 'Выплачено партнёрам (заходы)', v: money(c.total) },
+        { k: 'Сумма долей', v: `${sh.totalPct}%`, warn: pctWarn }
+    ];
+    $('#share-cards').innerHTML = cards.map((cd) =>
+        `<div class="stat-card"><div class="k">${escapeHtml(cd.k)}</div><div class="v"${cd.warn ? ' style="color:var(--amber)"' : ''}>${escapeHtml(cd.v)}</div></div>`
+    ).join('');
+
+    const rows = sh.holders.map((h) => `
+        <tr>
+          <td><div class="srv-cell"><span>${escapeHtml(h.userId)}</span><button class="btn-mini copy-id" data-copy="${h.userId}" title="${h.userId}">Copy ID</button></div></td>
+          <td class="num"><b>${h.pct}%</b></td>
+          <td class="num">$${Number(h.balance).toFixed(2)}</td>
+          <td class="num">$${Number(h.day).toFixed(2)}</td>
+          <td class="num">$${Number(h.week).toFixed(2)}</td>
+          <td class="num">$${Number(h.month).toFixed(2)}</td>
+          <td class="num">$${Number(h.earnedTotal).toFixed(2)}</td>
+          <td>
+            <div class="ad-limit-row" data-share-uid="${h.userId}" style="margin:0;padding:6px 8px;background:transparent;border:none;">
+              <input type="number" min="0" max="100" step="0.5" data-share-pct value="${h.pct}" style="width:80px" />
+              <button class="btn-mini" data-share-save>Сохранить %</button>
+              <button class="btn-mini off" data-share-del>Убрать</button>
+            </div>
+          </td>
+        </tr>`).join('');
+    $('#share-table').innerHTML = `
+        <thead><tr>
+          <th>Владелец</th><th class="num">Доля</th><th class="num">Баланс</th>
+          <th class="num">День</th><th class="num">Неделя</th><th class="num">Месяц</th><th class="num">Всего</th>
+          <th>Действия</th>
+        </tr></thead>
+        <tbody>${rows || '<tr><td colspan="8" class="muted">Долей пока нет</td></tr>'}</tbody>`;
+    wireShareActions();
+}
+
+async function saveShare(userId, pct) {
+    const { ok, body } = await put('/shares', { userId, pct });
+    if (ok) { toast(pct > 0 ? `Доля обновлена: ${pct}%` : 'Владелец убран'); refresh(); }
+    else toast(body?.error || 'Не удалось сохранить долю', 'err');
+}
+
+function wireShareActions() {
+    $$('#share-table [data-share-uid]').forEach((row) => {
+        const uid = row.dataset.shareUid;
+        row.querySelector('[data-share-save]').onclick = () => {
+            const pct = Number(row.querySelector('[data-share-pct]').value);
+            if (!Number.isFinite(pct) || pct < 0 || pct > 100) { toast('Доля — число 0..100', 'err'); return; }
+            saveShare(uid, pct);
+        };
+        row.querySelector('[data-share-del]').onclick = () => {
+            if (!confirm('Убрать этого владельца доли?')) return;
+            saveShare(uid, 0);
+        };
+    });
+}
+
+$('#share-add').onclick = () => {
+    const uid = prompt('ID пользователя (17–20 цифр):');
+    if (!uid) return;
+    if (!/^\d{17,20}$/.test(uid.trim())) { toast('Неверный ID', 'err'); return; }
+    const pctRaw = prompt('Доля в % (0–100):');
+    if (pctRaw === null) return;
+    const pct = Number(pctRaw.replace(',', '.'));
+    if (!Number.isFinite(pct) || pct < 0 || pct > 100) { toast('Доля — число 0..100', 'err'); return; }
+    saveShare(uid.trim(), pct);
+};
 
 // ---------- Render: templates ----------
 function renderTemplates() {
