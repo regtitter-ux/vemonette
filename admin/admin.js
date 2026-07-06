@@ -70,30 +70,27 @@ document.addEventListener('click', (e) => {
 // ---------- Login ----------
 async function checkAuth() {
     const { ok, body } = await get('/whoami');
-    return ok && body?.authed === true;
+    if (ok && body?.authed === true) { currentRole = body.role || 'admin'; return true; }
+    return false;
 }
 
-async function tryLogin(code) {
-    const { ok, body } = await post('/login', { code });
-    if (ok && body?.ok) return true;
-    if (body?.error) throw new Error(body.error);
-    throw new Error('login failed');
-}
+// Role of the logged-in user: 'owner' | 'admin'. Owner-only UI is hidden
+// for admins.
+let currentRole = 'admin';
 
-$('#login-form').addEventListener('submit', async (e) => {
+// Discord OAuth: bounce the browser to the backend, which redirects to
+// Discord and back with a session cookie set.
+$('#discord-login').addEventListener('click', (e) => {
     e.preventDefault();
-    const code = $('#code').value.trim();
-    $('#login-err').hidden = true;
-    try {
-        await tryLogin(code);
-        await enterApp();
-    } catch (err) {
-        $('#login-err').textContent = err.message || 'Не удалось войти';
-        $('#login-err').hidden = false;
-        $('#code').value = '';
-        $('#code').focus();
-    }
+    location.href = API + '/oauth/login';
 });
+
+// Show a message if the OAuth round-trip bounced us back denied.
+if (new URLSearchParams(location.search).get('login') === 'denied') {
+    $('#login-err').textContent = 'Доступ запрещён — этого аккаунта нет среди админов.';
+    $('#login-err').hidden = false;
+    history.replaceState(null, '', location.pathname);
+}
 
 $('#logout').addEventListener('click', async () => {
     await post('/logout');
@@ -120,15 +117,67 @@ async function refresh() {
     renderShares();
     renderTemplates();
     renderToggle();
+    if (currentRole === 'owner') renderAdmins();
+}
+
+// ---------- Admins (owner only) ----------
+async function renderAdmins() {
+    const { ok, body } = await get('/admins');
+    if (!ok) return; // 403 for non-owners — tab is hidden anyway
+    const owner = body.owner;
+    const rows = [
+        `<tr>
+           <td><div class="srv-cell"><span>${escapeHtml(owner)}</span><button class="btn-mini copy-id" data-copy="${owner}" title="${owner}">Copy ID</button></div></td>
+           <td><span class="chip green">Владелец</span></td>
+           <td><span class="muted">—</span></td>
+         </tr>`,
+        ...body.admins.map((id) => `
+         <tr>
+           <td><div class="srv-cell"><span>${escapeHtml(id)}</span><button class="btn-mini copy-id" data-copy="${id}" title="${id}">Copy ID</button></div></td>
+           <td><span class="chip blue">Админ</span></td>
+           <td><button class="btn-mini off" data-admin-del="${escapeHtml(id)}">Убрать</button></td>
+         </tr>`)
+    ].join('');
+    $('#admin-table').innerHTML = `
+        <thead><tr><th>Пользователь</th><th>Роль</th><th>Действия</th></tr></thead>
+        <tbody>${rows}</tbody>`;
+    $$('#admin-table [data-admin-del]').forEach((btn) => {
+        btn.onclick = async () => {
+            if (!confirm('Убрать этого админа?')) return;
+            const { ok, body } = await put('/admins', { userId: btn.dataset.adminDel, remove: true });
+            if (ok) { toast('Админ убран'); renderAdmins(); }
+            else toast(body?.error || 'Не удалось', 'err');
+        };
+    });
+}
+
+const _adminAddBtn = document.getElementById('admin-add');
+if (_adminAddBtn) _adminAddBtn.onclick = async () => {
+    const id = prompt('Discord ID нового админа (17–20 цифр):');
+    if (!id) return;
+    if (!/^\d{17,20}$/.test(id.trim())) { toast('Неверный ID', 'err'); return; }
+    const { ok, body } = await put('/admins', { userId: id.trim() });
+    if (ok) { toast('Админ добавлен'); renderAdmins(); }
+    else toast(body?.error || 'Не удалось', 'err');
+};
+
+function applyRole() {
+    const owner = currentRole === 'owner';
+    // Hide owner-only tabs for assigned admins.
+    $$('[data-owner-only]').forEach((el) => { el.hidden = !owner; });
+    // If an admin's current tab is now hidden, fall back to Statistics.
+    const activeTab = $('.tab.active');
+    if (activeTab && activeTab.hidden) $('.tab[data-tab="stats"]').click();
 }
 
 async function enterApp() {
     // Belt and suspenders: also force display via inline styles so a stale
     // cached stylesheet (without the [hidden] override) can't keep the
-    // login screen stuck on top after a successful 2FA.
+    // login screen stuck on top after login.
     const login = $('#login'), app = $('#app');
     login.hidden = true; login.style.display = 'none';
     app.hidden = false; app.style.display = 'grid';
+    applyRole();
     await refresh();
     startLiveRefresh();
 }
@@ -535,7 +584,7 @@ function renderShares() {
             k: 'Баланс Crypto Pay',
             v: cryptoBal == null ? '—' : money(cryptoBal),
             warn: needTopUp,
-            btn: 'cryptofund',
+            btn: currentRole === 'owner' ? 'cryptofund' : null,  // top-up is owner-only
             note: cryptoBal == null ? 'не настроен' : needTopUp ? `🔴 Пополни: меньше капитализации ${money(debt)}` : '🟢 Хватает на выплаты'
         },
         { k: 'Сумма долей', v: `${sh.totalPct}%`, warn: pctWarn }
