@@ -504,6 +504,12 @@ function renderShares() {
     const money = (v) => '$' + Number(v || 0).toFixed(2);
     const pctWarn = Math.abs(sh.totalPct - 100) > 0.001;
     const acqPct = Math.round((sh.acquiringRate || 0.03) * 100);
+    // Crypto Pay app balance vs service debt (outstanding). When the app
+    // balance can't cover what's owed to partners, flag a top-up.
+    const cryptoBal = state.cryptoBalance;
+    const debt = Number(state.stats?.outstanding) || 0;
+    const needTopUp = cryptoBal != null && cryptoBal < debt;
+
     const cards = [
         { k: 'Чистый доход (всего)', v: money(p.total) },
         { k: 'Доход за день', v: money(p.day) },
@@ -512,10 +518,18 @@ function renderShares() {
         { k: 'Выручка с заходов', v: money(r.total) },
         { k: 'Выплачено партнёрам (заходы)', v: money(c.total) },
         { k: `Эквайринг (${acqPct}%)`, v: money(acq.total) },
+        {
+            k: 'Баланс Crypto Pay',
+            v: cryptoBal == null ? '—' : money(cryptoBal),
+            warn: needTopUp,
+            note: cryptoBal == null ? 'не настроен' : needTopUp ? `🔴 Пополни: меньше долга ${money(debt)}` : '🟢 Хватает на выплаты'
+        },
         { k: 'Сумма долей', v: `${sh.totalPct}%`, warn: pctWarn }
     ];
     $('#share-cards').innerHTML = cards.map((cd) =>
-        `<div class="stat-card"><div class="k">${escapeHtml(cd.k)}</div><div class="v"${cd.warn ? ' style="color:var(--amber)"' : ''}>${escapeHtml(cd.v)}</div></div>`
+        `<div class="stat-card"><div class="k">${escapeHtml(cd.k)}</div>` +
+        `<div class="v"${cd.warn ? ' style="color:var(--amber)"' : ''}>${escapeHtml(cd.v)}</div>` +
+        `${cd.note ? `<div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0;font-size:11.5px">${escapeHtml(cd.note)}</div>` : ''}</div>`
     ).join('');
 
     const rows = sh.holders.map((h) => `
