@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="./admin.css?v=16" />
+  <link rel="stylesheet" href="./admin.css?v=17" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -27,6 +27,10 @@
 </div>
 
 <div id="app" hidden>
+  <div id="view-banner" hidden>
+    👁 Просмотр от лица админа — часть функций скрыта
+    <button id="view-exit">Выйти из режима</button>
+  </div>
   <aside class="sidebar">
     <div class="brand-sm">Vemoni · Admin</div>
     <nav class="tabs">
@@ -131,7 +135,10 @@
 
     <!-- Admins (owner only) -->
     <section class="pane" data-pane="admins" hidden>
-      <h1>Админы <button class="btn primary sm" id="admin-add">＋ Добавить админа</button></h1>
+      <h1>Админы
+        <button class="btn primary sm" id="admin-add">＋ Добавить админа</button>
+        <button class="btn ghost sm" id="view-as-admin">👁 Просмотр от лица админа</button>
+      </h1>
       <p class="muted">Назначенные админы видят всё, кроме вкладок «Шаблоны» и «Балансы», и не могут пополнять Crypto Pay. Владелец проекта задан жёстко и не редактируется.</p>
       <div class="table-wrap"><table class="stat-table" id="admin-table"></table></div>
     </section>
@@ -170,6 +177,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="./admin.js?v=26"></script>
+<script src="./admin.js?v=27"></script>
 </body>
 </html>

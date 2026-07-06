@@ -117,7 +117,7 @@ async function refresh() {
     renderShares();
     renderTemplates();
     renderToggle();
-    if (currentRole === 'owner') renderAdmins();
+    if (effRole() === 'owner') renderAdmins();
 }
 
 // ---------- Admins (owner only) ----------
@@ -161,14 +161,32 @@ if (_adminAddBtn) _adminAddBtn.onclick = async () => {
     else toast(body?.error || 'Не удалось', 'err');
 };
 
+// Owner can preview the panel as an assigned admin sees it. Real session
+// stays owner; this only changes what the UI shows (effective role).
+let viewAsAdmin = false;
+const effRole = () => (viewAsAdmin ? 'admin' : currentRole);
+
 function applyRole() {
-    const owner = currentRole === 'owner';
-    // Hide owner-only tabs for assigned admins.
+    const owner = effRole() === 'owner';
+    // Hide owner-only tabs (and the whole preview flow is owner-only itself).
     $$('[data-owner-only]').forEach((el) => { el.hidden = !owner; });
-    // If an admin's current tab is now hidden, fall back to Statistics.
+    // Preview banner (with the exit button) shows while previewing.
+    $('#view-banner').hidden = !viewAsAdmin;
+    // If the current tab is now hidden, fall back to Statistics.
     const activeTab = $('.tab.active');
     if (activeTab && activeTab.hidden) $('.tab[data-tab="stats"]').click();
 }
+
+function setViewAsAdmin(on) {
+    if (currentRole !== 'owner') return; // only the owner can preview
+    viewAsAdmin = on;
+    applyRole();
+    refresh(); // re-render per effective role (cryptofund button, admins table)
+}
+const _viewAsBtn = document.getElementById('view-as-admin');
+if (_viewAsBtn) _viewAsBtn.onclick = () => setViewAsAdmin(true);
+const _viewExitBtn = document.getElementById('view-exit');
+if (_viewExitBtn) _viewExitBtn.onclick = () => setViewAsAdmin(false);
 
 async function enterApp() {
     // Belt and suspenders: also force display via inline styles so a stale
@@ -584,7 +602,7 @@ function renderShares() {
             k: 'Баланс Crypto Pay',
             v: cryptoBal == null ? '—' : money(cryptoBal),
             warn: needTopUp,
-            btn: currentRole === 'owner' ? 'cryptofund' : null,  // top-up is owner-only
+            btn: effRole() === 'owner' ? 'cryptofund' : null,  // top-up is owner-only
             note: cryptoBal == null ? 'не настроен' : needTopUp ? `🔴 Пополни: меньше капитализации ${money(debt)}` : '🟢 Хватает на выплаты'
         },
         { k: 'Сумма долей', v: `${sh.totalPct}%`, warn: pctWarn }
