@@ -530,7 +530,7 @@ function renderShares() {
         { k: 'Выручка с заходов', v: money(r.total) },
         { k: 'Выплачено партнёрам (заходы)', v: money(c.total) },
         { k: `Эквайринг (${acqPct}%)`, v: money(acq.total) },
-        { k: 'Капитализация', v: money(debt) },
+        { k: 'Капитализация', sub: 'сумма балансов пользователей', v: money(debt) },
         {
             k: 'Баланс Crypto Pay',
             v: cryptoBal == null ? '—' : money(cryptoBal),
@@ -543,6 +543,7 @@ function renderShares() {
     $('#share-cards').innerHTML = cards.map((cd) => {
         const btn = cd.btn ? ` <button class="card-add" data-card-action="${cd.btn}" title="Пополнить">＋</button>` : '';
         return `<div class="stat-card"><div class="k">${escapeHtml(cd.k)}</div>` +
+            `${cd.sub ? `<div class="k" style="margin-top:2px;text-transform:none;letter-spacing:0;font-size:11px;opacity:.75">${escapeHtml(cd.sub)}</div>` : ''}` +
             `<div class="v"${cd.warn ? ' style="color:var(--amber)"' : ''}>${escapeHtml(cd.v)}${btn}</div>` +
             `${cd.note ? `<div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0;font-size:11.5px">${escapeHtml(cd.note)}</div>` : ''}</div>`;
     }).join('');
