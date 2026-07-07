@@ -271,15 +271,14 @@ function renderNoJoinCheckWarning() {
     const list = Array.isArray(state?.noJoinCheckAds) ? state.noJoinCheckAds : [];
     if (!list.length) { el.hidden = true; el.innerHTML = ''; return; }
     const items = list.slice(0, 5).map((a) => {
-        const snippet = (a.text || '').replace(/\s+/g, ' ').trim().slice(0, 70);
-        const where = (a.guilds || []).slice(0, 3).map((g) => escapeHtml(g.name || g.gid)).join(', ');
-        return `<li><b>${escapeHtml(snippet)}${a.text && a.text.length > 70 ? '…' : ''}</b>${where ? ` — показывается на: ${where}` : ''}</li>`;
+        const snippet = (a.text || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+        return `<li><b>${escapeHtml(snippet)}${a.text && a.text.length > 80 ? '…' : ''}</b></li>`;
     }).join('');
     const more = list.length > 5 ? `<li class="muted">…и ещё ${list.length - 5}</li>` : '';
     el.innerHTML =
-        `⚠️ <b>Реклама без проверки на заход.</b> Ссылка ведёт на сервер, где нет нашего бота — ` +
-        `заходы <u>не проверяются</u> и оплачиваются как клики ($1/100), а не как заходы ($5–7/100). ` +
-        `Добавьте бота на сервер спонсора или исправьте ссылку.<ul>${items}${more}</ul>`;
+        `⚠️ <b>Реклама не работает — нет проверки на заход.</b> Ссылка ведёт на сервер, где нет нашего бота, ` +
+        `поэтому заход нельзя проверить. Такая реклама <u>не показывается</u>, и верификации проходят ` +
+        `без рекламы (без дохода). Добавьте бота на сервер спонсора или исправьте ссылку:<ul>${items}${more}</ul>`;
     el.hidden = false;
 }
 
