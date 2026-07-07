@@ -37,17 +37,35 @@ function cardHTML(s) {
     </div>`;
 }
 
-/* Two rows (top scrolls left, bottom scrolls right), each duplicated for a seamless loop */
+/* Two rows (top scrolls left, bottom scrolls right), each duplicated for a
+   seamless loop. FEED is the owner-managed list from the API; the hardcoded
+   SERVERS above is the offline fallback so the feed is never empty. */
 const rowTop = document.getElementById('rowTop');
 const rowBottom = document.getElementById('rowBottom');
-const topHTML = SERVERS.map(cardHTML).join('');
-const bottomHTML = [...SERVERS].reverse().map(cardHTML).join('');
-rowTop.innerHTML = topHTML + topHTML;
-rowBottom.innerHTML = bottomHTML + bottomHTML;
+let FEED = SERVERS;
+function renderFeedRows() {
+  const topHTML = FEED.map(cardHTML).join('');
+  const bottomHTML = [...FEED].reverse().map(cardHTML).join('');
+  rowTop.innerHTML = topHTML + topHTML;
+  rowBottom.innerHTML = bottomHTML + bottomHTML;
+}
+renderFeedRows(); // instant render with the built-in fallback
+
+/* Load the owner-managed feed from the API (falls back to SERVERS on error). */
+async function loadManagedFeed() {
+  try {
+    const base = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '');
+    const r = await fetch(base + '/feed');
+    if (r.ok) {
+      const d = await r.json();
+      if (Array.isArray(d.servers) && d.servers.length) { FEED = d.servers; renderFeedRows(); }
+    }
+  } catch (_) { /* offline / API down → keep the fallback list */ }
+}
 
 /* Try to refresh counts live from the visitor's browser (Discord invite API allows CORS). */
 async function refreshLive() {
-  await Promise.all(SERVERS.map(async (s) => {
+  await Promise.all(FEED.map(async (s) => {
     if (!s.code) return; // no discord.gg invite (e.g. top.gg-linked) -> keep static data
     try {
       const r = await fetch(`https://discord.com/api/v9/invites/${s.code}?with_counts=true`);
@@ -68,9 +86,13 @@ async function refreshLive() {
     } catch (_) { /* offline / blocked → keep fallback numbers */ }
   }));
 }
-/* Don't block initial render — run the live refresh once the page is idle. */
-if ('requestIdleCallback' in window) requestIdleCallback(() => refreshLive(), { timeout: 3000 });
-else window.addEventListener('load', () => setTimeout(refreshLive, 1000));
+
+/* Load the managed feed, then refresh live counts once the page is idle. */
+(async () => {
+  await loadManagedFeed();
+  if ('requestIdleCallback' in window) requestIdleCallback(() => refreshLive(), { timeout: 3000 });
+  else setTimeout(refreshLive, 1000);
+})();
 
 /* ---------- Count-up numbers ---------- */
 function animateCount(el) {

@@ -4,8 +4,8 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
 // ---------- i18n (navigation + login chrome; deeper content is RU) ----------
 const I18N = {
-    ru: { tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Кран', tab_admins: 'Админы', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
-    en: { tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Kill switch', tab_admins: 'Admins', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
+    ru: { tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Кран', tab_feed: 'Лента', tab_admins: 'Админы', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
+    en: { tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Kill switch', tab_feed: 'Feed', tab_admins: 'Admins', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
 };
 let adminLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
 if (!I18N[adminLang]) adminLang = 'ru';
@@ -135,8 +135,56 @@ async function refresh() {
     renderShares();
     renderTemplates();
     renderToggle();
-    if (effRole() === 'owner') renderAdmins();
+    if (effRole() === 'owner') { renderAdmins(); renderFeed(); }
 }
+
+// ---------- Home-page server feed (owner only) ----------
+function feedIcon(s) {
+    const url = s.img || (s.id && s.icon
+        ? `https://cdn.discordapp.com/icons/${s.id}/${s.icon}.${String(s.icon).startsWith('a_') ? 'gif' : 'png'}?size=64`
+        : null);
+    const letter = escapeHtml(((s.letter || s.name || '?')[0] || '?').toUpperCase());
+    const bg = s.color || '#5865f2';
+    return url
+        ? `<img class="srv-ic" src="${escapeHtml(url)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=\\'srv-ic srv-ic-fallback\\' style=\\'background:${bg}\\'>${letter}</span>'" />`
+        : `<span class="srv-ic srv-ic-fallback" style="background:${bg}">${letter}</span>`;
+}
+
+async function renderFeed() {
+    const { ok, body } = await get('/feed');
+    if (!ok) return;
+    const list = body.servers || [];
+    const rows = list.map((s) => {
+        const sub = s.code ? `discord.gg/${escapeHtml(s.code)}` : (s.id ? escapeHtml(s.id) : '');
+        const keyAttr = s.code ? `data-feed-code="${escapeHtml(s.code)}"` : `data-feed-id="${escapeHtml(s.id)}"`;
+        return `
+          <tr>
+            <td><div class="srv-cell">${feedIcon(s)}<span>${escapeHtml(s.name || 'Server')}</span></div>${sub ? `<div class="muted" style="font-size:11.5px;margin-top:3px">${sub}</div>` : ''}</td>
+            <td><button class="btn-mini off" ${keyAttr}>Удалить</button></td>
+          </tr>`;
+    }).join('');
+    $('#feed-table').innerHTML = `
+        <thead><tr><th>Сервер</th><th>Действие</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="2" class="muted">Лента пуста</td></tr>'}</tbody>`;
+    $$('#feed-table [data-feed-code], #feed-table [data-feed-id]').forEach((b) => b.onclick = async () => {
+        const payload = b.dataset.feedCode ? { code: b.dataset.feedCode } : { id: b.dataset.feedId };
+        const { ok } = await del('/feed', payload);
+        if (ok) { toast('Сервер удалён из ленты'); renderFeed(); }
+        else toast('Не удалось удалить', 'err');
+    });
+}
+
+const _feedAddBtn = document.getElementById('feed-add');
+if (_feedAddBtn) _feedAddBtn.onclick = async () => {
+    const inp = $('#feed-invite');
+    const invite = (inp.value || '').trim();
+    if (!invite) { toast('Вставьте ссылку-приглашение', 'err'); return; }
+    const { ok, body } = await post('/feed', { invite });
+    if (ok) { inp.value = ''; toast('Сервер добавлен в ленту'); renderFeed(); }
+    else toast(body?.error === 'exists' ? 'Этот сервер уже в ленте'
+        : body?.error === 'bad-invite' ? 'Неверная ссылка-приглашение'
+        : (body?.error || 'Не удалось добавить'), 'err');
+};
 
 // ---------- Admins (owner only) ----------
 async function renderAdmins() {
