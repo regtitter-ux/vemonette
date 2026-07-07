@@ -2,6 +2,23 @@
 // The bot's HTTPS URL is set via window.__VEMONI_API_BASE__ in index.html.
 const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
+// ---------- i18n (navigation + login chrome; deeper content is RU) ----------
+const I18N = {
+    ru: { tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Кран', tab_admins: 'Админы', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
+    en: { tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Kill switch', tab_admins: 'Admins', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
+};
+let adminLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
+if (!I18N[adminLang]) adminLang = 'ru';
+function applyAdminLang() {
+    document.documentElement.lang = adminLang;
+    document.querySelectorAll('[data-i18n]').forEach((el) => { const v = I18N[adminLang][el.dataset.i18n]; if (v) el.textContent = v; });
+    document.querySelectorAll('.lang-switch button').forEach((b) => b.classList.toggle('active', b.dataset.lang === adminLang));
+}
+document.querySelectorAll('.lang-switch button').forEach((b) => b.addEventListener('click', () => {
+    adminLang = b.dataset.lang; localStorage.setItem('vemoni_lang', adminLang); applyAdminLang();
+}));
+applyAdminLang();
+
 // ---------- HTTP helpers (credentials: include so the session cookie flows) ----------
 async function api(path, opts = {}) {
     let res;

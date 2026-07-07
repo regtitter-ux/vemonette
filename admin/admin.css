@@ -69,6 +69,13 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .discord-btn:hover { background: #4752c4; }
 .discord-btn:active { transform: translateY(1px); }
 
+/* Language switch (sidebar + login) */
+.lang-switch { display: inline-flex; gap: 2px; padding: 3px; background: rgba(255,255,255,0.04); border: 1px solid var(--stroke); border-radius: 999px; }
+.sidebar .lang-switch { align-self: flex-start; margin-bottom: 8px; }
+.login-card .lang-switch { align-self: flex-end; margin-bottom: -4px; }
+.lang-switch button { border: none; cursor: pointer; padding: 5px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; font-family: inherit; background: transparent; color: var(--muted); }
+.lang-switch button.active { background: var(--blue); color: #06121c; }
+
 /* Owner "view as admin" preview banner */
 #view-banner {
   grid-column: 1 / -1;
