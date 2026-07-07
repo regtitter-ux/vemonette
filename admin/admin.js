@@ -556,25 +556,22 @@ function openServerAdModal(gid) {
     // Owner-only: keep-payouts-after-completion toggle for this server.
     const isOwner = effRole() === 'owner';
     const clawOff = Boolean((state.clawbackOffAfterComplete || {})[gid]);
-    const complete = Boolean(guildEntry?.adComplete);
+    const showing = Boolean(guildEntry?.adShowing);
     let clawBlock = '';
     if (isOwner) {
         const chip = clawOff
             ? '<span class="chip red">Снятие: Выкл</span>'
             : '<span class="chip green">Снятие: Вкл</span>';
-        const statusHint = complete
-            ? '<span class="chip blue">Реклама завершена</span>'
-            : '<span class="chip">Реклама ещё идёт</span>';
+        const statusHint = showing
+            ? '<span class="chip blue">Реклама показывается</span>'
+            : '<span class="chip">Реклама не показывается</span>';
         clawBlock = `
         <div class="setting wide" style="margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;">
-          <label>Снятие средств при выходе (после завершения рекламы)</label>
+          <label>Снятие средств при выходе (пока реклама не показывается)</label>
           <p class="muted" style="margin:4px 0 10px;">
-            Когда реклама этого сервера завершена (заказ выполнен <b>или</b> ручная
-            реклама достигла лимита заходов) и участник позже выходит,
             ${clawOff
-                ? 'выплата партнёру <b>не снимается</b> — заход считается финальным.'
-                : 'выплата партнёру <b>снимается</b> обратно (стандартное поведение).'}
-            Пока реклама активна, снятие работает всегда — это защита от накрутки.
+                ? 'Пока ссылки на этот сервер нет в рекламе партнёров, выход участника <b>не снимает</b> выплату — заход финальный. Как только реклама снова начнёт показываться, снятие возобновится; но ушедшие в период без показа больше не учитываются.'
+                : 'Выход участника <b>снимает</b> выплату партнёру обратно (стандартное поведение), даже если реклама сейчас не показывается.'}
           </p>
           <div class="actions-row" style="align-items:center;gap:10px;">
             ${chip} ${statusHint}
@@ -613,7 +610,7 @@ function openServerAdModal(gid) {
                 state.clawbackOffAfterComplete = state.clawbackOffAfterComplete || {};
                 if (newOff) state.clawbackOffAfterComplete[gid] = true;
                 else delete state.clawbackOffAfterComplete[gid];
-                toast(newOff ? 'Снятие после завершения отключено' : 'Снятие после завершения включено');
+                toast(newOff ? 'Снятие при выходе (без показа) отключено' : 'Снятие при выходе включено');
                 openServerAdModal(gid);
                 refresh();
             } else toast(body?.error || 'Не удалось переключить', 'err');
