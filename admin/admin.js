@@ -154,52 +154,63 @@ function fmtSec(s) {
     s = Math.round(s);
     return s >= 60 ? `${Math.floor(s / 60)}м ${s % 60}с` : `${s}с`;
 }
+function cardBlock(c, deleted) {
+    const st = c.stats || {};
+    const owner = c.creatorName ? `${escapeHtml(c.creatorName)}` : escapeHtml(c.creatorId || '—');
+    const role = c.roleName ? `@${escapeHtml(c.roleName)}` : (c.roleId ? `<code>${escapeHtml(c.roleId)}</code>` : '<span class="muted">роль по умолчанию</span>');
+    const chan = c.channelName ? `#${escapeHtml(c.channelName)}` : escapeHtml(c.channelId || '');
+    const link = c.link ? ` · <a href="${escapeHtml(c.link)}" target="_blank" rel="noopener">↗ сообщение</a>` : '';
+    const avg = c.avgVerifySeconds != null ? ` · <span title="Среднее время от первого клика до проверенного захода">⏱ ~${escapeHtml(fmtSec(c.avgVerifySeconds))}</span>` : '';
+    const who = c.deletedByName ? escapeHtml(c.deletedByName) : (c.deletedBy ? escapeHtml(c.deletedBy) : 'неизвестно');
+    const delMeta = deleted
+        ? `<div class="cardrow-meta" style="color:#ff9a9c">🗑 Удалено ${escapeHtml(relTime(c.deletedAt))} · кем: <b>${who}</b></div>`
+        : '';
+    const actions = deleted
+        ? `<button class="btn-mini off" data-card="purge">Убрать из списка</button>`
+        : `<button class="btn-mini" data-card="fix">Встряхнуть</button>
+           <button class="btn-mini" data-card="owner">Владелец…</button>
+           <button class="btn-mini" data-card="role">Роль…</button>
+           <button class="btn-mini" data-card="republish">Перепубликовать</button>
+           <button class="btn-mini off" data-card="delete">Удалить</button>`;
+    return `
+      <div class="cardrow${deleted ? ' deleted' : ''}" data-mid="${escapeHtml(c.messageId)}">
+        <div class="cardrow-head">${cardGuildIcon(c)}<span><b>${escapeHtml(c.guildName || 'Unknown Server')}</b> · ${chan}${link}</span></div>
+        <div class="cardrow-meta">
+          Владелец: <b>${owner}</b> <button class="btn-mini copy-id" data-copy="${escapeHtml(c.creatorId || '')}">Copy ID</button>
+          · Роль: ${role}${avg}
+        </div>
+        ${delMeta}
+        <table class="card-stats">
+          <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
+          <tbody>
+            ${statRow('1. Клик (начали)', st.clicks)}
+            ${statRow('2. Заход проверен', st.checked)}
+            ${statRow('3. Остались', st.stayed)}
+          </tbody>
+        </table>
+        <div class="cardrow-actions">${actions}</div>
+      </div>`;
+}
 async function renderCards() {
     const { ok, body } = await get('/cards');
     if (!ok) return;
-    const list = body.cards || [];
+    const active = body.cards || [];
+    const deleted = body.deletedCards || [];
     const avgEl = $('#cards-avg');
     if (avgEl) {
         if (body.avgVerifySeconds != null) { avgEl.textContent = `⏱ Среднее время от клика до проверенного захода (все карточки): ~${fmtSec(body.avgVerifySeconds)}`; avgEl.hidden = false; }
         else avgEl.hidden = true;
     }
     const box = $('#cards-list');
-    if (!list.length) { box.innerHTML = '<div class="muted">Карточек пока нет. Создайте через /verify или добавьте по ссылке выше.</div>'; return; }
-    box.innerHTML = list.map((c) => {
-        const st = c.stats || {};
-        const owner = c.creatorName ? `${escapeHtml(c.creatorName)}` : escapeHtml(c.creatorId || '—');
-        const role = c.roleName ? `@${escapeHtml(c.roleName)}` : (c.roleId ? `<code>${escapeHtml(c.roleId)}</code>` : '<span class="muted">роль по умолчанию</span>');
-        const chan = c.channelName ? `#${escapeHtml(c.channelName)}` : escapeHtml(c.channelId || '');
-        const link = c.link ? ` · <a href="${escapeHtml(c.link)}" target="_blank" rel="noopener">↗ сообщение</a>` : '';
-        const avg = c.avgVerifySeconds != null ? ` · <span title="Среднее время от первого клика до проверенного захода">⏱ ~${escapeHtml(fmtSec(c.avgVerifySeconds))}</span>` : '';
-        return `
-          <div class="cardrow" data-mid="${escapeHtml(c.messageId)}">
-            <div class="cardrow-head">${cardGuildIcon(c)}<span><b>${escapeHtml(c.guildName || 'Unknown Server')}</b> · ${chan}${link}</span></div>
-            <div class="cardrow-meta">
-              Владелец: <b>${owner}</b> <button class="btn-mini copy-id" data-copy="${escapeHtml(c.creatorId || '')}">Copy ID</button>
-              · Роль: ${role}${avg}
-            </div>
-            <table class="card-stats">
-              <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
-              <tbody>
-                ${statRow('1. Клик (начали)', st.clicks)}
-                ${statRow('2. Заход проверен', st.checked)}
-                ${statRow('3. Остались', st.stayed)}
-              </tbody>
-            </table>
-            <div class="cardrow-actions">
-              <button class="btn-mini" data-card="fix">Встряхнуть</button>
-              <button class="btn-mini" data-card="owner">Владелец…</button>
-              <button class="btn-mini" data-card="role">Роль…</button>
-              <button class="btn-mini" data-card="republish">Перепубликовать</button>
-              <button class="btn-mini off" data-card="delete">Удалить</button>
-            </div>
-          </div>`;
-    }).join('');
-    box.querySelectorAll('.cardrow').forEach((row) => {
+    box.innerHTML = active.length ? active.map((c) => cardBlock(c, false)).join('')
+        : '<div class="muted">Карточек пока нет. Создайте через /verify или добавьте по ссылке выше.</div>';
+    const dbox = $('#cards-deleted-list');
+    if (dbox) dbox.innerHTML = deleted.length ? deleted.map((c) => cardBlock(c, true)).join('')
+        : '<div class="muted">Удалённых карточек нет.</div>';
+    [box, dbox].forEach((container) => container && container.querySelectorAll('.cardrow').forEach((row) => {
         const mid = row.dataset.mid;
         row.querySelectorAll('[data-card]').forEach((b) => b.onclick = () => cardAction(b.dataset.card, mid));
-    });
+    }));
 }
 
 async function cardAction(action, messageId) {
@@ -228,8 +239,21 @@ async function cardAction(action, messageId) {
         if (roleId && !/^\d{17,20}$/.test(roleId)) { toast('Неверный ID роли', 'err'); return; }
         const { ok, body } = await post('/cards/edit', { messageId, roleId });
         toast(ok ? 'Роль изменена' : cardErr(body?.error), ok ? 'ok' : 'err'); if (ok) renderCards();
+    } else if (action === 'purge') {
+        if (!confirm('Окончательно убрать эту карточку из списка удалённых?')) return;
+        const { ok } = await post('/cards/purge', { messageId });
+        if (ok) { toast('Убрано из списка'); renderCards(); }
     }
 }
+
+const _cardVerifyBtn = document.getElementById('card-verify');
+if (_cardVerifyBtn) _cardVerifyBtn.onclick = async () => {
+    _cardVerifyBtn.disabled = true;
+    const { ok, body } = await post('/cards/verify');
+    _cardVerifyBtn.disabled = false;
+    if (ok) { toast(`Проверено. Помечено удалённых: ${body?.marked || 0}`); renderCards(); }
+    else toast('Не удалось проверить', 'err');
+};
 
 function cardErr(code) {
     return ({

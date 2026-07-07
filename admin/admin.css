@@ -517,3 +517,5 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .card-stats th { color: var(--muted); font-weight: 600; }
 .card-stats td.num, .card-stats th.num { text-align: right; font-variant-numeric: tabular-nums; min-width: 44px; }
 .cardrow-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+
+.cardrow.deleted { border-color: rgba(237,66,69,.3); background: rgba(237,66,69,.05); }

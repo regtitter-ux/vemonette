@@ -149,6 +149,10 @@
         </div>
         <div class="muted" id="card-scan-status" style="margin-bottom:10px" hidden></div>
         <div id="cards-list"></div>
+
+        <h2 style="margin-top:26px">Удалённые карточки <button class="btn ghost sm" id="card-verify" style="font-size:12px">Проверить сейчас</button></h2>
+        <p class="muted">Карточки, удалённые с канала (вручную, ботом или через панель). Статистика сохраняется; видно, кто и когда убрал верификацию (кто — если бот успел заметить удаление через аудит-лог).</p>
+        <div id="cards-deleted-list"></div>
       </div>
     </section>
 
@@ -207,6 +211,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=44"></script>
+<script src="/admin/admin.js?v=45"></script>
 </body>
 </html>
