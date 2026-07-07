@@ -131,6 +131,7 @@ async function refresh() {
     renderNoJoinCheckWarning();
     renderStats();
     renderGlobalAd();
+    renderFallback();
     renderAdStats();
     renderShares();
     renderTemplates();
@@ -154,6 +155,23 @@ function fmtSec(s) {
     s = Math.round(s);
     return s >= 60 ? `${Math.floor(s / 60)}м ${s % 60}с` : `${s}с`;
 }
+// ---------- Fallback ("Заглушка") text editor ----------
+function renderFallback() {
+    const box = $('#stats-fallback');
+    if (!box) return;
+    const val = (state && typeof state.fallbackText === 'string') ? state.fallbackText : '';
+    box.innerHTML = `
+      <div class="setting wide">
+        <textarea data-field="fallback" placeholder="Например: Отлично! Теперь нажмите кнопку ещё раз, чтобы открыть доступ к серверу.">${escapeHtml(val)}</textarea>
+        <div class="actions-row"><button class="btn primary sm" id="fallback-save">Сохранить</button></div>
+      </div>`;
+    $('#fallback-save').onclick = async () => {
+        const text = box.querySelector('[data-field="fallback"]').value;
+        const { ok, body } = await put('/fallback', { text });
+        toast(ok ? 'Заглушка сохранена' : (body?.error || 'Не удалось сохранить'), ok ? 'ok' : 'err');
+    };
+}
+
 function cardBlock(c, deleted) {
     const st = c.stats || {};
     const owner = c.creatorName ? `${escapeHtml(c.creatorName)}` : escapeHtml(c.creatorId || '—');
