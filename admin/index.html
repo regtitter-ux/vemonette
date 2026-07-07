@@ -121,9 +121,11 @@
       <div class="tpl-list" id="tpl-servers"></div>
     </section>
 
-    <!-- Ads-off toggle -->
+    <!-- Emergency: kill switch + verification-card management -->
     <section class="pane" data-pane="toggle" hidden>
-      <h1>Кран рекламы</h1>
+      <h1>Экстренно</h1>
+
+      <h2>Кран рекламы</h2>
       <p class="muted">Когда включён — верификация проходит **без рекламы и без начислений баланса** никому. Полезно, когда нет заказов и не хочется терять деньги на выплатах.</p>
       <div class="toggle-card">
         <label class="switch">
@@ -134,6 +136,16 @@
           <div class="switch-state" id="switch-state">…</div>
           <div class="switch-since muted" id="switch-since"></div>
         </div>
+      </div>
+
+      <div data-owner-only>
+        <h2 style="margin-top:28px">Карточки верификации</h2>
+        <p class="muted">Список всех карточек. Если карточка сломалась или работает некорректно — «Встряхнуть» пересоберёт её на месте (владелец и роль сохранятся). Также можно сменить владельца/роль, перепубликовать или удалить. Чтобы добавить карточку, созданную до отслеживания — вставьте ссылку на сообщение (ПКМ по карточке → «Копировать ссылку на сообщение»).</p>
+        <div class="filters">
+          <input id="card-ref" placeholder="Ссылка на сообщение с карточкой…" />
+          <button class="btn primary sm" id="card-register">＋ Добавить по ссылке</button>
+        </div>
+        <div id="cards-list"></div>
       </div>
     </section>
 
@@ -192,6 +204,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=40"></script>
+<script src="/admin/admin.js?v=41"></script>
 </body>
 </html>

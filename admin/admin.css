@@ -505,3 +505,15 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
   .login-card { padding: 24px 18px; }
   #code { font-size: 19px; letter-spacing: 6px; }
 }
+
+/* Verification-card management ("Экстренно" tab) */
+.cardrow { border: 1px solid var(--stroke-2); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; background: rgba(255,255,255,.02); }
+.cardrow-head { display: flex; align-items: center; gap: 9px; font-size: 14px; }
+.cardrow-head a { color: var(--blue, #4aa8ff); text-decoration: none; }
+.cardrow-meta { margin-top: 8px; font-size: 13px; color: var(--muted); display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.cardrow-meta b { color: var(--text); }
+.card-stats { width: auto; margin: 12px 0 10px; border-collapse: collapse; font-size: 12.5px; }
+.card-stats th, .card-stats td { padding: 4px 16px 4px 0; text-align: left; white-space: nowrap; }
+.card-stats th { color: var(--muted); font-weight: 600; }
+.card-stats td.num, .card-stats th.num { text-align: right; font-variant-numeric: tabular-nums; min-width: 44px; }
+.cardrow-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }

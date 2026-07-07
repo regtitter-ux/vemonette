@@ -4,8 +4,8 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
 // ---------- i18n (navigation + login chrome; deeper content is RU) ----------
 const I18N = {
-    ru: { tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Кран', tab_feed: 'Лента', tab_admins: 'Админы', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
-    en: { tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Kill switch', tab_feed: 'Feed', tab_admins: 'Admins', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
+    ru: { tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_admins: 'Админы', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
+    en: { tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_admins: 'Admins', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
 };
 let adminLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
 if (!I18N[adminLang]) adminLang = 'ru';
@@ -135,8 +135,109 @@ async function refresh() {
     renderShares();
     renderTemplates();
     renderToggle();
-    if (effRole() === 'owner') { renderAdmins(); renderFeed(); }
+    if (effRole() === 'owner') { renderAdmins(); renderFeed(); renderCards(); }
 }
+
+// ---------- Verification cards (owner only, "Экстренно" tab) ----------
+function cardGuildIcon(c) {
+    const letter = escapeHtml(((c.guildName || '?')[0] || '?').toUpperCase());
+    return c.guildIcon
+        ? `<img class="srv-ic" src="${escapeHtml(c.guildIcon)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=\\'srv-ic srv-ic-fallback\\'>${letter}</span>'" />`
+        : `<span class="srv-ic srv-ic-fallback">${letter}</span>`;
+}
+function statRow(label, w) {
+    w = w || { hour: 0, day: 0, week: 0 };
+    return `<tr><td>${escapeHtml(label)}</td><td class="num">${w.hour}</td><td class="num">${w.day}</td><td class="num">${w.week}</td></tr>`;
+}
+async function renderCards() {
+    const { ok, body } = await get('/cards');
+    if (!ok) return;
+    const list = body.cards || [];
+    const box = $('#cards-list');
+    if (!list.length) { box.innerHTML = '<div class="muted">Карточек пока нет. Создайте через /verify или добавьте по ссылке выше.</div>'; return; }
+    box.innerHTML = list.map((c) => {
+        const st = c.stats || {};
+        const owner = c.creatorName ? `${escapeHtml(c.creatorName)}` : escapeHtml(c.creatorId || '—');
+        const role = c.roleName ? `@${escapeHtml(c.roleName)}` : (c.roleId ? `<code>${escapeHtml(c.roleId)}</code>` : '<span class="muted">роль по умолчанию</span>');
+        const chan = c.channelName ? `#${escapeHtml(c.channelName)}` : escapeHtml(c.channelId || '');
+        const link = c.link ? ` · <a href="${escapeHtml(c.link)}" target="_blank" rel="noopener">↗ сообщение</a>` : '';
+        return `
+          <div class="cardrow" data-mid="${escapeHtml(c.messageId)}">
+            <div class="cardrow-head">${cardGuildIcon(c)}<span><b>${escapeHtml(c.guildName || 'Unknown Server')}</b> · ${chan}${link}</span></div>
+            <div class="cardrow-meta">
+              Владелец: <b>${owner}</b> <button class="btn-mini copy-id" data-copy="${escapeHtml(c.creatorId || '')}">Copy ID</button>
+              · Роль: ${role}
+            </div>
+            <table class="card-stats">
+              <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
+              <tbody>
+                ${statRow('1. Клик (начали)', st.clicks)}
+                ${statRow('2. Заход проверен', st.checked)}
+                ${statRow('3. Остались', st.stayed)}
+              </tbody>
+            </table>
+            <div class="cardrow-actions">
+              <button class="btn-mini" data-card="fix">Встряхнуть</button>
+              <button class="btn-mini" data-card="owner">Владелец…</button>
+              <button class="btn-mini" data-card="role">Роль…</button>
+              <button class="btn-mini" data-card="republish">Перепубликовать</button>
+              <button class="btn-mini off" data-card="delete">Удалить</button>
+            </div>
+          </div>`;
+    }).join('');
+    box.querySelectorAll('.cardrow').forEach((row) => {
+        const mid = row.dataset.mid;
+        row.querySelectorAll('[data-card]').forEach((b) => b.onclick = () => cardAction(b.dataset.card, mid));
+    });
+}
+
+async function cardAction(action, messageId) {
+    if (action === 'fix') {
+        const { ok, body } = await post('/cards/fix', { messageId });
+        toast(ok ? 'Карточка пересобрана' : (cardErr(body?.error)), ok ? 'ok' : 'err'); if (ok) renderCards();
+    } else if (action === 'republish') {
+        if (!confirm('Удалить старое сообщение и опубликовать карточку заново (владелец и роль сохранятся)?')) return;
+        const { ok, body } = await post('/cards/republish', { messageId });
+        toast(ok ? 'Карточка перепубликована' : cardErr(body?.error), ok ? 'ok' : 'err'); if (ok) renderCards();
+    } else if (action === 'delete') {
+        if (!confirm('Удалить карточку (сообщение бота будет удалено)?')) return;
+        const { ok, body } = await post('/cards/delete', { messageId });
+        toast(ok ? 'Карточка удалена' : cardErr(body?.error), ok ? 'ok' : 'err'); if (ok) renderCards();
+    } else if (action === 'owner') {
+        const creatorId = (prompt('Новый владелец — Discord ID:') || '').trim();
+        if (!creatorId) return;
+        if (!/^\d{17,20}$/.test(creatorId)) { toast('Неверный ID', 'err'); return; }
+        const { ok, body } = await post('/cards/edit', { messageId, creatorId });
+        toast(ok ? 'Владелец изменён' : cardErr(body?.error), ok ? 'ok' : 'err'); if (ok) renderCards();
+    } else if (action === 'role') {
+        const roleId = (prompt('Новая роль — ID (пусто = роль по умолчанию «Verified»):') || '').trim();
+        if (roleId && !/^\d{17,20}$/.test(roleId)) { toast('Неверный ID роли', 'err'); return; }
+        const { ok, body } = await post('/cards/edit', { messageId, roleId });
+        toast(ok ? 'Роль изменена' : cardErr(body?.error), ok ? 'ok' : 'err'); if (ok) renderCards();
+    }
+}
+
+function cardErr(code) {
+    return ({
+        'not-found': 'Сообщение не найдено (бот не видит канал?)',
+        'not-own-message': 'Это сообщение не от нашего бота',
+        'not-a-card': 'Это не карточка верификации',
+        'not-tracked': 'Карточка не в списке',
+        'no-owner': 'Не удалось определить владельца',
+        'bad-ref': 'Неверная ссылка на сообщение',
+        'send-failed': 'Не удалось отправить новое сообщение'
+    })[code] || (code || 'Ошибка');
+}
+
+const _cardRegBtn = document.getElementById('card-register');
+if (_cardRegBtn) _cardRegBtn.onclick = async () => {
+    const inp = $('#card-ref');
+    const ref = (inp.value || '').trim();
+    if (!ref) { toast('Вставьте ссылку на сообщение', 'err'); return; }
+    const { ok, body } = await post('/cards/register', { ref });
+    if (ok) { inp.value = ''; toast('Карточка добавлена'); renderCards(); }
+    else toast(cardErr(body?.error), 'err');
+};
 
 // ---------- Home-page server feed (owner only) ----------
 function feedIcon(s) {
