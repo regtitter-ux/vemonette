@@ -108,6 +108,14 @@ function campCard(c) {
     const pct = c.purchased ? Math.min(100, Math.round(c.delivered / c.purchased * 100)) : 0;
     const payLink = c.status === 'pending_payment' && c.invoiceUrl
         ? `<a class="btn-mini" href="${esc(c.invoiceUrl)}" target="_blank" rel="noopener">Оплатить</a>` : '';
+    // Strict requirement: no network bot on the buyer's server → the campaign
+    // cannot run. Show a blocking warning until they add it.
+    const needBot = c.botPresent === false && c.status !== 'complete' && c.status !== 'cancelled';
+    const botWarn = needBot ? `
+        <div class="warn">
+          ⚠️ Реклама не запустится: на вашем сервере нет нашего бота. Добавьте его — проверка заходов без него невозможна.
+          <a class="btn-mini" href="${esc(CFG.botInviteUrl || '#')}" target="_blank" rel="noopener">Добавить бота</a>
+        </div>` : '';
     const canManage = c.status === 'active';
     const pauseBtn = canManage
         ? `<button class="btn-mini ${c.paused ? 'off' : 'on'}" data-pause="${c.id}">${c.paused ? 'Возобновить' : 'Пауза'}</button>` : '';
@@ -122,6 +130,7 @@ function campCard(c) {
           </div>
           <span class="chip ${st.c}">${esc(st.t)}</span>
         </div>
+        ${botWarn}
         <div class="progress"><i style="width:${pct}%"></i></div>
         <div class="camp-nums"><span>Доставлено: <b>${c.delivered}</b> / ${c.purchased}</span><span>${money(c.price)}</span></div>
         <div class="camp-actions">${payLink}${pauseBtn}${srvBtn}</div>
