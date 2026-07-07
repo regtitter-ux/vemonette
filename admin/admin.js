@@ -149,10 +149,20 @@ function statRow(label, w) {
     w = w || { hour: 0, day: 0, week: 0 };
     return `<tr><td>${escapeHtml(label)}</td><td class="num">${w.hour}</td><td class="num">${w.day}</td><td class="num">${w.week}</td></tr>`;
 }
+function fmtSec(s) {
+    if (s == null) return '—';
+    s = Math.round(s);
+    return s >= 60 ? `${Math.floor(s / 60)}м ${s % 60}с` : `${s}с`;
+}
 async function renderCards() {
     const { ok, body } = await get('/cards');
     if (!ok) return;
     const list = body.cards || [];
+    const avgEl = $('#cards-avg');
+    if (avgEl) {
+        if (body.avgVerifySeconds != null) { avgEl.textContent = `⏱ Среднее время от клика до проверенного захода (все карточки): ~${fmtSec(body.avgVerifySeconds)}`; avgEl.hidden = false; }
+        else avgEl.hidden = true;
+    }
     const box = $('#cards-list');
     if (!list.length) { box.innerHTML = '<div class="muted">Карточек пока нет. Создайте через /verify или добавьте по ссылке выше.</div>'; return; }
     box.innerHTML = list.map((c) => {
@@ -161,12 +171,13 @@ async function renderCards() {
         const role = c.roleName ? `@${escapeHtml(c.roleName)}` : (c.roleId ? `<code>${escapeHtml(c.roleId)}</code>` : '<span class="muted">роль по умолчанию</span>');
         const chan = c.channelName ? `#${escapeHtml(c.channelName)}` : escapeHtml(c.channelId || '');
         const link = c.link ? ` · <a href="${escapeHtml(c.link)}" target="_blank" rel="noopener">↗ сообщение</a>` : '';
+        const avg = c.avgVerifySeconds != null ? ` · <span title="Среднее время от первого клика до проверенного захода">⏱ ~${escapeHtml(fmtSec(c.avgVerifySeconds))}</span>` : '';
         return `
           <div class="cardrow" data-mid="${escapeHtml(c.messageId)}">
             <div class="cardrow-head">${cardGuildIcon(c)}<span><b>${escapeHtml(c.guildName || 'Unknown Server')}</b> · ${chan}${link}</span></div>
             <div class="cardrow-meta">
               Владелец: <b>${owner}</b> <button class="btn-mini copy-id" data-copy="${escapeHtml(c.creatorId || '')}">Copy ID</button>
-              · Роль: ${role}
+              · Роль: ${role}${avg}
             </div>
             <table class="card-stats">
               <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
