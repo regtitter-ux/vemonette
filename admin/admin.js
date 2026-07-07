@@ -316,7 +316,7 @@ function renderStats() {
         const kranBtn = off
             ? `<button class="btn-mini off" data-act="kran-on" data-gid="${g.gid}">Кран: Выкл</button>`
             : `<button class="btn-mini on" data-act="kran-off" data-gid="${g.gid}">Кран: Вкл</button>`;
-        const adBtn = `<button class="btn-mini" data-act="ad-edit" data-gid="${g.gid}">Реклама…</button>`;
+        const adBtn = `<button class="btn-mini" data-act="ad-edit" data-gid="${g.gid}">Настройки…</button>`;
         const ic = g.icon
             ? `<img class="srv-ic" src="${escapeHtml(g.icon)}" alt="" loading="lazy" onerror="this.outerHTML='<span class=\\'srv-ic srv-ic-fallback\\'>${escapeHtml((g.name || '?')[0].toUpperCase())}</span>'" />`
             : `<span class="srv-ic srv-ic-fallback">${escapeHtml((g.name || '?')[0].toUpperCase())}</span>`;
@@ -552,6 +552,38 @@ function openServerAdModal(gid) {
     const name = ad?.name || guildEntry?.name || 'Unknown Server';
     const text = ad?.text || '';
     const stamp = ad?.updatedAt ? escapeHtml(relTime(ad.updatedAt)) : '';
+
+    // Owner-only: keep-payouts-after-completion toggle for this server.
+    const isOwner = effRole() === 'owner';
+    const clawOff = Boolean((state.clawbackOffAfterComplete || {})[gid]);
+    const complete = Boolean(guildEntry?.campaignComplete);
+    let clawBlock = '';
+    if (isOwner) {
+        const chip = clawOff
+            ? '<span class="chip red">Снятие: Выкл</span>'
+            : '<span class="chip green">Снятие: Вкл</span>';
+        const statusHint = complete
+            ? '<span class="chip blue">Реклама завершена</span>'
+            : '<span class="chip">Реклама ещё идёт</span>';
+        clawBlock = `
+        <div class="setting wide" style="margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;">
+          <label>Снятие средств при выходе (после завершения рекламы)</label>
+          <p class="muted" style="margin:4px 0 10px;">
+            Когда реклама этого сервера завершена и участник позже выходит,
+            ${clawOff
+                ? 'выплата партнёру <b>не снимается</b> — заход считается финальным.'
+                : 'выплата партнёру <b>снимается</b> обратно (стандартное поведение).'}
+            Во время активной кампании снятие работает всегда — это защита от накрутки.
+          </p>
+          <div class="actions-row" style="align-items:center;gap:10px;">
+            ${chip} ${statusHint}
+            <button class="btn-mini ${clawOff ? 'off' : 'on'}" data-act="claw-toggle">
+              ${clawOff ? 'Включить снятие' : 'Отключить снятие'}
+            </button>
+          </div>
+        </div>`;
+    }
+
     $('#server-ad-modal-body').innerHTML = `
       <div class="modal-body">
         <h2>${escapeHtml(name)} <span class="uid">${escapeHtml(gid)}</span></h2>
@@ -567,8 +599,25 @@ function openServerAdModal(gid) {
             <button class="btn primary sm" data-act="save">Сохранить</button>
           </div>
         </div>
+        ${clawBlock}
       </div>`;
     $('#server-ad-modal').hidden = false;
+
+    if (isOwner) {
+        const clawBtn = $('#server-ad-modal-body [data-act="claw-toggle"]');
+        if (clawBtn) clawBtn.onclick = async () => {
+            const newOff = !clawOff;
+            const { ok, body } = await put('/leave-clawback-off', { gid, off: newOff });
+            if (ok) {
+                state.clawbackOffAfterComplete = state.clawbackOffAfterComplete || {};
+                if (newOff) state.clawbackOffAfterComplete[gid] = true;
+                else delete state.clawbackOffAfterComplete[gid];
+                toast(newOff ? 'Снятие после завершения отключено' : 'Снятие после завершения включено');
+                openServerAdModal(gid);
+                refresh();
+            } else toast(body?.error || 'Не удалось переключить', 'err');
+        };
+    }
 
     const saveBtn = $('#server-ad-modal-body [data-act="save"]');
     const delBtn = $('#server-ad-modal-body [data-act="del"]');
