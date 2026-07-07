@@ -279,16 +279,16 @@ function renderStats() {
             { k: 'За месяц', v: one(n.month) }
         ];
     } else {
-        const g = s.gross || s.all;
-        // Gross up front, net-still-standing dimmed after the slash.
-        const vs = (grossV, netV) =>
-            `${Number(grossV).toLocaleString()} <span class="v-sub">/ ${Number(netV).toLocaleString()} stays</span>`;
+        // Paid, still-standing verifications only (leavers are clawed back and
+        // don't count) — matches partner balances exactly.
+        const n = s.all;
+        const one = (v) => Number(v).toLocaleString();
         cards = [
-            { k: 'Всего верифаций', html: vs(g.total, s.all.total) },
-            { k: 'За час',   html: vs(g.hour, s.all.hour) },
-            { k: 'За сутки', html: vs(g.day, s.all.day) },
-            { k: 'За неделю', html: vs(g.week, s.all.week) },
-            { k: 'За месяц', html: vs(g.month, s.all.month) }
+            { k: 'Оплаченных верифаций', v: one(n.total) },
+            { k: 'За час',   v: one(n.hour) },
+            { k: 'За сутки', v: one(n.day) },
+            { k: 'За неделю', v: one(n.week) },
+            { k: 'За месяц', v: one(n.month) }
         ];
     }
     $('#stat-cards').innerHTML = cards.map((c) =>
@@ -331,14 +331,13 @@ function renderStats() {
                 <td class="num">${n.month}</td>
                 <td class="num"><b>${n.total}</b></td>`;
         } else {
-            const gr = g.gross || { hour: g.hour, day: g.day, week: g.week, month: g.month, total: g.total };
-            const cell = (grossV, netV) => `${grossV} <span class="v-sub">/ ${netV}</span>`;
+            // Paid, still-standing verifications only (leavers excluded).
             cells = `
-                <td class="num">${cell(gr.hour, g.hour)}</td>
-                <td class="num">${cell(gr.day, g.day)}</td>
-                <td class="num">${cell(gr.week, g.week)}</td>
-                <td class="num">${cell(gr.month, g.month)}</td>
-                <td class="num"><b>${gr.total}</b> <span class="v-sub">/ ${g.total}</span></td>`;
+                <td class="num">${g.hour}</td>
+                <td class="num">${g.day}</td>
+                <td class="num">${g.week}</td>
+                <td class="num">${g.month}</td>
+                <td class="num"><b>${g.total}</b></td>`;
         }
         return `
             <tr>
