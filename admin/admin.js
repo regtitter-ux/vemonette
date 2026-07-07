@@ -556,7 +556,7 @@ function openServerAdModal(gid) {
     // Owner-only: keep-payouts-after-completion toggle for this server.
     const isOwner = effRole() === 'owner';
     const clawOff = Boolean((state.clawbackOffAfterComplete || {})[gid]);
-    const complete = Boolean(guildEntry?.campaignComplete);
+    const complete = Boolean(guildEntry?.adComplete);
     let clawBlock = '';
     if (isOwner) {
         const chip = clawOff
@@ -569,11 +569,12 @@ function openServerAdModal(gid) {
         <div class="setting wide" style="margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;">
           <label>Снятие средств при выходе (после завершения рекламы)</label>
           <p class="muted" style="margin:4px 0 10px;">
-            Когда реклама этого сервера завершена и участник позже выходит,
+            Когда реклама этого сервера завершена (заказ выполнен <b>или</b> ручная
+            реклама достигла лимита заходов) и участник позже выходит,
             ${clawOff
                 ? 'выплата партнёру <b>не снимается</b> — заход считается финальным.'
                 : 'выплата партнёру <b>снимается</b> обратно (стандартное поведение).'}
-            Во время активной кампании снятие работает всегда — это защита от накрутки.
+            Пока реклама активна, снятие работает всегда — это защита от накрутки.
           </p>
           <div class="actions-row" style="align-items:center;gap:10px;">
             ${chip} ${statusHint}
