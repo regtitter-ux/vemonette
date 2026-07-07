@@ -239,6 +239,31 @@ if (_cardRegBtn) _cardRegBtn.onclick = async () => {
     else toast(cardErr(body?.error), 'err');
 };
 
+let cardScanPoll = null;
+const _cardScanBtn = document.getElementById('card-scan');
+if (_cardScanBtn) _cardScanBtn.onclick = async () => {
+    const status = $('#card-scan-status');
+    const { ok } = await post('/cards/scan');
+    if (!ok) { toast('Не удалось запустить сканирование', 'err'); return; }
+    status.hidden = false;
+    status.textContent = '🔎 Сканирование запущено…';
+    clearInterval(cardScanPoll);
+    cardScanPoll = setInterval(async () => {
+        const { ok, body } = await get('/cards/scan');
+        if (!ok) return;
+        const s = body.scan || {};
+        if (s.running) {
+            status.textContent = `🔎 Сканирую… каналов: ${s.scannedChannels || 0}, найдено карточек: ${s.found || 0}`;
+        } else {
+            clearInterval(cardScanPoll);
+            status.textContent = `✅ Готово. Просканировано каналов: ${s.scannedChannels || 0}, добавлено карточек: ${s.found || 0}`;
+            toast(`Сканирование завершено: +${s.found || 0}`);
+            renderCards();
+            setTimeout(() => { status.hidden = true; }, 8000);
+        }
+    }, 2500);
+};
+
 // ---------- Home-page server feed (owner only) ----------
 function feedIcon(s) {
     const url = s.img || (s.id && s.icon
