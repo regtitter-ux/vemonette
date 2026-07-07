@@ -666,6 +666,7 @@ function renderShares() {
     $('#share-price').textContent = `$${sh.salePricePer100} / 100`;
 
     const p = sh.profit, r = sh.revenue, c = sh.partnerCost, acq = sh.acquiring || { total: 0 };
+    const mgr = sh.managerCost || { total: 0 };
     const money = (v) => '$' + Number(v || 0).toFixed(2);
     const pctWarn = Math.abs(sh.totalPct - 100) > 0.001;
     const acqPct = Math.round((sh.acquiringRate || 0.03) * 100);
@@ -683,6 +684,7 @@ function renderShares() {
         { k: 'Выручка с заходов', v: money(r.total) },
         { k: 'Выплачено партнёрам (заходы)', v: money(c.total) },
         { k: `Эквайринг (${acqPct}%)`, v: money(acq.total) },
+        { k: 'Расходы на менеджеров', sub: 'комиссия менеджерам с продаж', v: money(mgr.total) },
         { k: 'Капитализация', sub: 'сумма балансов пользователей', v: money(debt) },
         {
             k: 'Баланс Crypto Pay',

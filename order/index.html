@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Vemoni · Купить рекламу</title>
-  <link rel="stylesheet" href="/order/order.css?v=5" />
+  <link rel="stylesheet" href="/order/order.css?v=6" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';
   </script>
@@ -51,6 +51,7 @@
         <div class="price"><span data-i18n="price_label">К оплате:</span> <b id="ord-price">$10.00</b> <span class="muted" id="ord-rate"></span></div>
         <button id="ord-buy" class="btn primary" data-i18n="buy_btn">Оплатить через CryptoBot</button>
       </div>
+      <div class="muted sm mgr-note" id="mgr-note" hidden></div>
       <div id="ord-result"></div>
     </section>
 
@@ -58,10 +59,20 @@
       <h2 data-i18n="my_camps">Мои кампании</h2>
       <div id="camp-list"><div class="muted" data-i18n="loading">Загрузка…</div></div>
     </section>
+
+    <section class="card mgr-card" id="mgr-card" hidden>
+      <h2 data-i18n="mgr_h2">Менеджеры по продажам</h2>
+      <p class="muted" id="mgr-desc"></p>
+      <div class="field mgr-add">
+        <input id="mgr-id" type="text" placeholder="Discord ID" />
+        <button id="mgr-add" class="btn primary" data-i18n="mgr_add">Добавить</button>
+      </div>
+      <div id="mgr-list"></div>
+    </section>
   </main>
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/order/order.js?v=4"></script>
+<script src="/order/order.js?v=5"></script>
 </body>
 </html>

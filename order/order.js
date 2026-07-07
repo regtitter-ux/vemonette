@@ -39,7 +39,14 @@ const DICT = {
     add_bot: 'Добавить бота',
     st_pending: 'Ожидает оплаты', st_active: 'Активна', st_paused: 'На паузе',
     st_complete: 'Выполнена', st_cancelled: 'Отменена', st_invalid: 'Ссылка недействительна',
-    your_server: 'Ваш сервер'
+    your_server: 'Ваш сервер',
+    mgr_h2: 'Менеджеры по продажам',
+    mgr_desc: (p, c) => `Менеджеры покупают заходы по $${p} за 100 и получают ${c}% от суммы своих продаж на баланс.`,
+    mgr_add: 'Добавить',
+    mgr_bad_id: 'Введите корректный Discord ID (17–20 цифр)',
+    mgr_added: 'Менеджер добавлен', mgr_removed: 'Менеджер удалён',
+    mgr_remove: 'Убрать', mgr_empty: 'Менеджеров пока нет',
+    mgr_you: (p) => `Вы менеджер — ваша цена $${p} за 100 заходов.`
   },
   en: {
     brand: 'Vemoni · Ads',
@@ -77,7 +84,14 @@ const DICT = {
     add_bot: 'Add the bot',
     st_pending: 'Awaiting payment', st_active: 'Active', st_paused: 'Paused',
     st_complete: 'Completed', st_cancelled: 'Cancelled', st_invalid: 'Invite invalid',
-    your_server: 'Your server'
+    your_server: 'Your server',
+    mgr_h2: 'Sales managers',
+    mgr_desc: (p, c) => `Managers buy joins at $${p} per 100 and earn ${c}% of their sales to their balance.`,
+    mgr_add: 'Add',
+    mgr_bad_id: 'Enter a valid Discord ID (17–20 digits)',
+    mgr_added: 'Manager added', mgr_removed: 'Manager removed',
+    mgr_remove: 'Remove', mgr_empty: 'No managers yet',
+    mgr_you: (p) => `You're a manager — your price is $${p} per 100 joins.`
   }
 };
 let lang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
@@ -119,6 +133,10 @@ function applyLang() {
     $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
     $$('.lang-switch button').forEach((b) => b.classList.toggle('active', b.dataset.lang === lang));
     $('#ord-rate').textContent = t('rate', CFG.pricePer100);
+    const note = $('#mgr-note');
+    if (note && CFG.isManager) note.textContent = t('mgr_you', CFG.pricePer100);
+    const mgrCard = $('#mgr-card');
+    if (CFG.isOwner && mgrCard && !mgrCard.hidden) loadManagers();
     if (lastCampaigns.length) renderCampaigns(lastCampaigns);
 }
 $$('.lang-switch button').forEach((b) => b.addEventListener('click', () => { lang = b.dataset.lang; localStorage.setItem('vemoni_lang', lang); applyLang(); }));
@@ -146,8 +164,54 @@ async function enterApp() {
     const cfg = await get('/config'); if (cfg.ok) CFG = cfg.body;
     applyLang();
     updatePrice();
+    setupManagers();
     loadCampaigns();
     setInterval(loadCampaigns, 15000);
+}
+
+// ---------- Managers (owner sees management; managers see their price note) ----------
+function setupManagers() {
+    const note = $('#mgr-note');
+    if (note) {
+        if (CFG.isManager) { note.textContent = t('mgr_you', CFG.pricePer100); note.hidden = false; }
+        else note.hidden = true;
+    }
+    const card = $('#mgr-card');
+    if (!card) return;
+    if (!CFG.isOwner) { card.hidden = true; return; }
+    card.hidden = false;
+    loadManagers();
+    const addBtn = $('#mgr-add');
+    if (addBtn && !addBtn._wired) {
+        addBtn._wired = true;
+        addBtn.onclick = async () => {
+            const id = $('#mgr-id').value.trim();
+            if (!/^\d{17,20}$/.test(id)) { toast(t('mgr_bad_id'), 'err'); return; }
+            const { ok, body } = await put('/managers', { userId: id });
+            if (ok) { $('#mgr-id').value = ''; toast(t('mgr_added')); renderManagers(body.managers, body); }
+            else toast(body?.error || 'error', 'err');
+        };
+    }
+}
+
+async function loadManagers() {
+    const { ok, body } = await get('/managers');
+    if (!ok) return;
+    $('#mgr-desc').textContent = t('mgr_desc', body.pricePer100, Math.round((body.commissionRate || 0) * 100));
+    renderManagers(body.managers || [], body);
+}
+
+function renderManagers(list, meta) {
+    const box = $('#mgr-list');
+    if (!list.length) { box.innerHTML = `<div class="muted sm">${esc(t('mgr_empty'))}</div>`; return; }
+    box.innerHTML = list.map((id) =>
+        `<div class="mgr-row"><span class="mgr-uid">${esc(id)}</span><button class="btn-mini off" data-mgr-del="${esc(id)}">${esc(t('mgr_remove'))}</button></div>`
+    ).join('');
+    box.querySelectorAll('[data-mgr-del]').forEach((b) => b.onclick = async () => {
+        const { ok, body } = await put('/managers', { userId: b.dataset.mgrDel, remove: true });
+        if (ok) { toast(t('mgr_removed')); renderManagers(body.managers, meta); }
+        else toast(body?.error || 'error', 'err');
+    });
 }
 
 // ---------- New order ----------

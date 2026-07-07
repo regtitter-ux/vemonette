@@ -88,4 +88,12 @@ h2{font-size:18px;margin-bottom:14px}
 .toast.err{border-color:rgba(237,66,69,.5);color:#ffb4b6}
 .toast.ok{border-color:rgba(87,242,135,.4)}
 
+.mgr-note{margin-top:8px;color:var(--blue)}
+.mgr-add{flex-direction:row;align-items:center;gap:10px}
+.mgr-add input{flex:1}
+.mgr-add .btn{white-space:nowrap}
+.mgr-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--stroke-2)}
+.mgr-row:first-child{border-top:none}
+.mgr-uid{font-variant-numeric:tabular-nums;font-size:13.5px}
+
 @media (max-width:560px){.wrap{padding:20px 14px 50px}.card{padding:18px}}
