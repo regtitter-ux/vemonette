@@ -89,6 +89,18 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
   padding: 5px 12px; border-radius: 999px; font-weight: 800; font-size: 12.5px; cursor: pointer;
 }
 #view-banner button:hover { filter: brightness(1.08); }
+
+/* Warning: on-air ads with no join-check (link points to a bot-less server) */
+.warn-banner {
+  grid-column: 1 / -1;
+  background: rgba(237, 66, 69, 0.14); color: #ff8a8d;
+  border-bottom: 1px solid rgba(237, 66, 69, 0.4);
+  padding: 11px 18px; font-size: 13px; line-height: 1.5;
+}
+.warn-banner b { color: #ffb3b5; }
+.warn-banner ul { margin: 7px 0 0; padding-left: 20px; }
+.warn-banner li { margin: 2px 0; }
+.warn-banner .muted { color: rgba(255, 138, 141, 0.6); }
 #code {
   padding: 14px; text-align: center; letter-spacing: 8px; font-size: 22px;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;

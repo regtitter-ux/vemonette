@@ -128,6 +128,7 @@ async function refresh() {
     const { ok, body } = await get('/state');
     if (!ok) { toast(body?.error || 'Не удалось загрузить состояние', 'err'); return; }
     state = body;
+    renderNoJoinCheckWarning();
     renderStats();
     renderGlobalAd();
     renderAdStats();
@@ -261,6 +262,26 @@ function startLiveRefresh() {
 // the paid-order view) and 'noad' (verifications where NO ad was shown —
 // organic activity, a single count to gauge sellable volume next order).
 let statMode = 'ads';
+
+// Top-of-panel warning: on-air ads whose invite points to a server with no
+// network bot → no join-check, paid as plain clicks instead of confirmed joins.
+function renderNoJoinCheckWarning() {
+    const el = $('#nojoincheck-banner');
+    if (!el) return;
+    const list = Array.isArray(state?.noJoinCheckAds) ? state.noJoinCheckAds : [];
+    if (!list.length) { el.hidden = true; el.innerHTML = ''; return; }
+    const items = list.slice(0, 5).map((a) => {
+        const snippet = (a.text || '').replace(/\s+/g, ' ').trim().slice(0, 70);
+        const where = (a.guilds || []).slice(0, 3).map((g) => escapeHtml(g.name || g.gid)).join(', ');
+        return `<li><b>${escapeHtml(snippet)}${a.text && a.text.length > 70 ? '…' : ''}</b>${where ? ` — показывается на: ${where}` : ''}</li>`;
+    }).join('');
+    const more = list.length > 5 ? `<li class="muted">…и ещё ${list.length - 5}</li>` : '';
+    el.innerHTML =
+        `⚠️ <b>Реклама без проверки на заход.</b> Ссылка ведёт на сервер, где нет нашего бота — ` +
+        `заходы <u>не проверяются</u> и оплачиваются как клики ($1/100), а не как заходы ($5–7/100). ` +
+        `Добавьте бота на сервер спонсора или исправьте ссылку.<ul>${items}${more}</ul>`;
+    el.hidden = false;
+}
 
 function renderStats() {
     const s = state.stats;
