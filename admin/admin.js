@@ -279,16 +279,18 @@ function renderStats() {
             { k: 'За месяц', v: one(n.month) }
         ];
     } else {
-        // Paid, still-standing verifications only (leavers are clawed back and
-        // don't count) — matches partner balances exactly.
-        const n = s.all;
-        const one = (v) => Number(v).toLocaleString();
+        const g = s.gross || s.all;
+        // Invites (all paid joins) up front; clean still-standing joins after
+        // the slash (leavers are clawed back — the clean number matches the
+        // balance).
+        const vs = (invites, clean) =>
+            `${Number(invites).toLocaleString()} <span class="v-sub">/ ${Number(clean).toLocaleString()} чистых</span>`;
         cards = [
-            { k: 'Оплаченных верифаций', v: one(n.total) },
-            { k: 'За час',   v: one(n.hour) },
-            { k: 'За сутки', v: one(n.day) },
-            { k: 'За неделю', v: one(n.week) },
-            { k: 'За месяц', v: one(n.month) }
+            { k: 'Инвайты / чистые', html: vs(g.total, s.all.total) },
+            { k: 'За час',   html: vs(g.hour, s.all.hour) },
+            { k: 'За сутки', html: vs(g.day, s.all.day) },
+            { k: 'За неделю', html: vs(g.week, s.all.week) },
+            { k: 'За месяц', html: vs(g.month, s.all.month) }
         ];
     }
     $('#stat-cards').innerHTML = cards.map((c) =>
@@ -331,13 +333,15 @@ function renderStats() {
                 <td class="num">${n.month}</td>
                 <td class="num"><b>${n.total}</b></td>`;
         } else {
-            // Paid, still-standing verifications only (leavers excluded).
+            const gr = g.gross || { hour: g.hour, day: g.day, week: g.week, month: g.month, total: g.total };
+            // Invites (all paid joins) / clean joins still standing.
+            const cell = (invites, clean) => `${invites} <span class="v-sub">/ ${clean}</span>`;
             cells = `
-                <td class="num">${g.hour}</td>
-                <td class="num">${g.day}</td>
-                <td class="num">${g.week}</td>
-                <td class="num">${g.month}</td>
-                <td class="num"><b>${g.total}</b></td>`;
+                <td class="num">${cell(gr.hour, g.hour)}</td>
+                <td class="num">${cell(gr.day, g.day)}</td>
+                <td class="num">${cell(gr.week, g.week)}</td>
+                <td class="num">${cell(gr.month, g.month)}</td>
+                <td class="num"><b>${gr.total}</b> <span class="v-sub">/ ${g.total}</span></td>`;
         }
         return `
             <tr>
