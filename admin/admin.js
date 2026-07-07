@@ -684,7 +684,7 @@ function renderShares() {
         { k: 'Выручка с заходов', v: money(r.total) },
         { k: 'Выплачено партнёрам (заходы)', v: money(c.total) },
         { k: `Эквайринг (${acqPct}%)`, v: money(acq.total) },
-        { k: 'Расходы на менеджеров', sub: 'комиссия менеджерам с продаж', v: money(mgr.total) },
+        { k: 'Скидка менеджерам', sub: 'маржа менеджеров (розница − их цена)', v: money(mgr.total) },
         { k: 'Капитализация', sub: 'сумма балансов пользователей', v: money(debt) },
         {
             k: 'Баланс Crypto Pay',
@@ -896,17 +896,23 @@ function renderBalTable(users) {
         const bChip = u.balance > 0 ? 'green' : u.balance < 0 ? 'red' : '';
         const reqBadge = u.hasRequisites ? '<span class="chip green">Реквизиты</span>' : '<span class="chip">Нет реквизитов</span>';
         const auto = u.autoPayout ? '<span class="chip blue">Auto</span>' : '';
+        const name = u.username || 'Неизвестный';
+        // Join-check rate ($ per 100 joins). Boosted users show time left.
+        const rate = `$${Number(u.joinRate ?? u.joinBid ?? 5).toFixed(2)}`;
+        const boostChip = u.boosted
+            ? ` <span class="chip amber" title="Бонус по рефералке">🔥 ${fmtBoostLeft(u.boostLeftMs)}</span>`
+            : '';
         return `
           <tr class="clickable" data-uid="${escapeHtml(u.userId)}">
             <td>
-              <span class="uid">${escapeHtml(u.userId)}</span><br>
-              ${reqBadge} ${auto}
+              <div class="srv-cell"><span>${escapeHtml(name)}</span><button class="btn-mini copy-id" data-copy="${escapeHtml(u.userId)}" title="${escapeHtml(u.userId)}">Copy ID</button></div>
+              <div style="margin-top:4px">${reqBadge} ${auto}</div>
             </td>
             <td class="num"><span class="chip ${bChip}">$${u.balance.toFixed(2)}</span></td>
             <td class="num">$${u.withdrawnTotal.toFixed(2)}</td>
             <td class="num">${u.verifications.toLocaleString()}</td>
             <td class="num">${u.referralsCount}</td>
-            <td class="num">$${u.bid.toFixed(2)}</td>
+            <td class="num">${rate}${boostChip}</td>
           </tr>`;
     }).join('');
     $('#bal-table').innerHTML = `
@@ -916,12 +922,20 @@ function renderBalTable(users) {
         <th class="num">Выведено</th>
         <th class="num">Верифаций</th>
         <th class="num">Рефералов</th>
-        <th class="num">Bid</th>
+        <th class="num">Ставка/100</th>
       </tr></thead>
       <tbody>${rows || '<tr><td colspan="6" class="muted">Ничего не найдено под этот фильтр.</td></tr>'}</tbody>`;
     $$('#bal-table tr[data-uid]').forEach((tr) => {
-        tr.onclick = () => openBalDetail(tr.dataset.uid);
+        // Don't open the detail when the Copy ID button was clicked.
+        tr.onclick = (e) => { if (e.target.closest('[data-copy]')) return; openBalDetail(tr.dataset.uid); };
     });
+}
+
+// "165ч" / "2д 5ч" left of a referral boost.
+function fmtBoostLeft(ms) {
+    const h = Math.max(0, Math.ceil((Number(ms) || 0) / 3600000));
+    if (h >= 24) { const d = Math.floor(h / 24); return `${d}д ${h % 24}ч`; }
+    return `${h}ч`;
 }
 
 let currentDetailUserId = null;
@@ -962,13 +976,6 @@ function wireBalDetailControls(userId) {
         if (!m) { toast('Введи число с + или -, например +50 или -20', 'err'); return; }
         const delta = (m[1] === '-' ? -1 : 1) * Number(m[2]);
         editBalanceField(userId, 'balance', { delta }, `Баланс изменён на ${m[1]}$${m[2]}`);
-    };
-
-    const bidBtn = apply('bid');
-    if (bidBtn) bidBtn.onclick = () => {
-        const bid = Number($('[data-edit="bid"]').value.replace(',', '.'));
-        if (!Number.isFinite(bid) || bid < 0) { toast('Bid — число ≥ 0', 'err'); return; }
-        editBalanceField(userId, 'bid', { bid }, 'Bid сохранён');
     };
 
     const jbidBtn = apply('joinbid');
@@ -1050,13 +1057,8 @@ function balDetailHtml(u) {
             <div class="actions-row"><button class="btn primary sm" data-edit-act="balance">Применить</button></div>
           </div>
           <div class="setting">
-            <label>Bid ($/100 clicks)</label>
-            <input type="number" step="0.01" min="0" data-edit="bid" value="${u.bid.toFixed(2)}" />
-            <div class="actions-row"><button class="btn primary sm" data-edit-act="bid">Сохранить</button></div>
-          </div>
-          <div class="setting">
-            <label>Join bid ($/100 joins)</label>
-            <input type="number" step="0.01" min="0" data-edit="joinBid" value="${u.joinBid.toFixed(2)}" />
+            <label>Ставка ($/100 заходов)${u.boosted ? ` · <span class="chip amber">🔥 бонус ${fmtBoostLeft(u.boostLeftMs)}</span>` : ''}</label>
+            <input type="number" step="0.01" min="0" data-edit="joinBid" value="${Number(u.joinBid).toFixed(2)}" />
             <div class="actions-row"><button class="btn primary sm" data-edit-act="joinbid">Сохранить</button></div>
           </div>
           <div class="setting autopay">
