@@ -204,13 +204,16 @@ async function cardAction(action, messageId) {
         const { ok, body } = await post('/cards/delete', { messageId });
         toast(ok ? 'Карточка удалена' : cardErr(body?.error), ok ? 'ok' : 'err'); if (ok) renderCards();
     } else if (action === 'owner') {
-        const creatorId = (prompt('Новый владелец — Discord ID:') || '').trim();
-        if (!creatorId) return;
-        if (!/^\d{17,20}$/.test(creatorId)) { toast('Неверный ID', 'err'); return; }
+        const raw = prompt('Новый владелец — Discord ID:');
+        if (raw === null) return; // отмена / клик мимо — ничего не меняем
+        const creatorId = raw.trim();
+        if (!creatorId || !/^\d{17,20}$/.test(creatorId)) { toast('Неверный ID', 'err'); return; }
         const { ok, body } = await post('/cards/edit', { messageId, creatorId });
         toast(ok ? 'Владелец изменён' : cardErr(body?.error), ok ? 'ok' : 'err'); if (ok) renderCards();
     } else if (action === 'role') {
-        const roleId = (prompt('Новая роль — ID (пусто = роль по умолчанию «Verified»):') || '').trim();
+        const raw = prompt('Новая роль — ID (пусто = роль по умолчанию «Verified»):');
+        if (raw === null) return; // отмена / клик мимо — ничего не меняем
+        const roleId = raw.trim();
         if (roleId && !/^\d{17,20}$/.test(roleId)) { toast('Неверный ID роли', 'err'); return; }
         const { ok, body } = await post('/cards/edit', { messageId, roleId });
         toast(ok ? 'Роль изменена' : cardErr(body?.error), ok ? 'ok' : 'err'); if (ok) renderCards();
