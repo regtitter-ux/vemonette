@@ -38,6 +38,11 @@ const DICT = {
     pay: 'Оплатить',
     pause: 'Пауза', resume: 'Возобновить',
     servers_btn: 'Серверы показа',
+    change_link: 'Сменить ссылку', save: 'Сохранить', cancel: 'Отмена',
+    link_ph: 'https://discord.gg/xxxx',
+    link_changed: 'Ссылка обновлена', link_same: 'Это та же ссылка',
+    link_nobot: 'На новом сервере нет нашего бота — заходы не проверить. Добавьте бота и повторите.',
+    link_hint: 'Новая ссылка должна работать, и на её сервере должен быть наш бот. Прогресс кампании сохранится.',
     paused_toast: 'Кампания на паузе', resumed_toast: 'Кампания возобновлена',
     srv_loading: 'Загрузка…', srv_error: 'Ошибка', srv_empty: 'Пока нет доставленных заходов по серверам.',
     disable: 'Отключить', disabled: 'Выключен',
@@ -90,6 +95,11 @@ const DICT = {
     pay: 'Pay',
     pause: 'Pause', resume: 'Resume',
     servers_btn: 'Shown on servers',
+    change_link: 'Change link', save: 'Save', cancel: 'Cancel',
+    link_ph: 'https://discord.gg/xxxx',
+    link_changed: 'Link updated', link_same: 'Same link as before',
+    link_nobot: "Our bot isn't on the new server — joins can't be verified. Add the bot and try again.",
+    link_hint: 'The new link must work and its server must have our bot. Campaign progress is preserved.',
     paused_toast: 'Campaign paused', resumed_toast: 'Campaign resumed',
     srv_loading: 'Loading…', srv_error: 'Error', srv_empty: 'No delivered joins per server yet.',
     disable: 'Disable', disabled: 'Disabled',
@@ -114,7 +124,7 @@ function t(key, ...args) { const v = DICT[lang][key] ?? DICT.ru[key] ?? key; ret
 
 // Map short backend error codes to localized text.
 function errText(code) {
-    return ({ 'bad-invite': t('invite_bad'), 'min-joins': t('invite_min', CFG.minJoins), 'invoice-failed': t('order_fail'), 'min-topup': t('topup_min', (typeof WALLET !== 'undefined' && WALLET.minTopup) || 5) })[code] || code || t('order_fail');
+    return ({ 'bad-invite': t('invite_bad'), 'min-joins': t('invite_min', CFG.minJoins), 'invoice-failed': t('order_fail'), 'min-topup': t('topup_min', (typeof WALLET !== 'undefined' && WALLET.minTopup) || 5), 'no-bot': t('link_nobot'), 'not-active': t('order_fail') })[code] || code || t('order_fail');
 }
 
 // ---------- HTTP ----------
@@ -329,6 +339,7 @@ function campCard(c) {
         </div>` : '';
     const canManage = c.status === 'active';
     const pauseBtn = canManage ? `<button class="btn-mini ${c.paused ? 'off' : 'on'}" data-pause="${c.id}">${esc(c.paused ? t('resume') : t('pause'))}</button>` : '';
+    const linkBtn = canManage ? `<button class="btn-mini" data-editlink="${c.id}">${esc(t('change_link'))}</button>` : '';
     const srvBtn = (c.status === 'active' || c.status === 'complete') ? `<button class="btn-mini" data-servers="${c.id}">${esc(t('servers_btn'))}</button>` : '';
     return `
       <div class="camp" data-id="${c.id}">
@@ -343,7 +354,15 @@ function campCard(c) {
         <div class="progress"><i style="width:${pct}%"></i></div>
         <div class="camp-nums"><span>${esc(t('delivered'))} <b>${c.delivered}</b> / ${c.purchased}</span><span>${money(c.price)}</span></div>
         ${retentionRow(c.retention)}
-        <div class="camp-actions">${payLink}${pauseBtn}${srvBtn}</div>
+        <div class="camp-actions">${payLink}${pauseBtn}${linkBtn}${srvBtn}</div>
+        <div class="link-edit" data-link-edit="${c.id}" hidden>
+          <input type="text" class="link-input" data-link-input="${c.id}" value="${esc(c.invite)}" placeholder="${esc(t('link_ph'))}" />
+          <div class="link-row">
+            <button class="btn-mini on" data-link-save="${c.id}">${esc(t('save'))}</button>
+            <button class="btn-mini" data-link-cancel="${c.id}">${esc(t('cancel'))}</button>
+          </div>
+          <div class="link-hint muted sm">${esc(t('link_hint'))}</div>
+        </div>
         <div class="srv-list" data-srv-list="${c.id}" hidden></div>
       </div>`;
 }
@@ -353,6 +372,30 @@ function wireCampaigns(list) {
         const c = list.find((x) => x.id === b.dataset.pause);
         const { ok } = await post(`/campaigns/${b.dataset.pause}/pause`, { paused: !c.paused });
         if (ok) { toast(!c.paused ? t('paused_toast') : t('resumed_toast')); loadCampaigns(); }
+    });
+    // Change the invite link mid-flight — toggle inline editor, then save.
+    $$('#camp-list [data-editlink]').forEach((b) => b.onclick = () => {
+        const box = $(`[data-link-edit="${b.dataset.editlink}"]`);
+        if (!box) return;
+        box.hidden = !box.hidden;
+        if (!box.hidden) $(`[data-link-input="${b.dataset.editlink}"]`)?.focus();
+    });
+    $$('#camp-list [data-link-cancel]').forEach((b) => b.onclick = () => {
+        const box = $(`[data-link-edit="${b.dataset.linkCancel}"]`); if (box) box.hidden = true;
+    });
+    $$('#camp-list [data-link-save]').forEach((b) => b.onclick = async () => {
+        const id = b.dataset.linkSave;
+        const input = $(`[data-link-input="${id}"]`);
+        const val = (input?.value || '').trim();
+        const code = parseInvite(val);
+        if (!code) { toast(t('invite_bad'), 'err'); return; }
+        const cur = list.find((x) => x.id === id);
+        if (cur && `https://discord.gg/${code}` === cur.invite) { toast(t('link_same')); return; }
+        b.disabled = true;
+        const { ok, body } = await put(`/campaigns/${id}/invite`, { invite: `https://discord.gg/${code}` });
+        b.disabled = false;
+        if (ok) { toast(t('link_changed')); loadCampaigns(); }
+        else toast(errText(body?.error), 'err');
     });
     $$('#camp-list [data-servers]').forEach((b) => b.onclick = async () => {
         const id = b.dataset.servers; const box = $(`[data-srv-list="${id}"]`);

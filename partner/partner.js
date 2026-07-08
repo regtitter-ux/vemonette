@@ -60,7 +60,7 @@ function render(d) {
     const cards = [
         { k: 'Баланс', v: money(d.balance), n: d.balance >= (d.minWithdraw || 10) ? 'можно вывести' : `вывод от ${money(d.minWithdraw || 10)}` },
         { k: 'Ставка за заход', v: `$${Number(d.joinRate).toFixed(2)}<span class="muted sm">/100</span>${boost}` },
-        { k: 'Заходов засчитано', v: d.standingJoins, n: money(d.standingPaid) + ' начислено' },
+        { k: 'Заходов оплачено', v: d.standingJoins, n: money(d.standingPaid) + ' начислено' },
         { k: 'Всего выведено', v: money(d.withdrawnDone) }
     ];
     $('#p-cards').innerHTML = cards.map((c) =>
@@ -75,7 +75,7 @@ function render(d) {
     const pg = d.verifications?.perGuild || [];
     $('#p-verif').innerHTML = `
       <thead><tr><th>Сервер</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th><th class="num">месяц</th><th class="num">всего</th></tr></thead>
-      <tbody>${pg.length ? pg.map((g) => `<tr><td>${esc(g.name || g.guildId)}</td><td class="num">${g.hour}</td><td class="num">${g.day}</td><td class="num">${g.week}</td><td class="num">${g.month}</td><td class="num"><b>${g.total}</b></td></tr>`).join('') : '<tr><td colspan="6" class="muted">Пока нет оплаченных верификаций</td></tr>'}</tbody>`;
+      <tbody>${pg.length ? pg.map((g) => `<tr><td>${esc(g.name || g.guildId)}</td><td class="num">${g.hour}</td><td class="num">${g.day}</td><td class="num">${g.week}</td><td class="num">${g.month}</td><td class="num"><b>${g.total}</b>${g.left ? ` <span class="left-n" title="Зашли, но вышли">/${g.left}</span>` : ''}</td></tr>`).join('') : '<tr><td colspan="6" class="muted">Пока нет оплаченных верификаций</td></tr>'}</tbody>`;
 
     // Withdrawals
     const wds = d.withdrawals || [];
