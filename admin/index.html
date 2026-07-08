@@ -37,6 +37,7 @@
     <div class="brand-sm">Vemoni · Admin</div>
     <nav class="tabs">
       <button data-tab="stats" class="tab active" data-i18n="tab_stats">Статистика</button>
+      <button data-tab="bi" class="tab" data-owner-only data-i18n="tab_bi">Обзор</button>
       <button data-tab="adstats" class="tab" data-owner-only data-i18n="tab_adstats">Стата рекламы</button>
       <button data-tab="shares" class="tab" data-i18n="tab_shares">Доли</button>
       <button data-tab="balances" class="tab" data-owner-only data-i18n="tab_balances">Балансы</button>
@@ -51,6 +52,17 @@
   </aside>
 
   <main class="content">
+    <!-- Business overview / BI + inventory (owner only) -->
+    <section class="pane" data-pane="bi" hidden>
+      <h1>Обзор</h1>
+      <h2>Ключевые показатели</h2>
+      <div class="cards" id="bi-kpi"></div>
+      <h2>Инвентарь рекламы</h2>
+      <div class="cards" id="bi-inventory"></div>
+      <h2>Выручка по неделям</h2>
+      <div class="table-wrap"><table class="stat-table" id="bi-weeks"></table></div>
+    </section>
+
     <!-- Stats -->
     <section class="pane" data-pane="stats">
       <h1>Статистика
@@ -247,6 +259,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=48"></script>
+<script src="/admin/admin.js?v=49"></script>
 </body>
 </html>

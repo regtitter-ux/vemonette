@@ -4,8 +4,8 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
 // ---------- i18n (navigation + login chrome; deeper content is RU) ----------
 const I18N = {
-    ru: { tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_system: 'Система', tab_admins: 'Админы', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
-    en: { tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_system: 'System', tab_admins: 'Admins', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
+    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_system: 'Система', tab_admins: 'Админы', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
+    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_system: 'System', tab_admins: 'Admins', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
 };
 let adminLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
 if (!I18N[adminLang]) adminLang = 'ru';
@@ -136,7 +136,41 @@ async function refresh() {
     renderShares();
     renderTemplates();
     renderToggle();
-    if (effRole() === 'owner') { renderAdmins(); renderFeed(); renderCards(); renderSystem(); }
+    if (effRole() === 'owner') { renderAdmins(); renderFeed(); renderCards(); renderSystem(); renderBI(); }
+}
+
+// ---------- Overview / BI tab (#12) + inventory (#8) ----------
+async function renderBI() {
+    const { ok, body } = await get('/bi');
+    if (!ok) return;
+    const m = (v) => '$' + Number(v || 0).toFixed(2);
+    const card = (k, v, note, warn) =>
+        `<div class="stat-card"><div class="k">${escapeHtml(k)}</div><div class="v"${warn ? ' style="color:var(--red)"' : ''}>${escapeHtml(String(v))}</div>${note ? `<div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0;font-size:11.5px">${escapeHtml(note)}</div>` : ''}</div>`;
+    const kpi = $('#bi-kpi');
+    if (kpi) kpi.innerHTML = [
+        card('Выручка за 30д', m(body.revenue30)),
+        card('Заходы 7д / 30д', `${body.joins7} / ${body.joins30}`),
+        card('Активные партнёры 7д / 30д', `${body.activePartners7} / ${body.activePartners30}`),
+        card('Отток (клаубэк, 30д)', `${body.churnPct}%`, 'доля ушедших из засчитанных', body.churnPct > 30),
+        card('Активные кампании', body.activeCampaigns),
+        card('Покупатели за 30д', body.buyers30)
+    ].join('');
+    const inv = body.inventory || {};
+    const invBox = $('#bi-inventory');
+    if (invBox) invBox.innerHTML = [
+        card('Спрос (не доставлено)', `${inv.demand} заходов`, 'сумма остатков активных кампаний'),
+        card('Пропускная способность', `${inv.capacityPerDay}/день`, 'средняя за 7 дней'),
+        card('Хватит на', inv.coverageDays == null ? '—' : `${inv.coverageDays} дн.`, inv.oversold ? '🔴 перепродажа — заказов больше, чем сеть тянет' : '🟢 в норме', inv.oversold)
+    ].join('');
+    const weeksBox = $('#bi-weeks');
+    if (weeksBox) {
+        const w = body.weeks || [];
+        const head = w.map((_, i) => `<th class="num">${i === w.length - 1 ? 'эта' : '-' + (w.length - 1 - i) + 'н'}</th>`).join('');
+        weeksBox.innerHTML = `<thead><tr><th></th>${head}</tr></thead><tbody>
+            <tr><td>Выручка</td>${w.map((x) => `<td class="num">${m(x.revenue)}</td>`).join('')}</tr>
+            <tr><td>Заходы</td>${w.map((x) => `<td class="num">${x.joins}</td>`).join('')}</tr>
+        </tbody>`;
+    }
 }
 
 // ---------- System tab: monitoring, reconciliation, backups, audit ----------
