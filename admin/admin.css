@@ -517,5 +517,17 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .card-stats th { color: var(--muted); font-weight: 600; }
 .card-stats td.num, .card-stats th.num { text-align: right; font-variant-numeric: tabular-nums; min-width: 44px; }
 .cardrow-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.cardrow-actions .btn-mini {
+  font-size: 12px; padding: 5px 11px; border-radius: 8px; cursor: pointer;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14); color: var(--text);
+}
+.cardrow-actions .btn-mini:hover { background: rgba(255,255,255,0.09); border-color: rgba(255,255,255,0.24); }
+.cardrow-actions .btn-mini.ok  { background: rgba(87,242,135,0.14); border-color: rgba(87,242,135,0.35); color: var(--green); }
+.cardrow-actions .btn-mini.ok:hover  { background: rgba(87,242,135,0.22); }
+.cardrow-actions .btn-mini.off { background: rgba(237,66,69,0.14); border-color: rgba(237,66,69,0.35); color: var(--red); }
+.cardrow-actions .btn-mini.off:hover { background: rgba(237,66,69,0.22); }
+.cardrow-actions .btn-mini:disabled,
+.cardrow-actions .btn-mini[disabled] { opacity: .4; cursor: not-allowed; background: rgba(255,255,255,0.03); }
+.cardrow-actions .btn-mini:disabled:hover { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.14); }
 
 .cardrow.deleted { border-color: rgba(237,66,69,.3); background: rgba(237,66,69,.05); }

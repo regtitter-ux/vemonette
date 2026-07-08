@@ -295,8 +295,11 @@ function cardBlock(c, deleted) {
     const delMeta = deleted
         ? `<div class="cardrow-meta" style="color:#ff9a9c">🗑 Удалено ${escapeHtml(relTime(c.deletedAt))} · кем: <b>${who}</b></div>`
         : '';
+    const restoreBtn = c.canRestore
+        ? `<button class="btn-mini ok" data-card="restore">Вернуть</button>`
+        : `<button class="btn-mini" data-card="restore" disabled title="${escapeHtml(restoreReasonText(c.restoreReason))}">Вернуть</button>`;
     const actions = deleted
-        ? `<button class="btn-mini off" data-card="purge">Убрать из списка</button>`
+        ? `${restoreBtn}<button class="btn-mini off" data-card="purge">Убрать из списка</button>`
         : `<button class="btn-mini" data-card="fix">Встряхнуть</button>
            <button class="btn-mini" data-card="owner">Владелец…</button>
            <button class="btn-mini" data-card="role">Роль…</button>
@@ -375,6 +378,10 @@ async function cardAction(action, messageId) {
     } else if (action === 'desc') {
         const card = lastCardsAll.find((c) => c.messageId === messageId);
         openCardDescModal(messageId, card ? (card.description || '') : '');
+    } else if (action === 'restore') {
+        if (!confirm('Опубликовать карточку заново в том же канале (владелец и роль сохранятся)?')) return;
+        const { ok, body } = await post('/cards/restore', { messageId });
+        toast(ok ? 'Карточка возвращена' : cardErr(body?.error), ok ? 'ok' : 'err'); if (ok) renderCards();
     } else if (action === 'purge') {
         if (!confirm('Окончательно убрать эту карточку из списка удалённых?')) return;
         const { ok } = await post('/cards/purge', { messageId });
@@ -420,10 +427,25 @@ function cardErr(code) {
         'not-own-message': 'Это сообщение не от нашего бота',
         'not-a-card': 'Это не карточка верификации',
         'not-tracked': 'Карточка не в списке',
+        'not-deleted': 'Карточка не удалена',
         'no-owner': 'Не удалось определить владельца',
+        'no-bot': 'Бот больше не на сервере',
+        'no-channel': 'Канал удалён или недоступен',
+        'no-perms': 'У бота нет прав отправлять сообщения в этот канал',
         'bad-ref': 'Неверная ссылка на сообщение',
         'send-failed': 'Не удалось отправить новое сообщение'
     })[code] || (code || 'Ошибка');
+}
+
+// Why a deleted card's "Вернуть" button is disabled (button tooltip).
+function restoreReasonText(reason) {
+    return ({
+        'no-owner': 'Неизвестен владелец карточки',
+        'no-bot': 'Бот больше не на этом сервере',
+        'no-channel': 'Канал удалён или недоступен боту',
+        'no-perms': 'У бота нет прав отправлять сообщения в этот канал',
+        'not-deleted': 'Карточка не удалена'
+    })[reason] || 'Восстановление сейчас недоступно';
 }
 
 const _cardRegBtn = document.getElementById('card-register');
