@@ -89,8 +89,8 @@ main, .nav, .footer { position: relative; z-index: 1; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
 .brand-mark { width: 32px; height: 32px; border-radius: 9px; display: block; filter: drop-shadow(0 6px 16px rgba(34, 168, 240, 0.5)); }
 .brand-name { font-weight: 800; font-size: 20px; letter-spacing: -0.01em; }
-.nav-links { display: flex; gap: 6px; margin-left: auto; }
-.nav-links a { color: #e7ecf6; font-weight: 700; font-size: 14px; padding: 8px 15px; border-radius: 8px; transition: background 0.15s, color 0.15s; }
+.nav-links { display: flex; align-items: center; gap: 6px; margin-left: auto; }
+.nav-links a { display: flex; align-items: center; white-space: nowrap; color: #e7ecf6; font-weight: 700; font-size: 14px; padding: 8px 15px; border-radius: 8px; transition: background 0.15s, color 0.15s; }
 .nav-links a:hover { background: rgba(255, 255, 255, 0.07); }
 .nav-links a.active { background: var(--blue); color: #06121c; }
 
