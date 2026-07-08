@@ -61,9 +61,7 @@ function render(d) {
         { k: 'Баланс', v: money(d.balance), n: d.balance >= (d.minWithdraw || 10) ? 'можно вывести' : `вывод от ${money(d.minWithdraw || 10)}` },
         { k: 'Ставка за заход', v: `$${Number(d.joinRate).toFixed(2)}<span class="muted sm">/100</span>${boost}` },
         { k: 'Заходов засчитано', v: d.standingJoins, n: money(d.standingPaid) + ' начислено' },
-        { k: 'Ушло (списано)', v: d.clawedJoins, n: '−' + money(d.clawedAmount) },
-        { k: 'Всего выведено', v: money(d.withdrawnDone) },
-        { k: 'Автовывод', v: d.autoPayout ? '🟢 вкл' : '⚪ выкл' }
+        { k: 'Всего выведено', v: money(d.withdrawnDone) }
     ];
     $('#p-cards').innerHTML = cards.map((c) =>
         `<div class="pcard"><div class="k">${esc(c.k)}</div><div class="v">${c.v}</div>${c.n ? `<div class="n">${esc(c.n)}</div>` : ''}</div>`
