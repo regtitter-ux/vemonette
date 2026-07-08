@@ -75,7 +75,17 @@ function render(d) {
     const pg = d.verifications?.perGuild || [];
     $('#p-verif').innerHTML = `
       <thead><tr><th>Сервер</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th><th class="num">месяц</th><th class="num">всего</th></tr></thead>
-      <tbody>${pg.length ? pg.map((g) => `<tr><td>${esc(g.name || g.guildId)}</td><td class="num">${g.hour}</td><td class="num">${g.day}</td><td class="num">${g.week}</td><td class="num">${g.month}</td><td class="num"><b>${g.total}</b>${g.left ? ` <span class="left-n" title="Зашли, но вышли">/${g.left}</span>` : ''}</td></tr>`).join('') : '<tr><td colspan="6" class="muted">Пока нет оплаченных верификаций</td></tr>'}</tbody>`;
+      <tbody>${pg.length ? pg.map((g) => {
+          const L = g.left || {};
+          // left number = осталось (still standing), right = всего зашло (осталось + вышли)
+          const cell = (stayed, leftN, bold) => {
+              const joined = (Number(stayed) || 0) + (Number(leftN) || 0);
+              const main = bold ? `<b>${stayed}</b>` : `${stayed}`;
+              const extra = leftN ? ` <span class="left-n" title="Осталось / всего зашло">/${joined}</span>` : '';
+              return `<td class="num">${main}${extra}</td>`;
+          };
+          return `<tr><td>${esc(g.name || g.guildId)}</td>${cell(g.hour, L.hour)}${cell(g.day, L.day)}${cell(g.week, L.week)}${cell(g.month, L.month)}${cell(g.total, L.total, true)}</tr>`;
+      }).join('') : '<tr><td colspan="6" class="muted">Пока нет оплаченных верификаций</td></tr>'}</tbody>`;
 
     // Withdrawals
     const wds = d.withdrawals || [];
