@@ -1288,7 +1288,7 @@ function renderBalTable(users) {
     const rows = users.map((u) => {
         const bChip = u.balance > 0 ? 'green' : u.balance < 0 ? 'red' : '';
         const reqBadge = u.hasRequisites ? '<span class="chip green">Реквизиты</span>' : '<span class="chip">Нет реквизитов</span>';
-        const auto = u.autoPayout ? '<span class="chip blue">Auto</span>' : '';
+        const auto = u.autoTransfer ? '<span class="chip blue">Авто-перевод</span>' : u.autoPayout ? '<span class="chip blue">Авто-чек</span>' : '';
         const name = u.username || 'Неизвестный';
         // Join-check rate ($ per 100 joins). Boosted users show time left.
         const rate = `$${Number(u.joinRate ?? u.joinBid ?? 5).toFixed(2)}`;
@@ -1383,7 +1383,21 @@ function wireBalDetailControls(userId) {
         const off = !e.target.checked;
         const { ok, body } = await put(`/balances/${encodeURIComponent(userId)}/autopayout`, { autoPayout: e.target.checked });
         if (!ok) { e.target.checked = off; toast(body?.error || 'Не удалось переключить', 'err'); return; }
-        toast(e.target.checked ? 'Auto-payout включён' : 'Auto-payout выключен');
+        toast(e.target.checked ? 'Авто-вывод по чеку включён' : 'Авто-вывод по чеку выключен');
+        loadBalances();
+    };
+
+    const transferBtn = $('[data-edit-act="autotransfer"]');
+    if (transferBtn) transferBtn.onclick = async () => {
+        const autoTransfer = $('[data-edit="autoTransfer"]').checked;
+        const tgUserId = $('[data-edit="tgUserId"]').value.trim();
+        if (autoTransfer && !/^\d{5,15}$/.test(tgUserId)) { toast('Введите числовой Telegram ID получателя', 'err'); return; }
+        const { ok, body } = await put(`/balances/${encodeURIComponent(userId)}/autotransfer`, { autoTransfer, tgUserId });
+        if (!ok) {
+            const msg = body?.error === 'tg-id-required' ? 'Укажите Telegram ID' : body?.error === 'bad-tg-id' ? 'Неверный Telegram ID' : (body?.error || 'Не удалось сохранить');
+            toast(msg, 'err'); return;
+        }
+        toast(autoTransfer ? 'Прямой авто-вывод включён' : 'Прямой авто-вывод выключен');
         loadBalances();
     };
 
@@ -1455,11 +1469,25 @@ function balDetailHtml(u) {
             <div class="actions-row"><button class="btn primary sm" data-edit-act="joinbid">Сохранить</button></div>
           </div>
           <div class="setting autopay">
-            <label>Auto-payout (USDT-check)</label>
+            <label>Авто-вывод по чеку (USDT-check)</label>
             <label class="switch positive">
               <input type="checkbox" data-edit="autoPayout" ${u.autoPayout ? 'checked' : ''} />
               <span class="slider"></span>
             </label>
+          </div>
+          <div class="setting wide">
+            <div class="setting autopay" style="padding:0;border:none;background:transparent;">
+              <label>Авто-вывод прямым переводом (USDT, без чека)</label>
+              <label class="switch positive">
+                <input type="checkbox" data-edit="autoTransfer" ${u.autoTransfer ? 'checked' : ''} />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="actions-row" style="gap:8px;margin-top:8px;">
+              <input type="text" data-edit="tgUserId" placeholder="Telegram ID получателя, напр. 123456789" value="${escapeHtml(u.tgUserId || '')}" style="flex:1;" />
+              <button class="btn primary sm" data-edit-act="autotransfer">Сохранить</button>
+            </div>
+            <div class="muted" style="font-size:11.5px;margin-top:6px">Деньги приходят напрямую в @CryptoBot получателю — без чека и подтверждений. Нужен числовой Telegram ID (не @username; узнать можно через @userinfobot). Имеет приоритет над выводом по чеку.</div>
           </div>
           <div class="setting wide">
             <label>Реквизиты</label>
