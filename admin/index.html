@@ -213,8 +213,22 @@
   </div>
 </div>
 
+<div id="card-desc-modal" class="modal-overlay" hidden>
+  <div class="modal">
+    <button class="modal-close" id="card-desc-close" aria-label="Close">✕</button>
+    <div class="modal-body">
+      <h2>Описание карточки</h2>
+      <p class="muted" style="margin-bottom:12px">Текст под заголовком «Get verified!» — только для этой карточки. Пусто = стандартный текст.</p>
+      <div class="setting wide">
+        <textarea id="card-desc-input" rows="4" placeholder="Например: Чтобы получить доступ, пройдите верификацию — нажмите кнопку."></textarea>
+        <div class="actions-row"><button class="btn primary sm" id="card-desc-save">Сохранить</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=46"></script>
+<script src="/admin/admin.js?v=47"></script>
 </body>
 </html>

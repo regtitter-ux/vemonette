@@ -188,6 +188,7 @@ function cardBlock(c, deleted) {
         : `<button class="btn-mini" data-card="fix">Встряхнуть</button>
            <button class="btn-mini" data-card="owner">Владелец…</button>
            <button class="btn-mini" data-card="role">Роль…</button>
+           <button class="btn-mini" data-card="desc">Описание…</button>
            <button class="btn-mini" data-card="republish">Перепубликовать</button>
            <button class="btn-mini off" data-card="delete">Удалить</button>`;
     return `
@@ -209,11 +210,13 @@ function cardBlock(c, deleted) {
         <div class="cardrow-actions">${actions}</div>
       </div>`;
 }
+let lastCardsAll = [];
 async function renderCards() {
     const { ok, body } = await get('/cards');
     if (!ok) return;
     const active = body.cards || [];
     const deleted = body.deletedCards || [];
+    lastCardsAll = [...active, ...deleted];
     const avgEl = $('#cards-avg');
     if (avgEl) {
         if (body.avgVerifySeconds != null) { avgEl.textContent = `⏱ Среднее время от клика до проверенного захода (все карточки): ~${fmtSec(body.avgVerifySeconds)}`; avgEl.hidden = false; }
@@ -257,12 +260,38 @@ async function cardAction(action, messageId) {
         if (roleId && !/^\d{17,20}$/.test(roleId)) { toast('Неверный ID роли', 'err'); return; }
         const { ok, body } = await post('/cards/edit', { messageId, roleId });
         toast(ok ? 'Роль изменена' : cardErr(body?.error), ok ? 'ok' : 'err'); if (ok) renderCards();
+    } else if (action === 'desc') {
+        const card = lastCardsAll.find((c) => c.messageId === messageId);
+        openCardDescModal(messageId, card ? (card.description || '') : '');
     } else if (action === 'purge') {
         if (!confirm('Окончательно убрать эту карточку из списка удалённых?')) return;
         const { ok } = await post('/cards/purge', { messageId });
         if (ok) { toast('Убрано из списка'); renderCards(); }
     }
 }
+
+function openCardDescModal(messageId, desc) {
+    const modal = $('#card-desc-modal');
+    if (!modal) return;
+    $('#card-desc-input').value = desc || '';
+    modal.dataset.mid = messageId;
+    modal.hidden = false;
+    $('#card-desc-input').focus();
+}
+(() => {
+    const modal = document.getElementById('card-desc-modal');
+    if (!modal) return;
+    const close = () => { modal.hidden = true; };
+    document.getElementById('card-desc-close')?.addEventListener('click', close);
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+    document.getElementById('card-desc-save')?.addEventListener('click', async () => {
+        const mid = modal.dataset.mid;
+        const description = $('#card-desc-input').value;
+        const { ok, body } = await post('/cards/edit', { messageId: mid, description });
+        if (ok) { close(); toast('Описание обновлено'); renderCards(); }
+        else toast(cardErr(body?.error), 'err');
+    });
+})();
 
 const _cardVerifyBtn = document.getElementById('card-verify');
 if (_cardVerifyBtn) _cardVerifyBtn.onclick = async () => {
@@ -467,7 +496,8 @@ function isEditingSomething() {
     return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
 }
 function anyModalOpen() {
-    return !$('#bal-modal').hidden || !$('#server-ad-modal').hidden || !$('#cryptofund-modal').hidden;
+    return !$('#bal-modal').hidden || !$('#server-ad-modal').hidden || !$('#cryptofund-modal').hidden
+        || !$('#card-desc-modal').hidden;
 }
 async function liveTick() {
     if (document.hidden || isEditingSomething() || anyModalOpen()) return;
