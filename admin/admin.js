@@ -4,8 +4,8 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
 // ---------- i18n (navigation + login chrome; deeper content is RU) ----------
 const I18N = {
-    ru: { tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_admins: 'Админы', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
-    en: { tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_admins: 'Admins', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
+    ru: { tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_system: 'Система', tab_admins: 'Админы', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
+    en: { tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_system: 'System', tab_admins: 'Admins', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
 };
 let adminLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
 if (!I18N[adminLang]) adminLang = 'ru';
@@ -136,8 +136,82 @@ async function refresh() {
     renderShares();
     renderTemplates();
     renderToggle();
-    if (effRole() === 'owner') { renderAdmins(); renderFeed(); renderCards(); }
+    if (effRole() === 'owner') { renderAdmins(); renderFeed(); renderCards(); renderSystem(); }
 }
+
+// ---------- System tab: monitoring, reconciliation, backups, audit ----------
+function fmtDur(ms) {
+    ms = Number(ms) || 0;
+    const s = Math.floor(ms / 1000), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+    if (d) return `${d}д ${h}ч`;
+    if (h) return `${h}ч ${m}м`;
+    return `${m}м`;
+}
+async function renderSystem() {
+    const [h, f, a] = await Promise.all([get('/health'), get('/finance'), get('/audit?limit=200')]);
+    if (h.ok) { renderSysBots(h.body); renderSysBackup(h.body.backup, h.body.alertChannel); }
+    if (f.ok) renderSysFinance(f.body);
+    if (a.ok) renderSysAudit(a.body.entries || []);
+}
+function renderSysBots(b) {
+    const box = $('#sys-bots'); if (!box) return;
+    const cards = [{ k: 'Ботов онлайн', v: `${b.online} / ${b.total}`, warn: b.online < b.total }]
+        .concat((b.bots || []).map((bot) => ({
+            k: escapeHtml(bot.tag || bot.id || '—'),
+            v: bot.online ? '🟢 онлайн' : '🔴 офлайн',
+            warn: !bot.online,
+            note: `ping ${bot.ping < 0 ? '—' : bot.ping + 'мс'} · серверов ${bot.guilds} · аптайм ${fmtDur(bot.uptimeMs)}`
+        })));
+    box.innerHTML = cards.map((c) =>
+        `<div class="stat-card"><div class="k">${c.k}</div><div class="v"${c.warn ? ' style="color:var(--red)"' : ''}>${escapeHtml(c.v)}</div>${c.note ? `<div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0;font-size:11.5px">${escapeHtml(c.note)}</div>` : ''}</div>`
+    ).join('');
+    if (!b.alertChannel) box.innerHTML += `<div class="stat-card" style="border-color:rgba(245,179,0,.4)"><div class="k">Алерты</div><div class="v" style="color:var(--amber);font-size:14px">⚠️ выключены</div><div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0;font-size:11.5px">Задайте ALERT_CHANNEL в Railway</div></div>`;
+}
+function renderSysFinance(f) {
+    const box = $('#sys-finance'); if (!box) return;
+    const m = (v) => '$' + Number(v || 0).toFixed(2);
+    const cards = [
+        { k: 'Долг сервиса (положит. балансы)', v: m(f.owed), note: `${f.accountsOwed} аккаунтов` },
+        { k: 'Баланс Crypto Pay', v: f.cryptoBalance == null ? '—' : m(f.cryptoBalance) },
+        { k: 'Платёжеспособность', v: f.solvency == null ? '—' : m(f.solvency), warn: f.solvent === false, note: f.solvent === false ? '🔴 не хватает на выплаты' : f.solvent === true ? '🟢 хватает' : '' },
+        { k: 'Выплачено (завершено)', v: m(f.withdrawnDone) },
+        { k: 'Выводы в обработке', v: m(f.withdrawnPending) },
+        { k: 'Начислено за заходы', v: m(f.paidOutJoins) },
+        { k: 'Списано (клаубэк)', v: m(f.clawedBack) },
+        { k: 'Отрицательные балансы', v: m(f.negative), note: `${f.accountsNeg} аккаунтов (должны сервису)` }
+    ];
+    box.innerHTML = cards.map((c) =>
+        `<div class="stat-card"><div class="k">${escapeHtml(c.k)}</div><div class="v"${c.warn ? ' style="color:var(--red)"' : ''}>${escapeHtml(c.v)}</div>${c.note ? `<div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0;font-size:11.5px">${escapeHtml(c.note)}</div>` : ''}</div>`
+    ).join('');
+}
+function renderSysBackup(bk, alertOn) {
+    const box = $('#sys-backup'); if (!box) return;
+    const last = bk?.last;
+    const off = bk?.offsite ? 'вкл' : 'выкл (задайте BACKUP_CHANNEL)';
+    box.innerHTML = last
+        ? `Последний бэкап: <b>${escapeHtml(relTime(last.at))}</b> · локально: ${last.local ? '✅' : '❌'} · офсайт: ${last.offsite ? '✅' : '❌'} · файлов: ${last.files}. Офсайт-копия: ${off}.`
+        : `Бэкап ещё не запускался в этой сессии (первый — через пару минут после старта). Офсайт-копия: ${off}.`;
+}
+function renderSysAudit(entries) {
+    const box = $('#sys-audit'); if (!box) return;
+    const rows = entries.map((e) => `
+        <tr>
+          <td class="muted" style="white-space:nowrap">${escapeHtml(relTime(e.ts))}</td>
+          <td>${escapeHtml(e.userName || e.userId || '—')}</td>
+          <td><code>${escapeHtml(e.action)}</code></td>
+          <td class="muted">${escapeHtml(e.detail || '')}</td>
+        </tr>`).join('');
+    box.innerHTML = `<thead><tr><th>Когда</th><th>Кто</th><th>Действие</th><th>Детали</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="4" class="muted">Пока пусто</td></tr>'}</tbody>`;
+}
+const _sysBackupBtn = document.getElementById('sys-backup-now');
+if (_sysBackupBtn) _sysBackupBtn.onclick = async () => {
+    _sysBackupBtn.disabled = true;
+    const { ok, body } = await post('/backup');
+    _sysBackupBtn.disabled = false;
+    if (ok) { toast(body?.result?.offsite ? 'Бэкап сделан (локально + офсайт)' : 'Бэкап сделан (локально)'); renderSystem(); }
+    else toast('Не удалось сделать бэкап', 'err');
+};
 
 // ---------- Verification cards (owner only, "Экстренно" tab) ----------
 function cardGuildIcon(c) {

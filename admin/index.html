@@ -43,6 +43,7 @@
       <button data-tab="templates" class="tab" data-owner-only data-i18n="tab_templates">Шаблоны</button>
       <button data-tab="toggle" class="tab" data-i18n="tab_toggle">Кран</button>
       <button data-tab="feed" class="tab" data-owner-only data-i18n="tab_feed">Лента</button>
+      <button data-tab="system" class="tab" data-owner-only data-i18n="tab_system">Система</button>
       <button data-tab="admins" class="tab" data-owner-only data-i18n="tab_admins">Админы</button>
     </nav>
     <div class="lang-switch" id="langSwitch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
@@ -160,6 +161,23 @@
       </div>
     </section>
 
+    <!-- System: monitoring, reconciliation, backups, audit (owner only) -->
+    <section class="pane" data-pane="system" hidden>
+      <h1>Система</h1>
+
+      <h2>Мониторинг ботов</h2>
+      <div class="cards" id="sys-bots"></div>
+
+      <h2>Финансовая сверка</h2>
+      <div class="cards" id="sys-finance"></div>
+
+      <h2>Бэкапы <button class="btn ghost sm" id="sys-backup-now" style="font-size:12px">Сделать бэкап сейчас</button></h2>
+      <div id="sys-backup" class="muted"></div>
+
+      <h2>Аудит-лог действий</h2>
+      <div class="table-wrap"><table class="stat-table" id="sys-audit"></table></div>
+    </section>
+
     <!-- Home-page server feed (owner only) -->
     <section class="pane" data-pane="feed" hidden>
       <h1>Лента серверов</h1>
@@ -229,6 +247,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=47"></script>
+<script src="/admin/admin.js?v=48"></script>
 </body>
 </html>
