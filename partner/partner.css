@@ -1,0 +1,65 @@
+:root{
+  --bg:#0b0f17; --panel:#141b26; --panel-2:#1a2331; --stroke:#232d3d; --stroke-2:#2d3a4d;
+  --text:#e7ecf6; --muted:#8b97ab; --blue:#22a8f0; --blue-2:#5cc3ff; --green:#57f287;
+  --red:#ed4245; --amber:#f5b300; --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:15px;line-height:1.5}
+html,body{scrollbar-width:none;-ms-overflow-style:none}
+html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}
+a{color:var(--blue-2)}
+.muted{color:var(--muted)}
+.sm{font-size:12.5px}
+b{color:#fff}
+
+.btn{border:none;border-radius:10px;padding:11px 16px;font-weight:700;font-size:14px;font-family:inherit;cursor:pointer;transition:background .15s,transform .05s}
+.btn.primary{background:var(--blue);color:#06121c}
+.btn.primary:hover{background:var(--blue-2)}
+.btn.ghost{background:transparent;border:1px solid var(--stroke-2);color:var(--text)}
+.btn.ghost:hover{background:rgba(255,255,255,.05)}
+.btn.sm{padding:7px 12px;font-size:12.5px}
+
+.login{position:fixed;inset:0;display:grid;place-items:center;padding:24px}
+.login-card{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--stroke-2);border-radius:var(--radius);padding:32px 28px;display:flex;flex-direction:column;gap:14px;box-shadow:0 30px 80px -30px rgba(0,0,0,.85)}
+.brand{font-size:20px;font-weight:800}
+.hint{color:var(--muted);font-size:14px}
+.discord-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#5865F2;color:#fff;text-decoration:none;padding:13px 18px;border-radius:10px;font-weight:700;font-size:15px}
+.discord-btn:hover{background:#4752c4}
+.err{color:var(--red);font-size:13.5px}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--stroke);position:sticky;top:0;background:var(--bg);z-index:5}
+.brand-sm{font-weight:800}
+.top-right{display:flex;align-items:center;gap:12px}
+.bal-pill{display:inline-flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--stroke-2);border-radius:999px;padding:6px 14px;font-weight:800}
+.bal-pill .muted{font-weight:600}
+
+.wrap{max-width:860px;margin:0 auto;padding:28px 20px 60px;display:flex;flex-direction:column;gap:28px}
+h1{font-size:24px;margin-bottom:6px}
+h2{font-size:18px;margin-bottom:14px}
+.card{background:var(--panel);border:1px solid var(--stroke);border-radius:var(--radius);padding:22px}
+
+.pcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.pcard{background:var(--panel);border:1px solid var(--stroke);border-radius:12px;padding:16px 18px}
+.pcard .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.pcard .v{font-size:22px;font-weight:800;margin-top:6px}
+.pcard .n{color:var(--muted);font-size:11.5px;margin-top:6px}
+
+textarea{background:var(--bg);color:var(--text);border:1px solid var(--stroke-2);border-radius:10px;padding:11px 13px;font-size:14px;font-family:inherit;width:100%;min-height:80px;resize:vertical}
+textarea:focus{outline:none;border-color:var(--blue)}
+.actions-row{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--stroke)}
+th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.table-wrap{overflow-x:auto;border:1px solid var(--stroke);border-radius:12px}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;background:rgba(255,255,255,.06)}
+.chip.green{background:rgba(87,242,135,.16);color:var(--green)}
+.chip.amber{background:rgba(245,179,0,.16);color:var(--amber)}
+.chip.blue{background:rgba(34,168,240,.16);color:var(--blue-2)}
+
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--stroke-2);border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:600;box-shadow:0 20px 50px -20px rgba(0,0,0,.8);z-index:50}
+.toast.err{border-color:rgba(237,66,69,.5);color:#ffb4b6}
+@media (max-width:560px){.wrap{padding:20px 14px 50px}.card{padding:16px}}
