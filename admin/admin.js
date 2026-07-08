@@ -305,6 +305,7 @@ function cardBlock(c, deleted) {
            <button class="btn-mini" data-card="role">Роль…</button>
            <button class="btn-mini" data-card="desc">Описание…</button>
            <button class="btn-mini" data-card="republish">Перепубликовать</button>
+           <button class="btn-mini off" data-card="reset-role">Сбросить роль</button>
            <button class="btn-mini off" data-card="delete">Удалить</button>`;
     return `
       <div class="cardrow${deleted ? ' deleted' : ''}" data-mid="${escapeHtml(c.messageId)}">
@@ -378,6 +379,11 @@ async function cardAction(action, messageId) {
     } else if (action === 'desc') {
         const card = lastCardsAll.find((c) => c.messageId === messageId);
         openCardDescModal(messageId, card ? (card.description || '') : '');
+    } else if (action === 'reset-role') {
+        if (!confirm('Сбросить роль верификации?\n\nБудет создана НОВАЯ роль с теми же правами, правами на каналах, названием, цветом и иконкой. Старая роль будет удалена у всех участников, а карточка сразу переключится на новую роль.\n\nВсем участникам придётся пройти верификацию заново. Продолжить?')) return;
+        const { ok, body } = await post('/cards/reset-role', { messageId });
+        toast(ok ? `Роль сброшена${body?.roleName ? ': @' + body.roleName : ''}` : cardErr(body?.error), ok ? 'ok' : 'err');
+        if (ok) renderCards();
     } else if (action === 'restore') {
         if (!confirm('Опубликовать карточку заново в том же канале (владелец и роль сохранятся)?')) return;
         const { ok, body } = await post('/cards/restore', { messageId });
@@ -431,9 +437,15 @@ function cardErr(code) {
         'no-owner': 'Не удалось определить владельца',
         'no-bot': 'Бот больше не на сервере',
         'no-channel': 'Канал удалён или недоступен',
-        'no-perms': 'У бота нет прав отправлять сообщения в этот канал',
+        'no-perms': 'У бота нет прав (нужно «Управление ролями»)',
         'bad-ref': 'Неверная ссылка на сообщение',
-        'send-failed': 'Не удалось отправить новое сообщение'
+        'send-failed': 'Не удалось отправить новое сообщение',
+        'no-role': 'Роль карточки не найдена на сервере',
+        'no-guild': 'Сервер недоступен боту',
+        'role-managed': 'Это служебная роль (бот/интеграция) — пересоздать нельзя',
+        'role-everyone': 'Нельзя сбросить роль @everyone',
+        'role-too-high': 'Роль бота ниже этой роли — поднимите роль бота выше',
+        'create-failed': 'Не удалось создать новую роль'
     })[code] || (code || 'Ошибка');
 }
 
