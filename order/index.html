@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Vemoni · Купить рекламу</title>
-  <link rel="stylesheet" href="/order/order.css?v=6" />
+  <link rel="stylesheet" href="/order/order.css?v=7" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';
   </script>
@@ -29,6 +29,7 @@
   <header class="topbar">
     <div class="brand-sm" data-i18n="brand">Vemoni · Реклама</div>
     <div class="top-right">
+      <span class="bal-pill"><span class="muted sm" data-i18n="wallet_label">Баланс</span> <b id="wallet-balance">$0.00</b> <button class="btn-mini wallet-plus" id="wallet-topup" title="Пополнить">＋</button></span>
       <div class="lang-switch" id="langSwitchApp"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
       <button id="logout" class="btn ghost sm" data-i18n="logout">Выйти</button>
     </div>
@@ -49,7 +50,7 @@
       </div>
       <div class="order-foot">
         <div class="price"><span data-i18n="price_label">К оплате:</span> <b id="ord-price">$10.00</b> <span class="muted" id="ord-rate"></span></div>
-        <button id="ord-buy" class="btn primary" data-i18n="buy_btn">Оплатить через CryptoBot</button>
+        <button id="ord-buy" class="btn primary" data-i18n="buy_btn">Запустить кампанию</button>
       </div>
       <div class="muted sm mgr-note" id="mgr-note" hidden></div>
       <div id="ord-result"></div>
@@ -73,6 +74,6 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/order/order.js?v=6"></script>
+<script src="/order/order.js?v=7"></script>
 </body>
 </html>

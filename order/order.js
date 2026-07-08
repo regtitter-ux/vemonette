@@ -13,8 +13,14 @@ const DICT = {
     order_desc: 'Приведём живых участников на ваш сервер — реклама показывается в сети крупных сообществ, оплата только за подтверждённые заходы.',
     label_invite: 'Ссылка-приглашение вашего сервера',
     label_joins: 'Сколько заходов купить',
-    price_label: 'К оплате:',
-    buy_btn: 'Оплатить через CryptoBot',
+    price_label: 'Стоимость:',
+    buy_btn: 'Запустить кампанию',
+    wallet_label: 'Баланс',
+    topup_prompt: (min) => `Сумма пополнения в $ (минимум ${min}):`,
+    topup_min: (min) => `Минимум $${min}`,
+    topup_created: (a) => `Счёт на $${a} создан. Оплатите через CryptoBot — баланс пополнится в течение минуты:`,
+    launched: 'Кампания запущена! 🎉',
+    insufficient: (need) => `Недостаточно средств. Пополните ещё на $${need} и повторите.`,
     my_camps: 'Мои кампании',
     loading: 'Загрузка…',
     rate: (p) => `· $${p} за 100 заходов`,
@@ -58,8 +64,14 @@ const DICT = {
     order_desc: 'We bring real members to your server — your ad runs across a network of large communities, and you only pay for verified joins.',
     label_invite: 'Invite link to your server',
     label_joins: 'How many joins to buy',
-    price_label: 'Total:',
-    buy_btn: 'Pay via CryptoBot',
+    price_label: 'Cost:',
+    buy_btn: 'Launch campaign',
+    wallet_label: 'Balance',
+    topup_prompt: (min) => `Top-up amount in $ (min ${min}):`,
+    topup_min: (min) => `Minimum $${min}`,
+    topup_created: (a) => `Invoice for $${a} created. Pay via CryptoBot — your balance updates within a minute:`,
+    launched: 'Campaign launched! 🎉',
+    insufficient: (need) => `Not enough balance. Top up $${need} more and try again.`,
     my_camps: 'My campaigns',
     loading: 'Loading…',
     rate: (p) => `· $${p} per 100 joins`,
@@ -100,7 +112,7 @@ function t(key, ...args) { const v = DICT[lang][key] ?? DICT.ru[key] ?? key; ret
 
 // Map short backend error codes to localized text.
 function errText(code) {
-    return ({ 'bad-invite': t('invite_bad'), 'min-joins': t('invite_min', CFG.minJoins), 'invoice-failed': t('order_fail') })[code] || code || t('order_fail');
+    return ({ 'bad-invite': t('invite_bad'), 'min-joins': t('invite_min', CFG.minJoins), 'invoice-failed': t('order_fail'), 'min-topup': t('topup_min', (typeof WALLET !== 'undefined' && WALLET.minTopup) || 5) })[code] || code || t('order_fail');
 }
 
 // ---------- HTTP ----------
@@ -165,9 +177,33 @@ async function enterApp() {
     applyLang();
     updatePrice();
     setupManagers();
+    loadWallet();
     loadCampaigns();
     setInterval(loadCampaigns, 15000);
+    setInterval(loadWallet, 15000);
 }
+
+// ---------- Wallet ----------
+let WALLET = { balance: 0, minTopup: 5 };
+async function loadWallet() {
+    const { ok, body } = await get('/wallet');
+    if (!ok) return;
+    WALLET = body;
+    $('#wallet-balance').textContent = money(body.balance);
+}
+$('#wallet-topup').addEventListener('click', async () => {
+    const raw = prompt(t('topup_prompt', WALLET.minTopup || 5));
+    if (raw === null) return;
+    const amount = Math.floor(Number(String(raw).replace(',', '.')));
+    if (!Number.isFinite(amount) || amount < (WALLET.minTopup || 5)) { toast(t('topup_min', WALLET.minTopup || 5), 'err'); return; }
+    const { ok, body } = await post('/wallet/topup', { amount });
+    if (!ok || !body?.invoiceUrl) { toast(errText(body?.error), 'err'); return; }
+    $('#ord-result').innerHTML = `
+      <div class="pay-box">
+        <div style="margin-bottom:8px">${esc(t('topup_created', Number(body.amount).toFixed(2)))}</div>
+        <a href="${esc(body.invoiceUrl)}" target="_blank" rel="noopener">${esc(body.invoiceUrl)}</a>
+      </div>`;
+});
 
 // ---------- Managers (owner sees management; managers see their price note) ----------
 function setupManagers() {
@@ -234,15 +270,17 @@ $('#ord-buy').addEventListener('click', async () => {
     if (!Number.isFinite(joins) || joins < CFG.minJoins) { toast(t('invite_min', CFG.minJoins), 'err'); return; }
     $('#ord-buy').disabled = true;
     $('#ord-result').innerHTML = `<div class="muted">${esc(t('creating'))}</div>`;
-    const { ok, body } = await post('/create', { invite: `https://discord.gg/${code}`, joins });
+    const { ok, status, body } = await post('/create', { invite: `https://discord.gg/${code}`, joins });
     $('#ord-buy').disabled = false;
-    if (!ok || !body?.invoiceUrl) { $('#ord-result').innerHTML = `<div class="err">${esc(errText(body?.error))}</div>`; return; }
-    $('#ord-result').innerHTML = `
-      <div class="pay-box">
-        <div style="margin-bottom:8px">${esc(t('invoice_ready', Number(body.price).toFixed(2)))}</div>
-        <a href="${esc(body.invoiceUrl)}" target="_blank" rel="noopener">${esc(body.invoiceUrl)}</a>
-        <div class="muted sm" style="margin-top:8px">${esc(t('after_pay'))}</div>
-      </div>`;
+    if (status === 402 || body?.error === 'insufficient') {
+        const need = Number(body?.shortfall ?? Math.max(0, (body?.price || 0) - (body?.balance || 0))).toFixed(2);
+        $('#ord-result').innerHTML = `<div class="err">${esc(t('insufficient', need))}</div>`;
+        loadWallet();
+        return;
+    }
+    if (!ok || !body?.campaign) { $('#ord-result').innerHTML = `<div class="err">${esc(errText(body?.error))}</div>`; return; }
+    $('#ord-result').innerHTML = `<div class="pay-box">✅ ${esc(t('launched'))}</div>`;
+    loadWallet();
     loadCampaigns();
 });
 

@@ -97,3 +97,8 @@ h2{font-size:18px;margin-bottom:14px}
 .mgr-uid{font-variant-numeric:tabular-nums;font-size:13.5px}
 
 @media (max-width:560px){.wrap{padding:20px 14px 50px}.card{padding:18px}}
+
+.bal-pill{display:inline-flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--stroke-2);border-radius:999px;padding:5px 8px 5px 14px;font-weight:800}
+.bal-pill .muted{font-weight:600}
+.wallet-plus{padding:2px 9px;font-size:15px;line-height:1;font-weight:800}
+.pay-box{margin-top:14px;background:var(--panel-2);border:1px solid var(--stroke-2);border-radius:12px;padding:14px}
