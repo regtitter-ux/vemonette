@@ -148,7 +148,8 @@ async function renderBI() {
         `<div class="stat-card"><div class="k">${escapeHtml(k)}</div><div class="v"${warn ? ' style="color:var(--red)"' : ''}>${escapeHtml(String(v))}</div>${note ? `<div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0;font-size:11.5px">${escapeHtml(note)}</div>` : ''}</div>`;
     const kpi = $('#bi-kpi');
     if (kpi) kpi.innerHTML = [
-        card('Выручка за 30д', m(body.revenue30)),
+        card('Продажи рекламы 30д', m(body.adSales?.month), `всего ${m(body.adSales?.total)} · ${body.adSales?.count || 0} шт`),
+        card('Выручка с заходов 30д', m(body.revenue30), 'признаётся по мере доставки'),
         card('Заходы 7д / 30д', `${body.joins7} / ${body.joins30}`),
         card('Активные партнёры 7д / 30д', `${body.activePartners7} / ${body.activePartners30}`),
         card('Отток (клаубэк, 30д)', `${body.churnPct}%`, 'доля ушедших из засчитанных', body.churnPct > 30),
@@ -205,6 +206,9 @@ function renderSysFinance(f) {
     const box = $('#sys-finance'); if (!box) return;
     const m = (v) => '$' + Number(v || 0).toFixed(2);
     const cards = [
+        { k: 'Продажи рекламы (всего)', v: m(f.adSales?.total), note: `за 30д ${m(f.adSales?.month)} · ${f.adSales?.count || 0} шт` },
+        { k: 'Предоплата на кошельках', v: m(f.walletsHeld), note: 'пополнено, ещё не потрачено' },
+        { k: 'Оплачено, не доставлено', v: m(f.prepaidUndelivered), note: 'в активных кампаниях — распределится по мере доставки' },
         { k: 'Долг сервиса (положит. балансы)', v: m(f.owed), note: `${f.accountsOwed} аккаунтов` },
         { k: 'Баланс Crypto Pay', v: f.cryptoBalance == null ? '—' : m(f.cryptoBalance) },
         { k: 'Платёжеспособность', v: f.solvency == null ? '—' : m(f.solvency), warn: f.solvent === false, note: f.solvent === false ? '🔴 не хватает на выплаты' : f.solvent === true ? '🟢 хватает' : '' },
