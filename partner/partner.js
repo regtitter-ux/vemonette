@@ -50,8 +50,61 @@ async function enterApp() {
 
 async function load() {
     const { ok, body } = await get('/me');
+    if (ok) render(body);
+    loadAdHistory();
+}
+
+// ---- Ad history per server ----
+let adHist = [];
+let adHistSel = null;
+async function loadAdHistory() {
+    const { ok, body } = await get('/ad-history');
     if (!ok) return;
-    render(body);
+    renderAdHistory(body.servers || []);
+}
+function srvIcon(name, url) {
+    const initial = esc((String(name || '?')[0] || '?').toUpperCase());
+    return url
+        ? `<img class="sw-ic" src="${esc(url)}" alt="" onerror="this.outerHTML='<span class=\\'sw-ic sw-ic-fb\\'>${initial}</span>'" />`
+        : `<span class="sw-ic sw-ic-fb">${initial}</span>`;
+}
+function renderAdHistory(servers) {
+    adHist = servers;
+    const section = $('#adhist-section');
+    if (!servers.length) { section.hidden = true; return; }
+    section.hidden = false;
+    if (!adHistSel || !servers.some((s) => s.guildId === adHistSel)) adHistSel = servers[0].guildId;
+
+    // Server switcher (only when the partner has more than one server).
+    const sw = $('#adhist-switch');
+    if (servers.length > 1) {
+        sw.hidden = false;
+        sw.innerHTML = servers.map((s) =>
+            `<button class="sw-btn${s.guildId === adHistSel ? ' active' : ''}" data-sv="${esc(s.guildId)}">${srvIcon(s.name, s.icon)}<span>${esc(s.name || s.guildId)}</span></button>`
+        ).join('');
+        sw.querySelectorAll('[data-sv]').forEach((b) => b.onclick = () => { adHistSel = b.dataset.sv; renderAdHistory(adHist); });
+    } else { sw.hidden = true; sw.innerHTML = ''; }
+
+    const s = servers.find((x) => x.guildId === adHistSel) || servers[0];
+    $('#adhist-summary').innerHTML =
+        `<div class="ah-sum-row">${servers.length === 1 ? `${srvIcon(s.name, s.icon)}<span class="ah-sv-name">${esc(s.name || s.guildId)}</span>` : ''}
+          <span class="ah-kpi"><span class="muted sm">Зашло</span> <b>${s.totalJoined}</b></span>
+          <span class="ah-kpi"><span class="muted sm">Осталось</span> <b>${s.totalStayed}</b></span>
+          <span class="ah-kpi"><span class="muted sm">Ушли</span> <b>${s.totalLeft}</b></span>
+          <span class="ah-kpi"><span class="muted sm">Заработано</span> <b>${money(s.totalEarned)}</b></span>
+        </div>`;
+
+    const ads = s.ads || [];
+    $('#adhist-table').innerHTML = `
+      <thead><tr><th>Реклама (сервер)</th><th class="num">Зашло</th><th class="num">Осталось</th><th class="num">Ушли</th><th class="num">Заработано</th><th>Последний показ</th></tr></thead>
+      <tbody>${ads.length ? ads.map((a) => `<tr>
+        <td>${srvIcon(a.sponsorName, a.sponsorIcon)}<span class="ah-ad-name">${esc(a.sponsorName || a.sponsorGuildId)}</span></td>
+        <td class="num">${a.joined}</td>
+        <td class="num"><b>${a.stayed}</b></td>
+        <td class="num">${a.left || 0}</td>
+        <td class="num">${money(a.earned)}</td>
+        <td class="muted">${esc(relTime(a.lastAt))}</td>
+      </tr>`).join('') : '<tr><td colspan="6" class="muted">Пока не было показов рекламы на этом сервере.</td></tr>'}</tbody>`;
 }
 
 function render(d) {

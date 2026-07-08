@@ -56,6 +56,21 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;le
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .left-n{color:#5a6577;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
 .table-wrap{overflow-x:auto;border:1px solid var(--stroke);border-radius:12px}
+
+/* Ad-history: server switcher + summary */
+.srv-switch{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.sw-btn{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border-radius:999px;border:1px solid var(--stroke-2);background:rgba(255,255,255,.03);color:var(--text);font-size:13px;font-weight:600;cursor:pointer}
+.sw-btn:hover{background:rgba(255,255,255,.07)}
+.sw-btn.active{background:rgba(34,168,240,.16);border-color:rgba(34,168,240,.4);color:var(--blue-2)}
+.sw-ic{width:22px;height:22px;border-radius:50%;flex:none;object-fit:cover;background:rgba(255,255,255,.06)}
+.sw-ic-fb{display:inline-flex;align-items:center;justify-content:center;background:rgba(34,168,240,.16);color:var(--blue-2);font-weight:800;font-size:10px}
+.adhist-summary{margin-bottom:14px}
+.ah-sum-row{display:flex;flex-wrap:wrap;align-items:center;gap:18px;padding:12px 16px;border:1px solid var(--stroke);border-radius:12px;background:rgba(255,255,255,.02)}
+.ah-sv-name{font-weight:700;margin-right:4px}
+.ah-kpi{display:inline-flex;align-items:center;gap:7px}
+.ah-kpi b{font-size:15px;font-variant-numeric:tabular-nums}
+#adhist-table td .sw-ic{vertical-align:middle;margin-right:8px}
+.ah-ad-name{vertical-align:middle}
 .chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;background:rgba(255,255,255,.06)}
 .chip.green{background:rgba(87,242,135,.16);color:var(--green)}
 .chip.amber{background:rgba(245,179,0,.16);color:var(--amber)}
