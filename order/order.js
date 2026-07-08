@@ -34,6 +34,7 @@ const DICT = {
     after_pay: 'После оплаты кампания запустится автоматически (в течение минуты).',
     no_camps: 'Заказов пока нет. Оформите первый выше ↑',
     delivered: 'Доставлено:',
+    retention: 'Удержание',
     pay: 'Оплатить',
     pause: 'Пауза', resume: 'Возобновить',
     servers_btn: 'Серверы показа',
@@ -85,6 +86,7 @@ const DICT = {
     after_pay: 'The campaign starts automatically after payment (within a minute).',
     no_camps: 'No orders yet. Place your first one above ↑',
     delivered: 'Delivered:',
+    retention: 'Retention',
     pay: 'Pay',
     pause: 'Pause', resume: 'Resume',
     servers_btn: 'Shown on servers',
@@ -309,6 +311,11 @@ function renderCampaigns(list) {
     wireCampaigns(list);
 }
 
+function retentionRow(r) {
+    if (!r || (r.d1 == null && r.d7 == null && r.d30 == null)) return '';
+    const c = (v) => v == null ? '—' : `${v}%`;
+    return `<div class="camp-ret muted sm">${esc(t('retention'))}: 1д ${c(r.d1)} · 7д ${c(r.d7)} · 30д ${c(r.d30)}</div>`;
+}
 function campCard(c) {
     const st = statusOf(c);
     const pct = c.purchased ? Math.min(100, Math.round(c.delivered / c.purchased * 100)) : 0;
@@ -335,6 +342,7 @@ function campCard(c) {
         ${botWarn}
         <div class="progress"><i style="width:${pct}%"></i></div>
         <div class="camp-nums"><span>${esc(t('delivered'))} <b>${c.delivered}</b> / ${c.purchased}</span><span>${money(c.price)}</span></div>
+        ${retentionRow(c.retention)}
         <div class="camp-actions">${payLink}${pauseBtn}${srvBtn}</div>
         <div class="srv-list" data-srv-list="${c.id}" hidden></div>
       </div>`;
