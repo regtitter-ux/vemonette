@@ -1062,7 +1062,6 @@ function renderShares() {
     const p = sh.profit, r = sh.revenue, c = sh.partnerCost, acq = sh.acquiring || { total: 0 };
     const mgr = sh.managerCost || { total: 0 };
     const money = (v) => '$' + Number(v || 0).toFixed(2);
-    const pctWarn = Math.abs(sh.totalPct - 100) > 0.001;
     const acqPct = Math.round((sh.acquiringRate || 0.03) * 100);
     // Crypto Pay app balance vs service debt (outstanding). When the app
     // balance can't cover what's owed to partners, flag a top-up.
@@ -1086,8 +1085,7 @@ function renderShares() {
             warn: needTopUp,
             btn: effRole() === 'owner' ? 'cryptofund' : null,  // top-up is owner-only
             note: cryptoBal == null ? 'не настроен' : needTopUp ? `🔴 Пополни: меньше капитализации ${money(debt)}` : '🟢 Хватает на выплаты'
-        },
-        { k: 'Сумма долей', v: `${sh.totalPct}%`, warn: pctWarn }
+        }
     ];
     $('#share-cards').innerHTML = cards.map((cd) => {
         const btn = cd.btn ? ` <button class="card-add" data-card-action="${cd.btn}" title="Пополнить">＋</button>` : '';
@@ -1131,6 +1129,7 @@ function renderShares() {
 async function saveShare(userId, pct) {
     const { ok, body } = await put('/shares', { userId, pct });
     if (ok) { toast(pct > 0 ? `Доля обновлена: ${pct}%` : 'Владелец убран'); refresh(); }
+    else if (body?.error === 'exceeds-100') toast(`Сумма долей превысит 100%. Свободно: ${body.available}%`, 'err');
     else toast(body?.error || 'Не удалось сохранить долю', 'err');
 }
 
