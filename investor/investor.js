@@ -176,7 +176,7 @@ function serverCard(s) {
         <div class="vcard-head">${srvIcon(s.name, s.icon)}<span><b>${name}</b></span></div>
         ${flowRow(s.flow)}
         ${price}
-        ${(s.investable !== false && !s.occupied) ? minLine : ''}
+        ${(s.investable !== false && !s.occupied && !s.broken && !s.brokenSince) ? minLine : ''}
         ${mine}
         <div class="vcard-actions">${serverAction(s, name, minInv)}</div>
       </div>`;
@@ -200,6 +200,13 @@ function tickTimers() {
 setInterval(tickTimers, 1000);
 
 function serverAction(s, name, minInv) {
+    if (s.broken || s.brokenSince) {
+        const etaTs = s.refundEtaSec ? Date.now() + s.refundEtaSec * 1000 : 0;
+        const when = s.brokenSince
+            ? `Если не восстановится через <b class="inv-timer" data-eta="${etaTs}">${etaTs ? '~' + fmtEta(s.refundEtaSec) : 'скоро'}</b> — вернём $${PRICING.buyPer100}/100 за непроданные инвайты на инвест-счёт.`
+            : `После 24ч простоя вернём $${PRICING.buyPer100}/100 за непроданные инвайты на инвест-счёт.`;
+        return `<div class="inv-broken">⚠️ Сервер сейчас не работает (нет бота или активной карточки верификации). ${when}</div>`;
+    }
     if (s.occupied) {
         const etaTs = s.occupiedEtaSec ? Date.now() + s.occupiedEtaSec * 1000 : 0;
         return `<div class="inv-locked">🔒 Сервер уже занят другим инвестором, станет доступным через <b class="inv-timer" data-eta="${etaTs}">${etaTs ? '~' + fmtEta(s.occupiedEtaSec) : 'скоро'}</b></div>`;
@@ -221,6 +228,7 @@ async function buy(serverId, name, min) {
     else if (body?.error === 'insufficient') toast('Недостаточно средств на инвест-счёте. Пополните счёт.', 'err');
     else if (body?.error === 'min-qty') toast(`Минимум ${nf(body?.min || min)} инвайтов для этого сервера`, 'err');
     else if (body?.error === 'occupied') toast('Сервер уже занят другим инвестором.', 'err');
+    else if (body?.error === 'server-broken') toast('Сервер сейчас не работает (нет бота или карточки).', 'err');
     else if (body?.error === 'server-disabled') toast('Этот сервер больше не доступен для выкупа.', 'err');
     else toast(body?.error || 'Не удалось', 'err');
 }
