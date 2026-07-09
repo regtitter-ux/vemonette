@@ -75,7 +75,7 @@ function pcardBlock(c) {
     const link = c.link ? ` · <a href="${esc(c.link)}" target="_blank" rel="noopener">↗ сообщение</a>` : '';
     const avg = c.avgVerifySeconds != null ? ` · ⏱ ~${esc(fmtSec(c.avgVerifySeconds))}` : '';
     return `
-      <div class="vcard">
+      <div class="vcard" data-mid="${esc(c.messageId)}">
         <div class="vcard-head">${srvIcon(c.guildName, c.guildIcon)}<span><b>${esc(c.guildName || 'Сервер')}</b> · ${chan}${link}</span></div>
         <div class="vcard-meta">Роль: ${role}${avg}</div>
         <div class="table-wrap" style="margin-top:12px"><table>
@@ -86,12 +86,23 @@ function pcardBlock(c) {
             ${cardStatRow('3. Остались', st.stayed)}
           </tbody>
         </table></div>
+        <div class="vcard-actions">
+          <button class="btn-mini" data-card="fix">Встряхнуть</button>
+          <button class="btn-mini" data-card="owner">Владелец…</button>
+          <button class="btn-mini" data-card="role">Роль…</button>
+          <button class="btn-mini" data-card="desc">Описание…</button>
+          <button class="btn-mini" data-card="republish">Перепубликовать</button>
+          <button class="btn-mini off" data-card="reset-role">Сбросить роль</button>
+          <button class="btn-mini off" data-card="delete">Удалить</button>
+        </div>
       </div>`;
 }
+let lastPCards = [];
 async function loadCards() {
     const { ok, body } = await get('/cards');
     if (!ok) return;
     const list = body.cards || [];
+    lastPCards = list;
     const section = $('#vcards-section');
     if (!list.length) { section.hidden = true; return; }
     section.hidden = false;
@@ -101,7 +112,89 @@ async function loadCards() {
         else avgEl.hidden = true;
     }
     $('#vcards-list').innerHTML = list.map(pcardBlock).join('');
+    $('#vcards-list').querySelectorAll('.vcard').forEach((row) => {
+        const mid = row.dataset.mid;
+        row.querySelectorAll('[data-card]').forEach((b) => b.onclick = () => pcardAction(b.dataset.card, mid));
+    });
 }
+
+function pcardErr(code) {
+    return ({
+        'not-found': 'Сообщение не найдено (бот не видит канал?)',
+        'not-own-message': 'Это сообщение не от нашего бота',
+        'not-tracked': 'Карточка не в списке',
+        'not-your-card': 'Это не ваша карточка',
+        'no-owner': 'Не удалось определить владельца',
+        'no-role': 'Роль карточки не найдена на сервере',
+        'no-guild': 'Сервер недоступен боту',
+        'no-perms': 'У бота нет прав (нужно «Управление ролями»)',
+        'role-managed': 'Это служебная роль — пересоздать нельзя',
+        'role-everyone': 'Нельзя сбросить роль @everyone',
+        'role-too-high': 'Роль бота ниже этой роли — поднимите роль бота выше',
+        'create-failed': 'Не удалось создать новую роль',
+        'send-failed': 'Не удалось отправить новое сообщение'
+    })[code] || (code || 'Ошибка');
+}
+
+async function pcardAction(action, messageId) {
+    if (action === 'fix') {
+        const { ok, body } = await post('/cards/fix', { messageId });
+        toast(ok ? 'Карточка пересобрана' : pcardErr(body?.error), ok ? 'ok' : 'err'); if (ok) loadCards();
+    } else if (action === 'republish') {
+        if (!confirm('Удалить старое сообщение и опубликовать карточку заново (владелец и роль сохранятся)?')) return;
+        const { ok, body } = await post('/cards/republish', { messageId });
+        toast(ok ? 'Карточка перепубликована' : pcardErr(body?.error), ok ? 'ok' : 'err'); if (ok) loadCards();
+    } else if (action === 'delete') {
+        if (!confirm('Удалить карточку (сообщение бота будет удалено)?')) return;
+        const { ok, body } = await post('/cards/delete', { messageId });
+        toast(ok ? 'Карточка удалена' : pcardErr(body?.error), ok ? 'ok' : 'err'); if (ok) loadCards();
+    } else if (action === 'reset-role') {
+        if (!confirm('Сбросить роль верификации?\n\nБудет создана НОВАЯ роль с теми же правами, правами на каналах, названием, цветом и иконкой. Старая роль будет удалена у всех участников, а карточка сразу переключится на новую роль.\n\nВсем участникам придётся пройти верификацию заново. Продолжить?')) return;
+        const { ok, body } = await post('/cards/reset-role', { messageId });
+        toast(ok ? `Роль сброшена${body?.roleName ? ': @' + body.roleName : ''}` : pcardErr(body?.error), ok ? 'ok' : 'err'); if (ok) loadCards();
+    } else if (action === 'owner') {
+        const raw = prompt('Новый владелец — Discord ID:');
+        if (raw === null) return;
+        const creatorId = raw.trim();
+        if (!creatorId || !/^\d{17,20}$/.test(creatorId)) { toast('Неверный ID', 'err'); return; }
+        if (creatorId !== window.__PARTNER_ID__ && !confirm('Вы указываете чужой ID — карточка перестанет быть вашей и пропадёт из кабинета. Продолжить?')) return;
+        const { ok, body } = await post('/cards/edit', { messageId, creatorId });
+        toast(ok ? 'Владелец изменён' : pcardErr(body?.error), ok ? 'ok' : 'err'); if (ok) loadCards();
+    } else if (action === 'role') {
+        const raw = prompt('Новая роль — ID (пусто = роль по умолчанию «Verified»):');
+        if (raw === null) return;
+        const roleId = raw.trim();
+        if (roleId && !/^\d{17,20}$/.test(roleId)) { toast('Неверный ID роли', 'err'); return; }
+        const { ok, body } = await post('/cards/edit', { messageId, roleId });
+        toast(ok ? 'Роль изменена' : pcardErr(body?.error), ok ? 'ok' : 'err'); if (ok) loadCards();
+    } else if (action === 'desc') {
+        const card = lastPCards.find((c) => c.messageId === messageId);
+        openPcardDescModal(messageId, card ? (card.customDescription ? card.description : '') : '');
+    }
+}
+
+function openPcardDescModal(messageId, desc) {
+    const modal = $('#pcard-desc-modal');
+    if (!modal) return;
+    $('#pcard-desc-input').value = desc || '';
+    modal.dataset.mid = messageId;
+    modal.hidden = false;
+    $('#pcard-desc-input').focus();
+}
+(() => {
+    const modal = document.getElementById('pcard-desc-modal');
+    if (!modal) return;
+    const close = () => { modal.hidden = true; };
+    document.getElementById('pcard-desc-close')?.addEventListener('click', close);
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+    document.getElementById('pcard-desc-save')?.addEventListener('click', async () => {
+        const mid = modal.dataset.mid;
+        const description = $('#pcard-desc-input').value;
+        const { ok, body } = await post('/cards/edit', { messageId: mid, description });
+        if (ok) { close(); toast('Описание обновлено'); loadCards(); }
+        else toast(pcardErr(body?.error), 'err');
+    });
+})();
 
 // ---- Ad history per server ----
 let adHist = [];
@@ -157,6 +250,7 @@ function renderAdHistory(servers) {
 }
 
 function render(d) {
+    window.__PARTNER_ID__ = d.userId || window.__PARTNER_ID__;
     $('#top-balance').textContent = money(d.balance);
     const boost = d.boosted ? ` <span class="chip amber">🔥 буст ${fmtBoost(d.boostLeftMs)}</span>` : '';
     const cards = [
