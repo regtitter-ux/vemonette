@@ -42,6 +42,13 @@ b{color:#fff}
 .lang-switch button{border:none;cursor:pointer;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:700;font-family:inherit;background:transparent;color:var(--muted)}
 .lang-switch button.active{background:var(--blue);color:#06121c}
 .login-card .lang-switch{align-self:flex-end;margin-bottom:-4px}
+
+.camp-tabs{display:inline-flex;gap:3px;padding:3px;margin-bottom:16px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:999px}
+.camp-tabs button{display:inline-flex;align-items:center;gap:7px;border:none;cursor:pointer;padding:7px 15px;border-radius:999px;font-size:13px;font-weight:700;font-family:inherit;background:transparent;color:var(--muted)}
+.camp-tabs button:hover{color:var(--text)}
+.camp-tabs button.active{background:var(--blue);color:#06121c}
+.camp-tabs .cnt{font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;background:rgba(255,255,255,.1);color:inherit;font-variant-numeric:tabular-nums}
+.camp-tabs button.active .cnt{background:rgba(0,0,0,.18)}
 .field-err{color:var(--red);font-size:12.5px;margin-top:2px}
 .wrap{max-width:820px;margin:0 auto;padding:28px 20px 60px;display:flex;flex-direction:column;gap:28px}
 h1{font-size:24px;margin-bottom:6px}

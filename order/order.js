@@ -22,6 +22,8 @@ const DICT = {
     launched: 'Кампания запущена! 🎉',
     insufficient: (need) => `Недостаточно средств. Пополните ещё на $${need} и повторите.`,
     my_camps: 'Мои кампании',
+    tab_active: 'Активные', tab_finished: 'Завершено',
+    no_active_camps: 'Активных кампаний нет.', no_done_camps: 'Завершённых кампаний пока нет.',
     loading: 'Загрузка…',
     rate: (p) => `· $${p} за 100 заходов`,
     invite_bad: 'Вставьте корректную ссылку на Discord-сервер, например https://discord.gg/xxxx',
@@ -79,6 +81,8 @@ const DICT = {
     launched: 'Campaign launched! 🎉',
     insufficient: (need) => `Not enough balance. Top up $${need} more and try again.`,
     my_camps: 'My campaigns',
+    tab_active: 'Active', tab_finished: 'Completed',
+    no_active_camps: 'No active campaigns.', no_done_camps: 'No completed campaigns yet.',
     loading: 'Loading…',
     rate: (p) => `· $${p} per 100 joins`,
     invite_bad: 'Paste a valid Discord server invite, e.g. https://discord.gg/xxxx',
@@ -315,10 +319,28 @@ async function loadCampaigns() {
     renderCampaigns(lastCampaigns);
 }
 
+let campTab = 'active';
 function renderCampaigns(list) {
-    if (!list.length) { $('#camp-list').innerHTML = `<div class="muted">${esc(t('no_camps'))}</div>`; return; }
-    $('#camp-list').innerHTML = list.map(campCard).join('');
-    wireCampaigns(list);
+    const tabs = $('#camp-tabs');
+    const box = $('#camp-list');
+    if (!list.length) { if (tabs) tabs.hidden = true; box.innerHTML = `<div class="muted">${esc(t('no_camps'))}</div>`; return; }
+
+    // Split into running (active/paused) and finished (completed/cancelled/invalid).
+    const active = list.filter((c) => c.status === 'active');
+    const finished = list.filter((c) => c.status !== 'active');
+    if (campTab === 'finished' && !finished.length) campTab = 'active';
+
+    if (tabs) {
+        tabs.hidden = false;
+        const btn = (key, id, n) => `<button data-camptab="${id}" class="${campTab === id ? 'active' : ''}">${esc(t(key))} <span class="cnt">${n}</span></button>`;
+        tabs.innerHTML = btn('tab_active', 'active', active.length) + btn('tab_finished', 'finished', finished.length);
+        tabs.querySelectorAll('[data-camptab]').forEach((b) => b.onclick = () => { campTab = b.dataset.camptab; renderCampaigns(lastCampaigns); });
+    }
+
+    const shown = campTab === 'finished' ? finished : active;
+    if (!shown.length) { box.innerHTML = `<div class="muted">${esc(campTab === 'finished' ? t('no_done_camps') : t('no_active_camps'))}</div>`; return; }
+    box.innerHTML = shown.map(campCard).join('');
+    wireCampaigns(shown);
 }
 
 function retentionRow(r) {
