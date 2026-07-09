@@ -7,13 +7,14 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Кабинет партнёра</title>
-  <link rel="stylesheet" href="/partner/partner.css?v=5" />
+  <link rel="stylesheet" href="/partner/partner.css?v=6" />
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
 </head>
 <body>
 
 <div id="login" class="login">
   <div class="login-card">
+    <div class="lang-switch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
     <div class="brand">Vemoni · Партнёрам</div>
     <div class="hint">Войдите через Discord, чтобы видеть баланс, заходы и историю выплат вашего сервера.</div>
     <a id="discord-login" class="discord-btn" href="#">
@@ -29,6 +30,7 @@
     <div class="brand-sm">Vemoni · Кабинет партнёра</div>
     <div class="top-right">
       <span class="bal-pill"><span class="muted sm">Баланс</span> <b id="top-balance">$0.00</b></span>
+      <div class="lang-switch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
       <button id="logout" class="btn ghost sm">Выйти</button>
     </div>
   </header>
@@ -82,6 +84,6 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/partner/partner.js?v=7"></script>
+<script src="/partner/partner.js?v=8"></script>
 </body>
 </html>

@@ -15,9 +15,253 @@ function applyAdminLang() {
     document.querySelectorAll('.lang-switch button').forEach((b) => b.classList.toggle('active', b.dataset.lang === adminLang));
 }
 document.querySelectorAll('.lang-switch button').forEach((b) => b.addEventListener('click', () => {
-    adminLang = b.dataset.lang; localStorage.setItem('vemoni_lang', adminLang); applyAdminLang();
+    localStorage.setItem('vemoni_lang', b.dataset.lang); location.reload();
 }));
+
+// ---------- Full EN translation (runtime) ----------
+// The whole panel is authored in Russian. Rather than thread a t() call through
+// every one of the hundreds of render sites, we translate the rendered DOM live:
+// exact-match for short table cells (WHOLE), substring phrases for the rest (TR),
+// a few regex rules for interpolated strings, plus wrapped confirm/prompt/toast.
+// A MutationObserver re-translates on every re-render. Switching language reloads
+// (translation is one-way; RU is the source), so RU is always pristine.
+const WHOLE = {
+  'час':'hour','день':'day','неделя':'week','месяц':'month','эта':'this','сек':'s',
+  'Всего':'Total','День':'Day','Неделя':'Week','Месяц':'Month','Доля':'Share','Роль':'Role',
+  'Баланс':'Balance','Владелец':'Owner','Сервер':'Server','Реклама':'Ad','Действие':'Action',
+  'Действия':'Actions','Пользователь':'User','Юзер':'User','Детали':'Details','Кто':'Who','Когда':'When',
+  'Выведено':'Withdrawn','Верифаций':'Verifs','Рефералов':'Referrals','Ставка/100':'Rate/100',
+  'Все':'All','Положительные':'Positive','Нулевые':'Zero','Отрицательные':'Negative','Настройки':'Settings',
+  'Реквизиты':'Requisites','Воронка':'Funnel','Загрузка…':'Loading…','Пока пусто':'Nothing yet','Глобал':'Global',
+  'Обзор':'Overview','Статистика':'Statistics','Экстренно':'Emergency','Система':'System','Лента':'Feed',
+  'Шаблоны':'Templates','Админы':'Admins','Балансы':'Balances','Кран':'Kill-switch'
+};
+const TR_RE = [
+  [/Лимит (\d+) установлен/g,'Limit $1 set'],
+  [/на (\d+) серв(?:ере|ерах)/g,'on $1 server(s)'],
+  [/…и ещё (\d+)/g,'…and $1 more'],
+  [/(\d+) юзеров/g,'$1 users'],
+  [/(\d+) заходов\b/g,'$1 joins'],
+  [/(\d+) аккаунтов/g,'$1 accounts'],
+  [/(\d+) дн\./g,'$1 d'],
+  [/(\d+) шт\b/g,'$1 pcs'],
+  [/серв(?:ере|ерах)\b/g,'server(s)']
+];
+const TR = {
+  // login / chrome / banners
+  'Войдите через Discord, чтобы получить доступ к панели.':'Log in with Discord to access the panel.',
+  'Войти через Discord':'Log in with Discord','Выйти':'Log out',
+  'Доступ запрещён — этого аккаунта нет среди админов.':'Access denied — this account is not an admin.',
+  '👁 Просмотр от лица админа — часть функций скрыта':'👁 Viewing as an admin — some features are hidden',
+  '👁 Просмотр от лица админа':'👁 View as an admin','Выйти из режима':'Exit mode',
+  // BI / overview
+  'Обзор':'Overview','Ключевые показатели':'Key metrics','Инвентарь рекламы':'Ad inventory','Выручка по неделям':'Revenue by week',
+  'Продажи рекламы 30д':'Ad sales 30d','Выручка с заходов 30д':'Join revenue 30d','признаётся по мере доставки':'recognized as delivered',
+  'Заходы 7д / 30д':'Joins 7d / 30d','Активные партнёры 7д / 30д':'Active partners 7d / 30d',
+  'Отток (клаубэк, 30д)':'Churn (clawback, 30d)','доля ушедших из засчитанных':'share of counted joins that left',
+  'Активные кампании':'Active campaigns','Покупатели за 30д':'Buyers 30d','всего':'total',
+  'Спрос (не доставлено)':'Demand (undelivered)','сумма остатков активных кампаний':'sum of active campaign remainders',
+  'Пропускная способность':'Throughput','средняя за 7 дней':'7-day average','Хватит на':'Covers',
+  '🔴 перепродажа — заказов больше, чем сеть тянет':'🔴 oversold — more orders than the network can deliver','🟢 в норме':'🟢 healthy',
+  'Выручка':'Revenue','Заходы':'Joins',
+  // system
+  'Мониторинг ботов':'Bot monitoring','Финансовая сверка':'Financial reconciliation','Бэкапы':'Backups',
+  'Сделать бэкап сейчас':'Back up now','Аудит-лог действий':'Action audit log','Ботов онлайн':'Bots online',
+  '🟢 онлайн':'🟢 online','🔴 офлайн':'🔴 offline','Алерты':'Alerts','⚠️ выключены':'⚠️ off',
+  'Задайте ALERT_CHANNEL в Railway':'Set ALERT_CHANNEL in Railway',
+  'Продажи рекламы (всего)':'Ad sales (total)','за 30д':'30d','Предоплата на кошельках':'Prepaid in wallets',
+  'пополнено, ещё не потрачено':'topped up, not yet spent','Оплачено, не доставлено':'Paid, not delivered',
+  'в активных кампаниях — распределится по мере доставки':'in active campaigns — distributed as delivered',
+  'Долг сервиса (положит. балансы)':'Service debt (positive balances)','Баланс Crypto Pay':'Crypto Pay balance',
+  'Платёжеспособность':'Solvency','🔴 не хватает на выплаты':'🔴 not enough for payouts','🟢 хватает':'🟢 enough',
+  'Выплачено (завершено)':'Paid out (completed)','Выводы в обработке':'Withdrawals in progress',
+  'Начислено за заходы':'Credited for joins','Списано (клаубэк)':'Clawed back','Отрицательные балансы':'Negative balances',
+  ' (должны сервису)':' (owe the service)','аккаунтов':'accounts',
+  'Последний бэкап:':'Last backup:','локально:':'local:','офсайт:':'off-site:','файлов:':'files:','Офсайт-копия:':'Off-site copy:',
+  'Бэкап ещё не запускался в этой сессии (первый — через пару минут после старта). Офсайт-копия:':'No backup has run this session yet (the first runs a couple minutes after start). Off-site copy:',
+  'вкл':'on','выкл (задайте BACKUP_CHANNEL)':'off (set BACKUP_CHANNEL)',
+  'Бэкап сделан (локально + офсайт)':'Backup done (local + off-site)','Бэкап сделан (локально)':'Backup done (local)',
+  'Не удалось сделать бэкап':'Backup failed',
+  // stats
+  'Статистика':'Statistics','С рекламой':'With ads','Без рекламы':'No ads',
+  'Верификации, прошедшие без показа рекламы — органическая активность серверов. Помогает оценить, сколько заходов (stays) можно продать следующим заказом.':'Verifications that ran without showing an ad — organic server activity. It helps estimate how many joins (stays) you can sell in the next order.',
+  'Глобальная реклама':'Global ad','Заглушка':'No-ad message',
+  'Текст, который бот показывает вместо рекламы, когда её нет — верификация при этом проходит без рекламы. Пусто — будет использован стандартный текст.':'Text the bot shows instead of an ad when there is none — verification still runs ad-free. Empty — the default text is used.',
+  'По серверам':'By server','Верифаций без рекламы':'Ad-free verifs','За час':'Past hour','За сутки':'Past 24h','За неделю':'Past week','За месяц':'Past month',
+  'Инвайты / чистые':'Invites / clean','чистых':'clean','Данных пока нет':'No data yet','Выкл':'Off','Персональная':'Per-server',
+  'Кран: Выкл':'Kill-switch: Off','Кран: Вкл':'Kill-switch: On','Настройки…':'Settings…',
+  'Кран сервера закрыт':'Server kill-switch closed','Кран сервера открыт':'Server kill-switch opened','Не удалось переключить':'Could not toggle',
+  // ad statistics
+  'Стата рекламы':'Ad stats',
+  'Каждая карточка — уникальный креатив (готовый рендер текста с подставленной ссылкой).':'Each card is a unique creative (the rendered text with its link filled in).',
+  'Учитываются только верификации, где реклама реально была показана; закрытый кран или клики без рекламы в счёт не идут.':'Only verifications where an ad was actually shown are counted; a closed kill-switch or ad-free clicks do not count.',
+  'Пока ни одна верификация не была засчитана с рекламой':'No verification has been counted with an ad yet',
+  '(либо никто не подтвердился, либо все прошли до включения per-creative трекинга).':'(either nobody verified, or all of them predate per-creative tracking).',
+  'Сейчас показывается':'Showing now','Проверка на заход':'Join check','Креатив':'Creative',
+  'Заходы:':'Joins:','— лимит достигнут, реклама скрыта':' — limit reached, ad hidden','без лимита':'no limit',
+  'лимит, 0 = убрать':'limit, 0 = remove','Сохранить лимит':'Save limit','Сбросить счётчик':'Reset counter',
+  'Обнулить счётчик заходов для новой рекламы':'Zero the join counter for a new ad',
+  'Впервые:':'First seen:','Последний показ:':'Last shown:','· «Впервые» считается с момента сброса счётчика инвайтов':'· “First seen” counts from the last counter reset',
+  'Лимит — целое число ≥ 0':'Limit must be an integer ≥ 0','Лимит снят':'Limit removed','Счётчик сброшен':'Counter reset',
+  'Не удалось сохранить лимит':'Could not save the limit','Не удалось сбросить':'Could not reset',
+  // global / server ad editor
+  'Глобальная реклама — показывается на любом сервере, где нет персональной':'Global ad — shown on any server without a per-server ad',
+  'Ссылка-приглашение или готовый текст':'Invite link or ready-made text','Сохранить':'Save','Очистить':'Clear',
+  '{link} подставляется из шаблона при показе.':'{link} is inserted from the template on display.',
+  'Глобальная реклама сохранена':'Global ad saved','Не удалось сохранить':'Could not save','Очистить глобальную рекламу?':'Clear the global ad?',
+  'Глобальная реклама очищена':'Global ad cleared','Не удалось очистить':'Could not clear',
+  'Снятие: Выкл':'Clawback: Off','Снятие: Вкл':'Clawback: On','Реклама показывается':'Ad is showing','Реклама не показывается':'Ad is not showing',
+  'Снятие средств при выходе (пока реклама не показывается)':'Clawback on leave (while the ad is not showing)',
+  'Пока ссылки на этот сервер нет в рекламе партнёров, выход участника <b>не снимает</b> выплату — заход финальный. Как только реклама снова начнёт показываться, снятие возобновится; но ушедшие в период без показа больше не учитываются.':'While this server is not being advertised, a member leaving <b>does not</b> reverse the payout — the join is final. Once the ad shows again, clawback resumes; those who left during the off period are no longer revisited.',
+  'Выход участника <b>снимает</b> выплату партнёру обратно (стандартное поведение), даже если реклама сейчас не показывается.':'A member leaving <b>reverses</b> the partner payout (default behavior), even if the ad is not showing now.',
+  'Включить снятие':'Enable clawback','Отключить снятие':'Disable clawback',
+  'Персональная реклама этого сервера. Если оставить пустым и удалить — юзеры увидят глобальную.':'This server’s own ad. Leave empty and delete — users will see the global one.',
+  'Последнее обновление:':'Last updated:','Текст рекламы':'Ad text','Удалить':'Delete',
+  'Снятие при выходе (без показа) отключено':'Leave clawback (while off) disabled','Снятие при выходе включено':'Leave clawback enabled',
+  'Реклама сервера сохранена':'Server ad saved','Удалить персональную рекламу этого сервера? Юзеры будут видеть глобальную.':'Delete this server’s own ad? Users will see the global one.',
+  'Реклама сервера удалена':'Server ad deleted',
+  // shares
+  'Доли':'Shares','＋ Добавить долю':'＋ Add share',
+  '1% доли = 1% чистого дохода сервиса. Доход = продажа заходов (':'1% share = 1% of the service’s net income. Income = join sales (',
+  ' с проверкой на заход) минус выплата партнёрам и эквайринг (3% от выплат). Чистая прибыль каждого захода делится по долям и начисляется на баланс — дальше обычная выплата (запрос на вывод от $10 или автовывод).':' with join check) minus partner payouts and acquiring (3% of payouts). Each join’s net profit is split by share and credited to the balance — then the normal payout flow (withdrawal request from $10 or auto-payout).',
+  'Владельцы долей':'Shareholders','Чистый доход (всего)':'Net income (total)','Доход за день':'Income today','Доход за неделю':'Income this week','Доход за месяц':'Income this month',
+  'Выручка с заходов':'Join revenue','Выплачено партнёрам (заходы)':'Paid to partners (joins)','Эквайринг':'Acquiring',
+  'Скидка менеджерам':'Manager discount','маржа менеджеров (розница − их цена)':'manager margin (retail − their price)',
+  'Капитализация':'Capitalization','сумма балансов пользователей':'sum of user balances',
+  'не настроен':'not configured','🔴 Пополни: меньше капитализации':'🔴 Top up: below capitalization','🟢 Хватает на выплаты':'🟢 Enough for payouts',
+  'Пополнить':'Top up','Неизвестный':'Unknown','Сохранить %':'Save %','Убрать':'Remove',
+  'Доля обновлена:':'Share updated:','Владелец убран':'Owner removed','Сумма долей превысит 100%. Свободно:':'Total shares would exceed 100%. Available:',
+  'Не удалось сохранить долю':'Could not save the share','Доля — число 0..100':'Share must be 0..100','Убрать этого владельца доли?':'Remove this shareholder?',
+  'ID пользователя (17–20 цифр):':'User ID (17–20 digits):','Доля в % (0–100):':'Share in % (0–100):',
+  // crypto pay modal
+  'Пополнить Crypto Pay':'Top up Crypto Pay','Создаётся счёт USDT — оплати его из своего @CryptoBot кошелька, и баланс приложения пополнится (комиссия ~3%).':'A USDT invoice is created — pay it from your @CryptoBot wallet and the app balance tops up (~3% fee).',
+  'Сумма, $':'Amount, $','например 50':'e.g. 50','Создать счёт':'Create invoice','Введите сумму больше 0':'Enter an amount above 0',
+  'Создаём счёт…':'Creating invoice…','Не удалось создать счёт':'Could not create the invoice',
+  'Счёт на $':'Invoice for $',' готов. Оплати по ссылке из @CryptoBot:':' is ready. Pay via the @CryptoBot link:','Copy ссылку':'Copy link',
+  'После оплаты баланс обновится в течение ~минуты.':'After payment the balance updates within ~a minute.',
+  // templates
+  'Шаблоны рекламы':'Ad templates','＋ Шаблон для сервера':'＋ Template for a server',
+  'Шаблон подставляется вокруг ссылки':'The template wraps around the','при показе. Меняешь шаблон — обновление сразу видно на всех верификациях, ничего заново не запускать.':'link on display. Change the template — the update shows on all verifications instantly, nothing to re-run.',
+  'Глобальный (fallback)':'Global (fallback)','По серверам':'By server','Глобальный шаблон':'Global template',
+  'Персональных шаблонов пока нет. Нажми «＋ Шаблон для сервера».':'No per-server templates yet. Click “＋ Template for a server”.',
+  'Сбросить':'Reset','Используй':'Use','для подстановки ссылки.':'to insert the link.','Шаблон сохранён':'Template saved',
+  'Удалить персональный шаблон этого сервера?':'Delete this server’s template?','Сбросить глобальный шаблон до дефолтного?':'Reset the global template to default?',
+  'Удалено':'Deleted','Сброшено':'Reset','Не удалось удалить':'Could not delete',
+  'ID сервера (17–20 цифр):':'Server ID (17–20 digits):','Шаблон (используй {link}):':'Template (use {link}):','Добавлено':'Added','Не удалось добавить':'Could not add',
+  // kill-switch (toggle pane)
+  'Экстренно':'Emergency','Кран рекламы':'Ad kill-switch',
+  '🚫 Реклама выключена — верификация без начислений':'🚫 Ads off — verification with no credits','🟢 Реклама включена — работаем в обычном режиме':'🟢 Ads on — running as usual',
+  'Последнее изменение:':'Last change:','Реклама выключена':'Ads off','Реклама включена':'Ads on',
+  // verification cards
+  'Карточки верификации':'Verification cards',
+  'Список всех карточек. Если карточка сломалась или работает некорректно — «Встряхнуть» пересоберёт её на месте (владелец и роль сохранятся). Также можно сменить владельца/роль, перепубликовать или удалить. Чтобы добавить карточку, созданную до отслеживания — вставьте ссылку на сообщение (ПКМ по карточке → «Копировать ссылку на сообщение»).':'List of all cards. If a card breaks or misbehaves, “Shake” rebuilds it in place (owner and role kept). You can also change owner/role, republish or delete. To add a card created before tracking — paste the message link (right-click the card → “Copy Message Link”).',
+  'Ссылка на сообщение с карточкой…':'Link to the card message…','＋ Добавить по ссылке':'＋ Add by link','🔎 Просканировать серверы':'🔎 Scan servers',
+  'Удалённые карточки':'Deleted cards','Проверить сейчас':'Check now',
+  'Карточки, удалённые с канала (вручную, ботом или через панель). Статистика сохраняется; видно, кто и когда убрал верификацию (кто — если бот успел заметить удаление через аудит-лог).':'Cards removed from the channel (manually, by the bot, or via the panel). Stats are kept; you can see who removed verification and when (who — if the bot caught the deletion via the audit log).',
+  'роль по умолчанию':'default role','сообщение':'message','неизвестно':'unknown','🗑 Удалено':'🗑 Deleted','кем:':'by:',
+  'Среднее время от первого клика до проверенного захода':'Average time from first click to a checked join',
+  '⏱ Среднее время от клика до проверенного захода (все карточки): ~':'⏱ Average time from click to checked join (all cards): ~',
+  'Вернуть':'Restore','Убрать из списка':'Remove from list','Встряхнуть':'Shake','Владелец…':'Owner…','Роль…':'Role…','Описание…':'Description…',
+  'Перепубликовать':'Republish','Сбросить роль':'Reset role','Роль:':'Role:',
+  '1. Клик (начали)':'1. Click (started)','2. Заход проверен':'2. Join checked','3. Остались':'3. Stayed',
+  'Карточек пока нет. Создайте через /verify или добавьте по ссылке выше.':'No cards yet. Create one via /verify or add by link above.','Удалённых карточек нет.':'No deleted cards.',
+  'Карточка пересобрана':'Card rebuilt','Удалить старое сообщение и опубликовать карточку заново (владелец и роль сохранятся)?':'Delete the old message and post the card again (owner and role kept)?',
+  'Карточка перепубликована':'Card republished','Удалить карточку (сообщение бота будет удалено)?':'Delete the card (the bot message will be removed)?','Карточка удалена':'Card deleted',
+  'Новый владелец — Discord ID:':'New owner — Discord ID:','Неверный ID':'Invalid ID','Владелец изменён':'Owner changed',
+  'Новая роль — ID (пусто = роль по умолчанию «Verified»):':'New role — ID (empty = default “Verified” role):','Неверный ID роли':'Invalid role ID','Роль изменена':'Role changed',
+  'Сбросить роль верификации?':'Reset the verification role?','Роль сброшена':'Role reset',
+  'Опубликовать карточку заново в том же канале (владелец и роль сохранятся)?':'Post the card again in the same channel (owner and role kept)?','Карточка возвращена':'Card restored',
+  'Окончательно убрать эту карточку из списка удалённых?':'Permanently remove this card from the deleted list?','Убрано из списка':'Removed from list',
+  'Описание обновлено':'Description updated','Проверено. Помечено удалённых:':'Checked. Marked deleted:','Не удалось проверить':'Could not check',
+  'Вставьте ссылку на сообщение':'Paste the message link','Карточка добавлена':'Card added',
+  'Не удалось запустить сканирование':'Could not start the scan','🔎 Сканирование запущено…':'🔎 Scan started…',
+  '🔎 Сканирую… каналов:':'🔎 Scanning… channels:',', найдено карточек:':', cards found:','✅ Готово. Просканировано каналов:':'✅ Done. Channels scanned:',', добавлено карточек:':', cards added:','Сканирование завершено: +':'Scan finished: +',
+  'Описание карточки':'Card description','Текст под заголовком «Get verified!» — только для этой карточки. Пусто = стандартный текст.':'Text under the “Get verified!” title — for this card only. Empty = default text.',
+  'Например: Чтобы получить доступ, пройдите верификацию — нажмите кнопку.':'e.g. To get access, complete verification — click the button.',
+  // card error codes
+  'Сообщение не найдено (бот не видит канал?)':'Message not found (bot cannot see the channel?)','Это сообщение не от нашего бота':'This message is not from our bot',
+  'Это не карточка верификации':'This is not a verification card','Карточка не в списке':'Card not in the list','Карточка не удалена':'Card is not deleted',
+  'Не удалось определить владельца':'Could not determine the owner','Бот больше не на сервере':'Bot is no longer on the server','Канал удалён или недоступен':'Channel deleted or unavailable',
+  'У бота нет прав (нужно «Управление ролями»)':'Bot lacks permission (needs “Manage Roles”)','Неверная ссылка на сообщение':'Invalid message link','Не удалось отправить новое сообщение':'Could not send the new message',
+  'Роль карточки не найдена на сервере':'The card’s role was not found on the server','Сервер недоступен боту':'Server is unavailable to the bot',
+  'Это служебная роль (бот/интеграция) — пересоздать нельзя':'This is a managed role (bot/integration) — cannot be recreated','Нельзя сбросить роль @everyone':'Cannot reset the @everyone role',
+  'Роль бота ниже этой роли — поднимите роль бота выше':'The bot’s role is below this one — move the bot’s role higher','Не удалось создать новую роль':'Could not create the new role','Ошибка':'Error',
+  'Неизвестен владелец карточки':'Card owner is unknown','Бот больше не на этом сервере':'Bot is no longer on this server','Канал удалён или недоступен боту':'Channel deleted or unavailable to the bot',
+  'У бота нет прав отправлять сообщения в этот канал':'Bot cannot send messages in this channel','Восстановление сейчас недоступно':'Restore is unavailable right now',
+  // feed
+  'Лента серверов':'Server feed','Серверы в ленте «Сообщества, которые уже зарабатывают с нами» на главной. Добавьте по ссылке-приглашению — имя, иконка и число участников подтянутся автоматически.':'Servers in the “Communities already earning with us” feed on the home page. Add by invite link — name, icon and member count are pulled automatically.',
+  '＋ Добавить сервер':'＋ Add server','Лента пуста':'Feed is empty','Сервер удалён из ленты':'Server removed from the feed',
+  'Вставьте ссылку-приглашение':'Paste an invite link','Сервер добавлен в ленту':'Server added to the feed','Этот сервер уже в ленте':'This server is already in the feed','Неверная ссылка-приглашение':'Invalid invite link',
+  // admins
+  'Админы':'Admins','＋ Добавить админа':'＋ Add admin','👁 Просмотр от лица админа':'👁 View as an admin',
+  'Назначенные админы видят всё, кроме вкладок «Шаблоны» и «Балансы», и не могут пополнять Crypto Pay. Владелец проекта задан жёстко и не редактируется.':'Assigned admins see everything except the “Templates” and “Balances” tabs, and cannot top up Crypto Pay. The project owner is fixed and not editable.',
+  'Админ':'Admin','Убрать этого админа?':'Remove this admin?','Админ убран':'Admin removed','Не удалось':'Failed',
+  'Discord ID нового админа (17–20 цифр):':'Discord ID of the new admin (17–20 digits):','Админ добавлен':'Admin added',
+  // no-join-check banner
+  '⚠️ <b>Реклама не работает — нет проверки на заход.</b> Ссылка ведёт на сервер, где нет нашего бота, ':'⚠️ <b>Ad is not working — no join check.</b> The link leads to a server without our bot, ',
+  'поэтому заход нельзя проверить. Такая реклама <u>не показывается</u>, и верификации проходят ':'so the join cannot be verified. Such an ad is <u>not shown</u>, and verifications run ',
+  'без рекламы (без дохода). Добавьте бота на сервер спонсора или исправьте ссылку:':'ad-free (no income). Add the bot to the sponsor server or fix the link:',
+  // balances
+  'Балансы':'Balances','юзеров':'users','Поиск по ID юзера…':'Search by user ID…',
+  'Сорт: баланс':'Sort: balance','Сорт: выведено':'Sort: withdrawn','Сорт: верификации':'Sort: verifications','Сорт: рефералы':'Sort: referrals','Сорт: ставка':'Sort: rate',
+  'Не удалось загрузить балансы':'Could not load balances','Реквизиты':'Requisites','Нет реквизитов':'No requisites','Авто-перевод':'Auto-transfer','Авто-чек':'Auto-check','Неизвестный':'Unknown',
+  'Бонус по рефералке':'Referral bonus','Ничего не найдено под этот фильтр.':'Nothing found for this filter.',
+  'Ошибка загрузки':'Load error','Не удалось сохранить':'Could not save','Введи число с + или -, например +50 или -20':'Enter a number with + or -, e.g. +50 or -20',
+  'Баланс изменён на':'Balance changed by','Join bid — число ≥ 0':'Join bid must be a number ≥ 0','Join bid сохранён':'Join bid saved',
+  'Авто-вывод по чеку включён':'Check auto-payout enabled','Авто-вывод по чеку выключен':'Check auto-payout disabled',
+  'Введите числовой Telegram ID получателя':'Enter the recipient’s numeric Telegram ID','Укажите Telegram ID':'Provide a Telegram ID','Неверный Telegram ID':'Invalid Telegram ID',
+  'Прямой авто-вывод включён':'Direct auto-payout enabled','Прямой авто-вывод выключен':'Direct auto-payout disabled',
+  'Реквизиты сохранены':'Requisites saved','Список рефералов сохранён':'Referral list saved','Сохранено':'Saved',
+  'Юзер':'User','Всего выведено':'Total withdrawn','Реф-бонус в пуле':'Referral bonus in pool','Реферер':'Referrer',
+  'Настройки':'Settings','Изменить баланс':'Change balance','Применить':'Apply','Ставка ($/100 заходов)':'Rate ($/100 joins)','бонус':'bonus',
+  'Авто-вывод по чеку (USDT-check)':'Auto-payout by check (USDT-check)','Авто-вывод прямым переводом (USDT, без чека)':'Auto-payout by direct transfer (USDT, no check)',
+  'Telegram ID получателя, напр. 123456789':'Recipient Telegram ID, e.g. 123456789',
+  'Деньги приходят напрямую в @CryptoBot получателю — без чека и подтверждений. Нужен числовой Telegram ID (не @username; узнать можно через @userinfobot). Имеет приоритет над выводом по чеку.':'Money arrives directly in the recipient’s @CryptoBot — no check, no confirmations. Needs a numeric Telegram ID (not @username; find it via @userinfobot). Takes priority over the check payout.',
+  'Приглашённые':'Referred','по одному ID на строку':'one ID per line','Верификации':'Verifications','История выводов':'Withdrawal history','Выводов не было.':'No withdrawals yet.','Пока пусто.':'Nothing yet.',
+  // misc / errors / copy
+  'Не удалось загрузить состояние':'Could not load state','Не могу достучаться до':'Cannot reach','— открой DevTools → Console/Network, там точная причина (обычно CORS или неверный URL).':' — open DevTools → Console/Network for the exact cause (usually CORS or a wrong URL).',
+  'ID скопирован:':'ID copied:','Не удалось скопировать':'Could not copy','Загрузка…':'Loading…',
+  'завершено':'completed','выполнен':'completed','в обработке':'processing'
+};
+const TR_SORTED = Object.keys(TR).sort((a, b) => b.length - a.length).map((k) => [k, TR[k]]);
+function tr(s) {
+    if (adminLang !== 'en' || s == null) return s;
+    s = String(s);
+    for (const [re, rep] of TR_RE) s = s.replace(re, rep);
+    for (const [ru, en] of TR_SORTED) if (s.indexOf(ru) >= 0) s = s.split(ru).join(en);
+    return s;
+}
+function trWhole(t) { const k = t.trim(); if (k && WHOLE[k] !== undefined) return t.replace(k, WHOLE[k]); return tr(t); }
+const CYR = /[А-Яа-яЁё]/;
+function localizeAll(root) {
+    if (adminLang !== 'en') return;
+    root = root || document.body;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode(n) {
+        const tag = n.parentNode && n.parentNode.nodeName;
+        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'TEXTAREA') return NodeFilter.FILTER_REJECT;
+        return CYR.test(n.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+    } });
+    const nodes = []; while (walker.nextNode()) nodes.push(walker.currentNode);
+    for (const n of nodes) { const v = trWhole(n.nodeValue); if (v !== n.nodeValue) n.nodeValue = v; }
+    (root.querySelectorAll ? root.querySelectorAll('[placeholder],[title]') : []).forEach((el) => {
+        ['placeholder', 'title'].forEach((a) => { const val = el.getAttribute(a); if (val && CYR.test(val)) { const t = tr(val); if (t !== val) el.setAttribute(a, t); } });
+    });
+}
+let _obs;
+function startTranslator() {
+    if (adminLang !== 'en' || _obs) return;
+    const opts = { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['placeholder', 'title'] };
+    localizeAll(document.body);
+    _obs = new MutationObserver(() => { _obs.disconnect(); localizeAll(document.body); _obs.observe(document.body, opts); });
+    _obs.observe(document.body, opts);
+}
+// Translate native confirm/prompt messages too (they aren't in the DOM).
+const _confirm = window.confirm.bind(window), _prompt = window.prompt.bind(window);
+window.confirm = (m) => _confirm(tr(m));
+window.prompt = (m, d) => _prompt(tr(m), d);
+
 applyAdminLang();
+startTranslator();
 
 // ---------- HTTP helpers (credentials: include so the session cookie flows) ----------
 async function api(path, opts = {}) {
@@ -69,7 +313,7 @@ let toastT;
 function toast(msg, kind = 'ok') {
     const el = $('#toast');
     el.className = `toast ${kind}`;
-    el.textContent = msg;
+    el.textContent = tr(msg);
     el.hidden = false;
     clearTimeout(toastT);
     toastT = setTimeout(() => { el.hidden = true; }, 3500);

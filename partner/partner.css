@@ -55,6 +55,12 @@ th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--stroke)}
 th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .left-n{color:#5a6577;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+
+.lang-switch{display:inline-flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--stroke-2);border-radius:999px;padding:2px}
+.login-card .lang-switch{position:absolute;top:14px;right:14px}
+.login-card{position:relative}
+.lang-switch button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;cursor:pointer}
+.lang-switch button.active{background:var(--blue);color:#06121c}
 .table-wrap{overflow-x:auto;border:1px solid var(--stroke);border-radius:12px}
 
 /* Ad-history: server switcher + summary */
