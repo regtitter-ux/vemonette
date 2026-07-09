@@ -336,49 +336,44 @@
 
     <div class="viz reveal" role="img" aria-label="Движение средств: покупатели платят за 100 заходов, Vemoni начисляет на балансы партнёров и оставляет маржу на баланс сервиса">
       <div class="viz-title">Движение средств за каждые 100 заходов</div>
-      <svg viewBox="0 0 820 262" preserveAspectRatio="xMidYMid meet">
+      <svg id="sim-svg" viewBox="0 0 820 252" preserveAspectRatio="xMidYMid meet">
         <defs><linearGradient id="mgrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="var(--blue)"/><stop offset="1" stop-color="var(--violet)"/></linearGradient></defs>
-        <!-- flow lines -->
-        <g fill="none" stroke="var(--line-2)" stroke-width="2" stroke-linecap="round">
-          <path d="M660 146 L470 143"/>
-          <path d="M352 126 C305 104 275 90 236 80"/>
-          <path d="M352 160 C305 182 275 196 236 206"/>
+        <!-- routes -->
+        <g fill="none" stroke="var(--line-2)" stroke-width="1.4" opacity=".5" stroke-linecap="round">
+          <path d="M200 70 L410 112"/><path d="M200 116 L410 112"/><path d="M200 162 L410 112"/>
+          <path d="M410 112 L620 70"/><path d="M410 112 L620 116"/><path d="M410 112 L620 162"/>
         </g>
-        <!-- money coins: buyers -> hub (amber) -->
-        <circle r="6" fill="var(--amber)"><animateMotion dur="2.2s" repeatCount="indefinite" path="M660 146 L470 143"/></circle>
-        <circle r="6" fill="var(--amber)"><animateMotion dur="2.2s" begin="1.1s" repeatCount="indefinite" path="M660 146 L470 143"/></circle>
-        <!-- hub -> partners (green) -->
-        <circle r="5.5" fill="var(--green)"><animateMotion dur="2.5s" repeatCount="indefinite" path="M352 126 C305 104 275 90 236 80"/></circle>
-        <circle r="5.5" fill="var(--green)"><animateMotion dur="2.5s" begin="1.2s" repeatCount="indefinite" path="M352 126 C305 104 275 90 236 80"/></circle>
-        <!-- hub -> service (blue) -->
-        <circle r="5.5" fill="var(--blue-2)"><animateMotion dur="2.7s" repeatCount="indefinite" path="M352 160 C305 182 275 196 236 206"/></circle>
-        <circle r="5.5" fill="var(--blue-2)"><animateMotion dur="2.7s" begin="1.35s" repeatCount="indefinite" path="M352 160 C305 182 275 196 236 206"/></circle>
 
-        <!-- buyers -->
-        <rect x="662" y="116" width="150" height="58" rx="14" fill="var(--panel-2)" stroke="var(--amber)" stroke-width="1.4"/>
-        <text x="737" y="141" text-anchor="middle" font-size="15" font-weight="700" fill="var(--ink)">Покупатели</text>
-        <text x="737" y="160" text-anchor="middle" font-size="12" fill="var(--amber)">$10 / 100 заходов</text>
-        <!-- hub -->
-        <rect x="352" y="112" width="116" height="62" rx="16" fill="var(--panel-2)" stroke="var(--blue)" stroke-width="1.5"/>
-        <text x="410" y="149" text-anchor="middle" font-size="18" font-weight="800" fill="var(--ink)" font-family="Sora,Inter,sans-serif">Vemoni</text>
-        <!-- amounts on the lines -->
-        <text x="566" y="128" text-anchor="middle" font-size="13" font-weight="700" fill="var(--amber)">$10.00</text>
-        <text x="298" y="84" text-anchor="middle" font-size="13" font-weight="700" fill="var(--green)">$5.00</text>
-        <text x="298" y="200" text-anchor="middle" font-size="13" font-weight="700" fill="var(--blue-2)">$4.85</text>
+        <!-- partners (supply) -->
+        <text x="40" y="26" font-size="13" font-weight="700" fill="var(--green)">Партнёры</text>
+        <text x="40" y="43" font-size="10.5" fill="var(--muted)">отправляют заходы · +$0.05 за заход</text>
+        <text id="p1m" x="40" y="76" font-size="17" font-weight="800" fill="var(--green)" class="mono">$0.00</text>
+        <text id="p1j" x="40" y="90" font-size="11" fill="var(--muted)" class="mono">0 зах.</text>
+        <text id="p2m" x="40" y="122" font-size="17" font-weight="800" fill="var(--green)" class="mono">$0.00</text>
+        <text id="p2j" x="40" y="136" font-size="11" fill="var(--muted)" class="mono">0 зах.</text>
+        <text id="p3m" x="40" y="168" font-size="17" font-weight="800" fill="var(--green)" class="mono">$0.00</text>
+        <text id="p3j" x="40" y="182" font-size="11" fill="var(--muted)" class="mono">0 зах.</text>
+        <g fill="var(--green)"><circle cx="200" cy="70" r="5"/><circle cx="200" cy="116" r="5"/><circle cx="200" cy="162" r="5"/></g>
 
-        <!-- partners' balances — live, keep rising -->
-        <text x="40" y="34" font-size="13" font-weight="700" fill="var(--green)">Балансы партнёров</text>
-        <circle cx="48" cy="52" r="5" fill="var(--green)"/><text id="bal-p1" x="64" y="57" font-size="15" font-weight="700" fill="var(--green)" class="mono">$0.00</text>
-        <circle cx="48" cy="80" r="5" fill="var(--green)"/><text id="bal-p2" x="64" y="85" font-size="15" font-weight="700" fill="var(--green)" class="mono">$0.00</text>
-        <circle cx="48" cy="108" r="5" fill="var(--green)"/><text id="bal-p3" x="64" y="113" font-size="15" font-weight="700" fill="var(--green)" class="mono">$0.00</text>
-        <text x="40" y="136" font-size="11.5" fill="var(--muted)">$5.00 начисляется по заходам между партнёрами</text>
+        <!-- hub + service margin -->
+        <rect x="352" y="86" width="116" height="52" rx="15" fill="var(--panel-2)" stroke="var(--blue)" stroke-width="1.5"/>
+        <text x="410" y="117" text-anchor="middle" font-size="18" font-weight="800" fill="var(--ink)" font-family="Sora,Inter,sans-serif">Vemoni</text>
+        <text x="410" y="158" text-anchor="middle" font-size="12" font-weight="700" fill="var(--blue-2)">Маржа сервиса · $0.0485/заход</text>
+        <text id="svcm" x="410" y="188" text-anchor="middle" font-size="25" font-weight="800" fill="url(#mgrad)" font-family="Sora,Inter,sans-serif" class="mono">$0.00</text>
+        <text id="svcj" x="410" y="208" text-anchor="middle" font-size="11" fill="var(--muted)" class="mono">0 заходов проведено</text>
 
-        <!-- service balance — live, keeps rising -->
-        <text x="40" y="184" font-size="13" font-weight="700" fill="var(--blue-2)">Баланс сервиса</text>
-        <text id="bal-svc" x="40" y="216" font-size="26" font-weight="800" fill="url(#mgrad)" font-family="Sora,Inter,sans-serif" class="mono">$0.00</text>
-        <text x="40" y="238" font-size="11.5" fill="var(--muted)">+$4.85 маржи с каждых 100 заходов</text>
+        <!-- buyers (demand) -->
+        <text x="780" y="26" text-anchor="end" font-size="13" font-weight="700" fill="var(--amber)">Покупатели</text>
+        <text x="780" y="43" text-anchor="end" font-size="10.5" fill="var(--muted)">покупают заходы · $0.10 за заход</text>
+        <text id="b1m" x="780" y="76" text-anchor="end" font-size="17" font-weight="800" fill="var(--amber)" class="mono">$0.00</text>
+        <text id="b1j" x="780" y="90" text-anchor="end" font-size="11" fill="var(--muted)" class="mono">0 зах.</text>
+        <text id="b2m" x="780" y="122" text-anchor="end" font-size="17" font-weight="800" fill="var(--amber)" class="mono">$0.00</text>
+        <text id="b2j" x="780" y="136" text-anchor="end" font-size="11" fill="var(--muted)" class="mono">0 зах.</text>
+        <text id="b3m" x="780" y="168" text-anchor="end" font-size="17" font-weight="800" fill="var(--amber)" class="mono">$0.00</text>
+        <text id="b3j" x="780" y="182" text-anchor="end" font-size="11" fill="var(--muted)" class="mono">0 зах.</text>
+        <g fill="var(--amber)"><circle cx="620" cy="70" r="5"/><circle cx="620" cy="116" r="5"/><circle cx="620" cy="162" r="5"/></g>
       </svg>
-      <div class="viz-cap">Покупатели платят за каждые 100 заходов. Vemoni начисляет <b style="color:var(--ink)">$5</b> на балансы партнёров — по мере доставки заходов — и оставляет <b style="color:var(--ink)">$4.85</b> маржи. Баланс сервиса растёт с каждой сделки (эквайринг ~$0.15 уже учтён).</div>
+      <div class="viz-cap">Живая симуляция: каждый кружок — один заход, который идёт от партнёра через Vemoni к покупателю. Счётчики точны — <b style="color:var(--ink)">партнёр получает $0.05 за каждый отправленный заход</b>, <b style="color:var(--ink)">покупатель платит $0.10 за каждый купленный</b>, сети остаётся $0.0485 маржи (эквайринг ~$0.0015 учтён). Сколько отправил / купил — столько и начислено / списано.</div>
     </div>
   </div>
 </section>
@@ -523,20 +518,62 @@
     els.forEach(function(e,i){ e.style.transitionDelay=(Math.min(i%3,3)*70)+'ms'; io.observe(e); });
   })();
 
-  // Live money counters — balances keep rising until the page is refreshed.
+  // Live money-flow simulation. Every dot is one join routed partner → Vemoni →
+  // buyer. On arrival the exact balances update: a partner earns $0.05 per join
+  // it SENT, a buyer pays $0.10 per join it BOUGHT, the service keeps $0.0485
+  // margin per join (acquiring $0.0015 implied). Totals always reconcile:
+  // Σ buyer_spend = Σ partner_payout + acquiring + service_margin.
   (function(){
-    var p1=document.getElementById('bal-p1'),p2=document.getElementById('bal-p2'),
-        p3=document.getElementById('bal-p3'),sv=document.getElementById('bal-svc');
-    if(!p1||!p2||!p3||!sv) return;
-    var v1=0,v2=0,v3=0,vs=0;
-    var fmt=function(n){return '$'+n.toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});};
-    setInterval(function(){
-      // each tick = a few delivered joins accruing; partners earn $0.05/join,
-      // the service ~$0.0485/join of margin — kept roughly in proportion.
-      v1+=0.04+Math.random()*0.10; v2+=0.03+Math.random()*0.13; v3+=0.02+Math.random()*0.08;
-      vs+=0.13+Math.random()*0.22;
-      p1.textContent=fmt(v1); p2.textContent=fmt(v2); p3.textContent=fmt(v3); sv.textContent=fmt(vs);
-    },95);
+    var svg=document.getElementById('sim-svg'); if(!svg) return;
+    var NS='http://www.w3.org/2000/svg', g=function(id){return document.getElementById(id);};
+    var hub={x:410,y:112};
+    var partners=[
+      {x:200,y:70,w:.42,j:0,m:g('p1m'),c:g('p1j')},
+      {x:200,y:116,w:.34,j:0,m:g('p2m'),c:g('p2j')},
+      {x:200,y:162,w:.24,j:0,m:g('p3m'),c:g('p3j')}
+    ];
+    var buyers=[
+      {x:620,y:70,w:.40,j:0,m:g('b1m'),c:g('b1j')},
+      {x:620,y:116,w:.35,j:0,m:g('b2m'),c:g('b2j')},
+      {x:620,y:162,w:.25,j:0,m:g('b3m'),c:g('b3j')}
+    ];
+    var total=0, svcm=g('svcm'), svcj=g('svcj');
+    var mny=function(n){return '$'+n.toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});};
+    var zh=function(n){return n.toLocaleString('ru-RU')+' зах.';};
+    var pick=function(a){var r=Math.random(),s=0;for(var i=0;i<a.length;i++){s+=a[i].w;if(r<=s)return a[i];}return a[a.length-1];};
+    function settle(p,b){
+      p.j++; b.j++; total++;
+      p.m.textContent=mny(p.j*0.05); p.c.textContent=zh(p.j);
+      b.m.textContent=mny(b.j*0.10); b.c.textContent=zh(b.j);
+      svcm.textContent=mny(total*0.0485);
+      svcj.textContent=total.toLocaleString('ru-RU')+' заходов проведено';
+    }
+    var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    if(reduce){ setInterval(function(){ settle(pick(partners),pick(buyers)); },260); return; }
+
+    var toks=[], last=null, DUR=1.5;
+    function frame(ts){
+      if(last===null) last=ts; var dt=(ts-last)/1000; last=ts; if(dt>0.1) dt=0.1;
+      for(var i=toks.length-1;i>=0;i--){
+        var t=toks[i]; t.t+=dt/DUR;
+        if(t.t>=1){ settle(t.p,t.b); if(t.el.parentNode) svg.removeChild(t.el); toks.splice(i,1); continue; }
+        var x,y,u;
+        if(t.t<0.5){ u=t.t*2; x=t.p.x+(hub.x-t.p.x)*u; y=t.p.y+(hub.y-t.p.y)*u; }
+        else{ u=(t.t-0.5)*2; x=hub.x+(t.b.x-hub.x)*u; y=hub.y+(t.b.y-hub.y)*u; }
+        t.el.setAttribute('cx',x.toFixed(1)); t.el.setAttribute('cy',y.toFixed(1));
+      }
+      requestAnimationFrame(frame);
+    }
+    function spawn(){
+      if(toks.length>28) return;
+      var p=pick(partners), b=pick(buyers);
+      var el=document.createElementNS(NS,'circle');
+      el.setAttribute('r','4.5'); el.setAttribute('cx',p.x); el.setAttribute('cy',p.y); el.setAttribute('fill','var(--blue-2)');
+      svg.appendChild(el);
+      toks.push({p:p,b:b,el:el,t:0});
+    }
+    requestAnimationFrame(frame);
+    setInterval(spawn,85);
   })();
 </script>
 </body>
