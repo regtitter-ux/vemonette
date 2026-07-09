@@ -380,12 +380,35 @@ function render(d) {
           return `<tr><td>${esc(g.name || g.guildId)}</td>${cell(g.hour, L.hour)}${cell(g.day, L.day)}${cell(g.week, L.week)}${cell(g.month, L.month)}${cell(g.total, L.total, true)}</tr>`;
       }).join('') : '<tr><td colspan="6" class="muted">Пока нет оплаченных верификаций</td></tr>'}</tbody>`;
 
-    // Withdrawals
-    const wds = d.withdrawals || [];
+    // Withdrawals — 10 per page, prev/next for the rest.
+    lastWithdrawals = d.withdrawals || [];
+    renderWithdrawals();
+}
+
+let lastWithdrawals = [];
+let wdPage = 0;
+const WD_PER_PAGE = 10;
+function renderWithdrawals() {
+    const wds = lastWithdrawals;
     const st = (s) => s === 'completed' ? '<span class="chip green">выполнен</span>' : '<span class="chip amber">в обработке</span>';
+    const pages = Math.max(1, Math.ceil(wds.length / WD_PER_PAGE));
+    if (wdPage > pages - 1) wdPage = pages - 1;
+    if (wdPage < 0) wdPage = 0;
+    const slice = wds.slice(wdPage * WD_PER_PAGE, wdPage * WD_PER_PAGE + WD_PER_PAGE);
     $('#p-wd').innerHTML = `
       <thead><tr><th>Дата</th><th class="num">Сумма</th><th>Статус</th></tr></thead>
-      <tbody>${wds.length ? wds.map((w) => `<tr><td class="muted">${esc(relTime(w.createdAt))}</td><td class="num">${money(w.amount)}</td><td>${st(w.status)}</td></tr>`).join('') : '<tr><td colspan="3" class="muted">Выплат пока не было</td></tr>'}</tbody>`;
+      <tbody>${slice.length ? slice.map((w) => `<tr><td class="muted">${esc(relTime(w.createdAt))}</td><td class="num">${money(w.amount)}</td><td>${st(w.status)}</td></tr>`).join('') : '<tr><td colspan="3" class="muted">Выплат пока не было</td></tr>'}</tbody>`;
+    const pager = $('#p-wd-pager');
+    if (!pager) return;
+    if (wds.length <= WD_PER_PAGE) { pager.hidden = true; pager.innerHTML = ''; return; }
+    pager.hidden = false;
+    pager.innerHTML =
+        `<button class="btn ghost sm" id="wd-prev"${wdPage === 0 ? ' disabled' : ''}>← Назад</button>` +
+        `<span class="wd-page muted sm">Стр. ${wdPage + 1} из ${pages}</span>` +
+        `<button class="btn ghost sm" id="wd-next"${wdPage >= pages - 1 ? ' disabled' : ''}>Вперёд →</button>`;
+    const prev = $('#wd-prev'), next = $('#wd-next');
+    if (prev) prev.onclick = () => { if (wdPage > 0) { wdPage--; renderWithdrawals(); } };
+    if (next) next.onclick = () => { if (wdPage < pages - 1) { wdPage++; renderWithdrawals(); } };
 }
 
 $('#p-req-save').addEventListener('click', async () => {
