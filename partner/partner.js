@@ -52,6 +52,55 @@ async function load() {
     const { ok, body } = await get('/me');
     if (ok) render(body);
     loadAdHistory();
+    loadCards();
+}
+
+// ---- My verification cards (read-only, same funnel as admin "Экстренно") ----
+function fmtSec(s) {
+    if (s == null) return '—';
+    if (s < 60) return `${s} сек`;
+    const m = Math.floor(s / 60), r = s % 60;
+    if (m < 60) return r ? `${m} мин ${r} сек` : `${m} мин`;
+    const h = Math.floor(m / 60);
+    return `${h} ч ${m % 60} мин`;
+}
+function cardStatRow(label, w) {
+    const c = (v) => (v == null ? 0 : v);
+    return `<tr><td>${esc(label)}</td><td class="num">${c(w?.hour)}</td><td class="num">${c(w?.day)}</td><td class="num">${c(w?.week)}</td></tr>`;
+}
+function pcardBlock(c) {
+    const st = c.stats || {};
+    const role = c.roleName ? '@' + esc(c.roleName) : (c.roleId ? esc(c.roleId) : 'роль по умолчанию');
+    const chan = c.channelName ? '#' + esc(c.channelName) : esc(c.channelId || '');
+    const link = c.link ? ` · <a href="${esc(c.link)}" target="_blank" rel="noopener">↗ сообщение</a>` : '';
+    const avg = c.avgVerifySeconds != null ? ` · ⏱ ~${esc(fmtSec(c.avgVerifySeconds))}` : '';
+    return `
+      <div class="vcard">
+        <div class="vcard-head">${srvIcon(c.guildName, c.guildIcon)}<span><b>${esc(c.guildName || 'Сервер')}</b> · ${chan}${link}</span></div>
+        <div class="vcard-meta">Роль: ${role}${avg}</div>
+        <div class="table-wrap" style="margin-top:12px"><table>
+          <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
+          <tbody>
+            ${cardStatRow('1. Клик (начали)', st.clicks)}
+            ${cardStatRow('2. Заход проверен', st.checked)}
+            ${cardStatRow('3. Остались', st.stayed)}
+          </tbody>
+        </table></div>
+      </div>`;
+}
+async function loadCards() {
+    const { ok, body } = await get('/cards');
+    if (!ok) return;
+    const list = body.cards || [];
+    const section = $('#vcards-section');
+    if (!list.length) { section.hidden = true; return; }
+    section.hidden = false;
+    const avgEl = $('#vcards-avg');
+    if (avgEl) {
+        if (body.avgVerifySeconds != null) { avgEl.textContent = `⏱ Среднее время от клика до проверенного захода: ~${fmtSec(body.avgVerifySeconds)}`; avgEl.hidden = false; }
+        else avgEl.hidden = true;
+    }
+    $('#vcards-list').innerHTML = list.map(pcardBlock).join('');
 }
 
 // ---- Ad history per server ----
