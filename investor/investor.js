@@ -107,7 +107,7 @@ async function checkAuth() { const { ok, body } = await get('/whoami'); return o
 async function enterApp() { $('#login').hidden = true; $('#app').hidden = false; await load(); setInterval(load, 15000); }
 
 // ---------- Data ----------
-let PRICING = { buyPer100: 9, sellPer100: 10, returnRate: 0.10, minInvites: 100, minDays: 30 };
+let PRICING = { buyPer100: 9, sellPer100: 10, returnRate: 0.10, minInvites: 100, minDays: 30, minDaily: 10 };
 let MIN_TOPUP = 5;
 function srvIcon(name, url) {
     const initial = esc((String(name || '?')[0] || '?').toUpperCase());
@@ -142,7 +142,7 @@ function renderAccount(d) {
 }
 
 function renderServers(list) {
-    if (!list.length) { $('#inv-servers').innerHTML = `<div class="muted">Пока нет серверов с активностью.</div>`; return; }
+    if (!list.length) { $('#inv-servers').innerHTML = `<div class="muted">Пока нет серверов с достаточной активностью — нужно от ${PRICING.minDaily} проверенных заходов в сутки. Серверы появляются автоматически, как только выходят на этот темп.</div>`; return; }
     $('#inv-servers').innerHTML = list.map(serverCard).join('');
     $('#inv-servers').querySelectorAll('[data-buy]').forEach((b) => b.onclick = () => buy(b.dataset.buy, b.dataset.name, Number(b.dataset.min) || PRICING.minInvites));
 }
@@ -175,9 +175,11 @@ function serverCard(s) {
         <div class="vcard-head">${srvIcon(s.name, s.icon)}<span><b>${name}</b></span></div>
         ${flowRow(s.flow)}
         ${price}
-        ${minLine}
+        ${s.investable !== false ? minLine : ''}
         ${mine}
-        <div class="vcard-actions"><button class="btn primary sm" data-buy="${esc(s.serverId)}" data-name="${name}" data-min="${minInv}">Выкуп инвайтов</button></div>
+        <div class="vcard-actions">${s.investable !== false
+            ? `<button class="btn primary sm" data-buy="${esc(s.serverId)}" data-name="${name}" data-min="${minInv}">Выкуп инвайтов</button>`
+            : `<span class="muted sm">Сейчас ниже порога активности (нужно ≥ ${PRICING.minDaily} заходов/сутки) — выкуп недоступен</span>`}</div>
       </div>`;
 }
 

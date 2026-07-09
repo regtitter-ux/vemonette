@@ -67,7 +67,7 @@ const TR = {
   // system
   'Мониторинг ботов':'Bot monitoring',
   'Серверы для выкупа инвайтов (инвесторам)':'Servers for invite buy-in (investors)',
-  'Серверы, доступные инвесторам в инвест-кабинете для выкупа будущих инвайтов. Добавить можно только сервер, где есть активная карточка верификации.':'Servers investors can buy future invites of in the investor cabinet. You can only add a server that has an active verification card.',
+  'Серверы появляются у инвесторов автоматически, когда выходят на порог активности (по умолчанию ≥10 проверенных заходов/сутки), и пропадают, если темп падает. Здесь можно принудительно открыть сервер ниже порога — но только если на нём есть активная карточка верификации.':'Servers appear to investors automatically once they reach the activity threshold (default ≥10 verified joins/day) and drop off when the rate falls. Here you can force-open a below-threshold server — but only if it has an active verification card.',
   '— выберите сервер с активной карточкой —':'— pick a server with an active card —','Нет серверов с активными карточками':'No servers with active cards',
   'Пока не добавлено ни одного сервера':'No servers added yet','нет активной карточки':'no active card',
   'Сервер добавлен для выкупа инвайтов':'Server added for invite buy-in','Сервер убран из инвест-списка':'Server removed from the invest list',
