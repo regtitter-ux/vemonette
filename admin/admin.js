@@ -65,7 +65,14 @@ const TR = {
   '🔴 перепродажа — заказов больше, чем сеть тянет':'🔴 oversold — more orders than the network can deliver','🟢 в норме':'🟢 healthy',
   'Выручка':'Revenue','Заходы':'Joins',
   // system
-  'Мониторинг ботов':'Bot monitoring','Финансовая сверка':'Financial reconciliation','Бэкапы':'Backups',
+  'Мониторинг ботов':'Bot monitoring',
+  'Серверы для выкупа инвайтов (инвесторам)':'Servers for invite buy-in (investors)',
+  'Серверы, доступные инвесторам в инвест-кабинете для выкупа будущих инвайтов. Добавить можно только сервер, где есть активная карточка верификации.':'Servers investors can buy future invites of in the investor cabinet. You can only add a server that has an active verification card.',
+  '— выберите сервер с активной карточкой —':'— pick a server with an active card —','Нет серверов с активными карточками':'No servers with active cards',
+  'Пока не добавлено ни одного сервера':'No servers added yet','нет активной карточки':'no active card',
+  'Сервер добавлен для выкупа инвайтов':'Server added for invite buy-in','Сервер убран из инвест-списка':'Server removed from the invest list',
+  'На сервере нет активной карточки верификации':'The server has no active verification card','Выберите сервер':'Select a server','Не удалось убрать':'Could not remove',
+  'Пополнить инвест-счёт, $':'Top up investment account, $','Инвест-счёт пополнен на':'Investment account topped up by','Финансовая сверка':'Financial reconciliation','Бэкапы':'Backups',
   'Сделать бэкап сейчас':'Back up now','Аудит-лог действий':'Action audit log','Ботов онлайн':'Bots online',
   '🟢 онлайн':'🟢 online','🔴 офлайн':'🔴 offline','Алерты':'Alerts','⚠️ выключены':'⚠️ off',
   'Задайте ALERT_CHANNEL в Railway':'Set ALERT_CHANNEL in Railway',
@@ -431,7 +438,39 @@ async function renderSystem() {
     if (h.ok) { renderSysBots(h.body); renderSysBackup(h.body.backup, h.body.alertChannel); }
     if (f.ok) renderSysFinance(f.body);
     if (a.ok) renderSysAudit(a.body.entries || []);
+    renderInvestServers();
 }
+
+// ---- Invest-servers (owner-only): servers investors may buy invites of ----
+async function renderInvestServers() {
+    const box = $('#invest-servers-table'), sel = $('#invest-add-select');
+    if (!box || !sel) return;
+    const { ok, body } = await get('/invest-servers');
+    if (!ok) return;
+    const cands = body.candidates || [], enabled = body.enabled || [];
+    sel.innerHTML = cands.length
+        ? '<option value="">— выберите сервер с активной карточкой —</option>' + cands.map((c) => `<option value="${escapeHtml(c.serverId)}">${escapeHtml(c.name || c.serverId)}</option>`).join('')
+        : '<option value="">Нет серверов с активными карточками</option>';
+    box.innerHTML = `
+      <thead><tr><th>Сервер</th><th>Действие</th></tr></thead>
+      <tbody>${enabled.length ? enabled.map((s) => `
+        <tr><td>${escapeHtml(s.name || s.serverId)} <span class="gid">${escapeHtml(s.serverId)}</span>${s.hasCard ? '' : ' <span class="chip red">нет активной карточки</span>'}</td>
+        <td><button class="btn-mini off" data-invest-del="${escapeHtml(s.serverId)}">Убрать</button></td></tr>`).join('')
+        : '<tr><td colspan="2" class="muted">Пока не добавлено ни одного сервера</td></tr>'}</tbody>`;
+    box.querySelectorAll('[data-invest-del]').forEach((b) => b.onclick = async () => {
+        const { ok } = await del('/invest-servers', { serverId: b.dataset.investDel });
+        if (ok) { toast('Сервер убран из инвест-списка'); renderInvestServers(); }
+        else toast('Не удалось убрать', 'err');
+    });
+}
+const _investAddBtn = document.getElementById('invest-add');
+if (_investAddBtn) _investAddBtn.onclick = async () => {
+    const serverId = $('#invest-add-select').value;
+    if (!serverId) { toast('Выберите сервер', 'err'); return; }
+    const { ok, body } = await post('/invest-servers', { serverId });
+    if (ok) { toast('Сервер добавлен для выкупа инвайтов'); renderInvestServers(); }
+    else toast(body?.error === 'no-active-card' ? 'На сервере нет активной карточки верификации' : (body?.error || 'Не удалось добавить'), 'err');
+};
 function renderSysBots(b) {
     const box = $('#sys-bots'); if (!box) return;
     const cards = [{ k: 'Ботов онлайн', v: `${b.online} / ${b.total}`, warn: b.online < b.total }]
@@ -1634,6 +1673,13 @@ function wireBalDetailControls(userId) {
         editBalanceField(userId, 'joinbid', { joinBid }, 'Join bid сохранён');
     };
 
+    const invBtn = apply('investtopup');
+    if (invBtn) invBtn.onclick = () => {
+        const amount = Number(String($('[data-edit="investTopup"]').value).replace(',', '.'));
+        if (!Number.isFinite(amount) || amount <= 0) { toast('Введите сумму больше 0', 'err'); return; }
+        editBalanceField(userId, 'investtopup', { amount }, `Инвест-счёт пополнен на $${amount}`);
+    };
+
     const autoCb = $('[data-edit="autoPayout"]');
     if (autoCb) autoCb.onchange = async (e) => {
         const off = !e.target.checked;
@@ -1723,6 +1769,11 @@ function balDetailHtml(u) {
             <label>Ставка ($/100 заходов)${u.boosted ? ` · <span class="chip amber">🔥 бонус ${fmtBoostLeft(u.boostLeftMs)}</span>` : ''}</label>
             <input type="number" step="0.01" min="0" data-edit="joinBid" value="${Number(u.joinBid).toFixed(2)}" />
             <div class="actions-row"><button class="btn primary sm" data-edit-act="joinbid">Сохранить</button></div>
+          </div>
+          <div class="setting">
+            <label>Пополнить инвест-счёт, $</label>
+            <input type="number" step="1" min="0" data-edit="investTopup" placeholder="например 50" />
+            <div class="actions-row"><button class="btn primary sm" data-edit-act="investtopup">Пополнить</button></div>
           </div>
           <div class="setting autopay">
             <label>Авто-вывод по чеку (USDT-check)</label>

@@ -188,6 +188,14 @@
       <h2>Бэкапы <button class="btn ghost sm" id="sys-backup-now" style="font-size:12px">Сделать бэкап сейчас</button></h2>
       <div id="sys-backup" class="muted"></div>
 
+      <h2>Серверы для выкупа инвайтов (инвесторам)</h2>
+      <p class="muted">Серверы, доступные инвесторам в инвест-кабинете для выкупа будущих инвайтов. Добавить можно только сервер, где есть активная карточка верификации.</p>
+      <div class="filters">
+        <select id="invest-add-select"></select>
+        <button class="btn primary sm" id="invest-add">＋ Добавить</button>
+      </div>
+      <div class="table-wrap"><table class="stat-table" id="invest-servers-table"></table></div>
+
       <h2>Аудит-лог действий</h2>
       <div class="table-wrap"><table class="stat-table" id="sys-audit"></table></div>
     </section>
@@ -261,6 +269,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=55"></script>
+<script src="/admin/admin.js?v=56"></script>
 </body>
 </html>
