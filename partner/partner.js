@@ -356,6 +356,10 @@ function render(d) {
         `<div class="pcard"><div class="k">${esc(c.k)}</div><div class="v">${c.v}</div>${c.n ? `<div class="n">${esc(c.n)}</div>` : ''}</div>`
     ).join('');
 
+    // Auto-payout on (check or direct transfer) → requisites aren't needed; hide the block.
+    const reqSection = $('#p-req-section');
+    if (reqSection) reqSection.hidden = Boolean(d.autoPayout || d.autoTransfer);
+
     // Requisites (don't clobber while the user is editing)
     const reqEl = $('#p-req');
     if (document.activeElement !== reqEl) reqEl.value = d.requisites || '';
