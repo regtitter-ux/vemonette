@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Vemoni — биржа живого трафика для Discord</title>
+<meta name="description" content="Vemoni объединяет поток проверенных заходов сотен Discord-серверов и продаёт его другим сообществам. Оплата только за подтверждённые заходы." />
+<meta property="og:title" content="Vemoni — биржа живого трафика для Discord" />
+<meta property="og:description" content="Сеть, которая приводит живых участников в Discord-сообщества. Оплата за результат, выплаты в крипте." />
+<meta property="og:type" content="website" />
+<link rel="icon" type="image/png" href="/assets/logo.png" />
+<link rel="apple-touch-icon" href="/assets/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#070a11; --bg-2:#0b1019; --panel:#0f1626; --panel-2:#131d31; --line:#1d2942; --line-2:#26375a;
+    --ink:#eaf0fa; --muted:#93a2ba; --dim:#64748f;
+    --blue:#3aa0ff; --blue-2:#7cc4ff; --green:#40d18a; --violet:#977dff; --amber:#ffb84d;
+    --radius:18px;
+    --shadow:0 30px 70px -34px rgba(0,0,0,.9);
+    --maxw:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  h1,h2,h3,.brand{font-family:'Sora','Inter',sans-serif;letter-spacing:-.02em}
+  .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .eyebrow{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--blue-2)}
+  .muted{color:var(--muted)}
+
+  /* ---- nav ---- */
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(7,10,17,.72);border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
+  nav.scrolled{border-color:var(--line);background:rgba(7,10,17,.9)}
+  .nav-in{max-width:var(--maxw);margin:0 auto;padding:14px 22px;display:flex;align-items:center;gap:16px}
+  .logo{display:flex;align-items:center;gap:10px;font-family:'Sora';font-weight:800;font-size:19px}
+  .logo .mk{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--blue),var(--violet));
+    display:grid;place-items:center;box-shadow:0 6px 20px -6px var(--blue)}
+  .logo .mk svg{width:15px;height:15px}
+  .nav-tag{font-size:12.5px;color:var(--muted);border-left:1px solid var(--line);padding-left:16px}
+  @media(max-width:620px){.nav-tag{display:none}}
+  .nav-cta{margin-left:auto;font-size:14px;font-weight:600;padding:9px 18px;border-radius:999px;
+    background:var(--blue);color:#04121f;box-shadow:0 8px 24px -10px var(--blue)}
+  .nav-cta:hover{background:var(--blue-2)}
+
+  /* ---- hero ---- */
+  .hero{position:relative;padding:80px 0 40px;overflow:hidden}
+  .hero::before{content:"";position:absolute;inset:-30% 0 auto 0;height:820px;z-index:0;pointer-events:none;
+    background:radial-gradient(680px 420px at 50% -4%,rgba(58,160,255,.24),transparent 62%),
+               radial-gradient(520px 380px at 84% 8%,rgba(151,125,255,.16),transparent 60%)}
+  .hero::after{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+    background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+    background-size:54px 54px;mask-image:radial-gradient(700px 360px at 50% 12%,#000,transparent 78%)}
+  .hero-in{position:relative;z-index:1;text-align:center}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--blue-2);
+    border:1px solid var(--line-2);background:rgba(58,160,255,.07);padding:6px 14px;border-radius:999px;margin-bottom:22px}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  h1{font-size:clamp(32px,6vw,58px);line-height:1.04;font-weight:800;margin:0 auto 20px;max-width:16ch;text-wrap:balance}
+  h1 .g{background:linear-gradient(100deg,var(--blue-2),var(--violet));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{font-size:clamp(16px,2.1vw,20px);color:var(--muted);max-width:60ch;margin:0 auto 30px;text-wrap:pretty}
+  .hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+  .btn{font-size:15px;font-weight:600;padding:13px 26px;border-radius:999px;cursor:pointer;border:1px solid transparent;transition:.18s}
+  .btn.primary{background:var(--blue);color:#04121f;box-shadow:0 12px 34px -12px var(--blue)}
+  .btn.primary:hover{background:var(--blue-2);transform:translateY(-1px)}
+  .btn.ghost{background:transparent;border-color:var(--line-2);color:var(--ink)}
+  .btn.ghost:hover{border-color:var(--blue);color:var(--blue-2)}
+  .hero-chips{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:26px}
+  .chip{font-size:13px;font-weight:500;color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:8px 13px;background:var(--panel)}
+  .chip b{color:var(--ink);font-weight:700}
+
+  /* ---- marketplace diagram ---- */
+  .flowwrap{margin:56px auto 0;max-width:960px;position:relative;z-index:1}
+  .flow{display:grid;grid-template-columns:1fr auto 1.25fr auto 1fr;align-items:center;gap:8px}
+  .node{border:1px solid var(--line-2);border-radius:16px;padding:18px 16px;background:linear-gradient(180deg,var(--panel-2),var(--panel));text-align:center}
+  .node .role{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px}
+  .node .who{font-family:'Sora';font-weight:700;font-size:15px}
+  .node .sub{font-size:12.5px;color:var(--muted);margin-top:4px}
+  .node.supply .role{color:var(--green)} .node.demand .role{color:var(--amber)}
+  .node.core{padding:22px 18px;border-color:rgba(58,160,255,.4);
+    background:radial-gradient(120% 120% at 50% 0%,rgba(58,160,255,.18),var(--panel));box-shadow:0 0 0 1px rgba(58,160,255,.12),0 24px 60px -30px var(--blue)}
+  .node.core .who{font-size:20px}
+  .node.core .role{color:var(--blue-2)}
+  .conn{position:relative;height:2px;min-width:44px;background:var(--line-2);border-radius:2px;overflow:visible}
+  .conn::after{content:"";position:absolute;top:50%;left:0;width:7px;height:7px;border-radius:50%;transform:translateY(-50%);
+    background:var(--blue-2);box-shadow:0 0 10px var(--blue-2);animation:flow 2.4s linear infinite}
+  .conn.rev::after{background:var(--green);box-shadow:0 0 10px var(--green);animation-direction:reverse;animation-delay:1.2s}
+  @keyframes flow{0%{left:-4px;opacity:0}12%{opacity:1}88%{opacity:1}100%{left:calc(100% - 3px);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.conn::after{animation:none;left:50%}}
+  .flow-legend{display:flex;justify-content:center;gap:22px;margin-top:16px;font-size:12.5px;color:var(--muted);flex-wrap:wrap}
+  .flow-legend span{display:inline-flex;align-items:center;gap:7px}
+  .flow-legend i{width:16px;height:2px;border-radius:2px;display:inline-block}
+  @media(max-width:720px){
+    .flow{grid-template-columns:1fr;gap:0}
+    .conn{width:2px;height:34px;min-width:0;margin:0 auto}
+    .conn::after{top:0;left:50%;transform:translateX(-50%);animation:flowv 2.4s linear infinite}
+    @keyframes flowv{0%{top:-4px;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:calc(100% - 3px);opacity:0}}
+  }
+
+  /* ---- sections ---- */
+  section{padding:74px 0;position:relative}
+  .sec-head{max-width:640px;margin:0 0 40px}
+  .sec-head.center{margin-left:auto;margin-right:auto;text-align:center}
+  h2{font-size:clamp(25px,3.6vw,38px);font-weight:800;margin:12px 0 14px;line-height:1.1;text-wrap:balance}
+  .sec-head p{color:var(--muted);font-size:17px;margin:0}
+  .divider{height:1px;background:linear-gradient(90deg,transparent,var(--line),transparent)}
+
+  .cards{display:grid;gap:16px}
+  .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:820px){.g3,.g4{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.g3,.g4,.g2{grid-template-columns:1fr}}
+  .card{border:1px solid var(--line);border-radius:var(--radius);padding:24px;background:var(--panel);position:relative}
+  .card .ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;margin-bottom:16px;
+    background:rgba(58,160,255,.12);color:var(--blue-2)}
+  .card .ico svg{width:22px;height:22px}
+  .card h3{font-size:18px;font-weight:700;margin:0 0 8px}
+  .card p{margin:0;color:var(--muted);font-size:14.5px}
+  .step-n{font-family:'Sora';font-weight:800;font-size:14px;color:var(--blue-2);
+    border:1px solid var(--line-2);border-radius:9px;width:34px;height:34px;display:grid;place-items:center;margin-bottom:16px}
+
+  /* ---- econ bar ---- */
+  .econ{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:28px 26px}
+  .econ-top{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  .econ-top .big{font-family:'Sora';font-weight:800;font-size:26px}
+  .bar{display:flex;height:60px;border-radius:12px;overflow:hidden;border:1px solid var(--line-2)}
+  .bar .seg{display:flex;flex-direction:column;justify-content:center;padding:0 14px;color:#04121f;font-weight:700;font-size:13.5px;white-space:nowrap}
+  .bar .partner{background:linear-gradient(180deg,#54dd99,#37c082);flex:5}
+  .bar .acq{background:linear-gradient(180deg,#5a6d8f,#455677);color:#dbe6f7;flex:.15;min-width:74px}
+  .bar .margin{background:linear-gradient(120deg,var(--blue),var(--violet));flex:4.85}
+  .bar .seg small{display:block;font-weight:500;font-size:11px;opacity:.85}
+  .econ-note{margin-top:16px;color:var(--muted);font-size:14px}
+  .econ-note b{color:var(--ink)}
+  @media(max-width:560px){.bar{height:auto;flex-direction:column}.bar .seg{padding:12px 14px}.bar .acq{min-width:0}}
+
+  /* ---- metrics ---- */
+  .kpi{border:1px solid var(--line);border-radius:var(--radius);padding:22px;background:linear-gradient(180deg,var(--panel-2),var(--panel))}
+  .kpi .v{font-family:'Sora';font-weight:800;font-size:34px;line-height:1;letter-spacing:-.02em}
+  .kpi .v.blue{color:var(--blue-2)} .kpi .v.green{color:var(--green)} .kpi .v.violet{color:var(--violet)} .kpi .v.amber{color:var(--amber)}
+  .kpi .k{margin-top:10px;font-size:13.5px;color:var(--muted)}
+
+  /* ---- invest / cta ---- */
+  .invest{border:1px solid var(--line-2);border-radius:22px;padding:44px;text-align:center;position:relative;overflow:hidden;
+    background:radial-gradient(120% 160% at 50% 0%,rgba(58,160,255,.16),var(--panel))}
+  .invest h2{margin-top:0}
+  .invest .lede{margin-bottom:26px}
+
+  footer{border-top:1px solid var(--line);padding:30px 0;color:var(--dim);font-size:13.5px}
+  .foot-in{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+
+  /* ---- diagrams ---- */
+  .viz{margin-top:34px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:26px 20px}
+  .viz svg{width:100%;height:auto;display:block;max-height:340px}
+  .viz-cap{margin-top:14px;text-align:center;color:var(--muted);font-size:14px;max-width:60ch;margin-left:auto;margin-right:auto}
+  .viz text{font-family:'Inter',sans-serif}
+  .viz .flowline{stroke:var(--line-2);stroke-width:2;fill:none;stroke-dasharray:4 7;animation:dash 1.1s linear infinite}
+  @keyframes dash{to{stroke-dashoffset:-22}}
+  @media (prefers-reduced-motion:reduce){.viz .flowline{animation:none}}
+
+  /* ---- reveal ---- */
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .7s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-in">
+    <a class="logo" href="#top">
+      <span class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="#04121f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg></span>
+      Vemoni
+    </a>
+    <span class="nav-tag">Рекламная сеть для Discord</span>
+    <a class="nav-cta" href="#invest">Инвесторам</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap hero-in">
+    <span class="pill"><span class="dot"></span>Живая сеть · оплата за результат</span>
+    <h1>Биржа <span class="g">живого трафика</span> для Discord-сообществ</h1>
+    <p class="lede">Мы объединяем поток проверенных заходов сотен серверов в один канал и продаём его другим сообществам — объёмом и скоростью, недостижимыми в одиночку. Рекламодатель платит только за&nbsp;подтверждённый заход.</p>
+    <div class="hero-cta">
+      <a class="btn primary" href="#how">Как это работает</a>
+      <a class="btn ghost" href="#econ">Юнит-экономика</a>
+    </div>
+    <div class="hero-chips">
+      <span class="chip"><b>$10</b> за 100 заходов</span>
+      <span class="chip">Оплата за результат <b>(CPA)</b></span>
+      <span class="chip">Выплаты в <b>USDT</b></span>
+      <span class="chip">Плата только за <b>оставшихся</b></span>
+    </div>
+
+    <div class="flowwrap reveal">
+      <div class="flow">
+        <div class="node supply">
+          <div class="role">Предложение</div>
+          <div class="who">Серверы-партнёры</div>
+          <div class="sub">монетизируют верификацию</div>
+        </div>
+        <div class="conn"></div>
+        <div class="node core">
+          <div class="role">Сеть</div>
+          <div class="who">Vemoni</div>
+          <div class="sub">агрегирует и распределяет поток</div>
+        </div>
+        <div class="conn rev"></div>
+        <div class="node demand">
+          <div class="role">Спрос</div>
+          <div class="who">Серверы-покупатели</div>
+          <div class="sub">растят сообщество</div>
+        </div>
+      </div>
+      <div class="flow-legend">
+        <span><i style="background:var(--blue-2)"></i> заходы → покупателям</span>
+        <span><i style="background:var(--green)"></i> оплата → партнёрам</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap"><div class="divider"></div></div>
+
+<!-- PROBLEM -->
+<section>
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Проблема</span>
+      <h2>Сообществам нужны живые участники — быстро</h2>
+      <p>Discord — это десятки миллионов серверов, и каждый борется за рост. Но привлечь реальных активных участников трудно: обычная реклама дорогая и без гарантий, накрутка приводит ботов, а самому не выйти на объём. Простого доверенного места купить и продать реальные заходы — нет.</p>
+    </div>
+    <div class="cards g3">
+      <div class="card reveal">
+        <h3>Дорого и без гарантий</h3>
+        <p>Классическая реклама берёт деньги за показы, а не за пришедших участников. Платишь вслепую.</p>
+      </div>
+      <div class="card reveal">
+        <h3>Накрутка = боты</h3>
+        <p>Дешёвые «участники» — мёртвые аккаунты. Они не общаются, отваливаются и портят сервер.</p>
+      </div>
+      <div class="card reveal">
+        <h3>Нет объёма в одиночку</h3>
+        <p>Один сервер физически не может привести много людей за сутки. Рост упирается в потолок.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <span class="eyebrow">Как это работает</span>
+      <h2>Реальный заход в три шага</h2>
+      <p>Каждый заход — это живой участник, который действительно вступил на сервер и прошёл проверку.</p>
+    </div>
+    <div class="cards g3">
+      <div class="card reveal">
+        <div class="step-n">1</div>
+        <h3>Верификация</h3>
+        <p>Сервер-партнёр ставит нашего бота. Чтобы получить доступ, новый участник проходит верификацию — обычная и привычная механика для Discord.</p>
+      </div>
+      <div class="card reveal">
+        <div class="step-n">2</div>
+        <h3>Заход по рекламе</h3>
+        <p>В процессе ему показывается приглашение на сервер-рекламодателя. Он вступает — а бот сети <b>физически проверяет</b>, что заход настоящий.</p>
+      </div>
+      <div class="card reveal">
+        <div class="step-n">3</div>
+        <h3>Оплата за результат</h3>
+        <p>Заход подтверждён: рекламодатель получил живого участника, партнёр — оплату, сеть — маржу. Платят только за подтверждённые заходы.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- MARKETPLACE / MOAT -->
+<section>
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Двусторонний рынок</span>
+      <h2>Мы сводим спрос и предложение — и забираем спред</h2>
+      <p>Обе стороны — это Discord-серверы. Мы собираем их разрозненные потоки в единую сеть: по отдельности каждый даёт немного, вместе — объём, который можно продавать.</p>
+    </div>
+    <div class="cards g2">
+      <div class="card reveal">
+        <div class="ico" style="background:rgba(64,209,138,.14);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <h3>Партнёры зарабатывают</h3>
+        <p>Сервер монетизирует свой поток верификаций: за каждый доставленный живой заход он получает выплату. Пассивный доход из того, что и так происходит.</p>
+      </div>
+      <div class="card reveal">
+        <div class="ico" style="background:rgba(255,184,77,.14);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8M14 7h7v7"/></svg></div>
+        <h3>Покупатели растут</h3>
+        <p>Сервер платит за реальных участников и вырастает за часы, а не за месяцы. Ровно тот объём, который заказал — с гарантией живого захода.</p>
+      </div>
+    </div>
+
+    <div class="viz reveal" role="img" aria-label="Множество серверов-партнёров сводятся в сеть Vemoni и продаются покупателям одним объёмом">
+      <svg viewBox="0 0 820 250" preserveAspectRatio="xMidYMid meet">
+        <!-- incoming: partner servers -> hub -->
+        <path class="flowline" d="M104 30 L350 125"/><path class="flowline" d="M104 76 L350 125"/>
+        <path class="flowline" d="M104 122 L350 125"/><path class="flowline" d="M104 168 L350 125"/>
+        <path class="flowline" d="M104 214 L350 125"/>
+        <!-- outgoing: hub -> buyers -->
+        <path class="flowline" d="M470 125 L690 62"/><path class="flowline" d="M470 125 L690 125"/>
+        <path class="flowline" d="M470 125 L690 188"/>
+        <!-- partner dots -->
+        <g fill="var(--green)">
+          <circle cx="95" cy="30" r="9"/><circle cx="95" cy="76" r="9"/><circle cx="95" cy="122" r="9"/><circle cx="95" cy="168" r="9"/><circle cx="95" cy="214" r="9"/>
+        </g>
+        <text x="95" y="244" text-anchor="middle" font-size="13" font-weight="600" fill="var(--muted)">Сотни серверов-партнёров</text>
+        <!-- hub -->
+        <rect x="350" y="90" width="120" height="70" rx="16" fill="var(--panel-2)" stroke="var(--blue)" stroke-width="1.5"/>
+        <text x="410" y="122" text-anchor="middle" font-size="19" font-weight="800" fill="var(--ink)" font-family="Sora,Inter,sans-serif">Vemoni</text>
+        <text x="410" y="142" text-anchor="middle" font-size="11.5" fill="var(--blue-2)">единый канал</text>
+        <!-- buyers -->
+        <g>
+          <rect x="690" y="44" width="104" height="36" rx="10" fill="var(--panel-2)" stroke="var(--line-2)"/>
+          <rect x="690" y="107" width="104" height="36" rx="10" fill="var(--panel-2)" stroke="var(--line-2)"/>
+          <rect x="690" y="170" width="104" height="36" rx="10" fill="var(--panel-2)" stroke="var(--line-2)"/>
+        </g>
+        <g fill="var(--amber)" font-size="12.5" font-weight="600" text-anchor="middle" font-family="Inter,sans-serif">
+          <text x="742" y="66">покупатель</text><text x="742" y="129">покупатель</text><text x="742" y="192">покупатель</text>
+        </g>
+      </svg>
+      <div class="viz-cap">Разрозненные потоки десятков серверов сходятся в один канал — и продаются объёмом и скоростью, недостижимыми в&nbsp;одиночку. В этом наш ров.</div>
+    </div>
+  </div>
+</section>
+
+<!-- UNIT ECONOMICS -->
+<section id="econ" style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Юнит-экономика</span>
+      <h2>Понятная маржа с каждой сделки</h2>
+      <p>Прозрачная модель без скрытых статей. Вот как делится каждая продажа.</p>
+    </div>
+    <div class="econ reveal">
+      <div class="econ-top">
+        <div><span class="muted" style="font-size:14px">Покупатель платит</span><div class="big">$10.00 <span class="muted" style="font-size:15px;font-weight:500">/ 100 заходов</span></div></div>
+        <div style="text-align:right"><span class="muted" style="font-size:14px">Маржа сети</span><div class="big" style="color:var(--blue-2)">≈ 48.5%</div></div>
+      </div>
+      <div class="bar mono">
+        <div class="seg partner">$5.00<small>партнёру</small></div>
+        <div class="seg acq">$0.15<small>эквайринг</small></div>
+        <div class="seg margin">$4.85<small>маржа сети</small></div>
+      </div>
+      <p class="econ-note">С каждых <b>$10</b> выручки: <b>$5.00</b> — выплата партнёру за доставленные заходы, <b>~$0.15</b> — эквайринг (3%), <b>$4.85</b> остаётся сети. Отдельный канал — <b>менеджеры-реселлеры</b>: покупают заходы оптом у нас и продают в розницу, расширяя продажи без наших затрат на привлечение.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHY WE WIN -->
+<section>
+  <div class="wrap">
+    <div class="sec-head center reveal">
+      <span class="eyebrow">Почему это работает</span>
+      <h2>Защищённость и качество встроены в модель</h2>
+    </div>
+    <div class="cards g4">
+      <div class="card reveal">
+        <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <h3>Оплата за результат</h3>
+        <p>Рекламодатель платит только за подтверждённый заход, а не за показы. Риск потратить впустую — нулевой.</p>
+      </div>
+      <div class="card reveal">
+        <div class="ico" style="background:rgba(64,209,138,.14);color:var(--green)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <h3>Только за оставшихся</h3>
+        <p>Если участник уходит с сервера — выплата аннулируется. Покупатель платит за тех, кто остался; качество трафика самонастраивается.</p>
+      </div>
+      <div class="card reveal">
+        <div class="ico" style="background:rgba(151,125,255,.14);color:var(--violet)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+        <h3>Реальная проверка</h3>
+        <p>Не боты и не накрутка: бот сети физически проверяет членство участника на сервере рекламодателя.</p>
+      </div>
+      <div class="card reveal">
+        <div class="ico" style="background:rgba(255,184,77,.14);color:var(--amber)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div>
+        <h3>Крипто-нативность</h3>
+        <p>Мгновенные глобальные выплаты в USDT — без банков, границ и задержек. Идеально для интернет-сообществ по всему миру.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NETWORK EFFECT / metrics -->
+<section style="background:var(--bg-2)">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Сетевой эффект</span>
+      <h2>Каждый новый сервер усиливает сеть</h2>
+      <p>Больше партнёров → больше объём и скорость доставки → сеть привлекательнее для покупателей → больше спрос → выше выплаты партнёрам. Маховик, который раскручивает сам себя.</p>
+    </div>
+
+    <div class="viz reveal" role="img" aria-label="Маховик роста: партнёры, объём, покупатели, спрос, выплаты — замкнутый самоусиливающийся цикл" style="max-width:560px;margin-left:auto;margin-right:auto;margin-bottom:34px">
+      <svg viewBox="0 0 520 300" preserveAspectRatio="xMidYMid meet">
+        <defs><marker id="ah" markerWidth="8" markerHeight="8" refX="5.5" refY="3.6" orient="auto"><path d="M0 0 L8 3.6 L0 7.2 z" fill="var(--blue-2)"/></marker></defs>
+        <g fill="none" stroke="var(--line-2)" stroke-width="2.6" marker-end="url(#ah)">
+          <path d="M260 52 A100 100 0 0 1 353 120"/>
+          <path d="M355 121 A100 100 0 0 1 318 229"/>
+          <path d="M317 231 A100 100 0 0 1 203 231"/>
+          <path d="M201 229 A100 100 0 0 1 165 121"/>
+          <path d="M167 120 A100 100 0 0 1 258 52"/>
+        </g>
+        <circle cx="260" cy="150" r="46" fill="var(--panel-2)" stroke="var(--line-2)"/>
+        <text x="260" y="146" text-anchor="middle" font-size="14" font-weight="800" fill="var(--blue-2)" font-family="Sora,Inter,sans-serif">Маховик</text>
+        <text x="260" y="165" text-anchor="middle" font-size="14" font-weight="800" fill="var(--blue-2)" font-family="Sora,Inter,sans-serif">роста</text>
+        <g>
+          <circle cx="260" cy="50" r="8" fill="var(--green)"/>
+          <circle cx="355" cy="119" r="8" fill="var(--blue-2)"/>
+          <circle cx="319" cy="231" r="8" fill="var(--amber)"/>
+          <circle cx="201" cy="231" r="8" fill="var(--blue-2)"/>
+          <circle cx="165" cy="119" r="8" fill="var(--green)"/>
+        </g>
+        <g font-size="13.5" font-weight="600" fill="var(--ink)" font-family="Inter,sans-serif">
+          <text x="260" y="32" text-anchor="middle">Партнёры</text>
+          <text x="372" y="115" text-anchor="start">Объём</text>
+          <text x="319" y="256" text-anchor="middle">Покупатели</text>
+          <text x="201" y="256" text-anchor="middle">Спрос</text>
+          <text x="148" y="115" text-anchor="end">Выплаты</text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="cards g4">
+      <div class="kpi reveal"><div class="v blue">≈48%</div><div class="k">маржа с оборота сети</div></div>
+      <div class="kpi reveal"><div class="v green">CPA</div><div class="k">оплата за подтверждённый заход</div></div>
+      <div class="kpi reveal"><div class="v violet">1 / 7 / 30д</div><div class="k">удержание отслеживается по каждому заходу</div></div>
+      <div class="kpi reveal"><div class="v amber">USDT</div><div class="k">выплаты партнёрам в крипте</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- INVEST -->
+<section id="invest">
+  <div class="wrap">
+    <div class="invest reveal">
+      <span class="eyebrow">Инвесторам</span>
+      <h2>Капитало-эффективная модель роста</h2>
+      <p class="lede" style="margin-left:auto;margin-right:auto">Вложения идут на подключение новых серверов к сети — они сразу начинают приносить оборот. Возврат инвесторам — из реальных продаж, а не из фиксированного долга: риск минимален, а сеть с каждым сервером становится дороже. Рынок — сотни миллионов пользователей Discord и постоянный спрос сообществ на рост.</p>
+      <div class="hero-cta" style="margin-bottom:0">
+        <a class="btn primary" href="mailto:flamestreaksupp@gmail.com?subject=Vemoni%20—%20инвестиции">Обсудить инвестиции</a>
+        <a class="btn ghost" href="https://vemoni.info" target="_blank" rel="noopener">Открыть сеть</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>© Vemoni — рекламная сеть для Discord</span>
+    <span class="muted">Оплата за результат · выплаты в USDT</span>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var nav=document.getElementById('nav');
+    var onScroll=function(){ nav.classList.toggle('scrolled', window.scrollY>8); };
+    onScroll(); window.addEventListener('scroll',onScroll,{passive:true});
+
+    var reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    var els=document.querySelectorAll('.reveal');
+    if(reduce||!('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in')}); return; }
+    var io=new IntersectionObserver(function(ents){
+      ents.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    },{threshold:.14,rootMargin:'0px 0px -8% 0px'});
+    els.forEach(function(e,i){ e.style.transitionDelay=(Math.min(i%3,3)*70)+'ms'; io.observe(e); });
+  })();
+</script>
+</body>
+</html>
