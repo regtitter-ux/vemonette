@@ -54,7 +54,8 @@ const TR = {
   'Выкуплено инвайтов':'Invites bought','Недостаточно средств на инвест-счёте. Пополните счёт.':'Not enough on the investment account. Top it up.',
   'Сумма пополнения в $ (минимум':'Top-up amount in $ (min','Счёт создан. Оплатите через CryptoBot — средства зачислятся в течение минуты.':'Invoice created. Pay via CryptoBot — funds credit within a minute.','Оплата временно недоступна':'Payments are temporarily unavailable','Не удалось создать счёт':'Could not create the invoice',
   'Вывести всё свободное на баланс партнёра?':'Withdraw all available to the partner balance?','Переведено на баланс партнёра':'Transferred to the partner balance','Нечего выводить':'Nothing to withdraw',
-  'Сервер':'Server','Не удалось':'Failed'
+  'Сервер':'Server','Не удалось':'Failed',
+  'Сервер уже занят другим инвестором, станет доступным через':'Taken by another investor, frees up in','Сервер уже занят другим инвестором.':'This server is taken by another investor.','скоро':'soon'
 };
 const TR_SORTED = Object.keys(TR).sort((a, b) => b.length - a.length).map((k) => [k, TR[k]]);
 function tr(s) {
@@ -175,12 +176,38 @@ function serverCard(s) {
         <div class="vcard-head">${srvIcon(s.name, s.icon)}<span><b>${name}</b></span></div>
         ${flowRow(s.flow)}
         ${price}
-        ${s.investable !== false ? minLine : ''}
+        ${(s.investable !== false && !s.occupied) ? minLine : ''}
         ${mine}
-        <div class="vcard-actions">${s.investable !== false
-            ? `<button class="btn primary sm" data-buy="${esc(s.serverId)}" data-name="${name}" data-min="${minInv}">Выкуп инвайтов</button>`
-            : `<span class="muted sm">Сейчас ниже порога активности (нужно ≥ ${PRICING.minDaily} заходов/сутки) — выкуп недоступен</span>`}</div>
+        <div class="vcard-actions">${serverAction(s, name, minInv)}</div>
       </div>`;
+}
+
+function fmtEta(sec) {
+    sec = Math.max(0, Math.floor(Number(sec) || 0));
+    const d = Math.floor(sec / 86400), h = Math.floor((sec % 86400) / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+    if (d > 0) return `${d}д ${h}ч ${m}м`;
+    if (h > 0) return `${h}ч ${m}м ${s}с`;
+    if (m > 0) return `${m}м ${s}с`;
+    return `${s}с`;
+}
+function tickTimers() {
+    document.querySelectorAll('.inv-timer[data-eta]').forEach((el) => {
+        const ts = Number(el.dataset.eta) || 0;
+        if (!ts) { el.textContent = 'скоро'; return; }
+        el.textContent = '~' + fmtEta(Math.max(0, (ts - Date.now()) / 1000));
+    });
+}
+setInterval(tickTimers, 1000);
+
+function serverAction(s, name, minInv) {
+    if (s.occupied) {
+        const etaTs = s.occupiedEtaSec ? Date.now() + s.occupiedEtaSec * 1000 : 0;
+        return `<div class="inv-locked">🔒 Сервер уже занят другим инвестором, станет доступным через <b class="inv-timer" data-eta="${etaTs}">${etaTs ? '~' + fmtEta(s.occupiedEtaSec) : 'скоро'}</b></div>`;
+    }
+    if (s.investable === false) {
+        return `<span class="muted sm">Сейчас ниже порога активности (нужно ≥ ${PRICING.minDaily} заходов/сутки) — выкуп недоступен</span>`;
+    }
+    return `<button class="btn primary sm" data-buy="${esc(s.serverId)}" data-name="${name}" data-min="${minInv}">Выкуп инвайтов</button>`;
 }
 
 async function buy(serverId, name, min) {
@@ -193,6 +220,7 @@ async function buy(serverId, name, min) {
     if (ok) { toast(`Выкуплено инвайтов: ${nf(qty)} за ${money(body?.cost)}`); load(); }
     else if (body?.error === 'insufficient') toast('Недостаточно средств на инвест-счёте. Пополните счёт.', 'err');
     else if (body?.error === 'min-qty') toast(`Минимум ${nf(body?.min || min)} инвайтов для этого сервера`, 'err');
+    else if (body?.error === 'occupied') toast('Сервер уже занят другим инвестором.', 'err');
     else if (body?.error === 'server-disabled') toast('Этот сервер больше не доступен для выкупа.', 'err');
     else toast(body?.error || 'Не удалось', 'err');
 }
