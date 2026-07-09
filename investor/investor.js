@@ -108,6 +108,7 @@ async function enterApp() { $('#login').hidden = true; $('#app').hidden = false;
 
 // ---------- Data ----------
 let PRICING = { buyPer100: 9, sellPer100: 10, returnRate: 0.10, minInvites: 100 };
+let MIN_TOPUP = 5;
 function srvIcon(name, url) {
     const initial = esc((String(name || '?')[0] || '?').toUpperCase());
     return url
@@ -116,7 +117,7 @@ function srvIcon(name, url) {
 }
 async function load() {
     const me = await get('/me');
-    if (me.ok) { PRICING = me.body.pricing || PRICING; renderAccount(me.body); }
+    if (me.ok) { PRICING = me.body.pricing || PRICING; if (me.body.minTopup) MIN_TOPUP = me.body.minTopup; renderAccount(me.body); }
     const sv = await get('/servers');
     if (sv.ok) { PRICING = sv.body.pricing || PRICING; renderServers(sv.body.servers || []); }
 }
@@ -190,13 +191,13 @@ async function buy(serverId, name) {
 }
 
 $('#inv-topup').onclick = async () => {
-    const raw = prompt(`Сумма пополнения в $ (минимум ${5}):`);
+    const raw = prompt(`Сумма пополнения в $ (минимум ${MIN_TOPUP}):`);
     if (raw === null) return;
     const amount = Math.floor(Number(String(raw).replace(',', '.')) * 100) / 100;
     if (!Number.isFinite(amount) || amount <= 0) { toast('Неверное число', 'err'); return; }
     const { ok, body } = await post('/topup', { amount });
     if (ok && body?.invoiceUrl) { toast('Счёт создан. Оплатите через CryptoBot — средства зачислятся в течение минуты.'); window.open(body.invoiceUrl, '_blank', 'noopener'); }
-    else toast(body?.error === 'min-topup' ? `Минимум $5` : body?.error === 'Оплата временно недоступна' ? 'Оплата временно недоступна' : 'Не удалось создать счёт', 'err');
+    else toast(body?.error === 'min-topup' ? `Минимум $${MIN_TOPUP}` : body?.error === 'Оплата временно недоступна' ? 'Оплата временно недоступна' : 'Не удалось создать счёт', 'err');
 };
 
 $('#inv-withdraw').onclick = async () => {
