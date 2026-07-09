@@ -107,7 +107,7 @@ async function checkAuth() { const { ok, body } = await get('/whoami'); return o
 async function enterApp() { $('#login').hidden = true; $('#app').hidden = false; await load(); setInterval(load, 15000); }
 
 // ---------- Data ----------
-let PRICING = { buyPer100: 9, sellPer100: 10, returnRate: 0.10, minInvites: 100 };
+let PRICING = { buyPer100: 9, sellPer100: 10, returnRate: 0.10, minInvites: 100, minDays: 30 };
 let MIN_TOPUP = 5;
 function srvIcon(name, url) {
     const initial = esc((String(name || '?')[0] || '?').toUpperCase());
@@ -144,14 +144,16 @@ function renderAccount(d) {
 function renderServers(list) {
     if (!list.length) { $('#inv-servers').innerHTML = `<div class="muted">Пока нет серверов с активностью.</div>`; return; }
     $('#inv-servers').innerHTML = list.map(serverCard).join('');
-    $('#inv-servers').querySelectorAll('[data-buy]').forEach((b) => b.onclick = () => buy(b.dataset.buy, b.dataset.name));
+    $('#inv-servers').querySelectorAll('[data-buy]').forEach((b) => b.onclick = () => buy(b.dataset.buy, b.dataset.name, Number(b.dataset.min) || PRICING.minInvites));
 }
 function flowRow(f) {
     return `<div class="inv-flow muted sm">Продаётся заходов: час <b>${nf(f.hour)}</b> · день <b>${nf(f.day)}</b> · неделя <b>${nf(f.week)}</b> · всего <b>${nf(f.total)}</b></div>`;
 }
 function serverCard(s) {
     const name = esc(s.name || s.serverId);
+    const minInv = Number(s.minInvites) || PRICING.minInvites;
     const price = `<div class="inv-price muted sm">Выкуп $${PRICING.buyPer100}/100 · продажа $${PRICING.sellPer100}/100 · возврат +${Math.round((PRICING.returnRate || 0.1) * 100)}%</div>`;
+    const minLine = `<div class="inv-min muted sm">Минимум выкупа: <b>${nf(minInv)}</b> инвайтов (≈ ${PRICING.minDays} дней продаж сервера)</div>`;
     let mine = '';
     if (s.mine) {
         const m = s.mine;
@@ -173,20 +175,23 @@ function serverCard(s) {
         <div class="vcard-head">${srvIcon(s.name, s.icon)}<span><b>${name}</b></span></div>
         ${flowRow(s.flow)}
         ${price}
+        ${minLine}
         ${mine}
-        <div class="vcard-actions"><button class="btn primary sm" data-buy="${esc(s.serverId)}" data-name="${name}">Выкуп инвайтов</button></div>
+        <div class="vcard-actions"><button class="btn primary sm" data-buy="${esc(s.serverId)}" data-name="${name}" data-min="${minInv}">Выкуп инвайтов</button></div>
       </div>`;
 }
 
-async function buy(serverId, name) {
-    const raw = prompt(`Сколько инвайтов выкупить? (минимум ${PRICING.minInvites}, шаг ${PRICING.minInvites})\nСервер: ${name}\nЦена: $${PRICING.buyPer100} за 100`);
+async function buy(serverId, name, min) {
+    min = Number(min) || PRICING.minInvites;
+    const raw = prompt(`Сколько инвайтов выкупить?\nСервер: ${name}\nМинимум: ${nf(min)} инвайтов (≈ ${PRICING.minDays} дней продаж)\nЦена: $${PRICING.buyPer100} за 100`);
     if (raw === null) return;
     const qty = Math.floor(Number(String(raw).replace(/\s/g, '')));
-    if (!Number.isFinite(qty) || qty < PRICING.minInvites) { toast(`Минимум ${PRICING.minInvites} инвайтов`, 'err'); return; }
+    if (!Number.isFinite(qty) || qty < min) { toast(`Минимум ${nf(min)} инвайтов для этого сервера`, 'err'); return; }
     const { ok, body } = await post('/buy', { serverId, qty });
     if (ok) { toast(`Выкуплено инвайтов: ${nf(qty)} за ${money(body?.cost)}`); load(); }
     else if (body?.error === 'insufficient') toast('Недостаточно средств на инвест-счёте. Пополните счёт.', 'err');
-    else if (body?.error === 'min-qty') toast(`Минимум ${PRICING.minInvites} инвайтов`, 'err');
+    else if (body?.error === 'min-qty') toast(`Минимум ${nf(body?.min || min)} инвайтов для этого сервера`, 'err');
+    else if (body?.error === 'server-disabled') toast('Этот сервер больше не доступен для выкупа.', 'err');
     else toast(body?.error || 'Не удалось', 'err');
 }
 

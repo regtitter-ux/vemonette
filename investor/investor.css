@@ -13,6 +13,8 @@
 .inv-flow{margin-top:8px}
 .inv-flow b{color:var(--text)}
 .inv-price{margin-top:6px}
+.inv-min{margin-top:4px}
+.inv-min b{color:var(--text)}
 
 .inv-mine{margin-top:12px;border:1px solid var(--stroke);border-radius:12px;padding:12px 14px;background:rgba(87,242,135,.05)}
 .inv-mine-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--green);margin-bottom:8px}
