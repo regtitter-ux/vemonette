@@ -52,7 +52,7 @@ const TR = {
   'Войти через Discord':'Log in with Discord','Не удалось войти. Попробуйте ещё раз.':'Could not log in. Please try again.','Нет связи с сервером':'No connection to the server',
   // requisites
   'Реквизиты для выплат':'Payout details','Крипто-адрес и сеть, например:':'Crypto address and network, e.g.:','. Без реквизитов вывод невозможен.':'. Without details, withdrawal is not possible.',
-  'Реквизиты сохранены':'Requisites saved','Не удалось сохранить':'Could not save',
+  'Реквизиты сохранены':'Requisites saved','Не удалось сохранить':'Could not save','Инвест-кабинет':'Investor cabinet',
   // verifications table
   'Верификации по серверам':'Verifications by server','Пока нет оплаченных верификаций':'No paid verifications yet','Осталось / всего зашло':'Stayed / total joined',
   // main cards

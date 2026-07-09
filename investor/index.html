@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="/assets/logo.png" />
+  <link rel="apple-touch-icon" href="/assets/logo.png" />
+  <title>Vemoni · Инвест-кабинет</title>
+  <link rel="stylesheet" href="/partner/partner.css?v=7" />
+  <link rel="stylesheet" href="/investor/investor.css?v=1" />
+  <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
+</head>
+<body>
+
+<div id="login" class="login">
+  <div class="login-card">
+    <div class="lang-switch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+    <div class="brand">Vemoni · Инвесторам</div>
+    <div class="hint">Войдите через Discord, чтобы открыть инвест-счёт и выкупать инвайты серверов.</div>
+    <a id="discord-login" class="discord-btn" href="#">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M20.317 4.369A19.79 19.79 0 0 0 15.885 3c-.196.35-.42.82-.577 1.19a18.27 18.27 0 0 0-5.487 0A12.6 12.6 0 0 0 9.24 3a19.74 19.74 0 0 0-4.434 1.369C1.61 9.046.73 13.605 1.17 18.1a19.9 19.9 0 0 0 6.073 3.058c.49-.667.927-1.376 1.302-2.122-.716-.269-1.4-.6-2.045-.99.171-.125.34-.255.5-.39a14.2 14.2 0 0 0 12.198 0c.164.14.332.27.5.39-.647.39-1.332.722-2.049.99.375.746.81 1.454 1.3 2.122a19.85 19.85 0 0 0 6.076-3.058c.5-5.177-.838-9.694-3.508-13.731ZM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.955 2.42-2.157 2.42Zm7.96 0c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.946 2.42-2.157 2.42Z"/></svg>
+      Войти через Discord
+    </a>
+    <div class="err" id="login-err" hidden></div>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header class="topbar">
+    <div class="brand-sm">Vemoni · Инвест-кабинет</div>
+    <div class="top-right">
+      <span class="bal-pill"><span class="muted sm">Инвест-счёт</span> <b id="inv-balance">$0.00</b></span>
+      <button id="inv-topup" class="btn ghost sm">＋ Пополнить</button>
+      <button id="inv-withdraw" class="btn ghost sm">Вывести</button>
+      <a href="/partner/" class="btn ghost sm">Кабинет партнёра</a>
+      <div class="lang-switch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+      <button id="logout" class="btn ghost sm">Выйти</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="pcards" id="inv-cards"></section>
+
+    <section class="card how-card">
+      <h2>Как это работает</h2>
+      <div class="how-steps">
+        <div class="how-step"><span class="how-n">1</span><div><b>Пополняете инвест-счёт</b><p class="muted sm">USDT через CryptoBot — так же, как баланс при заказе рекламы.</p></div></div>
+        <div class="how-step"><span class="how-n">2</span><div><b>Выкупаете будущие инвайты сервера</b><p class="muted sm">По <b id="how-buy">$9 за 100</b> — со скидкой к рознице <b id="how-sell">$10 за 100</b>. Это не для себя, а как вклад.</p></div></div>
+        <div class="how-step"><span class="how-n">3</span><div><b>Сервис продаёт их по рознице</b><p class="muted sm">По мере продажи ваших инвайтов вам возвращается вложенное <b id="how-ret">+10%</b>. Жёсткого срока нет — доход идёт из реальных продаж.</p></div></div>
+      </div>
+      <p class="muted sm how-note">Доход зависит от того, как быстро сервер продаёт заходы — выбирайте активные серверы (смотрите «продаётся заходов» в карточке). Инвайты каждого сервера продаются по очереди в порядке выкупа.</p>
+    </section>
+
+    <section>
+      <h2>Серверы для выкупа</h2>
+      <div id="inv-servers"></div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+<script src="/investor/investor.js?v=1"></script>
+</body>
+</html>

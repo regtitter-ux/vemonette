@@ -1,0 +1,25 @@
+/* Investor cabinet — extends /partner/partner.css */
+
+.how-card{margin-bottom:22px}
+.how-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:8px 0 6px}
+@media(max-width:720px){.how-steps{grid-template-columns:1fr}}
+.how-step{display:flex;gap:12px;align-items:flex-start}
+.how-step p{margin:4px 0 0}
+.how-n{flex:none;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:800;
+  background:rgba(34,168,240,.14);color:var(--blue-2);border:1px solid rgba(34,168,240,.3)}
+.how-step b{font-size:14.5px}
+.how-note{margin-top:10px}
+
+.inv-flow{margin-top:8px}
+.inv-flow b{color:var(--text)}
+.inv-price{margin-top:6px}
+
+.inv-mine{margin-top:12px;border:1px solid var(--stroke);border-radius:12px;padding:12px 14px;background:rgba(87,242,135,.05)}
+.inv-mine-h{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--green);margin-bottom:8px}
+.inv-mine-grid{display:flex;flex-wrap:wrap;gap:6px 18px}
+.inv-mine-grid b{font-size:15px;font-variant-numeric:tabular-nums}
+.inv-mine-win{margin-top:8px}
+
+/* auto-payout / disabled buttons in the topbar */
+.top-right .btn[disabled]{opacity:.45;cursor:not-allowed}
+.top-right{flex-wrap:wrap}
