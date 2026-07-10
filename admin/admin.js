@@ -4,8 +4,8 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
 // ---------- i18n (navigation + login chrome; deeper content is RU) ----------
 const I18N = {
-    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_system: 'Система', tab_admins: 'Админы', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
-    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_system: 'System', tab_admins: 'Admins', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
+    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_activity: 'Активность', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_system: 'Система', tab_admins: 'Админы', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
+    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_activity: 'Activity', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_system: 'System', tab_admins: 'Admins', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
 };
 let adminLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
 if (!I18N[adminLang]) adminLang = 'ru';
@@ -1842,6 +1842,56 @@ $('#bal-modal').addEventListener('click', (e) => { if (e.target.id === 'bal-moda
 // Load balances when the tab is first opened, and re-fetch on every open so
 // numbers stay fresh without a full page refresh.
 document.querySelector('[data-tab="balances"]').addEventListener('click', loadBalances);
+
+// ---------- Activity log across all partners ----------
+const ALOG_ESC = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const ALOG_MONEY = (n) => '$' + Number(n || 0).toFixed(2);
+const ALOG_LABEL = {
+    grant_paid: { cls: 'g', title: 'Выдана верификация', tag: 'начислено' },
+    grant_no_ad: { cls: 'n', title: 'Выдана верификация · без оплаты', tag: 'рекламы не было' },
+    grant_dup_join: { cls: 'n', title: 'Выдана верификация · без оплаты', tag: 'уже был на сервере' },
+    grant_already_verified: { cls: 'n', title: 'Повторная попытка', tag: 'уже верифицирован' },
+    debit_left: { cls: 'd', title: 'Списание', tag: 'участник ушёл' },
+    unverify_left: { cls: 'u', title: 'Снята верификация', tag: 'участник ушёл' }
+};
+let alogTimer = null;
+function alogQuery() {
+    const v = (id) => ($(id)?.value || '').trim();
+    const p = new URLSearchParams();
+    for (const [k, id] of [['type', '#alf-type'], ['reason', '#alf-reason'], ['period', '#alf-period'], ['sort', '#alf-sort']]) { const val = v(id); if (val) p.set(k, val); }
+    for (const [k, id] of [['partner', '#alf-partner'], ['user', '#alf-user'], ['server', '#alf-server']]) { const val = v(id); if (/^\d{17,20}$/.test(val)) p.set(k, val); }
+    return p.toString();
+}
+function alogRow(e, maps) {
+    const L = ALOG_LABEL[`${e.type}_${e.reason}`] || { cls: 'n', title: e.type, tag: e.reason || '' };
+    const amt = e.type === 'debit' ? `<span class="plog-amt neg">−${ALOG_MONEY(e.amount)}</span>`
+        : (e.type === 'grant' && e.reason === 'paid' && e.amount ? `<span class="plog-amt pos">+${ALOG_MONEY(e.amount)}</span>` : '');
+    const partner = e.creatorId ? `<span class="plog-sv">Партнёр: ${ALOG_ESC(maps.partners[e.creatorId] || e.creatorId)}</span>` : '';
+    const sv = e.guildId ? `<span class="plog-sv">${ALOG_ESC(maps.servers[e.guildId] || e.guildId)}</span>` : '';
+    const usr = e.userId ? `<span class="plog-usr">${ALOG_ESC(maps.users[e.userId] || ('ID ' + e.userId))}</span>` : '';
+    return `<div class="plog-row plog-${L.cls}">
+      <span class="plog-dot"></span>
+      <div class="plog-main">
+        <div class="plog-title">${ALOG_ESC(L.title)} ${L.tag ? `<span class="plog-tag">${ALOG_ESC(L.tag)}</span>` : ''}</div>
+        <div class="plog-sub">${partner}${sv}${usr}</div>
+      </div>
+      <div class="plog-right">${amt}<span class="plog-time">${ALOG_ESC(relTime(e.ts))}</span></div>
+    </div>`;
+}
+async function loadActivityLog() {
+    const list = $('#alog-list');
+    const { ok, body } = await get('/activity?' + alogQuery());
+    if (!ok) { if (list) list.innerHTML = '<div class="muted">Не удалось загрузить журнал.</div>'; return; }
+    const events = body.events || [];
+    const maps = { servers: body.servers || {}, users: body.users || {}, partners: body.partners || {} };
+    if (list) list.innerHTML = events.length ? events.map((e) => alogRow(e, maps)).join('') : '<div class="muted">Событий не найдено.</div>';
+}
+['#alf-type', '#alf-reason', '#alf-period', '#alf-sort'].forEach((id) => { const el = $(id); if (el) el.addEventListener('change', loadActivityLog); });
+['#alf-partner', '#alf-user', '#alf-server'].forEach((id) => { const el = $(id); if (el) el.addEventListener('input', () => { clearTimeout(alogTimer); alogTimer = setTimeout(loadActivityLog, 400); }); });
+const alfReset = $('#alf-reset');
+if (alfReset) alfReset.addEventListener('click', () => { ['#alf-partner', '#alf-user', '#alf-server', '#alf-type', '#alf-reason', '#alf-period', '#alf-sort'].forEach((id) => { const el = $(id); if (el) el.value = ''; }); loadActivityLog(); });
+const actTab = document.querySelector('[data-tab="activity"]');
+if (actTab) actTab.addEventListener('click', loadActivityLog);
 
 // ---------- Boot ----------
 (async () => {

@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Кабинет партнёра</title>
-  <link rel="stylesheet" href="/partner/partner.css?v=8" />
+  <link rel="stylesheet" href="/partner/partner.css?v=9" />
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
 </head>
 <body>
@@ -71,6 +71,40 @@
       <div class="table-wrap"><table id="adhist-table"></table></div>
     </section>
 
+    <section id="plog-section">
+      <h2>Журнал активности</h2>
+      <p class="muted sm" style="margin-bottom:12px">Все события верификаций на ваших серверах: начисления, списания, выдача и снятие верификации — включая те, за которые не было оплаты, сразу с причиной.</p>
+      <div class="plog-filters" id="plog-filters">
+        <select id="plf-type" class="plog-sel">
+          <option value="">Все типы</option>
+          <option value="grant">Выдача верификации</option>
+          <option value="debit">Списания</option>
+          <option value="unverify">Снятие верификации</option>
+        </select>
+        <select id="plf-reason" class="plog-sel">
+          <option value="">Все причины</option>
+          <option value="paid">Оплачено</option>
+          <option value="no_ad">Рекламы не было</option>
+          <option value="dup_join">Уже был на сервере</option>
+          <option value="already_verified">Уже верифицирован</option>
+          <option value="left">Участник ушёл</option>
+        </select>
+        <select id="plf-server" class="plog-sel"><option value="">Все серверы</option></select>
+        <select id="plf-period" class="plog-sel">
+          <option value="">Всё время</option>
+          <option value="24h">24 часа</option>
+          <option value="7d">7 дней</option>
+          <option value="30d">30 дней</option>
+        </select>
+        <select id="plf-sort" class="plog-sel">
+          <option value="">Сначала новые</option>
+          <option value="oldest">Сначала старые</option>
+        </select>
+        <input id="plf-user" class="plog-inp" type="text" placeholder="ID пользователя" />
+      </div>
+      <div id="plog-list"><div class="muted">Загрузка…</div></div>
+    </section>
+
     <section>
       <h2>История выплат</h2>
       <div class="table-wrap"><table id="p-wd"></table></div>
@@ -92,6 +126,6 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/partner/partner.js?v=12"></script>
+<script src="/partner/partner.js?v=13"></script>
 </body>
 </html>

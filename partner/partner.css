@@ -113,3 +113,28 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--panel-2);border:1px solid var(--stroke-2);border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:600;box-shadow:0 20px 50px -20px rgba(0,0,0,.8);z-index:50}
 .toast.err{border-color:rgba(237,66,69,.5);color:#ffb4b6}
 @media (max-width:560px){.wrap{padding:20px 14px 50px}.card{padding:16px}}
+
+/* Activity log (журнал) */
+.plog-filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.plog-sel,.plog-inp{background:var(--panel-2);color:var(--text);border:1px solid var(--stroke-2);border-radius:9px;padding:8px 11px;font-size:13px;font-family:inherit;font-weight:600}
+.plog-sel:focus,.plog-inp:focus{outline:none;border-color:var(--blue-2,#22a8f0)}
+.plog-inp{min-width:150px}
+#plog-list{display:flex;flex-direction:column;gap:6px}
+.plog-row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--stroke);border-radius:11px;padding:11px 14px}
+.plog-dot{width:9px;height:9px;border-radius:50%;flex:none;background:var(--muted)}
+.plog-g .plog-dot{background:var(--green,#57f287)}
+.plog-n .plog-dot{background:var(--muted)}
+.plog-d .plog-dot{background:var(--red,#ed4245)}
+.plog-u .plog-dot{background:var(--amber,#f5b300)}
+.plog-main{flex:1;min-width:0}
+.plog-title{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.plog-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.07);color:var(--muted)}
+.plog-sub{margin-top:3px;font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap}
+.plog-sv{color:var(--blue-2)}
+.plog-usr{font-variant-numeric:tabular-nums}
+.plog-right{display:flex;align-items:center;gap:12px;flex:none;white-space:nowrap}
+.plog-amt{font-weight:800;font-size:14px}
+.plog-amt.pos{color:var(--green,#57f287)}
+.plog-amt.neg{color:var(--red,#ed4245)}
+.plog-time{font-size:12px;color:var(--muted)}
+@media (max-width:560px){.plog-right{flex-direction:column;align-items:flex-end;gap:2px}}

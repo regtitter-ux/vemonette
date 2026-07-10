@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="/admin/admin.css?v=21" />
+  <link rel="stylesheet" href="/admin/admin.css?v=22" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -41,6 +41,7 @@
       <button data-tab="stats" class="tab active" data-i18n="tab_stats">Статистика</button>
       <button data-tab="bi" class="tab" data-owner-only data-i18n="tab_bi">Обзор</button>
       <button data-tab="adstats" class="tab" data-owner-only data-i18n="tab_adstats">Стата рекламы</button>
+      <button data-tab="activity" class="tab" data-i18n="tab_activity">Активность</button>
       <button data-tab="shares" class="tab" data-i18n="tab_shares">Доли</button>
       <button data-tab="balances" class="tab" data-owner-only data-i18n="tab_balances">Балансы</button>
       <button data-tab="templates" class="tab" data-owner-only data-i18n="tab_templates">Шаблоны</button>
@@ -100,6 +101,43 @@
       <p class="muted">Каждая карточка — уникальный креатив (готовый рендер текста с подставленной ссылкой).
         Учитываются только верификации, где реклама реально была показана; закрытый кран или клики без рекламы в счёт не идут.</p>
       <div id="adstats-list"></div>
+    </section>
+
+    <!-- Activity log across all partners -->
+    <section class="pane" data-pane="activity" hidden>
+      <h1>Активность</h1>
+      <p class="muted">Все события верификаций по всем партнёрам: начисления, списания, выдача и снятие верификации — включая те, за которые не было оплаты, сразу с причиной.</p>
+      <div class="plog-filters" id="alog-filters">
+        <input id="alf-partner" class="plog-inp" type="text" placeholder="ID партнёра" />
+        <input id="alf-user" class="plog-inp" type="text" placeholder="ID пользователя" />
+        <input id="alf-server" class="plog-inp" type="text" placeholder="ID сервера" />
+        <select id="alf-type" class="plog-sel">
+          <option value="">Все типы</option>
+          <option value="grant">Выдача верификации</option>
+          <option value="debit">Списания</option>
+          <option value="unverify">Снятие верификации</option>
+        </select>
+        <select id="alf-reason" class="plog-sel">
+          <option value="">Все причины</option>
+          <option value="paid">Оплачено</option>
+          <option value="no_ad">Рекламы не было</option>
+          <option value="dup_join">Уже был на сервере</option>
+          <option value="already_verified">Уже верифицирован</option>
+          <option value="left">Участник ушёл</option>
+        </select>
+        <select id="alf-period" class="plog-sel">
+          <option value="">Всё время</option>
+          <option value="24h">24 часа</option>
+          <option value="7d">7 дней</option>
+          <option value="30d">30 дней</option>
+        </select>
+        <select id="alf-sort" class="plog-sel">
+          <option value="">Сначала новые</option>
+          <option value="oldest">Сначала старые</option>
+        </select>
+        <button class="btn ghost sm" id="alf-reset">Сбросить</button>
+      </div>
+      <div id="alog-list"><div class="muted">Загрузка…</div></div>
     </section>
 
     <!-- Shares (доли) — revenue split among holders -->
@@ -275,6 +313,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=58"></script>
+<script src="/admin/admin.js?v=59"></script>
 </body>
 </html>

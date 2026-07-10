@@ -39,7 +39,18 @@ const WHOLE = {
   'час':'hour','день':'day','неделя':'week','месяц':'month','всего':'total','Воронка':'Funnel',
   'Сервер':'Server','Роль':'Role','Баланс':'Balance','Дата':'Date','Сумма':'Amount','Статус':'Status',
   'Зашло':'Joined','Осталось':'Stayed','Ушли':'Left','Заработано':'Earned','Выйти':'Log out','Отмена':'Cancel','Сохранить':'Save',
-  'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin'
+  'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin',
+  // Activity log
+  'Журнал активности':'Activity log','Все типы':'All types','Выдача верификации':'Verification granted',
+  'Списания':'Debits','Снятие верификации':'Verification removed','Все причины':'All reasons','Оплачено':'Paid',
+  'Рекламы не было':'No ad shown','Уже был на сервере':'Already on server','Уже верифицирован':'Already verified',
+  'Участник ушёл':'Member left','Все серверы':'All servers','Всё время':'All time','24 часа':'24 hours',
+  '7 дней':'7 days','30 дней':'30 days','Сначала новые':'Newest first','Сначала старые':'Oldest first',
+  'Событий не найдено.':'No events found.','Не удалось загрузить журнал.':'Could not load the log.',
+  'Выдана верификация':'Verification granted','Выдана верификация · без оплаты':'Verification granted · unpaid',
+  'Повторная попытка':'Repeat attempt','Списание':'Debit','Снята верификация':'Verification removed',
+  'начислено':'credited','рекламы не было':'no ad','уже был на сервере':'already on server',
+  'уже верифицирован':'already verified','участник ушёл':'member left'
 };
 function setupCabNav(isAdmin) {
     const path = location.pathname;
@@ -152,6 +163,8 @@ async function load() {
     if (ok) render(body);
     loadAdHistory();
     loadCards();
+    wirePlogFilters();
+    loadActivity();
 }
 
 // ---- My verification cards (read-only, same funnel as admin "Экстренно") ----
@@ -346,6 +359,74 @@ function renderAdHistory(servers) {
         <td class="num">${money(a.earned)}</td>
         <td class="muted">${esc(relTime(a.lastAt))}</td>
       </tr>`).join('') : '<tr><td colspan="6" class="muted">Пока не было показов рекламы на этом сервере.</td></tr>'}</tbody>`;
+}
+
+// ---- Activity log (журнал: начисления, списания, выдача/снятие верифки) ----
+let plogServers = {};
+let plogUserTimer = null;
+const PLOG_LABEL = {
+    grant_paid: { cls: 'g', title: 'Выдана верификация', tag: 'начислено' },
+    grant_no_ad: { cls: 'n', title: 'Выдана верификация · без оплаты', tag: 'рекламы не было' },
+    grant_dup_join: { cls: 'n', title: 'Выдана верификация · без оплаты', tag: 'уже был на сервере' },
+    grant_already_verified: { cls: 'n', title: 'Повторная попытка', tag: 'уже верифицирован' },
+    debit_left: { cls: 'd', title: 'Списание', tag: 'участник ушёл' },
+    unverify_left: { cls: 'u', title: 'Снята верификация', tag: 'участник ушёл' }
+};
+function plogLabel(e) {
+    return PLOG_LABEL[`${e.type}_${e.reason}`] || { cls: 'n', title: e.type, tag: e.reason || '' };
+}
+function plogRow(e, servers) {
+    const L = plogLabel(e);
+    const amt = e.type === 'debit'
+        ? `<span class="plog-amt neg">−${money(e.amount)}</span>`
+        : (e.type === 'grant' && e.reason === 'paid' && e.amount ? `<span class="plog-amt pos">+${money(e.amount)}</span>` : '');
+    const sv = e.guildId ? (servers[e.guildId] || e.guildId) : '';
+    const usr = e.userId ? `<span class="plog-usr">ID ${esc(e.userId)}</span>` : '';
+    return `<div class="plog-row plog-${L.cls}">
+        <span class="plog-dot"></span>
+        <div class="plog-main">
+          <div class="plog-title">${esc(L.title)} ${L.tag ? `<span class="plog-tag">${esc(L.tag)}</span>` : ''}</div>
+          <div class="plog-sub">${sv ? `<span class="plog-sv">${esc(sv)}</span>` : ''}${usr}</div>
+        </div>
+        <div class="plog-right">${amt}<span class="plog-time">${esc(relTime(e.ts))}</span></div>
+      </div>`;
+}
+function plogQuery() {
+    const v = (id) => ($(id)?.value || '').trim();
+    const p = new URLSearchParams();
+    for (const [k, id] of [['type', '#plf-type'], ['reason', '#plf-reason'], ['server', '#plf-server'], ['period', '#plf-period'], ['sort', '#plf-sort']]) {
+        const val = v(id); if (val) p.set(k, val);
+    }
+    const u = v('#plf-user'); if (/^\d{17,20}$/.test(u)) p.set('user', u);
+    return p.toString();
+}
+function fillPlogServers(servers) {
+    let changed = false;
+    for (const [gid, name] of Object.entries(servers || {})) if (!(gid in plogServers)) { plogServers[gid] = name || gid; changed = true; }
+    const sel = $('#plf-server');
+    if (!sel || !changed) return;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">Все серверы</option>' +
+        Object.entries(plogServers).map(([gid, name]) => `<option value="${esc(gid)}">${esc(name || gid)}</option>`).join('');
+    sel.value = cur;
+}
+async function loadActivity() {
+    const list = $('#plog-list');
+    const { ok, body } = await get('/activity?' + plogQuery());
+    if (!ok) { if (list) list.innerHTML = '<div class="muted">Не удалось загрузить журнал.</div>'; return; }
+    fillPlogServers(body.servers || {});
+    const events = body.events || [];
+    if (!list) return;
+    list.innerHTML = events.length
+        ? events.map((e) => plogRow(e, body.servers || {})).join('')
+        : '<div class="muted">Событий не найдено.</div>';
+}
+function wirePlogFilters() {
+    ['#plf-type', '#plf-reason', '#plf-server', '#plf-period', '#plf-sort'].forEach((id) => {
+        const el = $(id); if (el && !el.dataset.wired) { el.dataset.wired = '1'; el.onchange = loadActivity; }
+    });
+    const u = $('#plf-user');
+    if (u && !u.dataset.wired) { u.dataset.wired = '1'; u.oninput = () => { clearTimeout(plogUserTimer); plogUserTimer = setTimeout(loadActivity, 400); }; }
 }
 
 function render(d) {
