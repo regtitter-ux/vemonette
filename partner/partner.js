@@ -410,16 +410,38 @@ function fillPlogServers(servers) {
         Object.entries(plogServers).map(([gid, name]) => `<option value="${esc(gid)}">${esc(name || gid)}</option>`).join('');
     sel.value = cur;
 }
+let plogEvents = [], plogServersLast = {}, plogPage = 0;
+const PLOG_PER_PAGE = 10;
 async function loadActivity() {
     const list = $('#plog-list');
     const { ok, body } = await get('/activity?' + plogQuery());
-    if (!ok) { if (list) list.innerHTML = '<div class="muted">Не удалось загрузить журнал.</div>'; return; }
+    if (!ok) { if (list) list.innerHTML = '<div class="muted">Не удалось загрузить журнал.</div>'; $('#plog-pager').hidden = true; return; }
     fillPlogServers(body.servers || {});
-    const events = body.events || [];
-    if (!list) return;
-    list.innerHTML = events.length
-        ? events.map((e) => plogRow(e, body.servers || {})).join('')
+    plogEvents = body.events || [];
+    plogServersLast = body.servers || {};
+    plogPage = 0;
+    renderPlogPage();
+}
+function renderPlogPage() {
+    const list = $('#plog-list'); if (!list) return;
+    const pages = Math.max(1, Math.ceil(plogEvents.length / PLOG_PER_PAGE));
+    if (plogPage > pages - 1) plogPage = pages - 1;
+    if (plogPage < 0) plogPage = 0;
+    const slice = plogEvents.slice(plogPage * PLOG_PER_PAGE, plogPage * PLOG_PER_PAGE + PLOG_PER_PAGE);
+    list.innerHTML = slice.length
+        ? slice.map((e) => plogRow(e, plogServersLast)).join('')
         : '<div class="muted">Событий не найдено.</div>';
+    const pager = $('#plog-pager');
+    if (!pager) return;
+    if (plogEvents.length <= PLOG_PER_PAGE) { pager.hidden = true; pager.innerHTML = ''; return; }
+    pager.hidden = false;
+    pager.innerHTML =
+        `<button class="btn ghost sm" id="plog-prev"${plogPage === 0 ? ' disabled' : ''}>← Назад</button>` +
+        `<span class="wd-page muted sm">Стр. ${plogPage + 1} из ${pages}</span>` +
+        `<button class="btn ghost sm" id="plog-next"${plogPage >= pages - 1 ? ' disabled' : ''}>Вперёд →</button>`;
+    const prev = $('#plog-prev'), next = $('#plog-next');
+    if (prev) prev.onclick = () => { if (plogPage > 0) { plogPage--; renderPlogPage(); } };
+    if (next) next.onclick = () => { if (plogPage < pages - 1) { plogPage++; renderPlogPage(); } };
 }
 function wirePlogFilters() {
     ['#plf-type', '#plf-reason', '#plf-server', '#plf-period', '#plf-sort'].forEach((id) => {

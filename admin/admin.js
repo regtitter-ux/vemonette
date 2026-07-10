@@ -1878,13 +1878,35 @@ function alogRow(e, maps) {
       <div class="plog-right">${amt}<span class="plog-time">${ALOG_ESC(relTime(e.ts))}</span></div>
     </div>`;
 }
+let alogEvents = [], alogMaps = { servers: {}, users: {}, partners: {} }, alogPage = 0;
+const ALOG_PER_PAGE = 10;
 async function loadActivityLog() {
     const list = $('#alog-list');
     const { ok, body } = await get('/activity?' + alogQuery());
-    if (!ok) { if (list) list.innerHTML = '<div class="muted">Не удалось загрузить журнал.</div>'; return; }
-    const events = body.events || [];
-    const maps = { servers: body.servers || {}, users: body.users || {}, partners: body.partners || {} };
-    if (list) list.innerHTML = events.length ? events.map((e) => alogRow(e, maps)).join('') : '<div class="muted">Событий не найдено.</div>';
+    if (!ok) { if (list) list.innerHTML = '<div class="muted">Не удалось загрузить журнал.</div>'; const pg = $('#alog-pager'); if (pg) pg.hidden = true; return; }
+    alogEvents = body.events || [];
+    alogMaps = { servers: body.servers || {}, users: body.users || {}, partners: body.partners || {} };
+    alogPage = 0;
+    renderAlogPage();
+}
+function renderAlogPage() {
+    const list = $('#alog-list'); if (!list) return;
+    const pages = Math.max(1, Math.ceil(alogEvents.length / ALOG_PER_PAGE));
+    if (alogPage > pages - 1) alogPage = pages - 1;
+    if (alogPage < 0) alogPage = 0;
+    const slice = alogEvents.slice(alogPage * ALOG_PER_PAGE, alogPage * ALOG_PER_PAGE + ALOG_PER_PAGE);
+    list.innerHTML = slice.length ? slice.map((e) => alogRow(e, alogMaps)).join('') : '<div class="muted">Событий не найдено.</div>';
+    const pager = $('#alog-pager');
+    if (!pager) return;
+    if (alogEvents.length <= ALOG_PER_PAGE) { pager.hidden = true; pager.innerHTML = ''; return; }
+    pager.hidden = false;
+    pager.innerHTML =
+        `<button class="btn ghost sm" id="alog-prev"${alogPage === 0 ? ' disabled' : ''}>← Назад</button>` +
+        `<span class="wd-page muted sm">Стр. ${alogPage + 1} из ${pages}</span>` +
+        `<button class="btn ghost sm" id="alog-next"${alogPage >= pages - 1 ? ' disabled' : ''}>Вперёд →</button>`;
+    const prev = $('#alog-prev'), next = $('#alog-next');
+    if (prev) prev.onclick = () => { if (alogPage > 0) { alogPage--; renderAlogPage(); } };
+    if (next) next.onclick = () => { if (alogPage < pages - 1) { alogPage++; renderAlogPage(); } };
 }
 ['#alf-type', '#alf-reason', '#alf-period', '#alf-sort'].forEach((id) => { const el = $(id); if (el) el.addEventListener('change', loadActivityLog); });
 ['#alf-partner', '#alf-user', '#alf-server'].forEach((id) => { const el = $(id); if (el) el.addEventListener('input', () => { clearTimeout(alogTimer); alogTimer = setTimeout(loadActivityLog, 400); }); });
