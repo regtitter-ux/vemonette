@@ -23,8 +23,14 @@ function toast(msg, kind = 'ok') { const el = $('#toast'); el.className = `toast
 let invLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
 if (invLang !== 'en' && invLang !== 'ru') invLang = 'ru';
 const WHOLE = {
-  'Выйти':'Log out','Вывести':'Withdraw','Инвест-счёт':'Investment account','Отмена':'Cancel'
+  'Выйти':'Log out','Вывести':'Withdraw','Инвест-счёт':'Investment account','Отмена':'Cancel',
+  'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin'
 };
+function setupCabNav(isAdmin) {
+    const path = location.pathname;
+    document.querySelectorAll('.cab-nav [data-cn]').forEach((a) => { if (path.indexOf('/' + a.dataset.cn) === 0) a.classList.add('active'); });
+    if (isAdmin) document.querySelectorAll('.cab-nav [data-cn="admin"]').forEach((a) => (a.hidden = false));
+}
 const TR_RE = [
   [/\$(\d[\d.,]*) за 100/g,'$$$1 per 100'],
   [/(\d+) заходов/g,'$1 joins'],[/(\d+) инвайтов/g,'$1 invites']
@@ -104,7 +110,7 @@ if (new URLSearchParams(location.search).get('login') === 'denied') {
     history.replaceState(null, '', location.pathname);
 }
 $('#logout').addEventListener('click', async () => { await post('/logout'); location.reload(); });
-async function checkAuth() { const { ok, body } = await get('/whoami'); return ok && body?.authed === true; }
+async function checkAuth() { const { ok, body } = await get('/whoami'); return (ok && body?.authed === true) ? body : null; }
 async function enterApp() { $('#login').hidden = true; $('#app').hidden = false; await load(); setInterval(load, 15000); }
 
 // ---------- Data ----------

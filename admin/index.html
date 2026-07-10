@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="/admin/admin.css?v=20" />
+  <link rel="stylesheet" href="/admin/admin.css?v=21" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -48,6 +48,12 @@
       <button data-tab="feed" class="tab" data-owner-only data-i18n="tab_feed">Лента</button>
       <button data-tab="system" class="tab" data-owner-only data-i18n="tab_system">Система</button>
       <button data-tab="admins" class="tab" data-owner-only data-i18n="tab_admins">Админы</button>
+    </nav>
+    <nav class="cab-links">
+      <a href="/" class="cl-link" data-i18n="nav_home">Главная</a>
+      <a href="/order/" class="cl-link" data-i18n="nav_orders">Заказы</a>
+      <a href="/partner/" class="cl-link" data-i18n="nav_partner">Партнёр</a>
+      <a href="/investor/" class="cl-link" data-i18n="nav_investor">Инвест</a>
     </nav>
     <div class="lang-switch" id="langSwitch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
     <button id="logout" class="btn ghost sm" data-i18n="logout">Выйти</button>
@@ -269,6 +275,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=57"></script>
+<script src="/admin/admin.js?v=58"></script>
 </body>
 </html>

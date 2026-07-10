@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Инвест-кабинет</title>
-  <link rel="stylesheet" href="/partner/partner.css?v=7" />
+  <link rel="stylesheet" href="/partner/partner.css?v=8" />
   <link rel="stylesheet" href="/investor/investor.css?v=4" />
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
 </head>
@@ -29,11 +29,17 @@
 <div id="app" hidden>
   <header class="topbar">
     <div class="brand-sm">Vemoni · Инвест-кабинет</div>
+    <nav class="cab-nav" id="cab-nav">
+      <a href="/" class="cn-link">Главная</a>
+      <a href="/order/" class="cn-link" data-cn="order">Заказы</a>
+      <a href="/partner/" class="cn-link" data-cn="partner">Партнёр</a>
+      <a href="/investor/" class="cn-link" data-cn="investor">Инвест</a>
+      <a href="/admin/" class="cn-link" data-cn="admin" hidden>Админка</a>
+    </nav>
     <div class="top-right">
       <span class="bal-pill"><span class="muted sm">Инвест-счёт</span> <b id="inv-balance">$0.00</b></span>
       <button id="inv-topup" class="btn ghost sm">＋ Пополнить</button>
       <button id="inv-withdraw" class="btn ghost sm">Вывести</button>
-      <a href="/partner/" class="btn ghost sm">Кабинет партнёра</a>
       <div class="lang-switch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
       <button id="logout" class="btn ghost sm">Выйти</button>
     </div>
@@ -60,6 +66,6 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/investor/investor.js?v=6"></script>
+<script src="/investor/investor.js?v=7"></script>
 </body>
 </html>

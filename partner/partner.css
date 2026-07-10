@@ -56,6 +56,11 @@ th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;le
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .left-n{color:#5a6577;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
 
+.cab-nav{display:flex;gap:2px;flex-wrap:wrap;align-items:center}
+.cab-nav .cn-link{font-size:13px;font-weight:600;color:var(--muted);padding:7px 12px;border-radius:8px;white-space:nowrap}
+.cab-nav .cn-link:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.cab-nav .cn-link.active{color:var(--blue-2);background:rgba(34,168,240,.14)}
+
 .lang-switch{display:inline-flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--stroke-2);border-radius:999px;padding:2px}
 .login-card .lang-switch{position:absolute;top:14px;right:14px}
 .login-card{position:relative}

@@ -116,3 +116,9 @@ h2{font-size:18px;margin-bottom:14px}
 .pay-box{margin-top:14px;background:var(--panel-2);border:1px solid var(--stroke-2);border-radius:12px;padding:14px}
 
 .camp-ret{margin-top:6px}
+
+/* Cross-cabinet nav */
+.cab-nav{display:flex;gap:2px;flex-wrap:wrap;align-items:center}
+.cab-nav .cn-link{font-size:13px;font-weight:600;color:var(--muted);padding:7px 12px;border-radius:8px;white-space:nowrap}
+.cab-nav .cn-link:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.cab-nav .cn-link.active{color:var(--blue-2);background:rgba(34,168,240,.14)}

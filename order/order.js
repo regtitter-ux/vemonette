@@ -15,6 +15,7 @@ const DICT = {
     label_joins: 'Сколько заходов купить',
     price_label: 'Стоимость:',
     buy_btn: 'Запустить кампанию',
+    nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', nav_admin: 'Админка',
     wallet_label: 'Баланс',
     topup_prompt: (min) => `Сумма пополнения в $ (минимум ${min}):`,
     topup_min: (min) => `Минимум $${min}`,
@@ -74,6 +75,7 @@ const DICT = {
     label_joins: 'How many joins to buy',
     price_label: 'Cost:',
     buy_btn: 'Launch campaign',
+    nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', nav_admin: 'Admin',
     wallet_label: 'Balance',
     topup_prompt: (min) => `Top-up amount in $ (min ${min}):`,
     topup_min: (min) => `Minimum $${min}`,
@@ -185,7 +187,12 @@ if (new URLSearchParams(location.search).get('login') === 'denied') {
     history.replaceState(null, '', location.pathname);
 }
 $('#logout').addEventListener('click', async () => { await post('/logout'); location.reload(); });
-async function checkAuth() { const { ok, body } = await get('/whoami'); return ok && body?.authed === true; }
+async function checkAuth() { const { ok, body } = await get('/whoami'); return (ok && body?.authed === true) ? body : null; }
+function setupCabNav(isAdmin) {
+    const path = location.pathname;
+    document.querySelectorAll('.cab-nav [data-cn]').forEach((a) => { if (path.indexOf('/' + a.dataset.cn) === 0) a.classList.add('active'); });
+    if (isAdmin) document.querySelectorAll('.cab-nav [data-cn="admin"]').forEach((a) => (a.hidden = false));
+}
 
 async function enterApp() {
     $('#login').hidden = true; $('#app').hidden = false;
@@ -447,4 +454,4 @@ function srvRow(campId, s) {
 
 // ---------- Boot ----------
 applyLang();
-(async () => { if (await checkAuth()) enterApp(); })();
+(async () => { const who = await checkAuth(); if (who) { enterApp(); setupCabNav(who.isAdmin); } })();

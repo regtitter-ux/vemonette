@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Кабинет партнёра</title>
-  <link rel="stylesheet" href="/partner/partner.css?v=7" />
+  <link rel="stylesheet" href="/partner/partner.css?v=8" />
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
 </head>
 <body>
@@ -28,9 +28,15 @@
 <div id="app" hidden>
   <header class="topbar">
     <div class="brand-sm">Vemoni · Кабинет партнёра</div>
+    <nav class="cab-nav" id="cab-nav">
+      <a href="/" class="cn-link">Главная</a>
+      <a href="/order/" class="cn-link" data-cn="order">Заказы</a>
+      <a href="/partner/" class="cn-link" data-cn="partner">Партнёр</a>
+      <a href="/investor/" class="cn-link" data-cn="investor">Инвест</a>
+      <a href="/admin/" class="cn-link" data-cn="admin" hidden>Админка</a>
+    </nav>
     <div class="top-right">
       <span class="bal-pill"><span class="muted sm">Баланс</span> <b id="top-balance">$0.00</b></span>
-      <a href="/investor/" class="btn ghost sm">Инвест-кабинет</a>
       <div class="lang-switch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
       <button id="logout" class="btn ghost sm">Выйти</button>
     </div>
@@ -86,6 +92,6 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/partner/partner.js?v=11"></script>
+<script src="/partner/partner.js?v=12"></script>
 </body>
 </html>

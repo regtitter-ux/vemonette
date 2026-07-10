@@ -38,8 +38,14 @@ if (partnerLang !== 'en' && partnerLang !== 'ru') partnerLang = 'ru';
 const WHOLE = {
   'час':'hour','день':'day','неделя':'week','месяц':'month','всего':'total','Воронка':'Funnel',
   'Сервер':'Server','Роль':'Role','Баланс':'Balance','Дата':'Date','Сумма':'Amount','Статус':'Status',
-  'Зашло':'Joined','Осталось':'Stayed','Ушли':'Left','Заработано':'Earned','Выйти':'Log out','Отмена':'Cancel','Сохранить':'Save'
+  'Зашло':'Joined','Осталось':'Stayed','Ушли':'Left','Заработано':'Earned','Выйти':'Log out','Отмена':'Cancel','Сохранить':'Save',
+  'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin'
 };
+function setupCabNav(isAdmin) {
+    const path = location.pathname;
+    document.querySelectorAll('.cab-nav [data-cn]').forEach((a) => { if (path.indexOf('/' + a.dataset.cn) === 0) a.classList.add('active'); });
+    if (isAdmin) document.querySelectorAll('.cab-nav [data-cn="admin"]').forEach((a) => (a.hidden = false));
+}
 const TR_RE = [
   [/только что/g,'just now'],
   [/(\d+) мин назад/g,'$1 min ago'],[/(\d+) ч назад/g,'$1 h ago'],[/(\d+) дн назад/g,'$1 d ago'],
@@ -133,7 +139,7 @@ if (new URLSearchParams(location.search).get('login') === 'denied') {
 }
 $('#logout').addEventListener('click', async () => { await post('/logout'); location.reload(); });
 
-async function checkAuth() { const { ok, body } = await get('/whoami'); return ok && body?.authed === true; }
+async function checkAuth() { const { ok, body } = await get('/whoami'); return (ok && body?.authed === true) ? body : null; }
 
 async function enterApp() {
     $('#login').hidden = true; $('#app').hidden = false;
@@ -417,4 +423,4 @@ $('#p-req-save').addEventListener('click', async () => {
 });
 
 // Boot
-(async () => { if (await checkAuth()) enterApp(); })();
+(async () => { const who = await checkAuth(); if (who) { enterApp(); setupCabNav(who.isAdmin); } })();
