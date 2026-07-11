@@ -83,11 +83,12 @@ const TR = {
   'Верификации по серверам':'Verifications by server','Пока нет оплаченных верификаций':'No paid verifications yet','Осталось / всего зашло':'Stayed / total joined',
   // main cards
   'можно вывести':'can withdraw','вывод от':'withdraw from','Ставка за заход':'Rate per join','Заходов оплачено':'Joins paid',' начислено':' credited','Всего выведено':'Total withdrawn','буст':'boost',
-  // active ads + priority
+  // active ads + priority / hide
   'Активные рекламы':'Active ads',
-  'Рекламы, доступные вашему серверу прямо сейчас (не скрытые). Отметьте одну как приоритетную — она будет показываться первой на ваших серверах, пока её кампания не завершится или вы не выберете другую. Приоритет можно дать только одной рекламе одновременно; без приоритета работает обычное умное распределение.':'Ads available to your server right now (not hidden). Mark one as priority — it will show first on your servers until its campaign finishes or you pick another. Only one ad can be priority at a time; without a priority the normal smart distribution applies.',
-  'Приоритет':'Priority','Остаток':'Remaining','Сейчас нет активных реклам, доступных этому серверу.':'There are no active ads available to this server right now.',
+  'Рекламы, доступные выбранному серверу. Для каждого сервера отдельно можно: отметить рекламу приоритетной (★), чтобы показывать её первой, пока кампания не завершится или вы не выберете другую; либо скрыть рекламу, чтобы она не показывалась на этом сервере. Без приоритета работает обычное умное распределение.':'Ads available to the selected server. For each server separately you can: mark an ad as priority (★) to show it first until its campaign finishes or you pick another; or hide an ad so it is not shown on that server. Without a priority the normal smart distribution applies.',
+  'Приоритет':'Priority','Скрыто':'Hidden','Скрыть':'Hide','Показать':'Show','Сейчас нет активных реклам, доступных этому серверу.':'There are no active ads available to this server right now.',
   'Приоритет установлен':'Priority set','Приоритет снят':'Priority cleared','Эта реклама сейчас недоступна.':'This ad is not available right now.','Не удалось сохранить приоритет.':'Could not save the priority.',
+  'Реклама скрыта на этом сервере':'Ad hidden on this server','Реклама снова показывается':'Ad is shown again','Не удалось изменить видимость рекламы.':'Could not change the ad visibility.',
   // ad history
   'Реклама на ваших серверах':'Ads on your servers',
   'История всех реклам, что показывались на вашем сервере: сколько человек зашло по каждой, сколько осталось и сколько вы на этом заработали.':'History of every ad shown on your server: how many joined via each, how many stayed and how much you earned.',
@@ -267,26 +268,35 @@ function renderPartnerAds() {
     const s = servers.find((x) => x.guildId === pAdsSel) || servers[0];
     const ads = s.ads || [];
     $('#pads-list').innerHTML = ads.length ? ads.map((a) => `
-      <div class="pad-row${a.isPriority ? ' pad-prio' : ''}">
+      <div class="pad-row${a.isPriority ? ' pad-prio' : ''}${a.isHidden ? ' pad-hidden' : ''}">
         <label class="pad-check" title="Приоритет">
-          <input type="checkbox" data-prio="${esc(a.campaignId)}" ${a.isPriority ? 'checked' : ''} />
+          <input type="checkbox" data-prio="${esc(a.campaignId)}" ${a.isPriority ? 'checked' : ''} ${a.isHidden ? 'disabled' : ''} />
           <span class="pad-star">★</span>
         </label>
-        <div class="pad-main">${srvIcon(a.sponsorName, a.sponsorIcon)}<span class="pad-name">${esc(a.sponsorName || a.sponsorGuildId)}</span>${a.isPriority ? '<span class="pad-badge">Приоритет</span>' : ''}</div>
-        <div class="pad-remain"><span class="muted sm">Остаток</span> <b>${a.remaining}</b></div>
+        <div class="pad-main">${srvIcon(a.sponsorName, a.sponsorIcon)}<span class="pad-name">${esc(a.sponsorName || a.sponsorGuildId)}</span>${a.isPriority ? '<span class="pad-badge">Приоритет</span>' : ''}${a.isHidden ? '<span class="pad-badge hid">Скрыто</span>' : ''}</div>
+        <div class="pad-remain"><b>${a.delivered}/${a.purchased}</b></div>
+        <button class="btn-mini${a.isHidden ? '' : ' off'}" data-hide="${esc(a.campaignId)}" data-h="${a.isHidden ? '1' : '0'}">${a.isHidden ? 'Показать' : 'Скрыть'}</button>
       </div>`).join('') : '<div class="muted">Сейчас нет активных реклам, доступных этому серверу.</div>';
+
+    const lockRows = () => $('#pads-list').querySelectorAll('input,button').forEach((x) => (x.disabled = true));
 
     $('#pads-list').querySelectorAll('[data-prio]').forEach((cb) => cb.onchange = async () => {
         const cid = cb.dataset.prio;
         const makePriority = cb.checked;
-        $('#pads-list').querySelectorAll('[data-prio]').forEach((x) => (x.disabled = true));
-        const { ok, body } = await put('/priority', { campaignId: makePriority ? cid : '' });
-        if (!ok) {
-            toast(body?.error === 'not-available' ? 'Эта реклама сейчас недоступна.' : 'Не удалось сохранить приоритет.', 'err');
-        } else {
-            pAds.priorityCampaign = body.priorityCampaign || null;
-            toast(makePriority ? 'Приоритет установлен' : 'Приоритет снят');
-        }
+        lockRows();
+        const { ok, body } = await put('/priority', { guildId: pAdsSel, campaignId: makePriority ? cid : '' });
+        if (!ok) toast(body?.error === 'not-available' ? 'Эта реклама сейчас недоступна.' : 'Не удалось сохранить приоритет.', 'err');
+        else toast(makePriority ? 'Приоритет установлен' : 'Приоритет снят');
+        await loadPartnerAds();
+    });
+
+    $('#pads-list').querySelectorAll('[data-hide]').forEach((btn) => btn.onclick = async () => {
+        const cid = btn.dataset.hide;
+        const nowHidden = btn.dataset.h === '1';
+        lockRows();
+        const { ok } = await put('/hide', { guildId: pAdsSel, campaignId: cid, hidden: !nowHidden });
+        if (!ok) toast('Не удалось изменить видимость рекламы.', 'err');
+        else toast(!nowHidden ? 'Реклама скрыта на этом сервере' : 'Реклама снова показывается');
         await loadPartnerAds();
     });
 }
