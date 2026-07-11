@@ -152,13 +152,14 @@
   .stays{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center}
   .stays-copy h3{font-size:23px;margin:0 0 12px}
   .stays-copy p{color:var(--muted);margin:0 0 16px}
-  .join-list{display:flex;flex-direction:column;height:302px;overflow:hidden;
-    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 13%,#000 87%,transparent 100%);
-    mask-image:linear-gradient(180deg,transparent 0,#000 13%,#000 87%,transparent 100%)}
+  /* live "joins in real time" ticker — GPU translateY on a recycled track,
+     no reflow. New rows are pre-rendered below the fold and rise into view. */
+  .join-feed{position:relative;overflow:hidden;
+    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 15%,#000 86%,transparent 100%);
+    mask-image:linear-gradient(180deg,transparent 0,#000 15%,#000 86%,transparent 100%)}
+  .join-track{display:flex;flex-direction:column;gap:10px;will-change:transform}
   .jrow{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
-    padding:11px 14px;font-size:14px;margin-bottom:10px;max-height:56px;overflow:hidden;flex:none;
-    transition:max-height .58s cubic-bezier(.22,.61,.36,1),opacity .45s ease,transform .58s cubic-bezier(.22,.61,.36,1),
-      margin .58s cubic-bezier(.22,.61,.36,1),padding .58s cubic-bezier(.22,.61,.36,1),border-color .5s ease,box-shadow .5s ease}
+    padding:11px 14px;font-size:14px;flex:none;transition:border-color .5s ease,box-shadow .5s ease,background .5s ease}
   .jrow .jav{width:30px;height:30px;border-radius:50%;flex:none;background:linear-gradient(135deg,#2b3752,#1a2438)}
   .jrow .jn{font-weight:600}
   .jrow .jm{margin-left:auto;font-weight:700;font-size:12.5px;white-space:nowrap}
@@ -167,11 +168,7 @@
   .jrow.bad{opacity:.5}
   .jrow.bad .jn{text-decoration:line-through;color:var(--muted)}
   .jrow.bad .jm{color:var(--red)}
-  /* live-feed enter/leave (must come after .ok/.bad to win) */
-  .jrow.enter{max-height:0;opacity:0;transform:translateY(14px);margin-bottom:0;padding-top:0;padding-bottom:0}
-  .jrow.leave{max-height:0;opacity:0;transform:translateY(-8px);margin-bottom:0;padding-top:0;padding-bottom:0}
-  .jrow.ok:not(.enter):not(.leave){box-shadow:0 0 0 0 rgba(63,209,138,0)}
-  .jrow.ok.pop{box-shadow:0 10px 34px -12px rgba(63,209,138,.5);border-color:rgba(63,209,138,.6)}
+  .jrow.pop{border-color:rgba(63,209,138,.6);box-shadow:0 10px 34px -12px rgba(63,209,138,.5)}
   .stays-sum{margin-top:16px;background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line-2);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px}
   .stays-sum .big{font-family:'Sora';font-weight:800;font-size:30px}
   .stays-sum .lbl{color:var(--muted);font-size:13.5px}
@@ -341,12 +338,14 @@
             <span class="lbl" data-i18n="stays_price">per 100 verified joins that stick — fixed price, no hidden fees.</span>
           </div>
         </div>
-        <div class="join-list" id="joinList">
-          <div class="jrow ok"><span class="jav"></span><span class="jn">@real_member</span><span class="jm" data-i18n="stays_counted">counted ✓</span></div>
-          <div class="jrow ok"><span class="jav"></span><span class="jn">@active_user</span><span class="jm" data-i18n="stays_counted2">counted ✓</span></div>
-          <div class="jrow bad"><span class="jav"></span><span class="jn">bot_x931</span><span class="jm" data-i18n="stays_filtered">filtered</span></div>
-          <div class="jrow ok"><span class="jav"></span><span class="jn">@stayed_member</span><span class="jm" data-i18n="stays_counted3">counted ✓</span></div>
-          <div class="jrow bad"><span class="jav"></span><span class="jn">@left_after_1m</span><span class="jm" data-i18n="stays_left">left — refunded</span></div>
+        <div class="join-feed" id="joinFeed">
+          <div class="join-track" id="joinTrack">
+            <div class="jrow ok"><span class="jav"></span><span class="jn">@real_member</span><span class="jm" data-i18n="stays_counted">counted ✓</span></div>
+            <div class="jrow ok"><span class="jav"></span><span class="jn">@active_user</span><span class="jm" data-i18n="stays_counted2">counted ✓</span></div>
+            <div class="jrow bad"><span class="jav"></span><span class="jn">bot_x931</span><span class="jm" data-i18n="stays_filtered">filtered</span></div>
+            <div class="jrow ok"><span class="jav"></span><span class="jn">@stayed_member</span><span class="jm" data-i18n="stays_counted3">counted ✓</span></div>
+            <div class="jrow bad"><span class="jav"></span><span class="jn">@left_after_1m</span><span class="jm" data-i18n="stays_left">left — refunded</span></div>
+          </div>
         </div>
       </div>
     </div>
@@ -555,15 +554,18 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
 })();
 
 /* ---------------- live "joins in real time" feed ----------------
-   New members appear at the bottom (grow + fade in), the oldest rises off the
-   top (collapse + fade). Edge mask dissolves rows softly. Organic jittered
-   pacing; mostly counted, a few filtered/left. */
+   Recycled ticker: N+1 rows in a track, the extra one pre-rendered below the
+   fold. Each tick appends a fresh buffer row, animates the track up by exactly
+   one row (GPU transform — no reflow), then drops the row that scrolled off the
+   top and snaps back to 0. The incoming row rises smoothly into view. */
 (function(){
-  const list=document.getElementById('joinList'); if(!list) return;
+  const feed=document.getElementById('joinFeed'), track=document.getElementById('joinTrack');
+  if(!feed||!track) return;
   const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const N=5;
   const NAMES=['real_member','active_user','stayed_here','night_owl','pixel_fox','mika_fan','lunar_kat','vibecheck',
     'frostbite','echo_zx','zephyr','sunny_d','arcadey','moonwalk','nova_x','driftwood','blue_jay','kettu','tanaka',
-    'wanderer','crimson','maple_','orbit_','glacier','pulse_','raven_','onyx_','koda','sprout',' member','halcyon'];
+    'wanderer','crimson','maple_','orbit_','glacier','pulse_','raven_','onyx_','koda','sprout','halcyon','quill'];
   const isRU=()=>document.documentElement.lang==='ru';
   const pick=(a)=>a[(Math.random()*a.length)|0];
   function make(){
@@ -573,30 +575,47 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
     else { cls='ok'; name='@'+pick(NAMES); label=isRU()?'засчитан ✓':'counted ✓'; }
     const h=Math.random()*360|0;
     const el=document.createElement('div');
-    el.className='jrow '+cls+' enter';
+    el.className='jrow '+cls;
     el.innerHTML='<span class="jav" style="background:linear-gradient(135deg,hsl('+h+' 42% 46%),hsl('+((h+50)%360)+' 40% 30%))"></span>'+
                  '<span class="jn"></span><span class="jm"></span>';
     el.querySelector('.jn').textContent=name; el.querySelector('.jm').textContent=label;
     return el;
   }
-  list.innerHTML='';
-  for(let i=0;i<5;i++){ const el=make(); el.classList.remove('enter'); list.appendChild(el); }
-  if(reduce) return;
-  function tick(){
-    if(!document.hidden){
-      const first=list.firstElementChild;
-      if(list.children.length>=5 && first && !first.classList.contains('leave')){
-        first.classList.add('leave'); setTimeout(()=>first.remove(),640);
-      }
-      const el=make(); list.appendChild(el);
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        el.classList.remove('enter');
-        if(el.classList.contains('ok')){ el.classList.add('pop'); setTimeout(()=>el.classList.remove('pop'),720); }
-      }));
-    }
-    setTimeout(tick, 1500+Math.random()*1000);
+  // seed N+1 rows (N visible + 1 buffer below the fold)
+  track.innerHTML='';
+  for(let i=0;i<N+1;i++) track.appendChild(make());
+  let rowH=62, gap=10;
+  function measure(){
+    const s=track.firstElementChild; if(!s) return;
+    const cs=getComputedStyle(track); gap=parseFloat(cs.rowGap||cs.gap)||10;
+    rowH=s.getBoundingClientRect().height+gap;
+    feed.style.height=(N*rowH-gap)+'px';
   }
-  setTimeout(tick, 1300);
+  function markPop(){
+    track.querySelectorAll('.jrow.pop').forEach((r)=>r.classList.remove('pop'));
+    const newest=track.children[N-1];           // bottom row now fully in view
+    if(newest && newest.classList.contains('ok')){ newest.classList.add('pop'); setTimeout(()=>newest.classList.remove('pop'),900); }
+  }
+  measure(); markPop();
+  window.addEventListener('resize', measure);
+  if(reduce) return;
+  let timer;
+  function schedule(){ clearTimeout(timer); timer=setTimeout(tick, 1600+Math.random()*1100); }
+  function tick(){
+    if(document.hidden){ schedule(); return; }
+    track.appendChild(make());                    // fresh buffer at the bottom
+    const anim=track.animate(
+      [{transform:'translateY(0)'},{transform:'translateY(-'+rowH+'px)'}],
+      {duration:640, easing:'cubic-bezier(.22,.61,.36,1)', fill:'forwards'}
+    );
+    anim.onfinish=()=>{
+      if(track.firstElementChild) track.removeChild(track.firstElementChild); // drop the row off the top
+      anim.cancel();                              // revert transform; layout already shifted up by one row → seamless
+      markPop();
+      schedule();
+    };
+  }
+  schedule();
 })();
 </script>
 </body>
