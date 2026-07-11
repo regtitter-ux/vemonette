@@ -1,10 +1,19 @@
 // Partner cabinet — vanilla JS.
 const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/partner';
 
+// Session token (localStorage) — alternative to the cross-site cookie that some
+// browsers block; sent as a Bearer header.
+const TOKEN_KEY = 'vemoni_tok';
+const getTok = () => { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; } };
+const setTok = (v) => { try { v ? localStorage.setItem(TOKEN_KEY, v) : localStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ } };
+(() => { const m = (location.hash || '').match(/[#&]t=([^&]+)/); if (m) { try { setTok(decodeURIComponent(m[1])); } catch { /* ignore */ } history.replaceState(null, '', location.pathname + location.search); } })();
+
 async function api(path, opts = {}) {
     let res;
+    const headers = opts.body ? { 'Content-Type': 'application/json' } : {};
+    const tk = getTok(); if (tk) headers.Authorization = 'Bearer ' + tk;
     try {
-        res = await fetch(API + path, { credentials: 'include', headers: opts.body ? { 'Content-Type': 'application/json' } : {}, ...opts });
+        res = await fetch(API + path, { credentials: 'include', ...opts, headers });
     } catch (err) { throw new Error('Нет связи с сервером'); }
     let body = null; try { body = await res.json(); } catch {}
     return { ok: res.ok, status: res.status, body };
@@ -189,7 +198,7 @@ $('#discord-login').addEventListener('click', (e) => { e.preventDefault(); locat
         verBtn.disabled = true; showMsg(T.checking, '');
         const { ok, body: b } = await post('/code/verify', { userId: uid, code });
         verBtn.disabled = false;
-        if (ok) { showMsg('', ''); location.reload(); return; }
+        if (ok) { if (b?.token) setTok(b.token); showMsg('', ''); location.reload(); return; }
         const e = b?.error;
         if (e === 'bad-code') showMsg(T.badcode(b?.attemptsLeft ?? 0), 'err');
         else if (e === 'expired') showMsg(T.expired, 'err');
@@ -204,7 +213,7 @@ if (new URLSearchParams(location.search).get('login') === 'denied') {
     $('#login-err').textContent = 'Не удалось войти. Попробуйте ещё раз.'; $('#login-err').hidden = false;
     history.replaceState(null, '', location.pathname);
 }
-$('#logout').addEventListener('click', async () => { await post('/logout'); location.reload(); });
+$('#logout').addEventListener('click', async () => { await post('/logout'); setTok(''); location.reload(); });
 
 async function checkAuth() { const { ok, body } = await get('/whoami'); return (ok && body?.authed === true) ? body : null; }
 

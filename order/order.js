@@ -156,10 +156,20 @@ function errText(code) {
 }
 
 // ---------- HTTP ----------
+// Session token (localStorage) — an alternative to the cross-site cookie, which
+// some browsers block as a third-party cookie. Sent as a Bearer header.
+const TOKEN_KEY = 'vemoni_tok';
+const getTok = () => { try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; } };
+const setTok = (v) => { try { v ? localStorage.setItem(TOKEN_KEY, v) : localStorage.removeItem(TOKEN_KEY); } catch { /* ignore */ } };
+// Capture a token handed back by the OAuth redirect fragment (#t=…), then clean the URL.
+(() => { const m = (location.hash || '').match(/[#&]t=([^&]+)/); if (m) { try { setTok(decodeURIComponent(m[1])); } catch { /* ignore */ } history.replaceState(null, '', location.pathname + location.search); } })();
+
 async function api(path, opts = {}) {
     let res;
+    const headers = opts.body ? { 'Content-Type': 'application/json' } : {};
+    const tk = getTok(); if (tk) headers.Authorization = 'Bearer ' + tk;
     try {
-        res = await fetch(API + path, { credentials: 'include', headers: opts.body ? { 'Content-Type': 'application/json' } : {}, ...opts });
+        res = await fetch(API + path, { credentials: 'include', ...opts, headers });
     } catch (err) { console.error('[order] fetch failed', API + path, err); throw new Error(t('no_conn')); }
     let body = null; try { body = await res.json(); } catch {}
     return { ok: res.ok, status: res.status, body };
@@ -219,7 +229,7 @@ $$('.lang-switch button').forEach((b) => b.addEventListener('click', () => { lan
         verBtn.disabled = true; showMsg(t('alt_checking'), '');
         const { ok, body: b } = await post('/code/verify', { userId: uid, code });
         verBtn.disabled = false;
-        if (ok) { showMsg('', ''); location.reload(); return; }
+        if (ok) { if (b?.token) setTok(b.token); showMsg('', ''); location.reload(); return; }
         const e = b?.error;
         if (e === 'bad-code') showMsg(t('alt_badcode', b?.attemptsLeft ?? 0), 'err');
         else if (e === 'expired') showMsg(t('alt_expired'), 'err');
@@ -246,7 +256,7 @@ if (new URLSearchParams(location.search).get('login') === 'denied') {
     $('#login-err').textContent = t('login_denied'); $('#login-err').hidden = false;
     history.replaceState(null, '', location.pathname);
 }
-$('#logout').addEventListener('click', async () => { await post('/logout'); location.reload(); });
+$('#logout').addEventListener('click', async () => { await post('/logout'); setTok(''); location.reload(); });
 async function checkAuth() { const { ok, body } = await get('/whoami'); return (ok && body?.authed === true) ? body : null; }
 function setupCabNav(isAdmin) {
     const path = location.pathname;
