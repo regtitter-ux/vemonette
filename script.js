@@ -331,3 +331,65 @@ setLang(startLang);
   clearCmd();
   requestAnimationFrame(() => setTimeout(run, 320));
 })();
+
+/* ---------- Live credit notifications (bottom-left) ----------
+   Real-time "someone just earned" pops, drawn from the live featured-servers
+   feed (FEED): real server names, avatars and member counts, with the real
+   $0.05-per-join rate. Newest slides in at the bottom-left; a few stack up. */
+(function creditToasts() {
+  const host = document.getElementById('creditToasts');
+  if (!host) return;
+  const AMOUNT = '+$0.05';
+  const MAX = 3;
+  const PPL = '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 1.9-8 4.25V20h16v-1.75C20 15.9 16.42 14 12 14Z"/></svg>';
+  const strings = () => (document.documentElement.lang === 'ru')
+    ? { sub: 'начисление за подтверждённый заход', members: 'участников' }
+    : { sub: 'credited for a verified join', members: 'members' };
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // Weighted pick: bigger servers pop a little more often (feels real, not uniform).
+  function pickServer() {
+    const pool = (Array.isArray(FEED) ? FEED : []).filter((s) => s && s.name);
+    if (!pool.length) return null;
+    const withM = pool.filter((s) => Number(s.members) > 0);
+    const base = withM.length ? withM : pool;
+    const wt = (s) => Math.max(1, Math.sqrt(Number(s.members) || 1));
+    let r = Math.random() * base.reduce((a, s) => a + wt(s), 0);
+    for (const s of base) { r -= wt(s); if (r <= 0) return s; }
+    return base[base.length - 1];
+  }
+  function iconHTML(s) {
+    const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null);
+    const letter = esc((s.letter || (s.name || 'S').trim()[0] || 'S').toUpperCase());
+    return src
+      ? `<img src="${esc(src)}" alt="" onerror="this.parentNode.textContent='${letter}'" />`
+      : letter;
+  }
+  function show() {
+    const s = pickServer(); if (!s) return;
+    const t = strings();
+    const el = document.createElement('div');
+    el.className = 'ctoast';
+    el.style.setProperty('--ic', s.color || 'var(--blurple)');
+    el.innerHTML =
+      `<button class="ctoast-x" aria-label="Close" title="Close">&times;</button>` +
+      `<div class="ctoast-top">` +
+        `<div class="ctoast-ic" style="background:${esc(s.accent || s.color || 'var(--blurple)')}">${iconHTML(s)}</div>` +
+        `<div class="ctoast-body"><div class="ctoast-name">${esc(s.name)}</div><div class="ctoast-sub">${t.sub}</div></div>` +
+      `</div>` +
+      `<div class="ctoast-foot">` +
+        `<span class="ctoast-members">${PPL} <b>${s.members != null ? fmt(s.members) : '—'}</b>&nbsp;${t.members}</span>` +
+        `<span class="ctoast-amt">${AMOUNT}</span>` +
+      `</div>`;
+    const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 420); };
+    el.querySelector('.ctoast-x').addEventListener('click', close);
+    host.appendChild(el);
+    while (host.children.length > MAX) host.firstElementChild.remove();
+    el._t = setTimeout(close, 5200 + Math.random() * 1600);
+  }
+  function loop() {
+    if (!document.hidden) show();
+    setTimeout(loop, 4800 + Math.random() * 5200); // ~5–10s between pops
+  }
+  setTimeout(loop, 2800); // first pop shortly after load
+})();
