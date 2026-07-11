@@ -340,9 +340,9 @@
         </div>
         <div class="join-feed" id="joinFeed">
           <div class="join-track" id="joinTrack">
-            <div class="jrow"><span class="jarr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M12 6l6 6-6 6"/></svg></span><span class="jmsg"><span class="jname" style="color:#57f287">sian</span> присоединяется к вашей пати.</span><span class="jtime">14:32</span></div>
-            <div class="jrow"><span class="jarr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M12 6l6 6-6 6"/></svg></span><span class="jmsg">Рады тебя видеть, <span class="jname" style="color:#c084fc">Pino</span>.</span><span class="jtime">14:32</span></div>
-            <div class="jrow"><span class="jarr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M12 6l6 6-6 6"/></svg></span><span class="jmsg">Добро пожаловать, <span class="jname" style="color:#5ac8fa">Zeii</span>. Надеемся, ты к нам не без пиццы!</span><span class="jtime">14:33</span></div>
+            <div class="jrow"><span class="jarr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M12 6l6 6-6 6"/></svg></span><span class="jmsg"><span class="jname" style="color:#57f287">sian</span> joined the party.</span><span class="jtime">14:32</span></div>
+            <div class="jrow"><span class="jarr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M12 6l6 6-6 6"/></svg></span><span class="jmsg">Glad you're here, <span class="jname" style="color:#c084fc">Pino</span>.</span><span class="jtime">14:32</span></div>
+            <div class="jrow"><span class="jarr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M12 6l6 6-6 6"/></svg></span><span class="jmsg">Welcome, <span class="jname" style="color:#5ac8fa">Zeii</span>. We hope you brought pizza.</span><span class="jtime">14:33</span></div>
           </div>
         </div>
       </div>
@@ -441,6 +441,9 @@ function setLang(lang){
   document.documentElement.lang=lang;
   try{ localStorage.setItem('vemonette-lang',lang); }catch(_){}
   document.querySelectorAll('#langSwitch button').forEach((b)=>b.classList.toggle('active',b.dataset.lang===lang));
+  // Notify the live join feed so it re-seeds its rows in the new language
+  // (setLang updates text in place without a reload).
+  try{ window.dispatchEvent(new CustomEvent('vemonette:lang',{detail:lang})); }catch(_){}
 }
 document.querySelectorAll('#langSwitch button').forEach((b)=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
 let startLang='en';
@@ -608,6 +611,13 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
   }
   measure(); markPop();
   window.addEventListener('resize', measure);
+  // Language switched (EN/RU): rebuild the visible rows so they immediately use
+  // the new-language phrases instead of lingering until they scroll off.
+  window.addEventListener('vemonette:lang', ()=>{
+    track.innerHTML='';
+    for(let i=0;i<N+1;i++) track.appendChild(make());
+    measure(); markPop();
+  });
   if(reduce) return;
   let timer;
   function schedule(){ clearTimeout(timer); timer=setTimeout(tick, 1600+Math.random()*1100); }
