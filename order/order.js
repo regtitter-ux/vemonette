@@ -186,8 +186,15 @@ const money = (n) => '$' + Number(n || 0).toFixed(2);
 let toastT;
 function toast(msg, kind = 'ok') { const el = $('#toast'); el.className = `toast ${kind}`; el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 3500); }
 
-let CFG = { pricePer100: 10, minJoins: 100, botInviteUrl: '#' };
+const BOT_INVITE_URL = 'https://discord.com/oauth2/authorize?client_id=1522609323090509905&permissions=2048&integration_type=0&scope=bot';
+let CFG = { pricePer100: 10, minJoins: 100, botInviteUrl: BOT_INVITE_URL };
 let lastCampaigns = [];
+
+// Warning shown when the pasted server has no bot — includes a one-click invite link.
+function noBotWarnHtml() {
+    const url = CFG.botInviteUrl && CFG.botInviteUrl !== '#' ? CFG.botInviteUrl : BOT_INVITE_URL;
+    return `<div class="err">${esc(t('link_nobot'))} <a class="btn-mini" href="${esc(url)}" target="_blank" rel="noopener">${esc(t('add_bot'))}</a></div>`;
+}
 
 // Apply translations to static [data-i18n] nodes + dynamic bits.
 function applyLang() {
@@ -377,7 +384,10 @@ $('#ord-buy').addEventListener('click', async () => {
         loadWallet();
         return;
     }
-    if (!ok || !body?.campaign) { $('#ord-result').innerHTML = `<div class="err">${esc(errText(body?.error))}</div>`; return; }
+    if (!ok || !body?.campaign) {
+        if (body?.error === 'no-bot') { $('#ord-result').innerHTML = noBotWarnHtml(); return; }
+        $('#ord-result').innerHTML = `<div class="err">${esc(errText(body?.error))}</div>`; return;
+    }
     $('#ord-result').innerHTML = `<div class="pay-box">✅ ${esc(t('launched'))}</div>`;
     loadWallet();
     loadCampaigns();
@@ -500,6 +510,15 @@ function wireCampaigns(list) {
         const { ok, body } = await put(`/campaigns/${id}/invite`, { invite: `https://discord.gg/${code}` });
         b.disabled = false;
         if (ok) { toast(t('link_changed')); loadCampaigns(); }
+        else if (body?.error === 'no-bot') {
+            const box = $(`[data-link-edit="${id}"]`);
+            if (box) {
+                let w = box.querySelector('.nobot-w');
+                if (!w) { w = document.createElement('div'); w.className = 'nobot-w'; box.appendChild(w); }
+                w.innerHTML = noBotWarnHtml();
+            }
+            toast(t('link_nobot'), 'err');
+        }
         else toast(errText(body?.error), 'err');
     });
     $$('#camp-list [data-servers]').forEach((b) => b.onclick = async () => {
