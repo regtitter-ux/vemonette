@@ -116,8 +116,8 @@
   .dsc-bar .h{color:#80848e}
   .dsc-body{padding:16px}
   .row{display:flex;gap:13px;align-items:flex-start}
-  .av{width:40px;height:40px;border-radius:50%;flex:none;overflow:hidden;background:#1e1f22}
-  .av img{width:100%;height:100%;object-fit:cover}
+  .av{width:40px;height:40px;flex:none}
+  .av img{width:100%;height:100%;object-fit:contain}
   .rhead{display:flex;align-items:center;gap:8px;margin-bottom:3px}
   .uname{color:#f2f3f5;font-weight:600;font-size:15px}
   .bot{background:var(--blue);color:#04121f;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;letter-spacing:.02em}
@@ -139,14 +139,14 @@
   .tag-you{background:rgba(63,209,138,.16);color:var(--green);font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;letter-spacing:.03em;vertical-align:middle}
 
   /* flow strip */
-  .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:f}
-  .frame{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 20px;position:relative}
-  .frame::before{counter-increment:f;content:counter(f);position:absolute;top:16px;right:18px;font-family:'Sora';font-weight:800;font-size:15px;color:var(--dim)}
-  .frame .fic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:20px;margin-bottom:14px;
-    background:rgba(55,166,255,.12);border:1px solid rgba(55,166,255,.25)}
+  .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .frame{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 22px;position:relative}
+  .frame .fic{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;margin-bottom:15px;
+    font-family:'Sora','Inter',sans-serif;font-weight:800;font-size:22px;line-height:1;color:var(--blue-2);
+    background:rgba(55,166,255,.12);border:1px solid rgba(55,166,255,.28)}
   .frame h3{font-size:17px;margin:0 0 7px}
   .frame p{color:var(--muted);font-size:14.5px;margin:0}
-  .frame.g .fic{background:rgba(63,209,138,.12);border-color:rgba(63,209,138,.25)}
+  .frame.g .fic{background:rgba(63,209,138,.12);border-color:rgba(63,209,138,.3);color:var(--green)}
 
   /* stays / filter */
   .stays{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center}
@@ -295,17 +295,17 @@
       </div>
       <div class="flow">
         <div class="frame">
-          <div class="fic">🔐</div>
+          <div class="fic">1</div>
           <h3 data-i18n="f1h">They verify on a partner</h3>
           <p data-i18n="f1p">A real member of a large community starts the same two-click verification they always do.</p>
         </div>
         <div class="frame">
-          <div class="fic">👀</div>
+          <div class="fic">2</div>
           <h3 data-i18n="f2h">They see your server</h3>
           <p data-i18n="f2p">Your invite is the one sponsor step before access. They tap through and join in a single click.</p>
         </div>
         <div class="frame g">
-          <div class="fic">✅</div>
+          <div class="fic">3</div>
           <h3 data-i18n="f3h">The join is confirmed</h3>
           <p data-i18n="f3p">We check membership against Discord itself and count it — a real person, now on your server.</p>
         </div>
@@ -450,76 +450,96 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
 });},{threshold:.4});
 ['nMembers','nJoins'].forEach((id)=>{ const el=document.getElementById(id); if(el) io.observe(el); });
 
-/* ---------------- hero flow visualization ---------------- */
+/* ---------------- hero flow visualization ----------------
+   Verified members stream from partner communities, through the Vemoni hub,
+   into the buyer's server. Bots / leavers are peeled off and fade at the hub.
+   Style follows the Vizceral / sFlow "particles on Bézier paths" approach:
+   colour = traffic type, glow + trail for readability, gradient flow lines. */
 (function(){
   const wrap=document.getElementById('viz'), canvas=document.getElementById('flow');
   if(!canvas) return;
   const ctx=canvas.getContext('2d');
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
-  const css=getComputedStyle(document.documentElement);
-  const C={ blue:css.getPropertyValue('--blue').trim()||'#37a6ff', blue2:css.getPropertyValue('--blue-2').trim()||'#7cc6ff',
-            green:css.getPropertyValue('--green').trim()||'#3fd18a', red:css.getPropertyValue('--red').trim()||'#ff6b74',
-            line:'rgba(124,198,255,.14)', ink:'#eaf0fa', muted:'#8fa0bb' };
-  let W=0,H=0,dpr=1, sources=[], hub={}, dest={}, particles=[], delivered=0, acc=0;
+  const cs=getComputedStyle(document.documentElement);
+  const cv=(v,f)=>{ const x=cs.getPropertyValue(v).trim(); return x||f; };
+  const BLUE=cv('--blue','#37a6ff'), BLUE2=cv('--blue-2','#7cc6ff'), GREEN=cv('--green','#3fd18a'), RED=cv('--red','#ff6b74');
+  const logo=new Image(); let logoOk=false; logo.onload=()=>{logoOk=true}; logo.src='/assets/logo.png';
+  let W=0,H=0,dpr=1, sources=[], hub={}, dest={}, parts=[], delivered=0, acc=0, t=0, raf;
   const countEl=document.getElementById('flowCount');
+
   function layout(){
     const r=wrap.getBoundingClientRect(); dpr=Math.min(2,window.devicePixelRatio||1);
     W=r.width; H=r.height; canvas.width=W*dpr; canvas.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
-    const lx=W*0.16, n=5;
-    sources=[]; for(let i=0;i<n;i++){ sources.push({x:lx, y:H*(0.16+0.68*(i/(n-1))), r:11}); }
-    hub={x:W*0.52, y:H*0.5, r:26};
-    dest={x:W*0.86, y:H*0.5, r:24, pulse:0};
+    const lx=W*0.135, n=6;
+    sources=[]; for(let i=0;i<n;i++) sources.push({x:lx, y:H*(0.11+0.78*(i/(n-1))), r:8.5, ph:Math.random()*6.28});
+    hub={x:W*0.52, y:H*0.5, r:30};
+    dest={x:W*0.855, y:H*0.5, r:26, pulse:0, arc:0};
   }
-  function curve(a,b,bend){ const mx=(a.x+b.x)/2, my=(a.y+b.y)/2; return {cx:mx, cy:my+bend}; }
+  const ctrl=(a,b,bend)=>({x:(a.x+b.x)/2, y:(a.y+b.y)/2+bend});
+  const qbez=(p0,cx,cy,p1,tt)=>{ const u=1-tt; return {x:u*u*p0.x+2*u*tt*cx+tt*tt*p1.x, y:u*u*p0.y+2*u*tt*cy+tt*tt*p1.y}; };
+
   function spawn(){
     const s=sources[(Math.random()*sources.length)|0];
-    const bad = Math.random()<0.22;                 // ~1 in 5 filtered at the hub
-    particles.push({ s, leg:0, t:Math.random()*0.15, bad, done:false,
-      c1:curve(s,hub,(Math.random()*2-1)*40), c2:curve(hub,dest,(Math.random()*2-1)*26) });
+    const c=ctrl(s,hub,(s.y-hub.y)*0.16);           // warp curve toward centre (Vizceral-style)
+    parts.push({ s, bad:Math.random()<0.20, leg:0, t:0, sp:0.010+Math.random()*0.006, cx:c.x, cy:c.y, px:s.x, py:s.y, die:0 });
   }
-  function bez(p0,c,p1,t){ const u=1-t; return { x:u*u*p0.x+2*u*t*c.x+t*t*p1.x, y:u*u*p0.y+2*u*t*c.y+t*t*p1.y }; }
-  function drawNode(n,label,accent){
-    ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,7); ctx.fillStyle='#0e1626'; ctx.fill();
-    ctx.lineWidth=1.5; ctx.strokeStyle=accent||'rgba(124,198,255,.35)'; ctx.stroke();
-  }
-  function frame(){
+  function softGlow(x,y,r,c,a){ ctx.save(); ctx.globalAlpha=a; const g=ctx.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,c); g.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill(); ctx.restore(); }
+  function gradStroke(a,cx,cy,b,c0,c1,w){ const g=ctx.createLinearGradient(a.x,a.y,b.x,b.y); g.addColorStop(0,c0); g.addColorStop(1,c1); ctx.strokeStyle=g; ctx.lineWidth=w; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.quadraticCurveTo(cx,cy,b.x,b.y); ctx.stroke(); }
+
+  function draw(){
+    t+=0.016;
     ctx.clearRect(0,0,W,H);
-    // connection lines
-    ctx.lineWidth=1;
-    sources.forEach((s)=>{ const c=curve(s,hub,0); ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.quadraticCurveTo(c.cx,c.cy,hub.x,hub.y); ctx.strokeStyle=C.line; ctx.stroke(); });
-    (function(){ const c=curve(hub,dest,0); ctx.beginPath(); ctx.moveTo(hub.x,hub.y); ctx.quadraticCurveTo(c.cx,c.cy,dest.x,dest.y); ctx.strokeStyle='rgba(63,209,138,.22)'; ctx.stroke(); })();
-    // nodes
-    sources.forEach((s)=>drawNode(s));
-    // dest pulse
-    if(dest.pulse>0){ ctx.beginPath(); ctx.arc(dest.x,dest.y,dest.r+dest.pulse,0,7); ctx.strokeStyle='rgba(63,209,138,'+(0.4*(1-dest.pulse/22))+')'; ctx.lineWidth=2; ctx.stroke(); dest.pulse-=0.6; if(dest.pulse<0)dest.pulse=0; }
-    drawNode(dest,'',C.green);
-    ctx.fillStyle=C.green; ctx.font='700 11px Inter,sans-serif'; ctx.textAlign='center';
-    ctx.fillText((document.documentElement.lang==='ru'?'ВАШ СЕРВЕР':'YOUR SERVER'), dest.x, dest.y+dest.r+16);
-    // hub
-    ctx.beginPath(); ctx.arc(hub.x,hub.y,hub.r,0,7); ctx.fillStyle='#0c1526'; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=C.blue; ctx.stroke();
-    ctx.fillStyle=C.blue2; ctx.font='800 12px Sora,Inter,sans-serif'; ctx.fillText('V', hub.x, hub.y+4);
-    // particles
-    for(let i=particles.length-1;i>=0;i--){ const p=particles[i];
-      p.t += p.leg===0 ? 0.012 : 0.016;
+    ctx.lineCap='round';
+    // ambient glows
+    softGlow(hub.x,hub.y,96,'rgba(55,166,255,.14)',1);
+    softGlow(dest.x,dest.y,74,'rgba(63,209,138,.13)',1);
+    // flow lines (gradient, warped to centre)
+    sources.forEach(s=>{ const c=ctrl(s,hub,(s.y-hub.y)*0.10); gradStroke(s,c.x,c.y,hub,'rgba(124,198,255,.04)','rgba(124,198,255,.28)',1.3); });
+    { const c=ctrl(hub,dest,0); gradStroke(hub,c.x,c.y,dest,'rgba(124,198,255,.28)','rgba(63,209,138,.5)',2.2); }
+    // source nodes (partner communities)
+    sources.forEach(s=>{ const pl=1+Math.sin(t*1.7+s.ph)*0.14;
+      softGlow(s.x,s.y,s.r*2.6,'rgba(55,166,255,.10)',1);
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r*pl,0,7); ctx.fillStyle='#111c30'; ctx.fill();
+      ctx.lineWidth=1.4; ctx.strokeStyle='rgba(124,198,255,.5)'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(s.x,s.y,2.3,0,7); ctx.fillStyle=BLUE2; ctx.fill();
+    });
+    // particles + trails
+    for(let i=parts.length-1;i>=0;i--){ const p=parts[i];
+      if(p.die>0){ ctx.save(); ctx.globalAlpha=p.die; const dx=hub.x+(1-p.die)*10, dy=hub.y+(1-p.die)*30; softGlow(dx,dy,10,RED,p.die*.9); ctx.fillStyle=RED; ctx.beginPath(); ctx.arc(dx,dy,3,0,7); ctx.fill(); ctx.restore(); p.die-=0.05; if(p.die<=0) parts.splice(i,1); continue; }
+      p.t += p.sp*(p.leg===1?1.3:1);
       let pos;
-      if(p.leg===0){ pos=bez(p.s,p.c1,hub,Math.min(1,p.t)); if(p.t>=1){ if(p.bad){ p.dying=1; } else { p.leg=1; p.t=0; } } }
-      else { pos=bez(hub,p.c2,dest,Math.min(1,p.t)); if(p.t>=1){ delivered++; dest.pulse=22; if(countEl) countEl.textContent=delivered.toLocaleString('en-US'); particles.splice(i,1); continue; } }
-      if(p.dying){ // filtered at hub
-        ctx.globalAlpha=p.dying; ctx.beginPath(); ctx.arc(hub.x,hub.y,3.4,0,7); ctx.fillStyle=C.red; ctx.fill(); ctx.globalAlpha=1;
-        p.dying-=0.05; if(p.dying<=0) particles.splice(i,1); continue;
-      }
-      const col = p.leg===0 ? C.blue : C.green;
-      ctx.beginPath(); ctx.arc(pos.x,pos.y,3.4,0,7); ctx.fillStyle=col; ctx.fill();
-      ctx.globalAlpha=.35; ctx.beginPath(); ctx.arc(pos.x,pos.y,6.5,0,7); ctx.fillStyle=col; ctx.fill(); ctx.globalAlpha=1;
+      if(p.leg===0){ pos=qbez(p.s,p.cx,p.cy,hub,Math.min(1,p.t)); if(p.t>=1){ if(p.bad){ p.die=1; continue; } p.leg=1; p.t=0; const c=ctrl(hub,dest,0); p.cx=c.x; p.cy=c.y; } }
+      else { pos=qbez(hub,p.cx,p.cy,dest,Math.min(1,p.t)); if(p.t>=1){ delivered++; dest.pulse=1; dest.arc=(dest.arc+0.018)%1; if(countEl) countEl.textContent=delivered.toLocaleString('en-US'); parts.splice(i,1); continue; } }
+      const c = p.leg===0 ? BLUE : GREEN;
+      ctx.strokeStyle=c; ctx.globalAlpha=.45; ctx.lineWidth=2.1; ctx.beginPath(); ctx.moveTo(p.px,p.py); ctx.lineTo(pos.x,pos.y); ctx.stroke(); ctx.globalAlpha=1;
+      softGlow(pos.x,pos.y,7,c,.85);
+      ctx.beginPath(); ctx.arc(pos.x,pos.y,2.4,0,7); ctx.fillStyle='#fff'; ctx.fill();
+      p.px=pos.x; p.py=pos.y;
     }
-    // steady spawn
-    acc+=1; if(acc>=14 && particles.length<40){ acc=0; spawn(); }
-    if(!reduce) raf=requestAnimationFrame(frame);   // static single frame when reduced-motion
+    // hub (Vemoni logo, clean — no fill tint)
+    softGlow(hub.x,hub.y,hub.r+14,'rgba(55,166,255,.20)',1);
+    ctx.beginPath(); ctx.arc(hub.x,hub.y,hub.r,0,7); ctx.fillStyle='#0b1424'; ctx.fill();
+    ctx.beginPath(); ctx.arc(hub.x,hub.y,hub.r,0,7); ctx.lineWidth=1.6; ctx.strokeStyle='rgba(55,166,255,.35)'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(hub.x,hub.y,hub.r, t*0.9, t*0.9+1.4); ctx.strokeStyle=BLUE2; ctx.lineWidth=2.4; ctx.stroke();
+    if(logoOk){ const s=hub.r*1.25; ctx.save(); ctx.beginPath(); ctx.arc(hub.x,hub.y,hub.r-6,0,7); ctx.clip(); ctx.drawImage(logo,hub.x-s/2,hub.y-s/2,s,s); ctx.restore(); }
+    // destination (buyer server)
+    if(dest.pulse>0){ ctx.beginPath(); ctx.arc(dest.x,dest.y,dest.r+(1-dest.pulse)*22,0,7); ctx.strokeStyle='rgba(63,209,138,'+(dest.pulse*.55)+')'; ctx.lineWidth=2; ctx.stroke(); dest.pulse-=0.045; if(dest.pulse<0)dest.pulse=0; }
+    ctx.beginPath(); ctx.arc(dest.x,dest.y,dest.r,0,7); ctx.fillStyle='#0b1a15'; ctx.fill();
+    ctx.beginPath(); ctx.arc(dest.x,dest.y,dest.r,0,7); ctx.lineWidth=1.6; ctx.strokeStyle='rgba(63,209,138,.35)'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(dest.x,dest.y,dest.r,-Math.PI/2,-Math.PI/2+dest.arc*6.283); ctx.strokeStyle=GREEN; ctx.lineWidth=2.6; ctx.stroke();
+    ctx.fillStyle=GREEN; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='700 15px Inter,sans-serif'; ctx.fillText('✓',dest.x,dest.y+1);
+    ctx.textBaseline='alphabetic'; ctx.font='800 10.5px Sora,Inter,sans-serif'; ctx.fillStyle=GREEN;
+    ctx.fillText(document.documentElement.lang==='ru'?'ВАШ СЕРВЕР':'YOUR SERVER', dest.x, dest.y+dest.r+16);
+
+    acc++; if(acc>=9 && parts.length<46){ acc=0; spawn(); }
+    if(!reduce) raf=requestAnimationFrame(draw);
   }
-  let raf;
-  function start(){ layout(); if(reduce){ for(let i=0;i<9;i++) spawn(); } frame(); }
-  window.addEventListener('resize',()=>{ cancelAnimationFrame(raf); layout(); frame(); });
-  // wait for layout to have height
+  function start(){
+    layout();
+    if(reduce){ for(let i=0;i<16;i++){ spawn(); const p=parts[parts.length-1]; p.leg=Math.random()<0.4?1:0; p.t=Math.random(); if(p.leg===1){ const c=ctrl(hub,dest,0); p.cx=c.x; p.cy=c.y; } } }
+    draw();
+  }
+  window.addEventListener('resize',()=>{ cancelAnimationFrame(raf); layout(); draw(); });
   requestAnimationFrame(start);
 })();
 </script>
