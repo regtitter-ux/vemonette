@@ -1846,10 +1846,17 @@ document.querySelector('[data-tab="balances"]').addEventListener('click', loadBa
 // ---------- Activity log across all partners ----------
 const ALOG_ESC = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const ALOG_MONEY = (n) => '$' + Number(n || 0).toFixed(2);
+const ALOG_NOPAY = 'Выдана верификация · без оплаты';
 const ALOG_LABEL = {
     grant_paid: { cls: 'g', title: 'Выдана верификация', tag: 'начислено' },
-    grant_no_ad: { cls: 'n', title: 'Выдана верификация · без оплаты', tag: 'рекламы не было' },
-    grant_dup_join: { cls: 'n', title: 'Выдана верификация · без оплаты', tag: 'уже был на сервере' },
+    grant_no_ad: { cls: 'n', title: ALOG_NOPAY, tag: 'рекламы не было' },
+    grant_ads_off: { cls: 'n', title: ALOG_NOPAY, tag: 'реклама отключена' },
+    grant_server_off: { cls: 'n', title: ALOG_NOPAY, tag: 'реклама отключена на сервере' },
+    grant_all_hidden: { cls: 'n', title: ALOG_NOPAY, tag: 'реклама скрыта партнёром' },
+    grant_already_member: { cls: 'n', title: ALOG_NOPAY, tag: 'уже в рекламируемых серверах' },
+    grant_capped: { cls: 'n', title: ALOG_NOPAY, tag: 'лимит показов исчерпан' },
+    grant_no_inventory: { cls: 'n', title: ALOG_NOPAY, tag: 'нет активных реклам' },
+    grant_dup_join: { cls: 'n', title: ALOG_NOPAY, tag: 'уже был на сервере' },
     grant_already_verified: { cls: 'n', title: 'Повторная попытка', tag: 'уже верифицирован' },
     debit_left: { cls: 'd', title: 'Списание', tag: 'участник ушёл' },
     unverify_left: { cls: 'u', title: 'Снята верификация', tag: 'участник ушёл' }

@@ -59,7 +59,14 @@ const WHOLE = {
   'Выдана верификация':'Verification granted','Выдана верификация · без оплаты':'Verification granted · unpaid',
   'Повторная попытка':'Repeat attempt','Списание':'Debit','Снята верификация':'Verification removed',
   'начислено':'credited','рекламы не было':'no ad','уже был на сервере':'already on server',
-  'уже верифицирован':'already verified','участник ушёл':'member left'
+  'уже верифицирован':'already verified','участник ушёл':'member left',
+  // granular no-ad reasons (row tags)
+  'реклама отключена':'ads disabled','реклама отключена на сервере':'ads disabled on this server',
+  'рекламы скрыты':'ads hidden','уже в рекламируемых серверах':'already in advertised servers',
+  'лимит показов исчерпан':'display limit reached','нет активных реклам':'no active ads',
+  // granular no-ad reasons (filter options)
+  'Реклама отключена':'Ads disabled','Отключена на сервере':'Disabled on server','Рекламы скрыты':'Ads hidden',
+  'Уже в рекламе':'Already in the ad','Лимит показов':'Display limit','Нет реклам':'No ads'
 };
 function setupCabNav(isAdmin) {
     const path = location.pathname;
@@ -498,10 +505,17 @@ function renderAdHistory(servers) {
 // ---- Activity log (журнал: начисления, списания, выдача/снятие верифки) ----
 let plogServers = {};
 let plogUserTimer = null;
+const NOPAY = 'Выдана верификация · без оплаты';
 const PLOG_LABEL = {
     grant_paid: { cls: 'g', title: 'Выдана верификация', tag: 'начислено' },
-    grant_no_ad: { cls: 'n', title: 'Выдана верификация · без оплаты', tag: 'рекламы не было' },
-    grant_dup_join: { cls: 'n', title: 'Выдана верификация · без оплаты', tag: 'уже был на сервере' },
+    grant_no_ad: { cls: 'n', title: NOPAY, tag: 'рекламы не было' },
+    grant_ads_off: { cls: 'n', title: NOPAY, tag: 'реклама отключена' },
+    grant_server_off: { cls: 'n', title: NOPAY, tag: 'реклама отключена на сервере' },
+    grant_all_hidden: { cls: 'n', title: NOPAY, tag: 'рекламы скрыты' },
+    grant_already_member: { cls: 'n', title: NOPAY, tag: 'уже в рекламируемых серверах' },
+    grant_capped: { cls: 'n', title: NOPAY, tag: 'лимит показов исчерпан' },
+    grant_no_inventory: { cls: 'n', title: NOPAY, tag: 'нет активных реклам' },
+    grant_dup_join: { cls: 'n', title: NOPAY, tag: 'уже был на сервере' },
     grant_already_verified: { cls: 'n', title: 'Повторная попытка', tag: 'уже верифицирован' },
     debit_left: { cls: 'd', title: 'Списание', tag: 'участник ушёл' },
     unverify_left: { cls: 'u', title: 'Снята верификация', tag: 'участник ушёл' }
