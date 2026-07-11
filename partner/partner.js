@@ -96,6 +96,8 @@ const TR = {
   'Приоритет':'Priority','Скрыто':'Hidden','Скрыть':'Hide','Показать':'Show','Сейчас нет активных реклам, доступных этому серверу.':'There are no active ads available to this server right now.',
   'Приоритет установлен':'Priority set','Приоритет снят':'Priority cleared','Эта реклама сейчас недоступна.':'This ad is not available right now.','Не удалось сохранить приоритет.':'Could not save the priority.',
   'Реклама скрыта на этом сервере':'Ad hidden on this server','Реклама снова показывается':'Ad is shown again','Не удалось изменить видимость рекламы.':'Could not change the ad visibility.',
+  // activity-log directions (who joined/left which sponsor)
+  'зашёл в':'joined','ушёл из':'left from','уже был в':'already in',
   // ad history
   'Реклама на ваших серверах':'Ads on your servers',
   'История всех реклам, что показывались на вашем сервере: сколько человек зашло по каждой, сколько осталось и сколько вы на этом заработали.':'History of every ad shown on your server: how many joined via each, how many stayed and how much you earned.',
@@ -523,18 +525,25 @@ const PLOG_LABEL = {
 function plogLabel(e) {
     return PLOG_LABEL[`${e.type}_${e.reason}`] || { cls: 'n', title: e.type, tag: e.reason || '' };
 }
-function plogRow(e, servers) {
+function plogRow(e, servers, users) {
     const L = plogLabel(e);
     const amt = e.type === 'debit'
         ? `<span class="plog-amt neg">−${money(e.amount)}</span>`
         : (e.type === 'grant' && e.reason === 'paid' && e.amount ? `<span class="plog-amt pos">+${money(e.amount)}</span>` : '');
     const sv = e.guildId ? (servers[e.guildId] || e.guildId) : '';
-    const usr = e.userId ? `<span class="plog-usr">ID ${esc(e.userId)}</span>` : '';
+    const uname = e.userId ? (users && users[e.userId]) : '';
+    const usr = e.userId ? `<span class="plog-usr">${uname ? `<b>${esc(uname)}</b> · ` : ''}ID ${esc(e.userId)}</span>` : '';
+    // Sponsor server the member joined into / left from (where the log knows it),
+    // with a direction word so "who + where" reads at a glance.
+    const sp = e.sponsorGuildId ? (servers[e.sponsorGuildId] || e.sponsorGuildId) : '';
+    const dir = (e.type === 'debit' || e.type === 'unverify') ? 'ушёл из'
+        : (e.reason === 'dup_join' || e.reason === 'already_member') ? 'уже был в' : 'зашёл в';
+    const spPart = sp ? `<span class="plog-sp">${dir}: ${esc(sp)}</span>` : '';
     return `<div class="plog-row plog-${L.cls}">
         <span class="plog-dot"></span>
         <div class="plog-main">
           <div class="plog-title">${esc(L.title)} ${L.tag ? `<span class="plog-tag">${esc(L.tag)}</span>` : ''}</div>
-          <div class="plog-sub">${sv ? `<span class="plog-sv">${esc(sv)}</span>` : ''}${usr}</div>
+          <div class="plog-sub">${sv ? `<span class="plog-sv">${esc(sv)}</span>` : ''}${usr}${spPart}</div>
         </div>
         <div class="plog-right">${amt}<span class="plog-time">${esc(relTime(e.ts))}</span></div>
       </div>`;
@@ -558,7 +567,7 @@ function fillPlogServers(servers) {
         Object.entries(plogServers).map(([gid, name]) => `<option value="${esc(gid)}">${esc(name || gid)}</option>`).join('');
     sel.value = cur;
 }
-let plogEvents = [], plogServersLast = {}, plogPage = 0;
+let plogEvents = [], plogServersLast = {}, plogUsersLast = {}, plogPage = 0;
 const PLOG_PER_PAGE = 10;
 async function loadActivity() {
     const list = $('#plog-list');
@@ -567,6 +576,7 @@ async function loadActivity() {
     fillPlogServers(body.servers || {});
     plogEvents = body.events || [];
     plogServersLast = body.servers || {};
+    plogUsersLast = body.users || {};
     plogPage = 0;
     renderPlogPage();
 }
@@ -577,7 +587,7 @@ function renderPlogPage() {
     if (plogPage < 0) plogPage = 0;
     const slice = plogEvents.slice(plogPage * PLOG_PER_PAGE, plogPage * PLOG_PER_PAGE + PLOG_PER_PAGE);
     list.innerHTML = slice.length
-        ? slice.map((e) => plogRow(e, plogServersLast)).join('')
+        ? slice.map((e) => plogRow(e, plogServersLast, plogUsersLast)).join('')
         : '<div class="muted">Событий не найдено.</div>';
     const pager = $('#plog-pager');
     if (!pager) return;

@@ -554,6 +554,9 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .plog-sub { margin-top: 3px; font-size: 12px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; }
 .plog-sv { color: var(--blue-2); }
 .plog-usr { font-variant-numeric: tabular-nums; }
+.plog-sp { color: var(--muted); }
+.plog-sp::before { content: '→ '; opacity: .6; }
+.plog-d .plog-sp::before, .plog-u .plog-sp::before { content: '← '; }
 .plog-right { display: flex; align-items: center; gap: 12px; flex: none; white-space: nowrap; }
 .plog-amt { font-weight: 800; font-size: 14px; }
 .plog-amt.pos { color: var(--green); }

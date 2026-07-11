@@ -1876,11 +1876,15 @@ function alogRow(e, maps) {
     const partner = e.creatorId ? `<span class="plog-sv">Партнёр: ${ALOG_ESC(maps.partners[e.creatorId] || e.creatorId)}</span>` : '';
     const sv = e.guildId ? `<span class="plog-sv">${ALOG_ESC(maps.servers[e.guildId] || e.guildId)}</span>` : '';
     const usr = e.userId ? `<span class="plog-usr">${ALOG_ESC(maps.users[e.userId] || ('ID ' + e.userId))}</span>` : '';
+    // Sponsor server the member joined into / left from (where known).
+    const spDir = (e.type === 'debit' || e.type === 'unverify') ? 'ушёл из'
+        : (e.reason === 'dup_join' || e.reason === 'already_member') ? 'уже был в' : 'зашёл в';
+    const sp = e.sponsorGuildId ? `<span class="plog-sp">${spDir}: ${ALOG_ESC(maps.servers[e.sponsorGuildId] || e.sponsorGuildId)}</span>` : '';
     return `<div class="plog-row plog-${L.cls}">
       <span class="plog-dot"></span>
       <div class="plog-main">
         <div class="plog-title">${ALOG_ESC(L.title)} ${L.tag ? `<span class="plog-tag">${ALOG_ESC(L.tag)}</span>` : ''}</div>
-        <div class="plog-sub">${partner}${sv}${usr}</div>
+        <div class="plog-sub">${partner}${sv}${usr}${sp}</div>
       </div>
       <div class="plog-right">${amt}<span class="plog-time">${ALOG_ESC(relTime(e.ts))}</span></div>
     </div>`;
