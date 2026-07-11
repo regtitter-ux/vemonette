@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Vemoni — advertising for Discord: real members, delivered</title>
+<meta name="description" content="Your invite lives inside the verification everyone completes on a network of large Discord communities. Thousands see your server every day and join in one click. Pay only for real members who stay — $10 per 100." />
+<meta property="og:title" content="Vemoni — advertising for Discord" />
+<meta property="og:description" content="Real Discord members delivered to your server through a network of large communities. Pay only for joins that stay." />
+<meta property="og:type" content="website" />
+<link rel="icon" type="image/png" href="/assets/logo.png" />
+<link rel="apple-touch-icon" href="/assets/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;450;500;600;700&display=swap" media="print" onload="this.media='all'" />
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;450;500;600;700&display=swap" /></noscript>
+<style>
+  :root{
+    --bg:#080b12; --bg-2:#0b101b; --panel:#0f1626; --panel-2:#131d31; --line:#1c2740; --line-2:#26375a;
+    --ink:#eaf0fa; --muted:#8fa0bb; --dim:#5d6b86;
+    --blue:#37a6ff; --blue-2:#7cc6ff; --green:#3fd18a; --amber:#ffb454; --red:#ff6b74;
+    --radius:18px; --maxw:1120px;
+    --shadow:0 34px 80px -40px rgba(0,0,0,.92);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:16px;line-height:1.62;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden}
+  h1,h2,h3,.brand-name{font-family:'Sora','Inter',sans-serif;letter-spacing:-.022em;line-height:1.08;font-weight:800}
+  a{color:inherit;text-decoration:none}
+  .mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  .eyebrow{font-size:12px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;color:var(--blue-2)}
+  .muted{color:var(--muted)}
+  .grad{background:linear-gradient(100deg,var(--blue-2),var(--blue) 55%,#9fe0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* ambient background glow */
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(1100px 520px at 78% -8%, rgba(55,166,255,.16), transparent 60%),
+      radial-gradient(900px 520px at 8% 8%, rgba(63,209,138,.08), transparent 60%);}
+  header,main,footer{position:relative;z-index:1}
+
+  /* ---- nav ---- */
+  nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
+    background:rgba(8,11,18,.7);border-bottom:1px solid var(--line)}
+  .nav-in{max-width:var(--maxw);margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:18px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand img{width:30px;height:30px;border-radius:8px}
+  .brand-name{font-size:18px}
+  .nav-sp{flex:1}
+  .nav-back{color:var(--muted);font-size:14px;font-weight:600;padding:8px 12px;border-radius:10px}
+  .nav-back:hover{color:var(--ink);background:rgba(255,255,255,.05)}
+  .lang{display:inline-flex;gap:2px;padding:3px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:999px}
+  .lang button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;cursor:pointer}
+  .lang button.active{background:var(--blue);color:#04121f}
+  .nav-cta{background:var(--blue);color:#04121f;font-weight:700;font-size:14px;padding:9px 15px;border-radius:11px;white-space:nowrap}
+  .nav-cta:hover{background:var(--blue-2)}
+
+  /* ---- buttons ---- */
+  .btn{display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:15px;padding:14px 22px;border-radius:13px;cursor:pointer;border:1px solid transparent;transition:transform .08s ease,background .15s ease}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:linear-gradient(180deg,var(--blue-2),var(--blue));color:#04121f;box-shadow:0 16px 40px -16px rgba(55,166,255,.6)}
+  .btn-primary:hover{filter:brightness(1.05)}
+  .btn-ghost{background:rgba(255,255,255,.03);border-color:var(--line-2);color:var(--ink)}
+  .btn-ghost:hover{background:rgba(255,255,255,.07)}
+
+  /* ---- hero ---- */
+  .hero{padding:64px 0 40px}
+  .hero-grid{display:grid;grid-template-columns:1.02fr .98fr;gap:44px;align-items:center}
+  .pill{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--blue-2);
+    background:rgba(55,166,255,.1);border:1px solid rgba(55,166,255,.28);padding:6px 13px;border-radius:999px}
+  .pill .d{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(63,209,138,.18)}
+  .hero h1{font-size:clamp(34px,5.4vw,58px);margin:20px 0 16px;text-wrap:balance}
+  .hero p.sub{font-size:clamp(16px,1.5vw,18.5px);color:var(--muted);max-width:33em;margin:0 0 26px}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+  .hero-tags{display:flex;gap:18px;flex-wrap:wrap;margin-top:24px;color:var(--dim);font-size:13.5px;font-weight:600}
+  .hero-tags b{color:var(--ink)}
+  .hero-tags span{display:inline-flex;align-items:center;gap:7px}
+  .hero-tags i{width:6px;height:6px;border-radius:50%;background:var(--blue);font-style:normal}
+
+  /* ---- flow canvas viz ---- */
+  .viz{position:relative;border:1px solid var(--line);border-radius:22px;overflow:hidden;
+    background:linear-gradient(180deg,#0c1220,#090d16);box-shadow:var(--shadow);height:430px}
+  .viz canvas{display:block;width:100%;height:100%}
+  .viz-legend{position:absolute;left:16px;bottom:14px;display:flex;gap:16px;font-size:12px;color:var(--muted);font-weight:600}
+  .viz-legend span{display:inline-flex;align-items:center;gap:7px}
+  .viz-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .viz-count{position:absolute;right:16px;top:14px;text-align:right}
+  .viz-count b{font-family:'Sora';font-size:26px;display:block;line-height:1}
+  .viz-count small{color:var(--muted);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;font-weight:700}
+
+  /* ---- sections ---- */
+  section{padding:66px 0}
+  .head{max-width:640px;margin:0 auto 40px;text-align:center}
+  .head h2{font-size:clamp(26px,3.4vw,38px);margin:12px 0 12px;text-wrap:balance}
+  .head p{color:var(--muted);font-size:16.5px;margin:0}
+  .band{background:linear-gradient(180deg,var(--bg-2),var(--bg))}
+
+  /* mechanic: ad-in-verification */
+  .mech{display:grid;grid-template-columns:.92fr 1.08fr;gap:44px;align-items:center}
+  .mech-copy h3{font-size:23px;margin:0 0 12px}
+  .mech-copy p{color:var(--muted);margin:0 0 18px}
+  .mech-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:13px}
+  .mech-list li{display:flex;gap:12px;align-items:flex-start;font-size:15px}
+  .mech-list .ic{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+    background:rgba(55,166,255,.14);color:var(--blue-2);font-size:14px;margin-top:1px}
+  .mech-list b{color:var(--ink)}
+
+  /* Discord mock */
+  .dsc{background:#313338;border-radius:14px;overflow:hidden;border:1px solid rgba(0,0,0,.4);
+    box-shadow:var(--shadow);font-family:'Inter','gg sans',sans-serif;color:#dbdee1;max-width:460px;margin-inline:auto}
+  .dsc-bar{background:#2b2d31;padding:11px 16px;font-weight:700;color:#f2f3f5;font-size:14px;border-bottom:1px solid rgba(0,0,0,.3);display:flex;align-items:center;gap:7px}
+  .dsc-bar .h{color:#80848e}
+  .dsc-body{padding:16px}
+  .row{display:flex;gap:13px;align-items:flex-start}
+  .av{width:40px;height:40px;border-radius:50%;flex:none;overflow:hidden;background:#1e1f22}
+  .av img{width:100%;height:100%;object-fit:cover}
+  .rhead{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+  .uname{color:#f2f3f5;font-weight:600;font-size:15px}
+  .bot{background:var(--blue);color:#04121f;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;letter-spacing:.02em}
+  .time{color:#949ba4;font-size:11.5px}
+  .embed{border-left:4px solid var(--blue);background:#2b2d31;border-radius:5px;padding:12px 14px;margin-top:4px;max-width:380px}
+  .embed .ea{display:flex;align-items:center;gap:8px;font-size:13px;color:#f2f3f5;font-weight:600;margin-bottom:6px}
+  .embed .ea img{width:20px;height:20px;border-radius:50%}
+  .embed .et{font-weight:700;color:#fff;font-size:16px;margin-bottom:5px}
+  .embed .ed{font-size:14px;color:#dbdee1;line-height:1.45}
+  .embed .btn-d{margin-top:11px;background:var(--blue);color:#04121f;border:0;font:inherit;font-weight:700;font-size:14px;padding:9px 16px;border-radius:8px;cursor:default}
+  .eph{margin-top:12px;background:#2e3035;border:1px solid #3a3d44;border-radius:8px;padding:11px 13px}
+  .eph .lead{font-size:14px;line-height:1.5}
+  .eph .srv{display:inline-flex;align-items:center;gap:8px;margin-top:9px;background:#232529;border:1px solid #3a3d44;border-radius:8px;padding:7px 10px}
+  .eph .srv .ic{width:24px;height:24px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--green));display:grid;place-items:center;font-size:12px;color:#04121f;font-weight:800}
+  .eph .srv .nm{font-weight:700;color:#f2f3f5;font-size:13.5px}
+  .eph .srv .go{margin-left:auto;color:var(--blue-2);font-weight:700;font-size:12.5px}
+  .eph .note{color:#80848e;font-size:11.5px;margin-top:9px}
+  .link{color:var(--blue-2);font-weight:600}
+  .tag-you{background:rgba(63,209,138,.16);color:var(--green);font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;letter-spacing:.03em;vertical-align:middle}
+
+  /* flow strip */
+  .flow{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;counter-reset:f}
+  .frame{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 20px;position:relative}
+  .frame::before{counter-increment:f;content:counter(f);position:absolute;top:16px;right:18px;font-family:'Sora';font-weight:800;font-size:15px;color:var(--dim)}
+  .frame .fic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:20px;margin-bottom:14px;
+    background:rgba(55,166,255,.12);border:1px solid rgba(55,166,255,.25)}
+  .frame h3{font-size:17px;margin:0 0 7px}
+  .frame p{color:var(--muted);font-size:14.5px;margin:0}
+  .frame.g .fic{background:rgba(63,209,138,.12);border-color:rgba(63,209,138,.25)}
+
+  /* stays / filter */
+  .stays{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center}
+  .stays-copy h3{font-size:23px;margin:0 0 12px}
+  .stays-copy p{color:var(--muted);margin:0 0 16px}
+  .join-list{display:flex;flex-direction:column;gap:9px}
+  .jrow{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:14px}
+  .jrow .jav{width:30px;height:30px;border-radius:50%;flex:none;background:linear-gradient(135deg,#2b3752,#1a2438)}
+  .jrow .jn{font-weight:600}
+  .jrow .jm{margin-left:auto;font-weight:700;font-size:12.5px}
+  .jrow.ok{border-color:rgba(63,209,138,.3)}
+  .jrow.ok .jm{color:var(--green)}
+  .jrow.bad{opacity:.55}
+  .jrow.bad .jn{text-decoration:line-through;color:var(--muted)}
+  .jrow.bad .jm{color:var(--red)}
+  .stays-sum{margin-top:16px;background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line-2);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px}
+  .stays-sum .big{font-family:'Sora';font-weight:800;font-size:30px}
+  .stays-sum .lbl{color:var(--muted);font-size:13.5px}
+
+  /* numbers */
+  .nums{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .num{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 20px}
+  .num b{font-family:'Sora';font-weight:800;font-size:30px;display:block;line-height:1}
+  .num span{color:var(--muted);font-size:13.5px;display:block;margin-top:8px}
+  .num .k{color:var(--blue-2)}
+
+  /* cta */
+  .cta{max-width:760px;margin:0 auto;text-align:center;background:radial-gradient(120% 140% at 50% 0%,rgba(55,166,255,.14),transparent 60%);
+    border:1px solid var(--line-2);border-radius:24px;padding:48px 28px}
+  .cta h2{font-size:clamp(26px,3.6vw,40px);margin:0 0 14px;text-wrap:balance}
+  .cta p{color:var(--muted);max-width:34em;margin:0 auto 26px}
+  .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+  footer{border-top:1px solid var(--line);padding:26px 0;color:var(--dim);font-size:13px}
+  .foot-in{max-width:var(--maxw);margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .foot-in .sp{flex:1}
+  footer a{color:var(--muted)} footer a:hover{color:var(--ink)}
+
+  @media (max-width:900px){
+    .hero-grid,.mech,.stays{grid-template-columns:1fr}
+    .hero{padding:40px 0 20px}
+    .viz{height:340px}
+    .flow{grid-template-columns:1fr}
+    .nums{grid-template-columns:repeat(2,1fr)}
+    .nav-back{display:none}
+  }
+  @media (max-width:520px){ .nums{grid-template-columns:1fr} }
+</style>
+<script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <a class="brand" href="/"><img src="/assets/logo.png" alt="Vemoni" /><span class="brand-name">Vemoni</span></a>
+    <span class="nav-sp"></span>
+    <a class="nav-back" href="/" data-i18n="nav_back">← Home</a>
+    <div class="lang" id="langSwitch"><button data-lang="en">EN</button><button data-lang="ru">RU</button></div>
+    <a class="nav-cta" href="/order/" data-i18n="nav_cta">Buy advertising</a>
+  </div>
+</nav>
+
+<main>
+  <!-- HERO -->
+  <header class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="pill"><span class="d"></span> <span data-i18n="hero_pill">Advertising for Discord</span></span>
+        <h1 data-i18n="hero_h1">Real members,<br /><span class="grad">delivered to your server</span></h1>
+        <p class="sub" data-i18n="hero_sub">Your invite lives inside the verification everyone completes on a network of large communities. Thousands see your server every day and join in one click — and you pay only for real members who stay.</p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="/order/" data-i18n="hero_cta1">Launch a campaign →</a>
+          <a class="btn btn-ghost" href="#how" data-i18n="hero_cta2">See how it works</a>
+        </div>
+        <div class="hero-tags">
+          <span><i></i> <b>$10</b>&nbsp;<span data-i18n="tag1">per 100 joins</span></span>
+          <span><i></i> <span data-i18n="tag2">verified against Discord</span></span>
+          <span><i></i> <span data-i18n="tag3">pay only for stays</span></span>
+        </div>
+      </div>
+      <div class="viz" id="viz" aria-hidden="true">
+        <canvas id="flow"></canvas>
+        <div class="viz-count"><b class="mono" id="flowCount">0</b><small data-i18n="viz_count">joins delivered</small></div>
+        <div class="viz-legend">
+          <span><i style="background:var(--blue)"></i> <span data-i18n="viz_l1">verified member</span></span>
+          <span><i style="background:var(--red)"></i> <span data-i18n="viz_l2">bot / left — filtered</span></span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MECHANIC: ad inside verification -->
+  <section id="how" class="band">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow" data-i18n="mech_eye">How we advertise you</span>
+        <h2 data-i18n="mech_h2">Your ad is where attention already is</h2>
+        <p data-i18n="mech_sub">Not a banner someone scrolls past. Your invite appears inside the two-click verification that new members on partner servers complete on purpose.</p>
+      </div>
+      <div class="mech">
+        <div class="mech-copy">
+          <h3 data-i18n="mech_h3">One line, full attention</h3>
+          <p data-i18n="mech_p">To finish verification, the member reads your sponsor line and taps through to your server — then confirms. It's the one moment they're actively paying attention.</p>
+          <ul class="mech-list">
+            <li><span class="ic">◎</span><div><b data-i18n="mech_l1b">Native, not intrusive.</b> <span data-i18n="mech_l1">Same flow they already expect — one short sponsor step, no redirects or spam.</span></div></li>
+            <li><span class="ic">↗</span><div><b data-i18n="mech_l2b">One-click join.</b> <span data-i18n="mech_l2">Your invite is right there — no searching, no friction.</span></div></li>
+            <li><span class="ic">◆</span><div><b data-i18n="mech_l3b">Prime placement.</b> <span data-i18n="mech_l3">Shown to people joining a community — the exact audience worth reaching.</span></div></li>
+          </ul>
+        </div>
+        <div class="dsc">
+          <div class="dsc-bar"><span class="h">#</span> verify</div>
+          <div class="dsc-body">
+            <div class="row">
+              <div class="av"><img src="/assets/logo.png" alt="" /></div>
+              <div>
+                <div class="rhead"><span class="uname">Verification</span><span class="bot">BOT</span><span class="time" data-i18n="dsc_time">Today at 17:29</span></div>
+                <div class="embed">
+                  <div class="ea"><img src="/assets/logo.png" alt="" /> Vemoni</div>
+                  <div class="et" data-i18n="dsc_title">Get verified!</div>
+                  <div class="ed" data-i18n="dsc_desc">To gain full access to the server, complete verification. Click the button below.</div>
+                  <button class="btn-d">🔐 <span data-i18n="dsc_btn">Start Verification</span></button>
+                </div>
+                <div class="eph">
+                  <div class="lead"><span data-i18n="eph_lead">To verify, join</span> <span class="link">discord.gg/your-server</span> <span data-i18n="eph_lead2">— then tap the button again.</span></div>
+                  <div class="srv">
+                    <span class="ic">▶</span>
+                    <span class="nm"><span data-i18n="eph_srv">Your Server</span><span class="tag-you" data-i18n="eph_you">YOUR AD</span></span>
+                    <span class="go" data-i18n="eph_join">Join ↗</span>
+                  </div>
+                  <div class="note" data-i18n="eph_note">Only you can see this · Dismiss message</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FLOW STRIP -->
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow" data-i18n="flow_eye">The member's path</span>
+        <h2 data-i18n="flow_h2">From verifying elsewhere to joining you</h2>
+      </div>
+      <div class="flow">
+        <div class="frame">
+          <div class="fic">🔐</div>
+          <h3 data-i18n="f1h">They verify on a partner</h3>
+          <p data-i18n="f1p">A real member of a large community starts the same two-click verification they always do.</p>
+        </div>
+        <div class="frame">
+          <div class="fic">👀</div>
+          <h3 data-i18n="f2h">They see your server</h3>
+          <p data-i18n="f2p">Your invite is the one sponsor step before access. They tap through and join in a single click.</p>
+        </div>
+        <div class="frame g">
+          <div class="fic">✅</div>
+          <h3 data-i18n="f3h">The join is confirmed</h3>
+          <p data-i18n="f3p">We check membership against Discord itself and count it — a real person, now on your server.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STAYS / FILTER -->
+  <section class="band">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow" data-i18n="stays_eye">What you actually pay for</span>
+        <h2 data-i18n="stays_h2">Only real members who stay</h2>
+        <p data-i18n="stays_sub">Bots, fakes and drive-by leavers are filtered out — automatically and continuously.</p>
+      </div>
+      <div class="stays">
+        <div class="stays-copy">
+          <h3 data-i18n="stays_h3">We watch every join, not just the click</h3>
+          <p data-i18n="stays_p">Each join is verified live against Discord. If someone leaves your server afterwards, we detect it and it stops counting — so your money follows real, lasting members, never a number that walked away.</p>
+          <div class="stays-sum">
+            <span class="big grad">$10</span>
+            <span class="lbl" data-i18n="stays_price">per 100 verified joins that stick — fixed price, no hidden fees.</span>
+          </div>
+        </div>
+        <div class="join-list">
+          <div class="jrow ok"><span class="jav"></span><span class="jn">@real_member</span><span class="jm" data-i18n="stays_counted">counted ✓</span></div>
+          <div class="jrow ok"><span class="jav"></span><span class="jn">@active_user</span><span class="jm" data-i18n="stays_counted2">counted ✓</span></div>
+          <div class="jrow bad"><span class="jav"></span><span class="jn">bot_x931</span><span class="jm" data-i18n="stays_filtered">filtered</span></div>
+          <div class="jrow ok"><span class="jav"></span><span class="jn">@stayed_member</span><span class="jm" data-i18n="stays_counted3">counted ✓</span></div>
+          <div class="jrow bad"><span class="jav"></span><span class="jn">@left_after_1m</span><span class="jm" data-i18n="stays_left">left — refunded</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NUMBERS -->
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow" data-i18n="num_eye">Reach &amp; terms</span>
+        <h2 data-i18n="num_h2">Scale that's already there</h2>
+      </div>
+      <div class="nums">
+        <div class="num"><b class="mono k" id="nMembers">0</b><span data-i18n="n1">members across the network, combined</span></div>
+        <div class="num"><b class="mono k" id="nJoins">0</b><span data-i18n="n2">joins already delivered to buyers</span></div>
+        <div class="num"><b class="k">$10</b><span data-i18n="n3">per 100 verified joins — flat</span></div>
+        <div class="num"><b class="k" data-i18n="n4b">Live</b><span data-i18n="n4">stats on every order, in real time</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section>
+    <div class="wrap">
+      <div class="cta">
+        <h2 data-i18n="cta_h2">Put your server in front of real members</h2>
+        <p data-i18n="cta_p">Set the volume, launch, and watch verified joins land in real time. Start, pause or scale whenever you want.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="/order/" data-i18n="cta_b1">Launch a campaign →</a>
+          <a class="btn btn-ghost" href="https://discord.gg/vemoni" target="_blank" rel="noopener" data-i18n="cta_b2">Talk to us on Discord</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="foot-in">
+    <a class="brand" href="/"><img src="/assets/logo.png" alt="" style="width:22px;height:22px;border-radius:6px" /> <span style="font-weight:700;color:var(--muted)">Vemoni</span></a>
+    <span class="sp"></span>
+    <a href="/" data-i18n="foot_home">Home</a>
+    <a href="/order/" data-i18n="foot_order">Order panel</a>
+    <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">Discord</a>
+  </div>
+</footer>
+
+<script>
+/* ---------------- i18n (EN in markup, RU here; shares the site's lang key) ---------------- */
+const RU = {
+  nav_back:'← На главную', nav_cta:'Купить рекламу',
+  hero_pill:'Реклама для Discord',
+  hero_h1:'Живые участники —<br /><span class="grad">прямо на ваш сервер</span>',
+  hero_sub:'Ваше приглашение показывается внутри верификации, которую проходят на серверах-партнёрах. Тысячи людей каждый день видят ваш сервер и заходят в один клик — а платите вы только за реальных участников, которые остались.',
+  hero_cta1:'Запустить кампанию →', hero_cta2:'Как это работает',
+  tag1:'за 100 заходов', tag2:'проверка через Discord', tag3:'платите за оставшихся',
+  viz_count:'заходов доставлено', viz_l1:'проверенный участник', viz_l2:'бот / ушёл — отсеян',
+  mech_eye:'Как мы вас рекламируем',
+  mech_h2:'Ваша реклама там, где уже есть внимание',
+  mech_sub:'Не баннер, который прокручивают. Ваше приглашение показывается внутри двухкликовой верификации, которую новые участники серверов-партнёров проходят осознанно.',
+  mech_h3:'Одна строка — всё внимание',
+  mech_p:'Чтобы завершить верификацию, участник читает вашу рекламную строку, переходит на ваш сервер и подтверждает. Это единственный момент, когда он действительно сосредоточен.',
+  mech_l1b:'Нативно, без навязчивости.', mech_l1:'Тот же привычный сценарий — один короткий шаг со спонсором, без редиректов и спама.',
+  mech_l2b:'Заход в один клик.', mech_l2:'Ваше приглашение прямо здесь — без поиска и трения.',
+  mech_l3b:'Лучшее место показа.', mech_l3:'Показывается тем, кто прямо сейчас вступает в сообщество — именно вашей аудитории.',
+  dsc_time:'Сегодня в 17:29', dsc_title:'Пройдите верификацию!',
+  dsc_desc:'Чтобы получить полный доступ к серверу, пройдите верификацию. Нажмите кнопку ниже.',
+  dsc_btn:'Начать верификацию',
+  eph_lead:'Чтобы пройти проверку, зайдите на', eph_lead2:'— затем нажмите кнопку ещё раз.',
+  eph_srv:'Ваш сервер', eph_you:'ВАША РЕКЛАМА', eph_join:'Зайти ↗',
+  eph_note:'Видно только вам · Скрыть сообщение',
+  flow_eye:'Путь участника', flow_h2:'От верификации у других — к заходу к вам',
+  f1h:'Проходит верификацию у партнёра', f1p:'Живой участник крупного сообщества начинает ту же двухкликовую проверку, что и всегда.',
+  f2h:'Видит ваш сервер', f2p:'Ваше приглашение — единственный шаг со спонсором перед доступом. Переходит и заходит в один клик.',
+  f3h:'Заход подтверждён', f3p:'Мы проверяем участие через сам Discord и засчитываем — реальный человек уже на вашем сервере.',
+  stays_eye:'За что вы платите', stays_h2:'Только реальные, оставшиеся участники',
+  stays_sub:'Боты, накрутка и «забежал-вышел» отсеиваются — автоматически и постоянно.',
+  stays_h3:'Мы следим за каждым заходом, а не только за кликом',
+  stays_p:'Каждый заход проверяется вживую через Discord. Если участник потом вышел — мы это замечаем, и он перестаёт засчитываться. Ваши деньги идут за реальных, оставшихся людей, а не за цифру, которая ушла.',
+  stays_price:'за 100 подтверждённых заходов, которые остались — фиксированная цена, без скрытых комиссий.',
+  stays_counted:'засчитан ✓', stays_counted2:'засчитан ✓', stays_counted3:'засчитан ✓',
+  stays_filtered:'отсеян', stays_left:'ушёл — не в счёт',
+  num_eye:'Охват и условия', num_h2:'Масштаб, который уже есть',
+  n1:'участников в сети суммарно', n2:'заходов уже доставлено покупателям',
+  n3:'за 100 подтверждённых заходов — фиксированно', n4:'статистика по каждому заказу в реальном времени', n4b:'Живая',
+  cta_h2:'Покажите свой сервер реальным участникам',
+  cta_p:'Задайте объём, запустите — и следите, как подтверждённые заходы приходят в реальном времени. Старт, пауза и масштаб — когда захотите.',
+  cta_b1:'Запустить кампанию →', cta_b2:'Написать нам в Discord',
+  foot_home:'Главная', foot_order:'Панель заказов',
+};
+const EN = {};
+document.querySelectorAll('[data-i18n]').forEach((el)=>{ EN[el.dataset.i18n]=el.innerHTML; });
+function setLang(lang){
+  const d = lang==='ru'?RU:EN;
+  document.querySelectorAll('[data-i18n]').forEach((el)=>{ const v=d[el.dataset.i18n]; if(v!=null) el.innerHTML=v; });
+  document.documentElement.lang=lang;
+  try{ localStorage.setItem('vemonette-lang',lang); }catch(_){}
+  document.querySelectorAll('#langSwitch button').forEach((b)=>b.classList.toggle('active',b.dataset.lang===lang));
+}
+document.querySelectorAll('#langSwitch button').forEach((b)=>b.addEventListener('click',()=>setLang(b.dataset.lang)));
+let startLang='en';
+try{ const s=localStorage.getItem('vemonette-lang'); if(s==='ru'||s==='en') startLang=s; }catch(_){}
+setLang(startLang);
+
+/* ---------------- count-up for the numbers ---------------- */
+function countUp(el, to, opts={}){
+  const dur=1400, t0=performance.now(), fmt=(n)=> (opts.prefix||'')+Math.floor(n).toLocaleString('en-US')+(opts.suffix||'');
+  (function tick(t){ const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3); el.textContent=fmt(to*e); if(p<1) requestAnimationFrame(tick); })(t0);
+}
+const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting) return; io.unobserve(e.target);
+  if(e.target.id==='nMembers') countUp(e.target,4000000,{suffix:'+'});
+  if(e.target.id==='nJoins') countUp(e.target,1000000,{suffix:'+'});
+});},{threshold:.4});
+['nMembers','nJoins'].forEach((id)=>{ const el=document.getElementById(id); if(el) io.observe(el); });
+
+/* ---------------- hero flow visualization ---------------- */
+(function(){
+  const wrap=document.getElementById('viz'), canvas=document.getElementById('flow');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const css=getComputedStyle(document.documentElement);
+  const C={ blue:css.getPropertyValue('--blue').trim()||'#37a6ff', blue2:css.getPropertyValue('--blue-2').trim()||'#7cc6ff',
+            green:css.getPropertyValue('--green').trim()||'#3fd18a', red:css.getPropertyValue('--red').trim()||'#ff6b74',
+            line:'rgba(124,198,255,.14)', ink:'#eaf0fa', muted:'#8fa0bb' };
+  let W=0,H=0,dpr=1, sources=[], hub={}, dest={}, particles=[], delivered=0, acc=0;
+  const countEl=document.getElementById('flowCount');
+  function layout(){
+    const r=wrap.getBoundingClientRect(); dpr=Math.min(2,window.devicePixelRatio||1);
+    W=r.width; H=r.height; canvas.width=W*dpr; canvas.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+    const lx=W*0.16, n=5;
+    sources=[]; for(let i=0;i<n;i++){ sources.push({x:lx, y:H*(0.16+0.68*(i/(n-1))), r:11}); }
+    hub={x:W*0.52, y:H*0.5, r:26};
+    dest={x:W*0.86, y:H*0.5, r:24, pulse:0};
+  }
+  function curve(a,b,bend){ const mx=(a.x+b.x)/2, my=(a.y+b.y)/2; return {cx:mx, cy:my+bend}; }
+  function spawn(){
+    const s=sources[(Math.random()*sources.length)|0];
+    const bad = Math.random()<0.22;                 // ~1 in 5 filtered at the hub
+    particles.push({ s, leg:0, t:Math.random()*0.15, bad, done:false,
+      c1:curve(s,hub,(Math.random()*2-1)*40), c2:curve(hub,dest,(Math.random()*2-1)*26) });
+  }
+  function bez(p0,c,p1,t){ const u=1-t; return { x:u*u*p0.x+2*u*t*c.x+t*t*p1.x, y:u*u*p0.y+2*u*t*c.y+t*t*p1.y }; }
+  function drawNode(n,label,accent){
+    ctx.beginPath(); ctx.arc(n.x,n.y,n.r,0,7); ctx.fillStyle='#0e1626'; ctx.fill();
+    ctx.lineWidth=1.5; ctx.strokeStyle=accent||'rgba(124,198,255,.35)'; ctx.stroke();
+  }
+  function frame(){
+    ctx.clearRect(0,0,W,H);
+    // connection lines
+    ctx.lineWidth=1;
+    sources.forEach((s)=>{ const c=curve(s,hub,0); ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.quadraticCurveTo(c.cx,c.cy,hub.x,hub.y); ctx.strokeStyle=C.line; ctx.stroke(); });
+    (function(){ const c=curve(hub,dest,0); ctx.beginPath(); ctx.moveTo(hub.x,hub.y); ctx.quadraticCurveTo(c.cx,c.cy,dest.x,dest.y); ctx.strokeStyle='rgba(63,209,138,.22)'; ctx.stroke(); })();
+    // nodes
+    sources.forEach((s)=>drawNode(s));
+    // dest pulse
+    if(dest.pulse>0){ ctx.beginPath(); ctx.arc(dest.x,dest.y,dest.r+dest.pulse,0,7); ctx.strokeStyle='rgba(63,209,138,'+(0.4*(1-dest.pulse/22))+')'; ctx.lineWidth=2; ctx.stroke(); dest.pulse-=0.6; if(dest.pulse<0)dest.pulse=0; }
+    drawNode(dest,'',C.green);
+    ctx.fillStyle=C.green; ctx.font='700 11px Inter,sans-serif'; ctx.textAlign='center';
+    ctx.fillText((document.documentElement.lang==='ru'?'ВАШ СЕРВЕР':'YOUR SERVER'), dest.x, dest.y+dest.r+16);
+    // hub
+    ctx.beginPath(); ctx.arc(hub.x,hub.y,hub.r,0,7); ctx.fillStyle='#0c1526'; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=C.blue; ctx.stroke();
+    ctx.fillStyle=C.blue2; ctx.font='800 12px Sora,Inter,sans-serif'; ctx.fillText('V', hub.x, hub.y+4);
+    // particles
+    for(let i=particles.length-1;i>=0;i--){ const p=particles[i];
+      p.t += p.leg===0 ? 0.012 : 0.016;
+      let pos;
+      if(p.leg===0){ pos=bez(p.s,p.c1,hub,Math.min(1,p.t)); if(p.t>=1){ if(p.bad){ p.dying=1; } else { p.leg=1; p.t=0; } } }
+      else { pos=bez(hub,p.c2,dest,Math.min(1,p.t)); if(p.t>=1){ delivered++; dest.pulse=22; if(countEl) countEl.textContent=delivered.toLocaleString('en-US'); particles.splice(i,1); continue; } }
+      if(p.dying){ // filtered at hub
+        ctx.globalAlpha=p.dying; ctx.beginPath(); ctx.arc(hub.x,hub.y,3.4,0,7); ctx.fillStyle=C.red; ctx.fill(); ctx.globalAlpha=1;
+        p.dying-=0.05; if(p.dying<=0) particles.splice(i,1); continue;
+      }
+      const col = p.leg===0 ? C.blue : C.green;
+      ctx.beginPath(); ctx.arc(pos.x,pos.y,3.4,0,7); ctx.fillStyle=col; ctx.fill();
+      ctx.globalAlpha=.35; ctx.beginPath(); ctx.arc(pos.x,pos.y,6.5,0,7); ctx.fillStyle=col; ctx.fill(); ctx.globalAlpha=1;
+    }
+    // steady spawn
+    acc+=1; if(acc>=14 && particles.length<40){ acc=0; spawn(); }
+    if(!reduce) raf=requestAnimationFrame(frame);   // static single frame when reduced-motion
+  }
+  let raf;
+  function start(){ layout(); if(reduce){ for(let i=0;i<9;i++) spawn(); } frame(); }
+  window.addEventListener('resize',()=>{ cancelAnimationFrame(raf); layout(); frame(); });
+  // wait for layout to have height
+  requestAnimationFrame(start);
+})();
+</script>
+</body>
+</html>
