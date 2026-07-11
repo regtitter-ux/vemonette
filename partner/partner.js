@@ -83,6 +83,11 @@ const TR = {
   'Верификации по серверам':'Verifications by server','Пока нет оплаченных верификаций':'No paid verifications yet','Осталось / всего зашло':'Stayed / total joined',
   // main cards
   'можно вывести':'can withdraw','вывод от':'withdraw from','Ставка за заход':'Rate per join','Заходов оплачено':'Joins paid',' начислено':' credited','Всего выведено':'Total withdrawn','буст':'boost',
+  // active ads + priority
+  'Активные рекламы':'Active ads',
+  'Рекламы, доступные вашему серверу прямо сейчас (не скрытые). Отметьте одну как приоритетную — она будет показываться первой на ваших серверах, пока её кампания не завершится или вы не выберете другую. Приоритет можно дать только одной рекламе одновременно; без приоритета работает обычное умное распределение.':'Ads available to your server right now (not hidden). Mark one as priority — it will show first on your servers until its campaign finishes or you pick another. Only one ad can be priority at a time; without a priority the normal smart distribution applies.',
+  'Приоритет':'Priority','Остаток':'Remaining','Сейчас нет активных реклам, доступных этому серверу.':'There are no active ads available to this server right now.',
+  'Приоритет установлен':'Priority set','Приоритет снят':'Priority cleared','Эта реклама сейчас недоступна.':'This ad is not available right now.','Не удалось сохранить приоритет.':'Could not save the priority.',
   // ad history
   'Реклама на ваших серверах':'Ads on your servers',
   'История всех реклам, что показывались на вашем сервере: сколько человек зашло по каждой, сколько осталось и сколько вы на этом заработали.':'History of every ad shown on your server: how many joined via each, how many stayed and how much you earned.',
@@ -226,10 +231,64 @@ async function enterApp() {
 async function load() {
     const { ok, body } = await get('/me');
     if (ok) render(body);
+    loadPartnerAds();
     loadAdHistory();
     loadCards();
     wirePlogFilters();
     loadActivity();
+}
+
+// ---- Active ads available to the partner's servers + priority selection ----
+let pAds = { priorityCampaign: null, servers: [] };
+let pAdsSel = null;
+async function loadPartnerAds() {
+    const { ok, body } = await get('/ads');
+    if (!ok) return;
+    pAds = body || { priorityCampaign: null, servers: [] };
+    renderPartnerAds();
+}
+function renderPartnerAds() {
+    const section = $('#pads-section');
+    const servers = pAds.servers || [];
+    if (!servers.length) { section.hidden = true; return; }
+    section.hidden = false;
+    if (!pAdsSel || !servers.some((s) => s.guildId === pAdsSel)) pAdsSel = servers[0].guildId;
+
+    // Server switcher (only when the partner has more than one server).
+    const sw = $('#pads-switch');
+    if (servers.length > 1) {
+        sw.hidden = false;
+        sw.innerHTML = servers.map((s) =>
+            `<button class="sw-btn${s.guildId === pAdsSel ? ' active' : ''}" data-sv="${esc(s.guildId)}">${srvIcon(s.name, s.icon)}<span>${esc(s.name || s.guildId)}</span></button>`
+        ).join('');
+        sw.querySelectorAll('[data-sv]').forEach((b) => b.onclick = () => { pAdsSel = b.dataset.sv; renderPartnerAds(); });
+    } else { sw.hidden = true; sw.innerHTML = ''; }
+
+    const s = servers.find((x) => x.guildId === pAdsSel) || servers[0];
+    const ads = s.ads || [];
+    $('#pads-list').innerHTML = ads.length ? ads.map((a) => `
+      <div class="pad-row${a.isPriority ? ' pad-prio' : ''}">
+        <label class="pad-check" title="Приоритет">
+          <input type="checkbox" data-prio="${esc(a.campaignId)}" ${a.isPriority ? 'checked' : ''} />
+          <span class="pad-star">★</span>
+        </label>
+        <div class="pad-main">${srvIcon(a.sponsorName, a.sponsorIcon)}<span class="pad-name">${esc(a.sponsorName || a.sponsorGuildId)}</span>${a.isPriority ? '<span class="pad-badge">Приоритет</span>' : ''}</div>
+        <div class="pad-remain"><span class="muted sm">Остаток</span> <b>${a.remaining}</b></div>
+      </div>`).join('') : '<div class="muted">Сейчас нет активных реклам, доступных этому серверу.</div>';
+
+    $('#pads-list').querySelectorAll('[data-prio]').forEach((cb) => cb.onchange = async () => {
+        const cid = cb.dataset.prio;
+        const makePriority = cb.checked;
+        $('#pads-list').querySelectorAll('[data-prio]').forEach((x) => (x.disabled = true));
+        const { ok, body } = await put('/priority', { campaignId: makePriority ? cid : '' });
+        if (!ok) {
+            toast(body?.error === 'not-available' ? 'Эта реклама сейчас недоступна.' : 'Не удалось сохранить приоритет.', 'err');
+        } else {
+            pAds.priorityCampaign = body.priorityCampaign || null;
+            toast(makePriority ? 'Приоритет установлен' : 'Приоритет снят');
+        }
+        await loadPartnerAds();
+    });
 }
 
 // ---- My verification cards (read-only, same funnel as admin "Экстренно") ----

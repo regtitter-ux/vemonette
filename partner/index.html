@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Кабинет партнёра</title>
-  <link rel="stylesheet" href="/partner/partner.css?v=11" />
+  <link rel="stylesheet" href="/partner/partner.css?v=12" />
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
 </head>
 <body>
@@ -80,6 +80,13 @@
       <div id="vcards-list"></div>
     </section>
 
+    <section id="pads-section" hidden>
+      <h2>Активные рекламы</h2>
+      <p class="muted sm" style="margin-bottom:12px">Рекламы, доступные вашему серверу прямо сейчас (не скрытые). Отметьте одну как приоритетную — она будет показываться первой на ваших серверах, пока её кампания не завершится или вы не выберете другую. Приоритет можно дать только одной рекламе одновременно; без приоритета работает обычное умное распределение.</p>
+      <div id="pads-switch" class="srv-switch"></div>
+      <div id="pads-list"></div>
+    </section>
+
     <section id="adhist-section" hidden>
       <h2>Реклама на ваших серверах</h2>
       <p class="muted sm" style="margin-bottom:12px">История всех реклам, что показывались на вашем сервере: сколько человек зашло по каждой, сколько осталось и сколько вы на этом заработали.</p>
@@ -144,6 +151,6 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/partner/partner.js?v=16"></script>
+<script src="/partner/partner.js?v=17"></script>
 </body>
 </html>
