@@ -202,8 +202,14 @@ async function enterApp() {
     setupManagers();
     loadWallet();
     loadCampaigns();
-    setInterval(loadCampaigns, 15000);
+    // Auto-refresh, but NOT while the user has an inline panel open (change-link
+    // editor or the "Shown on servers" list) — re-rendering the list rebuilds its
+    // HTML and would snap the open panel shut under the user.
+    setInterval(() => { if (!anyPanelOpen()) loadCampaigns(); }, 15000);
     setInterval(loadWallet, 15000);
+}
+function anyPanelOpen() {
+    return !!document.querySelector('#camp-list [data-link-edit]:not([hidden]), #camp-list [data-srv-list]:not([hidden])');
 }
 
 // ---------- Wallet ----------

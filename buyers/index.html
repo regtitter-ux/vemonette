@@ -152,23 +152,23 @@
   .stays{display:grid;grid-template-columns:1.05fr .95fr;gap:44px;align-items:center}
   .stays-copy h3{font-size:23px;margin:0 0 12px}
   .stays-copy p{color:var(--muted);margin:0 0 16px}
-  /* live "joins in real time" ticker — GPU translateY on a recycled track,
-     no reflow. New rows are pre-rendered below the fold and rise into view. */
-  .join-feed{position:relative;overflow:hidden;
-    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 15%,#000 86%,transparent 100%);
-    mask-image:linear-gradient(180deg,transparent 0,#000 15%,#000 86%,transparent 100%)}
-  .join-track{display:flex;flex-direction:column;gap:10px;will-change:transform}
-  .jrow{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
-    padding:11px 14px;font-size:14px;flex:none;transition:border-color .5s ease,box-shadow .5s ease,background .5s ease}
-  .jrow .jav{width:30px;height:30px;border-radius:50%;flex:none;background:linear-gradient(135deg,#2b3752,#1a2438)}
-  .jrow .jn{font-weight:600}
-  .jrow .jm{margin-left:auto;font-weight:700;font-size:12.5px;white-space:nowrap}
-  .jrow.ok{border-color:rgba(63,209,138,.3)}
-  .jrow.ok .jm{color:var(--green)}
-  .jrow.bad{opacity:.5}
-  .jrow.bad .jn{text-decoration:line-through;color:var(--muted)}
-  .jrow.bad .jm{color:var(--red)}
-  .jrow.pop{border-color:rgba(63,209,138,.6);box-shadow:0 10px 34px -12px rgba(63,209,138,.5)}
+  /* live join feed — Discord-style system "member joined" messages on a
+     recycled GPU-translate track (no reflow). New rows pre-render below the
+     fold and rise into view. */
+  .join-feed{position:relative;overflow:hidden;padding:4px 2px;
+    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 86%,transparent 100%);
+    mask-image:linear-gradient(180deg,transparent 0,#000 14%,#000 86%,transparent 100%)}
+  .join-track{display:flex;flex-direction:column;gap:3px;will-change:transform}
+  .jrow{display:flex;align-items:baseline;gap:11px;padding:6px 12px;border-radius:8px;font-size:14.5px;line-height:1.35;flex:none;transition:background .5s ease}
+  .jrow .jarr{flex:none;align-self:center;width:22px;height:22px;display:grid;place-items:center;color:var(--green)}
+  .jrow .jarr svg{width:16px;height:16px;display:block}
+  .jrow.left .jarr{color:var(--red)}
+  .jrow .jmsg{flex:1;min-width:0;color:#c6d0e2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .jrow .jname{font-weight:700}
+  .jrow.left .jmsg{color:var(--muted)}
+  .jrow .jtime{flex:none;color:var(--dim);font-size:11px;font-weight:600;letter-spacing:.02em}
+  .jrow.pop{background:rgba(63,209,138,.10)}
+  .jrow.left.pop{background:rgba(255,107,116,.08)}
   .stays-sum{margin-top:16px;background:linear-gradient(180deg,var(--panel-2),var(--panel));border:1px solid var(--line-2);border-radius:14px;padding:16px 18px;display:flex;align-items:center;gap:14px}
   .stays-sum .big{font-family:'Sora';font-weight:800;font-size:30px}
   .stays-sum .lbl{color:var(--muted);font-size:13.5px}
@@ -340,11 +340,9 @@
         </div>
         <div class="join-feed" id="joinFeed">
           <div class="join-track" id="joinTrack">
-            <div class="jrow ok"><span class="jav"></span><span class="jn">@real_member</span><span class="jm" data-i18n="stays_counted">counted ✓</span></div>
-            <div class="jrow ok"><span class="jav"></span><span class="jn">@active_user</span><span class="jm" data-i18n="stays_counted2">counted ✓</span></div>
-            <div class="jrow bad"><span class="jav"></span><span class="jn">bot_x931</span><span class="jm" data-i18n="stays_filtered">filtered</span></div>
-            <div class="jrow ok"><span class="jav"></span><span class="jn">@stayed_member</span><span class="jm" data-i18n="stays_counted3">counted ✓</span></div>
-            <div class="jrow bad"><span class="jav"></span><span class="jn">@left_after_1m</span><span class="jm" data-i18n="stays_left">left — refunded</span></div>
+            <div class="jrow"><span class="jarr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M12 6l6 6-6 6"/></svg></span><span class="jmsg"><span class="jname" style="color:#57f287">sian</span> присоединяется к вашей пати.</span><span class="jtime">14:32</span></div>
+            <div class="jrow"><span class="jarr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M12 6l6 6-6 6"/></svg></span><span class="jmsg">Рады тебя видеть, <span class="jname" style="color:#c084fc">Pino</span>.</span><span class="jtime">14:32</span></div>
+            <div class="jrow"><span class="jarr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M12 6l6 6-6 6"/></svg></span><span class="jmsg">Добро пожаловать, <span class="jname" style="color:#5ac8fa">Zeii</span>. Надеемся, ты к нам не без пиццы!</span><span class="jtime">14:33</span></div>
           </div>
         </div>
       </div>
@@ -562,23 +560,35 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
   const feed=document.getElementById('joinFeed'), track=document.getElementById('joinTrack');
   if(!feed||!track) return;
   const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
-  const N=5;
-  const NAMES=['real_member','active_user','stayed_here','night_owl','pixel_fox','mika_fan','lunar_kat','vibecheck',
-    'frostbite','echo_zx','zephyr','sunny_d','arcadey','moonwalk','nova_x','driftwood','blue_jay','kettu','tanaka',
-    'wanderer','crimson','maple_','orbit_','glacier','pulse_','raven_','onyx_','koda','sprout','halcyon','quill'];
+  const N=7;
+  const NAMES=['sian','Pino','Zeii','mika','Kettu','Nova','Frost','Echo','Luna','Koda','Sprout','Vex','Milo','Rin',
+    'Yuki','Zephyr','Pixel','Onyx','Sol','Wren','Tobi','Nori','Kai','Suki','Juno','Remy','Bibi','Kova','Ash','Fenn','Poko','Nyx'];
+  const COLORS=['#5ac8fa','#57f287','#c084fc','#f5b454','#ff8fb0','#7cc6ff','#e8edf5','#4fd6b8','#ffa9a3'];
+  const JOIN_RU=['{u} присоединяется к вашей пати.','Привет, {u}. Поздоровайся со всеми!','Рады тебя видеть, {u}.',
+    'Добро пожаловать, {u}. Надеемся, ты к нам не без пиццы!','{u} появляется.','Все встречаем {u}!',
+    'Добро пожаловать, {u}. Оставайся, тут интересно.','Рады, что ты с нами, {u}.','Ура, {u} уже здесь!',
+    '{u} залетает на сервер.','Дикий {u} появляется.','Здесь {u}.','{u} присоединяется к вечеринке.',
+    'Добро пожаловать, {u}. Мы надеялись, что ты придёшь.'];
+  const JOIN_EN=['{u} joined the party.','Welcome, {u}. Say hi!',"Glad you're here, {u}.",'Welcome, {u}. We hope you brought pizza.',
+    'A wild {u} appeared.','Everyone welcome {u}!','Welcome, {u}. Stay awhile and listen.','{u} just joined. Everyone, look busy!',
+    'Yay you made it, {u}!','{u} hopped into the server.','Ermahgerd. {u} is here.','{u} is here.','Good to see you, {u}.',
+    "{u} just slid into the server."];
+  const ARR_R='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h13"/><path d="M12 6l6 6-6 6"/></svg>';
+  const ARR_L='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H7"/><path d="M12 6l-6 6 6 6"/></svg>';
   const isRU=()=>document.documentElement.lang==='ru';
   const pick=(a)=>a[(Math.random()*a.length)|0];
+  const pad=(n)=>(n<10?'0':'')+n;
+  const timeNow=()=>{ const d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); };
   function make(){
-    const r=Math.random(); let cls,name,label;
-    if(r<0.10){ cls='bad'; name='bot_'+Math.random().toString(36).slice(2,6); label=isRU()?'отсеян':'filtered'; }
-    else if(r<0.17){ cls='bad'; name='@'+pick(NAMES)+(1+(Math.random()*90|0)); label=isRU()?'ушёл — не в счёт':'left — refunded'; }
-    else { cls='ok'; name='@'+pick(NAMES); label=isRU()?'засчитан ✓':'counted ✓'; }
-    const h=Math.random()*360|0;
+    const leave=Math.random()<0.14;
+    const name=pick(NAMES), color=pick(COLORS);
+    const tmpl=leave ? (isRU()?'{u} покинул сервер.':'{u} left the server.') : pick(isRU()?JOIN_RU:JOIN_EN);
+    const parts=tmpl.split('{u}');
     const el=document.createElement('div');
-    el.className='jrow '+cls;
-    el.innerHTML='<span class="jav" style="background:linear-gradient(135deg,hsl('+h+' 42% 46%),hsl('+((h+50)%360)+' 40% 30%))"></span>'+
-                 '<span class="jn"></span><span class="jm"></span>';
-    el.querySelector('.jn').textContent=name; el.querySelector('.jm').textContent=label;
+    el.className='jrow'+(leave?' left':'');
+    el.innerHTML='<span class="jarr">'+(leave?ARR_L:ARR_R)+'</span>'+
+      '<span class="jmsg">'+parts[0]+'<span class="jname" style="color:'+color+'">'+name+'</span>'+(parts[1]||'')+'</span>'+
+      '<span class="jtime">'+timeNow()+'</span>';
     return el;
   }
   // seed N+1 rows (N visible + 1 buffer below the fold)
@@ -594,7 +604,7 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
   function markPop(){
     track.querySelectorAll('.jrow.pop').forEach((r)=>r.classList.remove('pop'));
     const newest=track.children[N-1];           // bottom row now fully in view
-    if(newest && newest.classList.contains('ok')){ newest.classList.add('pop'); setTimeout(()=>newest.classList.remove('pop'),900); }
+    if(newest){ newest.classList.add('pop'); setTimeout(()=>{ if(newest) newest.classList.remove('pop'); },1000); }
   }
   measure(); markPop();
   window.addEventListener('resize', measure);
