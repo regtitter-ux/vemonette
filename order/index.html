@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
-  <link rel="stylesheet" href="/order/order.css?v=11" />
+  <link rel="stylesheet" href="/order/order.css?v=12" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';
   </script>
@@ -24,6 +24,23 @@
       <span data-i18n="login_btn">Войти через Discord</span>
     </a>
     <div class="err" id="login-err" hidden></div>
+
+    <div class="alt-login">
+      <div class="alt-sep"><span data-i18n="alt_or">или</span></div>
+      <button type="button" class="alt-toggle" id="altToggle" data-i18n="alt_toggle">Войти по коду</button>
+      <div class="alt-body" id="altBody" hidden>
+        <p class="alt-note" data-i18n="alt_note">Для тех, кто на сервере с нашим ботом — пришлём код в личные сообщения Discord.</p>
+        <div class="alt-row" id="altStep1">
+          <input id="altId" class="alt-input" type="text" inputmode="numeric" autocomplete="off" placeholder="Discord ID" />
+          <button class="btn ghost sm" id="altReq" data-i18n="alt_get">Получить код</button>
+        </div>
+        <div class="alt-row" id="altStep2" hidden>
+          <input id="altCode" class="alt-input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="——————" />
+          <button class="btn primary sm" id="altVerify" data-i18n="alt_login">Войти</button>
+        </div>
+        <div class="alt-msg" id="altMsg" hidden></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -84,6 +101,6 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/order/order.js?v=12"></script>
+<script src="/order/order.js?v=13"></script>
 </body>
 </html>

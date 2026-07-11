@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Кабинет партнёра</title>
-  <link rel="stylesheet" href="/partner/partner.css?v=10" />
+  <link rel="stylesheet" href="/partner/partner.css?v=11" />
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
 </head>
 <body>
@@ -22,6 +22,23 @@
       Войти через Discord
     </a>
     <div class="err" id="login-err" hidden></div>
+
+    <div class="alt-login">
+      <div class="alt-sep"><span id="altOr"></span></div>
+      <button type="button" class="alt-toggle" id="altToggle"></button>
+      <div class="alt-body" id="altBody" hidden>
+        <p class="alt-note" id="altNote"></p>
+        <div class="alt-row" id="altStep1">
+          <input id="altId" class="alt-input" type="text" inputmode="numeric" autocomplete="off" placeholder="Discord ID" />
+          <button class="btn ghost sm" id="altReq"></button>
+        </div>
+        <div class="alt-row" id="altStep2" hidden>
+          <input id="altCode" class="alt-input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="——————" />
+          <button class="btn primary sm" id="altVerify"></button>
+        </div>
+        <div class="alt-msg" id="altMsg" hidden></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -127,6 +144,6 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/partner/partner.js?v=14"></script>
+<script src="/partner/partner.js?v=15"></script>
 </body>
 </html>

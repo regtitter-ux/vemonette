@@ -144,6 +144,62 @@ startTranslator();
 
 // Auth
 $('#discord-login').addEventListener('click', (e) => { e.preventDefault(); location.href = API + '/oauth/login'; });
+
+// ---------- Alternative login: one-time code via Discord DM ----------
+(() => {
+    const toggle = $('#altToggle'); if (!toggle) return;
+    const lang = (localStorage.getItem('vemoni_lang') === 'en') ? 'en' : 'ru';
+    const T = ({
+        ru: { or: 'или', toggle: 'Войти по коду', get: 'Получить код', login: 'Войти', unit: 'мин',
+            note: 'Для тех, кто на сервере с нашим ботом — пришлём код в личные сообщения Discord.',
+            sent: 'Код отправлен в личные сообщения Discord. Введите его ниже.',
+            nodm: 'Не удалось отправить ЛС. Проверьте, что вы на сервере с нашим ботом и что у вас открыты личные сообщения.',
+            badid: 'Введите корректный Discord ID.', sending: 'Отправляем…', checking: 'Проверяем…',
+            cooldown: (x) => `Новый код можно запросить через ${x}.`, badcode: (n) => `Неверный код. Осталось попыток: ${n}.`,
+            expired: 'Код истёк — запросите новый.', toomany: 'Слишком много попыток — запросите новый код.', nocode: 'Сначала запросите код.' },
+        en: { or: 'or', toggle: 'Log in with a code', get: 'Get code', login: 'Log in', unit: 'min',
+            note: "For members of a server with our bot — we'll DM the code to you on Discord.",
+            sent: 'Code sent to your Discord DMs. Enter it below.',
+            nodm: "Couldn't DM you. Make sure you share a server with our bot and your DMs are open.",
+            badid: 'Enter a valid Discord ID.', sending: 'Sending…', checking: 'Checking…',
+            cooldown: (x) => `You can request a new code in ${x}.`, badcode: (n) => `Wrong code. Attempts left: ${n}.`,
+            expired: 'Code expired — request a new one.', toomany: 'Too many attempts — request a new code.', nocode: 'Request a code first.' }
+    })[lang];
+    $('#altOr').textContent = T.or; toggle.textContent = T.toggle; $('#altNote').textContent = T.note;
+    $('#altReq').textContent = T.get; $('#altVerify').textContent = T.login;
+    const body = $('#altBody'), msg = $('#altMsg'), step2 = $('#altStep2');
+    const idInp = $('#altId'), codeInp = $('#altCode'), reqBtn = $('#altReq'), verBtn = $('#altVerify');
+    const showMsg = (txt, kind) => { msg.textContent = txt || ''; msg.className = 'alt-msg ' + (kind || ''); msg.hidden = !txt; };
+    const fmtWait = (s) => `${Math.max(1, Math.ceil((s || 3600) / 60))} ${T.unit}`;
+    const cleanId = () => (idInp.value || '').replace(/\D/g, '').slice(0, 20);
+    toggle.addEventListener('click', () => { const open = body.hidden; body.hidden = !open; toggle.classList.toggle('on', open); if (open) idInp.focus(); });
+    reqBtn.addEventListener('click', async () => {
+        const uid = cleanId(); if (!/^\d{17,20}$/.test(uid)) { showMsg(T.badid, 'err'); return; }
+        reqBtn.disabled = true; showMsg(T.sending, '');
+        const { ok, status, body: b } = await post('/code/request', { userId: uid });
+        reqBtn.disabled = false;
+        if (ok) { step2.hidden = false; showMsg(T.sent, 'ok'); codeInp.focus(); return; }
+        if (status === 429) showMsg(T.cooldown(fmtWait(b?.retryAfterSec)), 'err');
+        else if (b?.error === 'no-dm') showMsg(T.nodm, 'err');
+        else showMsg(T.badid, 'err');
+    });
+    verBtn.addEventListener('click', async () => {
+        const uid = cleanId(), code = (codeInp.value || '').replace(/\D/g, '');
+        if (!/^\d{17,20}$/.test(uid)) { showMsg(T.badid, 'err'); return; }
+        verBtn.disabled = true; showMsg(T.checking, '');
+        const { ok, body: b } = await post('/code/verify', { userId: uid, code });
+        verBtn.disabled = false;
+        if (ok) { showMsg('', ''); location.reload(); return; }
+        const e = b?.error;
+        if (e === 'bad-code') showMsg(T.badcode(b?.attemptsLeft ?? 0), 'err');
+        else if (e === 'expired') showMsg(T.expired, 'err');
+        else if (e === 'too-many') showMsg(T.toomany, 'err');
+        else if (e === 'no-code') showMsg(T.nocode, 'err');
+        else showMsg(T.badid, 'err');
+    });
+    idInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') reqBtn.click(); });
+    codeInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') verBtn.click(); });
+})();
 if (new URLSearchParams(location.search).get('login') === 'denied') {
     $('#login-err').textContent = 'Не удалось войти. Попробуйте ещё раз.'; $('#login-err').hidden = false;
     history.replaceState(null, '', location.pathname);

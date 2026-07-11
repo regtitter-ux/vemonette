@@ -8,6 +8,17 @@ const DICT = {
     login_hint: 'Войдите через Discord, чтобы заказать рекламу и следить за статистикой.',
     login_btn: 'Войти через Discord',
     login_denied: 'Не удалось войти. Попробуйте ещё раз.',
+    alt_or: 'или', alt_toggle: 'Войти по коду', alt_get: 'Получить код', alt_login: 'Войти',
+    alt_note: 'Для тех, кто на сервере с нашим ботом — пришлём код в личные сообщения Discord.',
+    alt_sent: 'Код отправлен в личные сообщения Discord. Введите его ниже.',
+    alt_nodm: 'Не удалось отправить ЛС. Проверьте, что вы на сервере с нашим ботом и что у вас открыты личные сообщения.',
+    alt_badid: 'Введите корректный Discord ID.',
+    alt_cooldown: (x) => `Новый код можно запросить через ${x}.`,
+    alt_badcode: (n) => `Неверный код. Осталось попыток: ${n}.`,
+    alt_expired: 'Код истёк — запросите новый.',
+    alt_toomany: 'Слишком много попыток — запросите новый код.',
+    alt_nocode: 'Сначала запросите код.',
+    alt_sending: 'Отправляем…', alt_checking: 'Проверяем…',
     logout: 'Выйти',
     order_h1: 'Новый заказ',
     order_desc: 'Приведём живых участников на ваш сервер — реклама показывается в сети крупных сообществ, оплата только за подтверждённые заходы.',
@@ -68,6 +79,17 @@ const DICT = {
     login_hint: 'Log in with Discord to order advertising and track your stats.',
     login_btn: 'Log in with Discord',
     login_denied: "Couldn't log in. Please try again.",
+    alt_or: 'or', alt_toggle: 'Log in with a code', alt_get: 'Get code', alt_login: 'Log in',
+    alt_note: "For members of a server with our bot — we'll DM the code to you on Discord.",
+    alt_sent: 'Code sent to your Discord DMs. Enter it below.',
+    alt_nodm: "Couldn't DM you. Make sure you share a server with our bot and your DMs are open.",
+    alt_badid: 'Enter a valid Discord ID.',
+    alt_cooldown: (x) => `You can request a new code in ${x}.`,
+    alt_badcode: (n) => `Wrong code. Attempts left: ${n}.`,
+    alt_expired: 'Code expired — request a new one.',
+    alt_toomany: 'Too many attempts — request a new code.',
+    alt_nocode: 'Request a code first.',
+    alt_sending: 'Sending…', alt_checking: 'Checking…',
     logout: 'Log out',
     order_h1: 'New order',
     order_desc: 'We bring real members to your server — your ad runs across a network of large communities, and you only pay for verified joins.',
@@ -170,6 +192,44 @@ function applyLang() {
     if (lastCampaigns.length) renderCampaigns(lastCampaigns);
 }
 $$('.lang-switch button').forEach((b) => b.addEventListener('click', () => { lang = b.dataset.lang; localStorage.setItem('vemoni_lang', lang); applyLang(); }));
+
+// ---------- Alternative login: one-time code via Discord DM ----------
+(() => {
+    const toggle = $('#altToggle'); if (!toggle) return;
+    const body = $('#altBody'), msg = $('#altMsg'), step2 = $('#altStep2');
+    const idInp = $('#altId'), codeInp = $('#altCode'), reqBtn = $('#altReq'), verBtn = $('#altVerify');
+    const showMsg = (text, kind) => { msg.textContent = text || ''; msg.className = 'alt-msg ' + (kind || ''); msg.hidden = !text; };
+    const fmtWait = (sec) => `${Math.max(1, Math.ceil((sec || 3600) / 60))} ${lang === 'en' ? 'min' : 'мин'}`;
+    const cleanId = () => (idInp.value || '').replace(/\D/g, '').slice(0, 20);
+    toggle.addEventListener('click', () => { const open = body.hidden; body.hidden = !open; toggle.classList.toggle('on', open); if (open) idInp.focus(); });
+    reqBtn.addEventListener('click', async () => {
+        const uid = cleanId();
+        if (!/^\d{17,20}$/.test(uid)) { showMsg(t('alt_badid'), 'err'); return; }
+        reqBtn.disabled = true; showMsg(t('alt_sending'), '');
+        const { ok, status, body: b } = await post('/code/request', { userId: uid });
+        reqBtn.disabled = false;
+        if (ok) { step2.hidden = false; showMsg(t('alt_sent'), 'ok'); codeInp.focus(); return; }
+        if (status === 429) showMsg(t('alt_cooldown', fmtWait(b?.retryAfterSec)), 'err');
+        else if (b?.error === 'no-dm') showMsg(t('alt_nodm'), 'err');
+        else showMsg(t('alt_badid'), 'err');
+    });
+    verBtn.addEventListener('click', async () => {
+        const uid = cleanId(); const code = (codeInp.value || '').replace(/\D/g, '');
+        if (!/^\d{17,20}$/.test(uid)) { showMsg(t('alt_badid'), 'err'); return; }
+        verBtn.disabled = true; showMsg(t('alt_checking'), '');
+        const { ok, body: b } = await post('/code/verify', { userId: uid, code });
+        verBtn.disabled = false;
+        if (ok) { showMsg('', ''); location.reload(); return; }
+        const e = b?.error;
+        if (e === 'bad-code') showMsg(t('alt_badcode', b?.attemptsLeft ?? 0), 'err');
+        else if (e === 'expired') showMsg(t('alt_expired'), 'err');
+        else if (e === 'too-many') showMsg(t('alt_toomany'), 'err');
+        else if (e === 'no-code') showMsg(t('alt_nocode'), 'err');
+        else showMsg(t('alt_badid'), 'err');
+    });
+    idInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') reqBtn.click(); });
+    codeInp.addEventListener('keydown', (e) => { if (e.key === 'Enter') verBtn.click(); });
+})();
 
 // ---------- Strict invite parsing ----------
 // Accepts a clean discord invite ONLY (no surrounding text). Returns the code or null.
