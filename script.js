@@ -352,6 +352,7 @@ setLang(startLang);
   const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = 'assets/logo.png';
   const users = new Image(); let usersOk = false; users.onload = () => { usersOk = true; }; users.src = 'assets/users.png';
   const buyerImg = new Image(); let buyerImgOk = false; buyerImg.onload = () => { buyerImgOk = true; }; buyerImg.src = 'assets/suit.png';
+  const secureImg = new Image(); let secureImgOk = false; secureImg.onload = () => { secureImgOk = true; }; secureImg.src = 'assets/secure.png';
   let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
   let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0;
   let spinVel = velY; // current spin speed; eases back to velY after a manual drag
@@ -520,12 +521,10 @@ setLang(startLang);
         ctx.globalAlpha = 1;
       } else {
         const rr = 11;
-        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.9 * fade;
-        const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2.4); gg.addColorStop(0, 'rgba(34,168,240,.5)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2.4, 0, 7); ctx.fill(); ctx.restore();
         ctx.globalAlpha = fade;
-        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0a1420'; ctx.fill();
-        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(92,200,255,.75)'; ctx.stroke();
-        if (logoOk) { const s = rr * 1.4; ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr - 3, 0, 7); ctx.clip(); ctx.drawImage(logo, p[0] - s / 2, p[1] - s / 2, s, s); ctx.restore(); }
+        const s = rr * 2.2;
+        if (secureImgOk) ctx.drawImage(secureImg, p[0] - s / 2, p[1] - s / 2, s, s);
+        else if (logoOk) ctx.drawImage(logo, p[0] - s / 2, p[1] - s / 2, s, s);
         ctx.globalAlpha = 1;
       }
     }
