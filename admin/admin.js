@@ -74,7 +74,7 @@ const TR = {
   'На сервере нет активной карточки верификации':'The server has no active verification card','Выберите сервер':'Select a server','Не удалось убрать':'Could not remove',
   'Пополнить инвест-счёт, $':'Top up investment account, $','Инвест-счёт пополнен на':'Investment account topped up by','Финансовая сверка':'Financial reconciliation','Бэкапы':'Backups',
   'Сделать бэкап сейчас':'Back up now','Аудит-лог действий':'Action audit log','Ботов онлайн':'Bots online',
-  'Бот добавлен на сервер':'Bot added to a server','Бот удалён с сервера':'Bot removed from a server','Создана карточка верификации':'Verification card created','Удалена карточка верификации':'Verification card deleted','↗ ссылка':'↗ link',
+  'Бот добавлен на сервер':'Bot added to a server','Бот удалён с сервера':'Bot removed from a server','Создана карточка верификации':'Verification card created','Удалена карточка верификации':'Verification card deleted','↗ ссылка':'↗ link','участников':'members',
   '🟢 онлайн':'🟢 online','🔴 офлайн':'🔴 offline','Алерты':'Alerts','⚠️ выключены':'⚠️ off',
   'Задайте ALERT_CHANNEL в Railway':'Set ALERT_CHANNEL in Railway',
   'Продажи рекламы (всего)':'Ad sales (total)','за 30д':'30d','Предоплата на кошельках':'Prepaid in wallets',
