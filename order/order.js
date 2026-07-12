@@ -263,7 +263,8 @@ if (new URLSearchParams(location.search).get('login') === 'denied') {
     $('#login-err').textContent = t('login_denied'); $('#login-err').hidden = false;
     history.replaceState(null, '', location.pathname);
 }
-$('#logout').addEventListener('click', async () => { await post('/logout'); setTok(''); location.reload(); });
+const setAuthed = (v) => { try { v ? localStorage.setItem('vemoni_authed', '1') : localStorage.removeItem('vemoni_authed'); } catch (_) {} };
+$('#logout').addEventListener('click', async () => { await post('/logout'); setTok(''); setAuthed(false); location.reload(); });
 async function checkAuth() { const { ok, body } = await get('/whoami'); return (ok && body?.authed === true) ? body : null; }
 function bannerFromAvatar(url) {
     const bn = document.getElementById('nmBanner'); if (!bn || !url) return;
@@ -305,6 +306,7 @@ function setupCabNav(who) {
 }
 
 async function enterApp() {
+    setAuthed(true);
     $('#login').hidden = true; $('#app').hidden = false;
     const cfg = await get('/config'); if (cfg.ok) CFG = cfg.body;
     applyLang();
@@ -582,4 +584,8 @@ function srvRow(campId, s) {
 
 // ---------- Boot ----------
 applyLang();
-(async () => { const who = await checkAuth(); if (who) { enterApp(); setupCabNav(who); } })();
+(async () => {
+    const who = await checkAuth();
+    if (who) { enterApp(); setupCabNav(who); }
+    else { setAuthed(false); document.documentElement.classList.remove('pre-auth'); $('#login').hidden = false; $('#app').hidden = true; }
+})();

@@ -265,11 +265,15 @@ if (new URLSearchParams(location.search).get('login') === 'denied') {
     $('#login-err').textContent = 'Не удалось войти. Попробуйте ещё раз.'; $('#login-err').hidden = false;
     history.replaceState(null, '', location.pathname);
 }
-$('#logout').addEventListener('click', async () => { await post('/logout'); setTok(''); location.reload(); });
+// remembers the last known auth state so the next page load can show the app
+// immediately instead of flashing the login screen (see the <head> pre-auth script)
+const setAuthed = (v) => { try { v ? localStorage.setItem('vemoni_authed', '1') : localStorage.removeItem('vemoni_authed'); } catch (_) {} };
+$('#logout').addEventListener('click', async () => { await post('/logout'); setTok(''); setAuthed(false); location.reload(); });
 
 async function checkAuth() { const { ok, body } = await get('/whoami'); return (ok && body?.authed === true) ? body : null; }
 
 async function enterApp() {
+    setAuthed(true);
     $('#login').hidden = true; $('#app').hidden = false;
     await load();
     setInterval(load, 20000);
@@ -741,4 +745,8 @@ $('#p-req-save').addEventListener('click', async () => {
 });
 
 // Boot
-(async () => { const who = await checkAuth(); if (who) { enterApp(); setupCabNav(who); } })();
+(async () => {
+    const who = await checkAuth();
+    if (who) { enterApp(); setupCabNav(who); }
+    else { setAuthed(false); document.documentElement.classList.remove('pre-auth'); $('#login').hidden = false; $('#app').hidden = true; }
+})();

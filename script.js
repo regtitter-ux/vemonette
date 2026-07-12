@@ -557,10 +557,15 @@ setLang(startLang);
     };
     img.src = url;
   }
+  const setAuthed = (v) => { try { v ? localStorage.setItem('vemoni_authed', '1') : localStorage.removeItem('vemoni_authed'); } catch (_) {} };
   fetch(base + '/partner/whoami', { credentials: 'include', headers })
     .then((r) => (r.ok ? r.json() : null))
     .then((d) => {
-      if (!d || !d.authed) return;
+      if (!d || !d.authed) { // stale optimistic state → reveal the login button again
+        setAuthed(false); document.documentElement.classList.remove('pre-auth');
+        if (loginBtn) loginBtn.style.display = ''; box.hidden = true; return;
+      }
+      setAuthed(true);
       if (loginBtn) loginBtn.style.display = 'none';
       const name = d.name || d.username || 'User';
       const letter = (name.trim()[0] || 'U').toUpperCase();
@@ -590,6 +595,7 @@ setLang(startLang);
         e.preventDefault();
         try { await fetch(base + '/partner/logout', { method: 'POST', credentials: 'include', headers }); } catch (_) {}
         try { localStorage.removeItem('vemoni_tok'); } catch (_) {}
+        setAuthed(false);
         location.reload();
       });
     })
