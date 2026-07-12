@@ -100,6 +100,8 @@ const TR = {
   'Куплено':'Bought','Продано':'Sold','Осталось':'Outstanding','Вложено':'Invested','Заработано':'Earned',
   // minimum-buyout line + card notes (split by <b>, so caught as substrings)
   'Минимум выкупа:':'Minimum buyout:','инвайтов':'invites','дней продаж сервера':"days of the server's sales",'дней продаж':'days of sales','ждут продажи':'awaiting sale',
+  'Максимум выкупа:':'Maximum buyout:','Максимум':'Maximum','~6 мес':'~6 mo','6 мес продаж сервера':'6 mo of the server’s sales','6 мес продаж':'6 mo of sales','мес)':'mo)',
+  'Лимит выкупа достигнут (≈ 6 мес продаж) — сейчас недоступно':'Buyout limit reached (≈ 6 mo of sales) — currently unavailable','для этого сервера':'for this server',
   // buy / topup / withdraw
   'Сколько инвайтов выкупить?':'How many invites to buy?','Минимум':'Minimum','Неверное число':'Invalid number',
   'Выкуплено инвайтов':'Invites bought','Недостаточно средств на инвест-счёте. Пополните счёт.':'Not enough on the investment account. Top it up.',
@@ -253,7 +255,7 @@ function renderAccount(d) {
 function renderServers(list) {
     if (!list.length) { $('#inv-servers').innerHTML = `<div class="muted">Пока нет серверов с достаточной активностью — нужно от ${PRICING.minDaily} проверенных заходов в сутки. Серверы появляются автоматически, как только выходят на этот темп.</div>`; return; }
     $('#inv-servers').innerHTML = list.map(serverCard).join('');
-    $('#inv-servers').querySelectorAll('[data-buy]').forEach((b) => b.onclick = () => buy(b.dataset.buy, b.dataset.name, Number(b.dataset.min) || PRICING.minInvites));
+    $('#inv-servers').querySelectorAll('[data-buy]').forEach((b) => b.onclick = () => buy(b.dataset.buy, b.dataset.name, Number(b.dataset.min) || PRICING.minInvites, Number(b.dataset.max) || 0));
 }
 function flowRow(f) {
     return `<div class="inv-flow muted sm">Продаётся заходов: час <b>${nf(f.hour)}</b> · день <b>${nf(f.day)}</b> · неделя <b>${nf(f.week)}</b> · всего <b>${nf(f.total)}</b></div>`;
@@ -261,8 +263,11 @@ function flowRow(f) {
 function serverCard(s) {
     const name = esc(s.name || s.serverId);
     const minInv = Number(s.minInvites) || PRICING.minInvites;
+    const maxTotal = Number(s.maxInvites) || 0;
+    const maxDays = Number(s.maxDays) || 180;
     const price = `<div class="inv-price muted sm">Выкуп $${PRICING.buyPer100}/100 · продажа $${PRICING.sellPer100}/100 · возврат +${Math.round((PRICING.returnRate || 0.1) * 100)}%</div>`;
-    const minLine = `<div class="inv-min muted sm">Минимум выкупа: <b>${nf(minInv)}</b> инвайтов (≈ ${PRICING.minDays} дней продаж сервера)</div>`;
+    const minLine = `<div class="inv-min muted sm">Минимум выкупа: <b>${nf(minInv)}</b> инвайтов (≈ ${PRICING.minDays} дней продаж сервера)</div>`
+      + (maxTotal ? `<div class="inv-min muted sm">Максимум выкупа: <b>${nf(maxTotal)}</b> инвайтов (≈ ${maxDays} дней продаж, ~6 мес)</div>` : '');
     let mine = '';
     if (s.mine) {
         const m = s.mine;
@@ -322,19 +327,25 @@ function serverAction(s, name, minInv) {
     if (s.investable === false) {
         return `<span class="muted sm">Сейчас ниже порога активности (нужно ≥ ${PRICING.minDaily} заходов/сутки) — выкуп недоступен</span>`;
     }
-    return `<button class="btn ghost sm" data-buy="${esc(s.serverId)}" data-name="${name}" data-min="${minInv}">Выкуп инвайтов</button>`;
+    const maxBuy = (s.maxBuyable != null) ? Number(s.maxBuyable) : (Number(s.maxInvites) || 0);
+    if (maxBuy > 0 && maxBuy < minInv) return `<span class="muted sm">Лимит выкупа достигнут (≈ 6 мес продаж) — сейчас недоступно</span>`;
+    return `<button class="btn ghost sm" data-buy="${esc(s.serverId)}" data-name="${name}" data-min="${minInv}" data-max="${maxBuy}">Выкуп инвайтов</button>`;
 }
 
-async function buy(serverId, name, min) {
+async function buy(serverId, name, min, max) {
     min = Number(min) || PRICING.minInvites;
-    const raw = prompt(`Сколько инвайтов выкупить?\nСервер: ${name}\nМинимум: ${nf(min)} инвайтов (≈ ${PRICING.minDays} дней продаж)\nЦена: $${PRICING.buyPer100} за 100`);
+    max = Number(max) || 0;
+    const maxNote = max ? `\nМаксимум: ${nf(max)} инвайтов (≈ 6 мес продаж)` : '';
+    const raw = prompt(`Сколько инвайтов выкупить?\nСервер: ${name}\nМинимум: ${nf(min)} инвайтов (≈ ${PRICING.minDays} дней продаж)${maxNote}\nЦена: $${PRICING.buyPer100} за 100`);
     if (raw === null) return;
     const qty = Math.floor(Number(String(raw).replace(/\s/g, '')));
     if (!Number.isFinite(qty) || qty < min) { toast(`Минимум ${nf(min)} инвайтов для этого сервера`, 'err'); return; }
+    if (max && qty > max) { toast(`Максимум ${nf(max)} инвайтов для этого сервера (≈ 6 мес продаж)`, 'err'); return; }
     const { ok, body } = await post('/buy', { serverId, qty });
     if (ok) { toast(`Выкуплено инвайтов: ${nf(qty)} за ${money(body?.cost)}`); load(); }
     else if (body?.error === 'insufficient') toast('Недостаточно средств на инвест-счёте. Пополните счёт.', 'err');
     else if (body?.error === 'min-qty') toast(`Минимум ${nf(body?.min || min)} инвайтов для этого сервера`, 'err');
+    else if (body?.error === 'max-qty') toast(`Максимум ${nf(body?.remaining ?? body?.max ?? max)} инвайтов сейчас (≈ 6 мес продаж сервера)`, 'err');
     else if (body?.error === 'occupied') toast('Сервер уже занят другим инвестором.', 'err');
     else if (body?.error === 'server-broken') toast('Сервер сейчас не работает (нет бота или карточки).', 'err');
     else if (body?.error === 'server-disabled') toast('Этот сервер больше не доступен для выкупа.', 'err');
