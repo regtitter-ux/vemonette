@@ -7,8 +7,8 @@
 html,body{height:100%}
 [hidden]{display:none!important}
 body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;font-size:15px;line-height:1.5}
-html,body{scrollbar-width:none;-ms-overflow-style:none}
-html::-webkit-scrollbar,body::-webkit-scrollbar{width:0;height:0;display:none}
+*{scrollbar-width:none;-ms-overflow-style:none}
+*::-webkit-scrollbar{width:0;height:0;display:none}
 a{color:var(--blue-2)}
 .muted{color:var(--muted)}
 .sm{font-size:12.5px}

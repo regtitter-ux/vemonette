@@ -28,11 +28,8 @@ html, body { height: 100%; }
 /* Hide native scrollbars everywhere the user can scroll — matches the
    marketing site's chrome-less style. Content still scrolls with wheel /
    trackpad / drag; we just don't paint a scrollbar. */
-html, body { scrollbar-width: none; -ms-overflow-style: none; }
-html::-webkit-scrollbar, body::-webkit-scrollbar { width: 0; height: 0; display: none; }
-.modal, .table-wrap, .content, .sidebar { scrollbar-width: none; -ms-overflow-style: none; }
-.modal::-webkit-scrollbar, .table-wrap::-webkit-scrollbar,
-.content::-webkit-scrollbar, .sidebar::-webkit-scrollbar { width: 0; height: 0; display: none; }
+* { scrollbar-width: none; -ms-overflow-style: none; }
+*::-webkit-scrollbar { width: 0; height: 0; display: none; }
 body {
   font-family: "Roboto", system-ui, -apple-system, sans-serif;
   background: var(--bg);
