@@ -75,6 +75,9 @@ const TR = {
   'Пополнить инвест-счёт, $':'Top up investment account, $','Инвест-счёт пополнен на':'Investment account topped up by','Финансовая сверка':'Financial reconciliation','Бэкапы':'Backups',
   'Сделать бэкап сейчас':'Back up now','Аудит-лог действий':'Action audit log','Ботов онлайн':'Bots online',
   'Бот добавлен на сервер':'Bot added to a server','Бот удалён с сервера':'Bot removed from a server','Создана карточка верификации':'Verification card created','Удалена карточка верификации':'Verification card deleted','↗ ссылка':'↗ link','участников':'members',
+  // audit-log filters
+  'Все типы':'All types','Боты сети':'Network bots','Боты — все':'Bots — all','Карточки верификации':'Verification cards','Карточки — все':'Cards — all','Создана карточка':'Card created','Удалена карточка':'Card deleted',
+  'Всё время':'All time','24 часа':'24 hours','7 дней':'7 days','30 дней':'30 days','Сначала новые':'Newest first','Сначала старые':'Oldest first','ID пользователя':'User ID',
   '🟢 онлайн':'🟢 online','🔴 офлайн':'🔴 offline','Алерты':'Alerts','⚠️ выключены':'⚠️ off',
   'Задайте ALERT_CHANNEL в Railway':'Set ALERT_CHANNEL in Railway',
   'Продажи рекламы (всего)':'Ad sales (total)','за 30д':'30d','Предоплата на кошельках':'Prepaid in wallets',
@@ -435,11 +438,30 @@ function fmtDur(ms) {
     return `${m}м`;
 }
 async function renderSystem() {
-    const [h, f, a] = await Promise.all([get('/health'), get('/finance'), get('/audit?limit=200')]);
+    const [h, f] = await Promise.all([get('/health'), get('/finance')]);
     if (h.ok) { renderSysBots(h.body); renderSysBackup(h.body.backup, h.body.alertChannel); }
     if (f.ok) renderSysFinance(f.body);
-    if (a.ok) renderSysAudit(a.body.entries || []);
+    wireAuditFilters();
+    loadAuditLog();
     renderInvestServers();
+}
+
+// Admin audit log with filters (by action type, period, sort, user).
+function auditQuery() {
+    const v = (id) => ($(id)?.value || '').trim();
+    const p = new URLSearchParams({ limit: '300' });
+    for (const [k, id] of [['action', '#af-action'], ['period', '#af-period'], ['sort', '#af-sort']]) { const val = v(id); if (val) p.set(k, val); }
+    const u = v('#af-user'); if (/^\d{17,20}$/.test(u)) p.set('user', u);
+    return p.toString();
+}
+let _auditUserTimer = null;
+async function loadAuditLog() {
+    const { ok, body } = await get('/audit?' + auditQuery());
+    if (ok) renderSysAudit(body.entries || []);
+}
+function wireAuditFilters() {
+    ['#af-action', '#af-period', '#af-sort'].forEach((id) => { const el = $(id); if (el && !el.dataset.wired) { el.dataset.wired = '1'; el.onchange = loadAuditLog; } });
+    const u = $('#af-user'); if (u && !u.dataset.wired) { u.dataset.wired = '1'; u.oninput = () => { clearTimeout(_auditUserTimer); _auditUserTimer = setTimeout(loadAuditLog, 350); }; }
 }
 
 // ---- Invest-servers (owner-only): servers investors may buy invites of ----

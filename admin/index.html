@@ -248,6 +248,32 @@
       <div class="table-wrap"><table class="stat-table" id="invest-servers-table"></table></div>
 
       <h2>Аудит-лог действий</h2>
+      <div class="filters" id="audit-filters" style="margin-bottom:12px">
+        <select id="af-action" class="af-sel">
+          <option value="">Все типы</option>
+          <optgroup label="Боты сети">
+            <option value="bot">Боты — все</option>
+            <option value="bot.join">Бот добавлен на сервер</option>
+            <option value="bot.leave">Бот удалён с сервера</option>
+          </optgroup>
+          <optgroup label="Карточки верификации">
+            <option value="card">Карточки — все</option>
+            <option value="card.create">Создана карточка</option>
+            <option value="card.delete">Удалена карточка</option>
+          </optgroup>
+        </select>
+        <select id="af-period" class="af-sel">
+          <option value="">Всё время</option>
+          <option value="24h">24 часа</option>
+          <option value="7d">7 дней</option>
+          <option value="30d">30 дней</option>
+        </select>
+        <select id="af-sort" class="af-sel">
+          <option value="">Сначала новые</option>
+          <option value="oldest">Сначала старые</option>
+        </select>
+        <input id="af-user" class="af-inp" type="text" inputmode="numeric" placeholder="ID пользователя" />
+      </div>
       <div class="table-wrap"><table class="stat-table" id="sys-audit"></table></div>
     </section>
 
@@ -320,6 +346,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=66"></script>
+<script src="/admin/admin.js?v=67"></script>
 </body>
 </html>
