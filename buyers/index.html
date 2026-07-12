@@ -597,6 +597,7 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
   const ctrlR=(a,b,lift)=>{ const mx=a[0]+b[0],my=a[1]+b[1],mz=a[2]+b[2],ml=Math.hypot(mx,my,mz)||1; return [mx/ml*lift,my/ml*lift,mz/ml*lift]; };
   function drawArc(a,b,color,alpha,lift){ const c=ctrlR(a,b,lift); let prev=null; for(let s=0;s<=20;s++){ const v=rot(bez(a,c,b,s/20)), p=proj(v); if(prev&&v[2]>-0.15){ ctx.strokeStyle=color; ctx.globalAlpha=alpha*(v[2]>0?1:0.35); ctx.lineWidth=1.1; ctx.beginPath(); ctx.moveTo(prev[0],prev[1]); ctx.lineTo(p[0],p[1]); ctx.stroke(); } prev=p; } }
   function userGlyph(px,py,r,color){ ctx.fillStyle=color; ctx.beginPath(); ctx.arc(px,py-r*0.26,r*0.32,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(px,py+r*0.6,r*0.56,Math.PI,2*Math.PI); ctx.closePath(); ctx.fill(); }
+  function groupGlyph(px,py,r,color){ ctx.fillStyle=color; const hy=py-r*0.34, hr=r*0.27; ctx.beginPath(); ctx.arc(px-r*0.6,hy,hr,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(px+r*0.6,hy,hr,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(px,hy-r*0.06,hr*1.08,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(px,py+r*0.5,r*0.95,Math.PI,2*Math.PI); ctx.closePath(); ctx.fill(); }
   const FLOATS=[];
   function drawFloat(fl){ const v=rot(fl.p); if(v[2]<=0.02) return; const p=proj(v); const y=p[1]-16-24*fl.t; const a=(fl.t<0.15?fl.t/0.15:1-(fl.t-0.15)/0.85)*Math.min(1,v[2]/0.3); ctx.save(); ctx.globalAlpha=Math.max(0,a); ctx.textBaseline='middle'; ctx.font='800 12px Inter,system-ui,sans-serif'; if(fl.kind==='money'){ ctx.textAlign='center'; ctx.fillStyle=GREEN; ctx.fillText('+$',p[0],y); } else { ctx.textAlign='left'; ctx.fillStyle=BUY; ctx.fillText('+',p[0]-8,y); userGlyph(p[0]+4,y,5,BUY); } ctx.restore(); ctx.globalAlpha=1; }
 
@@ -630,7 +631,7 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
         const gg=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],7); gg.addColorStop(0,col); gg.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(p[0],p[1],7,0,7); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(p[0],p[1],1.8,0,7); ctx.fill();
         if(v[2]>0.15){ ctx.save(); ctx.globalAlpha=Math.min(1,(v[2]-0.15)*3);
           if(money){ ctx.font='800 18px Inter,system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=col; ctx.fillText('$',p[0],p[1]-13); }
-          else { userGlyph(p[0],p[1]-15,10,TRAFFIC); }
+          else { groupGlyph(p[0],p[1]-15,10,TRAFFIC); }
           ctx.restore(); ctx.globalAlpha=1; }
       } else { pt.trail.length=0; }
     }

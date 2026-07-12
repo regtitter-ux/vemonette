@@ -412,6 +412,15 @@ setLang(startLang);
     ctx.beginPath(); ctx.arc(px, py - r * 0.26, r * 0.32, 0, 7); ctx.fill();
     ctx.beginPath(); ctx.arc(px, py + r * 0.6, r * 0.56, Math.PI, 2 * Math.PI); ctx.closePath(); ctx.fill();
   }
+  // a small group of people (three heads + one wide body) — "traffic = members"
+  function groupGlyph(px, py, r, color) {
+    ctx.fillStyle = color;
+    const hy = py - r * 0.34, hr = r * 0.27;
+    ctx.beginPath(); ctx.arc(px - r * 0.6, hy, hr, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(px + r * 0.6, hy, hr, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(px, hy - r * 0.06, hr * 1.08, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(px, py + r * 0.5, r * 0.95, Math.PI, 2 * Math.PI); ctx.closePath(); ctx.fill();
+  }
   // floating "+$0.5" over a paid partner / "+👤" over a buyer that received a join
   const FLOATS = [];
   function drawFloat(fl) {
@@ -480,7 +489,7 @@ setLang(startLang);
         const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 7); gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 7, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fill();
         if (v[2] > 0.15) { ctx.save(); ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3);
           if (money) { ctx.font = '800 18px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText('$', p[0], p[1] - 13); }
-          else { userGlyph(p[0], p[1] - 15, 10, TRAFFIC); } // traffic = a member travelling to the buyer
+          else { groupGlyph(p[0], p[1] - 15, 10, TRAFFIC); } // traffic = members travelling to the buyer
           ctx.restore(); ctx.globalAlpha = 1; }
       } else { pt.trail.length = 0; }
     }
