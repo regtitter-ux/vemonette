@@ -44,10 +44,13 @@ const rowTop = document.getElementById('rowTop');
 const rowBottom = document.getElementById('rowBottom');
 let FEED = SERVERS;
 function renderFeedRows() {
-  const topHTML = FEED.map(cardHTML).join('');
-  const bottomHTML = [...FEED].reverse().map(cardHTML).join('');
-  rowTop.innerHTML = topHTML + topHTML;
-  rowBottom.innerHTML = bottomHTML + bottomHTML;
+  // Split the servers between the two rows so no server appears in both at once;
+  // each row's cards are duplicated for a seamless -50% scroll loop.
+  const top = FEED.filter((_, i) => i % 2 === 0);
+  const bot = FEED.filter((_, i) => i % 2 === 1);
+  const loop = (list) => { const one = (list.length ? list : FEED).map(cardHTML).join(''); return one + one; };
+  rowTop.innerHTML = loop(top);
+  rowBottom.innerHTML = loop([...bot].reverse());
 }
 renderFeedRows(); // instant render with the built-in fallback
 
