@@ -430,7 +430,7 @@ setLang(startLang);
     const a = (fl.t < 0.15 ? fl.t / 0.15 : 1 - (fl.t - 0.15) / 0.85) * Math.min(1, v[2] / 0.3);
     ctx.save(); ctx.globalAlpha = Math.max(0, a); ctx.textBaseline = 'middle'; ctx.font = '800 12px Roboto,system-ui,sans-serif';
     if (fl.kind === 'money') { ctx.textAlign = 'center'; ctx.fillStyle = GREEN; ctx.fillText('+$', p[0], y); }
-    else { ctx.textAlign = 'left'; ctx.fillStyle = BUY; ctx.fillText('+', p[0] - 8, y); userGlyph(p[0] + 4, y, 5, BUY); }
+    else { const s = 18; ctx.textAlign = 'right'; ctx.fillStyle = BUY; ctx.fillText('+', p[0] - s / 2 - 2, y); if (usersOk) ctx.drawImage(users, p[0] - s / 2, y - s / 2, s, s); else groupGlyph(p[0], y, 9, BUY); }
     ctx.restore(); ctx.globalAlpha = 1;
   }
 
@@ -491,7 +491,7 @@ setLang(startLang);
         if (v[2] > 0.15) { ctx.save(); ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3);
           if (money) { ctx.font = '800 18px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText('$', p[0], p[1] - 13); }
           else if (pt.kind === 'ret1') { userGlyph(p[0], p[1] - 15, 10, TRAFFIC); } // partner -> bot: a single member
-          else if (usersOk) { ctx.globalCompositeOperation = 'source-over'; const s = 24; ctx.drawImage(users, p[0] - s / 2, p[1] - 15 - s / 2, s, s); } // bot -> buyer: members
+          else if (usersOk) { ctx.globalCompositeOperation = 'source-over'; const s = 18; ctx.drawImage(users, p[0] - s / 2, p[1] - 15 - s / 2, s, s); } // bot -> buyer: members
           else { groupGlyph(p[0], p[1] - 15, 10, TRAFFIC); }
           ctx.restore(); ctx.globalAlpha = 1; }
       } else { pt.trail.length = 0; }
