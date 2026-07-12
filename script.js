@@ -334,9 +334,9 @@ setLang(startLang);
 })();
 
 /* ---------- Hero globe visualization ----------
-   Rotating dotted planet. Partner servers (avatars) feed into scattered Vemoni
-   verification centres; from each centre traffic then fans out to buyers.
-   Auto-spins; hold the RIGHT mouse button and drag to rotate. Original code. */
+   Rotating dotted planet. Buyers send money into scattered Vemoni verification
+   centres; each centre then distributes it out to partner servers. Auto-spins;
+   hold the RIGHT mouse button and drag to rotate. Original canvas code. */
 (function () {
   const wrap = document.getElementById('viz'), canvas = document.getElementById('flow');
   if (!canvas) return;
@@ -349,7 +349,7 @@ setLang(startLang);
   let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
   let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0;
 
-  const NDOTS = 540, dots = [];
+  const NDOTS = 560, dots = [];
   (function () { const g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < NDOTS; i++) { const y = 1 - 2 * (i + 0.5) / NDOTS; const rr = Math.sqrt(1 - y * y); const th = g * i; dots.push([Math.cos(th) * rr, y, Math.sin(th) * rr]); } })();
   const ll = (la, lo) => { la = la * Math.PI / 180; lo = lo * Math.PI / 180; return [Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)]; };
 
@@ -359,23 +359,24 @@ setLang(startLang);
   function buildNodes() {
     PARTNERS.length = CENTERS.length = BUYERS.length = 0;
     const feed = (typeof FEED !== 'undefined' && Array.isArray(FEED) ? FEED : []).filter((s) => s && s.name);
-    const pPos = [ll(34, -40), ll(-16, 46), ll(52, 96), ll(2, 156), ll(-42, -104), ll(24, -150)];
-    const cPos = [ll(14, -6), ll(-8, 92), ll(40, -96), ll(-36, 150)];
-    const bPos = [ll(6, 24), ll(46, -66), ll(-28, 116), ll(62, 4), ll(-56, 40), ll(18, -172), ll(38, 168), ll(-4, -52)];
+    const pPos = [ll(34, -40), ll(-16, 46), ll(52, 96), ll(2, 156), ll(-42, -104), ll(24, -150), ll(-30, 8), ll(62, -20), ll(10, 118), ll(-58, 130)];
+    const cPos = [ll(16, -8), ll(-10, 90), ll(44, -100), ll(-38, 152), ll(0, 40)];
+    const bPos = [ll(8, 26), ll(48, -66), ll(-28, 116), ll(64, 6), ll(-56, 44), ll(20, -174), ll(40, 168), ll(-6, -54), ll(30, -118), ll(-46, -20), ll(56, 128), ll(-18, 74)];
     pPos.forEach((p, i) => { const s = feed[i % Math.max(1, feed.length)] || {}; const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null); const n = { p, color: s.color || GREEN, img: null, src }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
-    cPos.forEach((p) => CENTERS.push({ p, buyers: [] }));
-    bPos.forEach((p) => BUYERS.push({ p }));
-    PARTNERS.forEach((pn) => { pn.center = nearest(pn.p, CENTERS); });
-    BUYERS.forEach((bn) => { nearest(bn.p, CENTERS).buyers.push(bn); });
-    CENTERS.forEach((c) => { if (!c.buyers.length) c.buyers.push(BUYERS[(Math.random() * BUYERS.length) | 0]); });
+    cPos.forEach((p) => CENTERS.push({ p, partners: [] }));
+    bPos.forEach((p) => BUYERS.push({ p, center: null }));
+    BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
+    PARTNERS.forEach((pn) => { nearest(pn.p, CENTERS).partners.push(pn); });
+    CENTERS.forEach((c) => { if (!c.partners.length) c.partners.push(PARTNERS[(Math.random() * PARTNERS.length) | 0]); });
   }
 
+  // particles: buyer -> centre -> partner (money)
   const PARTS = [];
   function spawn() {
-    if (!PARTNERS.length || !CENTERS.length) return;
-    const pn = PARTNERS[(Math.random() * PARTNERS.length) | 0], c = pn.center; if (!c || !c.buyers.length) return;
-    const b = c.buyers[(Math.random() * c.buyers.length) | 0];
-    PARTS.push({ a: pn.p, c: c.p, b: b.p, leg: 0, t: 0, sp: 0.008 + Math.random() * 0.005 });
+    if (!BUYERS.length || !CENTERS.length) return;
+    const bn = BUYERS[(Math.random() * BUYERS.length) | 0], c = bn.center; if (!c || !c.partners.length) return;
+    const pn = c.partners[(Math.random() * c.partners.length) | 0];
+    PARTS.push({ a: bn.p, c: c.p, b: pn.p, leg: 0, t: 0, sp: 0.008 + Math.random() * 0.005, trail: [] });
   }
 
   function rot(v) {
@@ -388,6 +389,11 @@ setLang(startLang);
   const bez = (a, c, b, t) => { const u = 1 - t; return [u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1], u * u * a[2] + 2 * u * t * c[2] + t * t * b[2]]; };
   const ctrlR = (a, b, lift) => { const mx = a[0] + b[0], my = a[1] + b[1], mz = a[2] + b[2], ml = Math.hypot(mx, my, mz) || 1; return [mx / ml * lift, my / ml * lift, mz / ml * lift]; };
   function drawArc(a, b, color, alpha, lift) { const c = ctrlR(a, b, lift); let prev = null; for (let s = 0; s <= 20; s++) { const v = rot(bez(a, c, b, s / 20)), p = proj(v); if (prev && v[2] > -0.15) { ctx.strokeStyle = color; ctx.globalAlpha = alpha * (v[2] > 0 ? 1 : 0.35); ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(p[0], p[1]); ctx.stroke(); } prev = p; } }
+  function userGlyph(px, py, r, color) {
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.arc(px, py - r * 0.26, r * 0.32, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(px, py + r * 0.6, r * 0.56, Math.PI, 2 * Math.PI); ctx.closePath(); ctx.fill();
+  }
 
   function layout() {
     const r = wrap.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -414,20 +420,26 @@ setLang(startLang);
     }
     ctx.globalAlpha = 1;
 
-    // network lines: partners -> centres (green), centres -> buyers (blue)
+    // network lines: buyers -> centres, centres -> partners (all money = green)
     ctx.save(); ctx.lineCap = 'round';
-    PARTNERS.forEach((pn) => { if (pn.center) drawArc(pn.p, pn.center.p, GREEN, 0.14, 1.26); });
-    CENTERS.forEach((c) => c.buyers.forEach((b) => drawArc(c.p, b.p, BLUE, 0.11, 1.26)));
+    BUYERS.forEach((b) => { if (b.center) drawArc(b.p, b.center.p, GREEN, 0.13, 1.26); });
+    CENTERS.forEach((c) => c.partners.forEach((pn) => drawArc(c.p, pn.p, GREEN, 0.11, 1.26)));
     ctx.restore(); ctx.globalAlpha = 1;
 
-    // travelling particles: partner -> centre -> buyer
+    // travelling money particles: buyer -> centre -> partner
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     for (let i = PARTS.length - 1; i >= 0; i--) { const pt = PARTS[i]; pt.t += pt.sp;
-      let seg, col;
-      if (pt.leg === 0) { seg = [pt.a, ctrlR(pt.a, pt.c, 1.26), pt.c]; col = GREEN; if (pt.t >= 1) { pt.leg = 1; pt.t = 0; } }
-      if (pt.leg === 1) { seg = [pt.c, ctrlR(pt.c, pt.b, 1.26), pt.b]; col = BLUE; if (pt.t >= 1) { PARTS.splice(i, 1); continue; } }
+      let seg;
+      if (pt.leg === 0) { seg = [pt.a, ctrlR(pt.a, pt.c, 1.26), pt.c]; if (pt.t >= 1) { pt.leg = 1; pt.t = 0; } }
+      if (pt.leg === 1) { seg = [pt.c, ctrlR(pt.c, pt.b, 1.26), pt.b]; if (pt.t >= 1) { PARTS.splice(i, 1); continue; } }
       const v = rot(bez(seg[0], seg[1], seg[2], pt.t)), p = proj(v);
-      if (v[2] > -0.05) { const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 6); gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 6, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.7, 0, 7); ctx.fill(); }
+      if (v[2] > -0.05) {
+        pt.trail.push([p[0], p[1]]); if (pt.trail.length > 9) pt.trail.shift();
+        const tr = pt.trail; ctx.lineCap = 'round';
+        for (let k = 1; k < tr.length; k++) { const a = k / tr.length; ctx.globalAlpha = a * 0.8; ctx.lineWidth = 0.5 + 2.4 * a; ctx.strokeStyle = GREEN; ctx.beginPath(); ctx.moveTo(tr[k - 1][0], tr[k - 1][1]); ctx.lineTo(tr[k][0], tr[k][1]); ctx.stroke(); }
+        ctx.globalAlpha = 1;
+        const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 7); gg.addColorStop(0, GREEN); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 7, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fill();
+      } else { pt.trail.length = 0; }
     }
     ctx.restore(); ctx.globalAlpha = 1;
 
@@ -441,18 +453,20 @@ setLang(startLang);
     for (const it of all) { const n = it.n, v = it.v, p = it.p, dep = v[2]; if (dep < -0.2) continue;
       const fade = dep > 0 ? 1 : 0.32;
       if (it.kind === 'b') {
-        const rr = 5;
-        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.8 * fade;
-        const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2.2); gg.addColorStop(0, BUY); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2.2, 0, 7); ctx.fill(); ctx.restore();
-        ctx.globalAlpha = fade; ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0c1526'; ctx.fill();
-        ctx.lineWidth = 1.6; ctx.strokeStyle = BUY; ctx.stroke();
-        ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fillStyle = BUY; ctx.fill(); ctx.globalAlpha = 1;
+        const rr = 8;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.7 * fade;
+        const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2); gg.addColorStop(0, BUY); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2, 0, 7); ctx.fill(); ctx.restore();
+        ctx.globalAlpha = fade;
+        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0c1526'; ctx.fill();
+        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(134,182,255,.7)'; ctx.stroke();
+        userGlyph(p[0], p[1], rr, BUY);
+        ctx.globalAlpha = 1;
       } else if (it.kind === 'p') {
         const rr = 11; ctx.globalAlpha = fade;
         if (n.img) { ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore(); }
         else { ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0a1a13'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = n.color; ctx.stroke(); ctx.beginPath(); ctx.arc(p[0], p[1], 2, 0, 7); ctx.fillStyle = n.color; ctx.fill(); }
         ctx.globalAlpha = 1;
-      } else { // Vemoni verification centre
+      } else {
         const rr = 13;
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.9 * fade;
         const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2.4); gg.addColorStop(0, 'rgba(34,168,240,.5)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2.4, 0, 7); ctx.fill(); ctx.restore();
@@ -464,7 +478,7 @@ setLang(startLang);
       }
     }
 
-    if (!reduce && Math.random() < 0.08 && PARTS.length < 18) spawn();
+    if (!reduce && Math.random() < 0.09 && PARTS.length < 22) spawn();
     raf = requestAnimationFrame(draw);
   }
 
@@ -476,7 +490,7 @@ setLang(startLang);
   wrap.addEventListener('pointercancel', endDrag);
 
   window.addEventListener('resize', () => { cancelAnimationFrame(raf); layout(); draw(); });
-  requestAnimationFrame(() => { layout(); buildNodes(); for (let i = 0; i < 8; i++) spawn(); draw(); });
+  requestAnimationFrame(() => { layout(); buildNodes(); for (let i = 0; i < 10; i++) spawn(); draw(); });
 })();
 /* ---------- Logged-in user chip + cabinet menu (main page) ---------- */
 (function () {
