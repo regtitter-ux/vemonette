@@ -58,7 +58,7 @@ async function loadManagedFeed() {
     const r = await fetch(base + '/feed');
     if (r.ok) {
       const d = await r.json();
-      if (Array.isArray(d.servers) && d.servers.length) { FEED = d.servers; renderFeedRows(); }
+      if (Array.isArray(d.servers) && d.servers.length) { FEED = d.servers; renderFeedRows(); try { window.dispatchEvent(new Event('vemoni:feed')); } catch (_) {} }
     }
   } catch (_) { /* offline / API down → keep the fallback list */ }
 }
@@ -358,7 +358,11 @@ setLang(startLang);
   const nearest = (p, arr) => { let bi = 0, bd = Infinity; arr.forEach((n, i) => { const d = dist2(p, n.p); if (d < bd) { bd = d; bi = i; } }); return arr[bi]; };
   function buildNodes() {
     PARTNERS.length = CENTERS.length = BUYERS.length = 0;
-    const feed = (typeof FEED !== 'undefined' && Array.isArray(FEED) ? FEED : []).filter((s) => s && s.name);
+    // partner avatars come from the server feed — prefer entries that actually
+    // have an icon so every partner shows a real avatar
+    const all = (typeof FEED !== 'undefined' && Array.isArray(FEED) ? FEED : []).filter((s) => s && s.name);
+    const withIcon = all.filter((s) => s.img || (s.id && s.icon));
+    const feed = withIcon.length ? withIcon : all;
     const pPos = [ll(34, -40), ll(-16, 46), ll(52, 96), ll(2, 156), ll(-42, -104), ll(24, -150), ll(-30, 8), ll(62, -20), ll(10, 118), ll(-58, 130)];
     const cPos = [ll(16, -8), ll(-10, 90), ll(44, -100), ll(-38, 152), ll(0, 40)];
     const bPos = [ll(8, 26), ll(48, -66), ll(-28, 116), ll(64, 6), ll(-56, 44), ll(20, -174), ll(40, 168), ll(-6, -54), ll(30, -118), ll(-46, -20), ll(56, 128), ll(-18, 74)];
@@ -483,15 +487,20 @@ setLang(startLang);
     raf = requestAnimationFrame(draw);
   }
 
-  // rotate by holding the RIGHT mouse button and dragging (tracked on window so
-  // a fast drag outside the canvas keeps working)
-  wrap.addEventListener('contextmenu', (e) => e.preventDefault());
-  wrap.addEventListener('mousedown', (e) => { if (e.button !== 2) return; e.preventDefault(); dragging = true; lastX = e.clientX; lastY = e.clientY; wrap.style.cursor = 'grabbing'; });
-  window.addEventListener('mousemove', (e) => { if (!dragging) return; rotY += (e.clientX - lastX) * 0.006; rotX += (e.clientY - lastY) * 0.006; rotX = Math.max(-1.15, Math.min(1.15, rotX)); lastX = e.clientX; lastY = e.clientY; });
-  window.addEventListener('mouseup', (e) => { if (e.button === 2 && dragging) { dragging = false; wrap.style.cursor = ''; } });
+  // rotate by dragging with the left mouse button (tracked on window so a fast
+  // drag outside the canvas keeps working), or with one finger on touch
+  const rotBy = (dx, dy) => { rotY += dx * 0.006; rotX += dy * 0.006; rotX = Math.max(-1.15, Math.min(1.15, rotX)); };
+  wrap.addEventListener('mousedown', (e) => { if (e.button !== 0) return; e.preventDefault(); dragging = true; lastX = e.clientX; lastY = e.clientY; wrap.style.cursor = 'grabbing'; });
+  window.addEventListener('mousemove', (e) => { if (!dragging) return; rotBy(e.clientX - lastX, e.clientY - lastY); lastX = e.clientX; lastY = e.clientY; });
+  window.addEventListener('mouseup', () => { if (dragging) { dragging = false; wrap.style.cursor = ''; } });
   wrap.addEventListener('mouseenter', () => { if (!dragging) wrap.style.cursor = 'grab'; });
+  wrap.addEventListener('touchstart', (e) => { if (e.touches.length !== 1) return; dragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; }, { passive: true });
+  wrap.addEventListener('touchmove', (e) => { if (!dragging || e.touches.length !== 1) return; const t = e.touches[0]; rotBy(t.clientX - lastX, t.clientY - lastY); lastX = t.clientX; lastY = t.clientY; e.preventDefault(); }, { passive: false });
+  const endTouch = () => { dragging = false; };
+  wrap.addEventListener('touchend', endTouch); wrap.addEventListener('touchcancel', endTouch);
 
   window.addEventListener('resize', () => { cancelAnimationFrame(raf); layout(); draw(); });
+  window.addEventListener('vemoni:feed', () => buildNodes()); // real avatars once the managed feed loads
   requestAnimationFrame(() => { layout(); buildNodes(); for (let i = 0; i < 10; i++) spawn(); draw(); });
 })();
 /* ---------- Logged-in user chip + cabinet menu (main page) ---------- */
