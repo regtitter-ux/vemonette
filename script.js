@@ -582,7 +582,6 @@ setLang(startLang);
       box.hidden = false;
       const menu = document.getElementById('navMenu');
       const toggle = (e) => { e.preventDefault(); e.stopPropagation(); menu.hidden = !menu.hidden; };
-      document.getElementById('navBurger').addEventListener('click', toggle);
       av.addEventListener('click', toggle);
       menu.addEventListener('click', (e) => e.stopPropagation());
       document.addEventListener('click', () => { menu.hidden = true; });
