@@ -431,8 +431,11 @@ setLang(startLang);
     const order = NODES.map((n) => { const v = rot(n.p); return { n, v, p: proj(v) }; }).sort((a, b) => a.v[2] - b.v[2]);
     for (const it of order) { const n = it.n, v = it.v, p = it.p, dep = v[2]; if (dep < -0.2) continue;
       const fade = dep > 0 ? 1 : 0.32, rr = n.type === 'p' ? 11 : 6;
-      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.85 * fade;
-      const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2.2); gg.addColorStop(0, n.color); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2.2, 0, 7); ctx.fill(); ctx.restore();
+      // soft glow only for plain (buyer) nodes — avatars get no halo
+      if (!(n.type === 'p' && n.img)) {
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.85 * fade;
+        const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2.2); gg.addColorStop(0, n.color); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2.2, 0, 7); ctx.fill(); ctx.restore();
+      }
       ctx.globalAlpha = fade;
       if (n.type === 'p' && n.img) {
         ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore();
