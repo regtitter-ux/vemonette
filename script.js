@@ -366,21 +366,27 @@ setLang(startLang);
     const pPos = [ll(34, -40), ll(-16, 46), ll(52, 96), ll(2, 156), ll(-42, -104), ll(24, -150), ll(-30, 8), ll(62, -20), ll(10, 118), ll(-58, 130)];
     const cPos = [ll(16, -8), ll(-10, 90), ll(44, -100), ll(-38, 152), ll(0, 40)];
     const bPos = [ll(8, 26), ll(48, -66), ll(-28, 116), ll(64, 6), ll(-56, 44), ll(20, -174), ll(40, 168), ll(-6, -54), ll(30, -118), ll(-46, -20), ll(56, 128), ll(-18, 74)];
-    pPos.forEach((p, i) => { const s = feed[i % Math.max(1, feed.length)] || {}; const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null); const n = { p, color: s.color || GREEN, img: null, src }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
-    cPos.forEach((p) => CENTERS.push({ p, partners: [] }));
+    pPos.forEach((p, i) => { const s = feed[i % Math.max(1, feed.length)] || {}; const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
+    cPos.forEach((p) => CENTERS.push({ p }));
     bPos.forEach((p) => BUYERS.push({ p, center: null }));
     BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
-    PARTNERS.forEach((pn) => { nearest(pn.p, CENTERS).partners.push(pn); });
-    CENTERS.forEach((c) => { if (!c.partners.length) c.partners.push(PARTNERS[(Math.random() * PARTNERS.length) | 0]); });
   }
 
-  // particles: buyer -> centre -> partner (money)
+  // particles: money flows buyer -> centre (blue), then the centre fans out to
+  // random partners (green) — periodically to several at once
   const PARTS = [];
   function spawn() {
     if (!BUYERS.length || !CENTERS.length) return;
-    const bn = BUYERS[(Math.random() * BUYERS.length) | 0], c = bn.center; if (!c || !c.partners.length) return;
-    const pn = c.partners[(Math.random() * c.partners.length) | 0];
-    PARTS.push({ a: bn.p, c: c.p, b: pn.p, leg: 0, t: 0, sp: 0.008 + Math.random() * 0.005, trail: [] });
+    const bn = BUYERS[(Math.random() * BUYERS.length) | 0], c = bn.center; if (!c) return;
+    PARTS.push({ kind: 'in', a: bn.p, b: c.p, ctr: c, t: 0, sp: 0.008 + Math.random() * 0.005, trail: [] });
+  }
+  function fanOut(c) {
+    if (!PARTNERS.length) return;
+    const k = Math.random() < 0.3 ? 2 + ((Math.random() * 3) | 0) : 1; // sometimes several partners at once
+    for (let n = 0; n < k; n++) {
+      const pn = PARTNERS[(Math.random() * PARTNERS.length) | 0];
+      PARTS.push({ kind: 'out', a: c.p, b: pn.p, t: 0, sp: 0.009 + Math.random() * 0.006, trail: [] });
+    }
   }
 
   function rot(v) {
@@ -424,26 +430,27 @@ setLang(startLang);
     }
     ctx.globalAlpha = 1;
 
-    // network lines: buyers -> centres, centres -> partners (all money = green)
+    // network lines: buyers -> centres are blue (money in); centre -> partner
+    // lines are green and traced live by the travelling particles below
     ctx.save(); ctx.lineCap = 'round';
-    BUYERS.forEach((b) => { if (b.center) drawArc(b.p, b.center.p, GREEN, 0.13, 1.26); });
-    CENTERS.forEach((c) => c.partners.forEach((pn) => drawArc(c.p, pn.p, GREEN, 0.11, 1.26)));
+    BUYERS.forEach((b) => { if (b.center) drawArc(b.p, b.center.p, BUY, 0.13, 1.26); });
     ctx.restore(); ctx.globalAlpha = 1;
 
-    // travelling money particles: buyer -> centre -> partner
+    // travelling money particles: buyer -> centre (blue), centre -> partner (green)
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     for (let i = PARTS.length - 1; i >= 0; i--) { const pt = PARTS[i]; pt.t += pt.sp;
-      let seg;
-      if (pt.leg === 0) { seg = [pt.a, ctrlR(pt.a, pt.c, 1.26), pt.c]; if (pt.t >= 1) { pt.leg = 1; pt.t = 0; } }
-      if (pt.leg === 1) { seg = [pt.c, ctrlR(pt.c, pt.b, 1.26), pt.b]; if (pt.t >= 1) { PARTS.splice(i, 1); continue; } }
+      const col = pt.kind === 'in' ? BUY : GREEN;
+      const seg = [pt.a, ctrlR(pt.a, pt.b, 1.26), pt.b];
+      if (pt.t >= 1) { if (pt.kind === 'in') fanOut(pt.ctr); PARTS.splice(i, 1); continue; }
       const v = rot(bez(seg[0], seg[1], seg[2], pt.t)), p = proj(v);
+      if (pt.kind === 'out') drawArc(pt.a, pt.b, GREEN, 0.1, 1.26); // trace the fan-out line while it travels
       if (v[2] > -0.05) {
         pt.trail.push([p[0], p[1]]); if (pt.trail.length > 9) pt.trail.shift();
         const tr = pt.trail; ctx.lineCap = 'round';
-        for (let k = 1; k < tr.length; k++) { const a = k / tr.length; ctx.globalAlpha = a * 0.8; ctx.lineWidth = 0.5 + 2.4 * a; ctx.strokeStyle = GREEN; ctx.beginPath(); ctx.moveTo(tr[k - 1][0], tr[k - 1][1]); ctx.lineTo(tr[k][0], tr[k][1]); ctx.stroke(); }
+        for (let k = 1; k < tr.length; k++) { const a = k / tr.length; ctx.globalAlpha = a * 0.8; ctx.lineWidth = 0.5 + 2.4 * a; ctx.strokeStyle = col; ctx.beginPath(); ctx.moveTo(tr[k - 1][0], tr[k - 1][1]); ctx.lineTo(tr[k][0], tr[k][1]); ctx.stroke(); }
         ctx.globalAlpha = 1;
-        const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 7); gg.addColorStop(0, GREEN); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 7, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fill();
-        if (v[2] > 0.15) { ctx.save(); ctx.font = '800 9px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = GREEN; ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3); ctx.fillText('$', p[0], p[1] - 9); ctx.restore(); ctx.globalAlpha = 1; }
+        const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 7); gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 7, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fill();
+        if (v[2] > 0.15) { ctx.save(); ctx.font = '800 9px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3); ctx.fillText('$', p[0], p[1] - 9); ctx.restore(); ctx.globalAlpha = 1; }
       } else { pt.trail.length = 0; }
     }
     ctx.restore(); ctx.globalAlpha = 1;
@@ -453,7 +460,7 @@ setLang(startLang);
     BUYERS.forEach((n) => all.push({ n, kind: 'b' }));
     PARTNERS.forEach((n) => all.push({ n, kind: 'p' }));
     CENTERS.forEach((n) => all.push({ n, kind: 'c' }));
-    all.forEach((it) => { it.v = rot(it.n.p); it.p = proj(it.v); });
+    all.forEach((it) => { it.v = rot(it.n.p); it.p = proj(it.v); it.n._sx = it.p[0]; it.n._sy = it.p[1]; it.n._dep = it.v[2]; it.n._kind = it.kind; });
     all.sort((a, b) => a.v[2] - b.v[2]);
     for (const it of all) { const n = it.n, v = it.v, p = it.p, dep = v[2]; if (dep < -0.2) continue;
       const fade = dep > 0 ? 1 : 0.32;
@@ -467,12 +474,12 @@ setLang(startLang);
         userGlyph(p[0], p[1], rr, BUY);
         ctx.globalAlpha = 1;
       } else if (it.kind === 'p') {
-        const rr = 11; ctx.globalAlpha = fade;
+        const rr = 13; ctx.globalAlpha = fade;
         if (n.img) { ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore(); }
         else { ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0a1a13'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = n.color; ctx.stroke(); ctx.beginPath(); ctx.arc(p[0], p[1], 2, 0, 7); ctx.fillStyle = n.color; ctx.fill(); }
         ctx.globalAlpha = 1;
       } else {
-        const rr = 13;
+        const rr = 11;
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.9 * fade;
         const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2.4); gg.addColorStop(0, 'rgba(34,168,240,.5)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2.4, 0, 7); ctx.fill(); ctx.restore();
         ctx.globalAlpha = fade;
@@ -500,6 +507,26 @@ setLang(startLang);
   wrap.addEventListener('touchmove', (e) => { if (!dragging || e.touches.length !== 1) return; const t = e.touches[0]; rotBy(t.clientX - lastX, t.clientY - lastY); lastX = t.clientX; lastY = t.clientY; e.preventDefault(); }, { passive: false });
   const endTouch = () => { dragging = false; };
   wrap.addEventListener('touchend', endTouch); wrap.addEventListener('touchcancel', endTouch);
+
+  // hover tooltips: server name on partner avatars, role labels on buyers/centres
+  const tip = document.createElement('div'); tip.className = 'viz-tip'; tip.hidden = true; wrap.appendChild(tip);
+  const LABELS = { b: { ru: 'Покупатель рекламы', en: 'Ad buyer' }, c: { ru: 'Бот-верификатор', en: 'Verification bot' } };
+  function pickHover(mx, my) {
+    let best = null, bd = Infinity;
+    const scan = (arr, kind, rr) => arr.forEach((n) => { if ((n._dep || -1) <= 0.02) return; const dx = n._sx - mx, dy = n._sy - my, d = dx * dx + dy * dy, hit = (rr + 5) * (rr + 5); if (d < hit && d < bd) { bd = d; best = { n, kind }; } });
+    scan(PARTNERS, 'p', 13); scan(CENTERS, 'c', 11); scan(BUYERS, 'b', 8);
+    return best;
+  }
+  wrap.addEventListener('mousemove', (e) => {
+    if (dragging) { tip.hidden = true; return; }
+    const r = canvas.getBoundingClientRect(); const h = pickHover(e.clientX - r.left, e.clientY - r.top);
+    if (!h) { tip.hidden = true; if (!dragging) wrap.style.cursor = 'grab'; return; }
+    const lng = document.documentElement.lang === 'ru' ? 'ru' : 'en';
+    tip.textContent = h.kind === 'p' ? (h.n.name || (lng === 'ru' ? 'Сервер-партнёр' : 'Partner server')) : LABELS[h.kind][lng];
+    tip.style.left = h.n._sx + 'px'; tip.style.top = (h.n._sy - 14) + 'px'; tip.hidden = false;
+    wrap.style.cursor = 'pointer';
+  });
+  wrap.addEventListener('mouseleave', () => { tip.hidden = true; });
 
   window.addEventListener('resize', () => { cancelAnimationFrame(raf); layout(); draw(); });
   window.addEventListener('vemoni:feed', () => buildNodes()); // real avatars once the managed feed loads
