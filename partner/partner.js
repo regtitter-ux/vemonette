@@ -82,7 +82,7 @@ const WHOLE = {
   'заход реферала отменён':'referral join reversed','списание вручную':'manual debit',
   // Referrals tab
   'Рефералы':'Referrals','Рефералов':'Referrals','Активных':'Active','Заработано с рефералов':'Earned from referrals',
-  'Ожидает вывода':'Pending withdrawal','выведено':'withdrawn','Не удалось загрузить рефералов.':'Could not load referrals.',
+  'Ожидает вывода':'Pending withdrawal','выведено':'withdrawn','Сервер:':'Server:','Не удалось загрузить рефералов.':'Could not load referrals.',
   'Приглашайте пользователей — и получайте 10% от каждого их вывода. Ниже — кого вы пригласили и сколько это принесло. Статистика собрана по уже имеющимся данным.':'Invite users and earn 10% of every withdrawal they make. Below is who you invited and how much it brought in. Stats are reconstructed from existing data.',
   'У вас пока нет рефералов. Приглашайте пользователей и получайте 10% с каждого их вывода.':'You have no referrals yet. Invite users and earn 10% of each withdrawal they make.'
 };
@@ -345,12 +345,24 @@ function refRow(r) {
         ? `<span class="ref-av" style="background-image:url('${esc(r.avatar)}')"></span>`
         : `<span class="ref-av ref-av-l">${esc(letter)}</span>`;
     const handle = r.username ? '@' + esc(r.username) : ('ID ' + esc(r.userId));
+    const f = r.funnel || {};
+    const frow = (label, w) => `<tr><td>${label}</td><td class="num">${(w && w.hour) || 0}</td><td class="num">${(w && w.day) || 0}</td><td class="num">${(w && w.week) || 0}</td></tr>`;
     const dim = r.active ? '' : ' ref-idle';
-    return `<div class="ref-row${dim}">
-        ${av}
-        <div class="ref-id"><b>${esc(name)}</b><span class="muted sm">${handle}</span></div>
-        <div class="ref-wd"><span class="muted sm">выведено</span> <b>${money(r.withdrawn)}</b></div>
-        <div class="ref-earn">+${money(r.earned)}</div>
+    return `<div class="ref-card${dim}">
+        <div class="ref-head">
+          ${av}
+          <div class="ref-id"><b>${esc(name)}</b><span class="muted sm">${handle}</span></div>
+          <div class="ref-earn">+${money(r.earned)}</div>
+        </div>
+        <div class="ref-meta muted sm"><span>Сервер:</span> <b>${r.server ? esc(r.server) : '—'}</b> · <span>выведено</span> ${money(r.withdrawn)}</div>
+        <div class="table-wrap" style="margin-top:10px"><table>
+          <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
+          <tbody>
+            ${frow('1. Клик (начали)', f.clicks)}
+            ${frow('2. Заход проверен', f.checked)}
+            ${frow('3. Остались', f.stayed)}
+          </tbody>
+        </table></div>
       </div>`;
 }
 
