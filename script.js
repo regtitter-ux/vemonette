@@ -411,6 +411,17 @@ setLang(startLang);
     ctx.beginPath(); ctx.arc(px, py - r * 0.26, r * 0.32, 0, 7); ctx.fill();
     ctx.beginPath(); ctx.arc(px, py + r * 0.6, r * 0.56, Math.PI, 2 * Math.PI); ctx.closePath(); ctx.fill();
   }
+  // floating "+$0.5" over a paid partner / "+👤" over a buyer that received a join
+  const FLOATS = [];
+  function drawFloat(fl) {
+    const v = rot(fl.p); if (v[2] <= 0.02) return; const p = proj(v);
+    const y = p[1] - 16 - 24 * fl.t;
+    const a = (fl.t < 0.15 ? fl.t / 0.15 : 1 - (fl.t - 0.15) / 0.85) * Math.min(1, v[2] / 0.3);
+    ctx.save(); ctx.globalAlpha = Math.max(0, a); ctx.textBaseline = 'middle'; ctx.font = '800 12px Roboto,system-ui,sans-serif';
+    if (fl.kind === 'money') { ctx.textAlign = 'center'; ctx.fillStyle = GREEN; ctx.fillText('+$0.5', p[0], y); }
+    else { ctx.textAlign = 'left'; ctx.fillStyle = BUY; ctx.fillText('+', p[0] - 8, y); userGlyph(p[0] + 4, y, 5, BUY); }
+    ctx.restore(); ctx.globalAlpha = 1;
+  }
 
   function layout() {
     const r = wrap.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -449,7 +460,14 @@ setLang(startLang);
       const money = pt.kind === 'in' || pt.kind === 'out';
       const col = pt.kind === 'in' ? BUY : pt.kind === 'out' ? GREEN : TRAFFIC;
       const seg = [pt.a, ctrlR(pt.a, pt.b, 1.26), pt.b];
-      if (pt.t >= 1) { if (pt.kind === 'in') fanOut(pt.ctr); else if (pt.kind === 'out') sendTraffic(pt.b); else if (pt.kind === 'ret1') trafficToBuyer(pt.ctr); PARTS.splice(i, 1); continue; }
+      if (pt.t >= 1) {
+        if (pt.kind === 'in') fanOut(pt.ctr);
+        else if (pt.kind === 'out') { sendTraffic(pt.b); FLOATS.push({ p: pt.b, kind: 'money', t: 0 }); }
+        else if (pt.kind === 'ret1') trafficToBuyer(pt.ctr);
+        else if (pt.kind === 'ret2') FLOATS.push({ p: pt.b, kind: 'user', t: 0 });
+        if (FLOATS.length > 40) FLOATS.shift();
+        PARTS.splice(i, 1); continue;
+      }
       const v = rot(bez(seg[0], seg[1], seg[2], pt.t)), p = proj(v);
       if (!money) drawArc(pt.a, pt.b, TRAFFIC, 0.1, 1.26); // trace the return traffic line
       else if (pt.kind === 'out') drawArc(pt.a, pt.b, GREEN, 0.1, 1.26); // trace the fan-out line while it travels
@@ -501,6 +519,8 @@ setLang(startLang);
         ctx.globalAlpha = 1;
       }
     }
+
+    for (let i = FLOATS.length - 1; i >= 0; i--) { const fl = FLOATS[i]; fl.t += 0.018; if (fl.t >= 1) { FLOATS.splice(i, 1); continue; } drawFloat(fl); }
 
     if (!reduce && Math.random() < 0.09 && PARTS.length < 22) spawn();
     raf = requestAnimationFrame(draw);
