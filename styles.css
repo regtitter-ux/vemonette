@@ -70,20 +70,18 @@ main, .nav, .footer { position: relative; z-index: 1; }
 
 /* Friendly Discord contact button — softer than a flat pill, subtle gloss, no gradient */
 .btn-discord {
-  display: inline-flex; align-items: center; gap: 11px;
-  font-weight: 700; font-size: 15px; letter-spacing: 0.01em;
-  padding: 14px 26px; border-radius: 16px;
-  color: #06121c; background: var(--blue);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: 0 10px 26px -10px rgba(34, 168, 240, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.38);
+  display: inline-flex; align-items: center; gap: 10px;
+  font-weight: 700; font-size: 15px;
+  padding: 12px 22px; border-radius: 10px;
+  color: var(--text); background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--stroke-2);
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.25s ease, background 0.2s ease;
+  transition: background 0.15s, border-color 0.15s, transform 0.05s;
 }
-.btn-discord svg { width: 22px; height: 22px; flex: none; }
+.btn-discord svg { width: 20px; height: 20px; flex: none; color: #7c84ff; }
 .connect-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-.hero-cta .btn-discord svg { width: 20px; height: 20px; }
-.btn-discord:hover { background: var(--blue-2); transform: translateY(-2px); box-shadow: 0 18px 36px -12px rgba(34, 168, 240, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.45); }
-.btn-discord:active { transform: translateY(0); box-shadow: 0 6px 16px -8px rgba(34, 168, 240, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+.btn-discord:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.26); }
+.btn-discord:active { transform: translateY(1px); }
 
 /* Nav — full-width sticky bar (serverstats style) */
 .nav { position: sticky; top: 0; z-index: 50; background: rgba(14, 18, 27, 0.8); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border-bottom: 1px solid var(--stroke); }
@@ -289,7 +287,7 @@ section[id] { scroll-margin-top: 82px; }
 
 /* Connect */
 .connect-section { padding: 40px 0 90px; }
-.connect-box { max-width: 720px; margin: 0 auto; padding: 52px 40px; text-align: center; background: rgba(34, 168, 240, 0.10); border: 1px solid var(--stroke-2); border-radius: 22px; }
+.connect-box { max-width: 720px; margin: 0 auto; padding: 24px 40px 40px; text-align: center; background: none; border: none; }
 .connect-box h2 { font-size: clamp(24px, 4vw, 36px); text-transform: uppercase; }
 .connect-box p { color: var(--muted); margin: 14px auto 24px; max-width: 480px; font-size: 17px; }
 
