@@ -351,6 +351,7 @@ setLang(startLang);
   const BLUE = cvv('--blue-2', '#5cc8ff'), GREEN = cvv('--green', '#57f287'), BUY = '#86b6ff', TRAFFIC = '#b9a3ff';
   const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = 'assets/logo.png';
   const users = new Image(); let usersOk = false; users.onload = () => { usersOk = true; }; users.src = 'assets/users.png';
+  const buyerImg = new Image(); let buyerImgOk = false; buyerImg.onload = () => { buyerImgOk = true; }; buyerImg.src = 'assets/buyer.png';
   let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
   let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0;
   let spinVel = velY; // current spin speed; eases back to velY after a manual drag
@@ -514,7 +515,7 @@ setLang(startLang);
         ctx.globalAlpha = fade;
         ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0c1526'; ctx.fill();
         ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(134,182,255,.7)'; ctx.stroke();
-        userGlyph(p[0], p[1], rr, BUY);
+        if (buyerImgOk) { const s = rr * 1.9; ctx.drawImage(buyerImg, p[0] - s / 2, p[1] - s / 2, s, s); } else userGlyph(p[0], p[1], rr, BUY);
         ctx.globalAlpha = 1;
       } else if (it.kind === 'p') {
         const rr = 13; ctx.globalAlpha = fade;
