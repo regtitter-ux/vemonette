@@ -84,36 +84,31 @@ main, .nav, .footer { position: relative; z-index: 1; }
 .btn-discord:active { transform: translateY(0); box-shadow: 0 6px 16px -8px rgba(34, 168, 240, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
 
 /* Nav — full-width sticky bar (serverstats style) */
-.nav { position: sticky; top: 0; z-index: 50; background: rgba(14, 18, 27, 0.82); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-bottom: 1px solid var(--stroke); }
-.nav-inner { max-width: var(--maxw); margin: 0 auto; padding: 11px 24px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 22px; }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; justify-self: start; }
-.brand-mark { width: 30px; height: 30px; border-radius: 9px; display: block; filter: drop-shadow(0 6px 16px rgba(34, 168, 240, 0.5)); }
-.brand-name { font-weight: 800; font-size: 19px; letter-spacing: -0.01em; }
-.nav-links { display: flex; align-items: center; gap: 4px; justify-self: center; }
-.nav-links a { display: flex; align-items: center; white-space: nowrap; color: var(--muted); font-weight: 600; font-size: 14px; padding: 8px 13px; border-radius: 8px; transition: background 0.15s, color 0.15s; }
-.nav-links a:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
-.nav-links a.active { color: var(--blue-2); background: rgba(34, 168, 240, 0.14); }
-.nav-actions { display: flex; align-items: center; gap: 10px; justify-self: end; }
+.nav { position: sticky; top: 0; z-index: 50; background: rgba(14, 18, 27, 0.8); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border-bottom: 1px solid var(--stroke); }
+.nav-inner { max-width: var(--maxw); margin: 0 auto; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.brand { display: flex; align-items: center; gap: 8px; }
+.brand-mark { width: 32px; height: 32px; border-radius: 50%; display: block; }
+.brand-name { font-weight: 700; font-size: 24px; letter-spacing: -0.01em; color: #fff; }
+.nav-links { display: flex; align-items: center; gap: 32px; }
+.nav-links a { white-space: nowrap; color: #9ca3af; font-weight: 500; font-size: 14px; transition: color 0.15s; }
+.nav-links a:hover { color: #fff; }
+.nav-links a.active { color: #fff; }
+.nav-actions { display: flex; align-items: center; gap: 12px; }
 
-/* Invite Bot link in the header — ghost/text style */
-.nav-invite {
-  color: var(--muted); font-weight: 600; font-size: 14px; white-space: nowrap;
-  padding: 8px 13px; border-radius: 8px;
+/* Invite Bot link in the header — plain text link */
+.nav-invite { color: #9ca3af; font-weight: 500; font-size: 14px; white-space: nowrap; transition: color 0.15s; }
+.nav-invite:hover { color: #fff; }
+
+/* "Login with Discord" button — dark, bordered (partnerbot.me style) */
+.nav-login {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
+  height: 40px; padding: 0 16px; border-radius: 6px;
+  background: rgba(255, 255, 255, 0.02); border: 1px solid var(--stroke-2);
+  color: #d5dbe6; font-weight: 500; font-size: 14px;
   transition: background 0.15s, color 0.15s;
 }
-.nav-invite:hover { color: var(--text); background: rgba(255, 255, 255, 0.06); }
-
-/* Primary "Login with Discord" button (top-right) */
-.nav-login {
-  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
-  background: rgba(255, 255, 255, 0.05); color: var(--text);
-  border: 1px solid var(--stroke-2); font-weight: 700; font-size: 14px;
-  padding: 8px 15px; border-radius: 9px;
-  transition: background 0.15s, border-color 0.15s, transform 0.05s;
-}
 .nav-login svg { color: #7c84ff; flex: none; }
-.nav-login:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.26); }
-.nav-login:active { transform: translateY(1px); }
+.nav-login:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
 
 /* Language switcher (top-right) */
 .lang-switch { display: inline-flex; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--stroke); border-radius: 999px; padding: 3px; }
@@ -326,10 +321,11 @@ section[id] { scroll-margin-top: 82px; }
 .foot-note { color: var(--muted); font-size: 14px; }
 .foot-fine { color: #5b6076; font-size: 12px; }
 
+/* Hide the centre nav on smaller screens; brand + actions stay via space-between */
+@media (max-width: 980px) { .nav-links { display: none; } }
+
 /* Responsive */
 @media (max-width: 880px) {
-  .nav-links { display: none; }
-  .nav-inner { grid-template-columns: auto 1fr; } /* brand + actions when the centre nav is hidden */
   .sim-grid { grid-template-columns: 1fr; }
   .steps { grid-template-columns: 1fr; }
   .pay-inner { grid-template-columns: 1fr; }
@@ -343,8 +339,8 @@ section[id] { scroll-margin-top: 82px; }
   .nav-inner { padding: 11px 16px; gap: 8px; }
   .nav-invite { display: none; } /* keep just Login + lang on phones */
   .nav-actions { gap: 8px; }
-  .nav-login { padding: 8px 12px; font-size: 13px; }
-  .brand-name { font-size: 18px; }
+  .nav-login { height: 38px; padding: 0 12px; font-size: 13px; }
+  .brand-name { font-size: 20px; }
   .hero { padding: 40px 16px 30px; }
   .section-head, .intro-body, .faq, .sim-grid, .steps, .pay-inner, .footer,
   .connect-section, .connect-box { padding-left: 16px; padding-right: 16px; }
