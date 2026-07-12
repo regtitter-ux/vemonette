@@ -345,6 +345,7 @@ setLang(startLang);
   const cs = getComputedStyle(document.documentElement);
   const cvv = (v, f) => { const x = cs.getPropertyValue(v).trim(); return x || f; };
   const BLUE = cvv('--blue-2', '#5cc8ff'), GREEN = cvv('--green', '#57f287');
+  const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = 'assets/logo.png';
   let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
   let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0;
 
@@ -398,6 +399,9 @@ setLang(startLang);
     g.addColorStop(0, 'rgba(34,168,240,.12)'); g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.35, 0, 7); ctx.fill();
     ctx.restore();
+
+    // faint Vemoni logo inside the planet (behind the dots, so it stays subtle)
+    if (logoOk) { ctx.save(); ctx.globalAlpha = 0.13; const s = R * 0.9; ctx.drawImage(logo, cx - s / 2, cy - s / 2, s, s); ctx.restore(); }
 
     // surface dots
     for (const d of dots) { const v = rot(d), p = proj(v), dep = v[2];
