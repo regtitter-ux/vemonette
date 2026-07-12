@@ -130,6 +130,7 @@ const RU = {
   hero_sub: 'Краткий и честный обзор: что делает Vemoni, как это работает и какие за этим цифры.',
   hero_cta: 'Читать ↓',
   invite_bot: 'Добавить бота', nav_login: 'Войти через Discord',
+  viz_buyers: 'Покупатели', viz_partners: 'Партнёры',
   stat1_label: 'Уже выплачено партнёрам',
   stat2_label: 'довольных покупателей',
   stat3_label: 'продано заходов',
@@ -329,4 +330,87 @@ setLang(startLang);
   }
   clearCmd();
   requestAnimationFrame(() => setTimeout(run, 320));
+})();
+
+/* ---------- Hero flow visualization (partner version) ----------
+   Payments stream from buyers (left) through the Vemoni hub to partner servers
+   (right); each partner shows how much it has earned from Vemoni. */
+(function () {
+  const wrap = document.getElementById('viz'), canvas = document.getElementById('flow');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const cs = getComputedStyle(document.documentElement);
+  const cv = (v, f) => { const x = cs.getPropertyValue(v).trim(); return x || f; };
+  const BLUE = cv('--blue', '#22a8f0'), BLUE2 = cv('--blue-2', '#44bbfc'), GREEN = cv('--green', '#57f287'), RED = cv('--red', '#ed4245');
+  const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = 'assets/logo.png';
+  let W = 0, H = 0, dpr = 1, sources = [], hub = {}, dests = [], parts = [], acc = 0, t = 0, raf;
+  const PAY = 0.05;
+
+  function layout() {
+    const r = wrap.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
+    W = r.width; H = r.height; canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const lx = W * 0.09, ns = 6;
+    sources = []; for (let i = 0; i < ns; i++) sources.push({ x: lx, y: H * (0.11 + 0.78 * (i / (ns - 1))), r: 8, ph: Math.random() * 6.28 });
+    hub = { x: W * 0.42, y: H * 0.5, r: 28 };
+    const dx = W * 0.64, nd = 5;
+    if (dests.length !== nd) { dests = []; for (let i = 0; i < nd; i++) dests.push({ earned: 20 + Math.random() * 220, ph: Math.random() * 6.28, pulse: 0 }); }
+    for (let i = 0; i < nd; i++) { dests[i].x = dx; dests[i].y = H * (0.13 + 0.74 * (i / (nd - 1))); dests[i].r = 12; }
+  }
+  const ctrl = (a, b, bend) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 + bend });
+  const qbez = (p0, cx, cy, p1, tt) => { const u = 1 - tt; return { x: u * u * p0.x + 2 * u * tt * cx + tt * tt * p1.x, y: u * u * p0.y + 2 * u * tt * cy + tt * tt * p1.y }; };
+
+  function spawn() {
+    const s = sources[(Math.random() * sources.length) | 0];
+    const di = (Math.random() * dests.length) | 0;
+    const c = ctrl(s, hub, (s.y - hub.y) * 0.16);
+    parts.push({ s, di, bad: Math.random() < 0.12, leg: 0, t: 0, sp: 0.010 + Math.random() * 0.006, cx: c.x, cy: c.y, px: s.x, py: s.y, die: 0 });
+  }
+  function softGlow(x, y, r, c, a) { ctx.save(); ctx.globalAlpha = a; const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, c); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.restore(); }
+  function gradStroke(a, cx, cy, b, c0, c1, w) { const g = ctx.createLinearGradient(a.x, a.y, b.x, b.y); g.addColorStop(0, c0); g.addColorStop(1, c1); ctx.strokeStyle = g; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(cx, cy, b.x, b.y); ctx.stroke(); }
+
+  function draw() {
+    t += 0.016; ctx.clearRect(0, 0, W, H); ctx.lineCap = 'round';
+    softGlow(hub.x, hub.y, 90, 'rgba(34,168,240,.14)', 1);
+    sources.forEach(s => { const c = ctrl(s, hub, (s.y - hub.y) * 0.10); gradStroke(s, c.x, c.y, hub, 'rgba(68,187,252,.04)', 'rgba(68,187,252,.26)', 1.2); });
+    dests.forEach(d => { const c = ctrl(hub, d, (d.y - hub.y) * 0.05); gradStroke(hub, c.x, c.y, d, 'rgba(68,187,252,.22)', 'rgba(87,242,135,.4)', 1.6); });
+    sources.forEach(s => { const pl = 1 + Math.sin(t * 1.7 + s.ph) * 0.14;
+      softGlow(s.x, s.y, s.r * 2.6, 'rgba(34,168,240,.10)', 1);
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r * pl, 0, 7); ctx.fillStyle = '#111c30'; ctx.fill();
+      ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(68,187,252,.5)'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(s.x, s.y, 2.2, 0, 7); ctx.fillStyle = BLUE2; ctx.fill();
+    });
+    for (let i = parts.length - 1; i >= 0; i--) { const p = parts[i]; const d = dests[p.di];
+      if (p.die > 0) { ctx.save(); ctx.globalAlpha = p.die; const dx = hub.x + (1 - p.die) * 10, dy = hub.y + (1 - p.die) * 30; softGlow(dx, dy, 10, RED, p.die * .9); ctx.fillStyle = RED; ctx.beginPath(); ctx.arc(dx, dy, 3, 0, 7); ctx.fill(); ctx.restore(); p.die -= 0.05; if (p.die <= 0) parts.splice(i, 1); continue; }
+      p.t += p.sp * (p.leg === 1 ? 1.3 : 1);
+      let pos;
+      if (p.leg === 0) { pos = qbez(p.s, p.cx, p.cy, hub, Math.min(1, p.t)); if (p.t >= 1) { if (p.bad) { p.die = 1; continue; } p.leg = 1; p.t = 0; const c = ctrl(hub, d, (d.y - hub.y) * 0.05); p.cx = c.x; p.cy = c.y; } }
+      else { pos = qbez(hub, p.cx, p.cy, d, Math.min(1, p.t)); if (p.t >= 1) { d.earned += PAY; d.pulse = 1; parts.splice(i, 1); continue; } }
+      const c = p.leg === 0 ? BLUE : GREEN;
+      ctx.strokeStyle = c; ctx.globalAlpha = .45; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(pos.x, pos.y); ctx.stroke(); ctx.globalAlpha = 1;
+      softGlow(pos.x, pos.y, 6.5, c, .85);
+      ctx.beginPath(); ctx.arc(pos.x, pos.y, 2.3, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+      p.px = pos.x; p.py = pos.y;
+    }
+    softGlow(hub.x, hub.y, hub.r + 14, 'rgba(34,168,240,.20)', 1);
+    ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r, 0, 7); ctx.fillStyle = '#0b1424'; ctx.fill();
+    ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r, 0, 7); ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(34,168,240,.35)'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r, t * 0.9, t * 0.9 + 1.4); ctx.strokeStyle = BLUE2; ctx.lineWidth = 2.4; ctx.stroke();
+    if (logoOk) { const s = hub.r * 1.25; ctx.save(); ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r - 6, 0, 7); ctx.clip(); ctx.drawImage(logo, hub.x - s / 2, hub.y - s / 2, s, s); ctx.restore(); }
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    dests.forEach(d => {
+      if (d.pulse > 0) { ctx.beginPath(); ctx.arc(d.x, d.y, d.r + (1 - d.pulse) * 16, 0, 7); ctx.strokeStyle = 'rgba(87,242,135,' + (d.pulse * .5) + ')'; ctx.lineWidth = 2; ctx.stroke(); d.pulse -= 0.05; if (d.pulse < 0) d.pulse = 0; }
+      softGlow(d.x, d.y, d.r * 2.2, 'rgba(87,242,135,.12)', 1);
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 7); ctx.fillStyle = '#0b1a15'; ctx.fill();
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 7); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(87,242,135,.4)'; ctx.stroke();
+      ctx.beginPath(); ctx.arc(d.x, d.y, 2.4, 0, 7); ctx.fillStyle = GREEN; ctx.fill();
+      ctx.font = '800 13px Roboto,sans-serif'; ctx.fillStyle = GREEN;
+      ctx.fillText('$' + d.earned.toFixed(2), d.x + d.r + 9, d.y);
+    });
+    ctx.textBaseline = 'alphabetic';
+    acc++; if (acc >= 8 && parts.length < 48) { acc = 0; spawn(); }
+    if (!reduce) raf = requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize', () => { cancelAnimationFrame(raf); layout(); draw(); });
+  requestAnimationFrame(() => { layout(); draw(); });
 })();

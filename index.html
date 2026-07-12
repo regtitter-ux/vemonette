@@ -13,7 +13,7 @@
   <!-- Load fonts without blocking first paint; drop the unused 900 weight -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" /></noscript>
-  <link rel="stylesheet" href="styles.css?v=12" />
+  <link rel="stylesheet" href="styles.css?v=13" />
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
 </head>
 <body>
@@ -49,18 +49,28 @@
   <main id="top">
     <!-- HERO -->
     <section class="hero">
-      <div class="hero-inner">
-        <span class="pill"><span class="dot"></span> <span data-i18n="hero_pill">A 2-minute read for prospective partners</span></span>
-        <h1 data-i18n="hero_h1">
-          Verification for which<br />
-          <span class="grad">you get paid</span>
-        </h1>
-        <p class="hero-sub" data-i18n="hero_sub">
-          This is a short, factual overview of what Vemoni does, how it works, and the
-          numbers behind it.
-        </p>
-        <div class="hero-cta">
-          <a href="#what" class="btn btn-ghost" data-i18n="hero_cta">Start reading ↓</a>
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <span class="pill"><span class="dot"></span> <span data-i18n="hero_pill">A 2-minute read for prospective partners</span></span>
+          <h1 data-i18n="hero_h1">
+            Verification for which<br />
+            <span class="grad">you get paid</span>
+          </h1>
+          <p class="hero-sub" data-i18n="hero_sub">
+            This is a short, factual overview of what Vemoni does, how it works, and the
+            numbers behind it.
+          </p>
+          <div class="hero-cta">
+            <a href="#what" class="btn btn-ghost" data-i18n="hero_cta">Start reading ↓</a>
+          </div>
+        </div>
+        <div class="viz" id="viz" aria-hidden="true">
+          <canvas id="flow"></canvas>
+          <div class="viz-legend">
+            <span><i style="background:var(--blue)"></i> <span data-i18n="viz_buyers">Buyers</span></span>
+            <span><i style="background:var(--blue-2)"></i> <span>Vemoni</span></span>
+            <span><i style="background:var(--green)"></i> <span data-i18n="viz_partners">Partners</span></span>
+          </div>
         </div>
       </div>
     </section>
@@ -344,6 +354,6 @@
     </div>
   </footer>
 
-  <script src="script.js?v=10" defer></script>
+  <script src="script.js?v=11" defer></script>
 </body>
 </html>
