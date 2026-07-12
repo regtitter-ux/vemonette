@@ -18,10 +18,14 @@
     body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(900px 460px at 82% -6%,rgba(34,168,240,.14),transparent 60%),radial-gradient(700px 460px at 6% 4%,rgba(87,242,135,.06),transparent 60%)}
     .wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:0 22px}
     header{border-bottom:1px solid var(--stroke)}
-    .bar{max-width:760px;margin:0 auto;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .brand{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:19px;letter-spacing:-.02em}
+    .bar{max-width:760px;margin:0 auto;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .brand{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:19px;letter-spacing:-.02em;flex:none}
     .brand img{width:28px;height:28px;border-radius:50%}
-    .back{color:var(--muted);font-size:14px;font-weight:600;text-decoration:none;transition:color .15s}
+    .bar-right{display:flex;align-items:center;gap:14px}
+    .lang{display:inline-flex;background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:8px;overflow:hidden}
+    .lang button{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;font-weight:700;padding:6px 10px;cursor:pointer;transition:.15s}
+    .lang button.active{background:rgba(92,200,255,.16);color:#fff}
+    .back{color:var(--muted);font-size:14px;font-weight:600;text-decoration:none;transition:color .15s;white-space:nowrap}
     .back:hover{color:#fff}
     main{padding:46px 0 80px}
     h1{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
@@ -35,6 +39,7 @@
     a:hover{text-decoration:underline}
     strong{color:var(--text);font-weight:700}
     .card{background:var(--panel);border:1px solid var(--stroke);border-radius:14px;padding:18px 20px;margin-top:22px}
+    .card h2{margin-top:0}
     footer{border-top:1px solid var(--stroke);margin-top:20px}
     .foot{max-width:760px;margin:0 auto;padding:26px 22px;color:var(--muted);font-size:13.5px;display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;text-align:center}
     .foot a{color:var(--muted)} .foot a:hover{color:#fff;text-decoration:none}
@@ -44,77 +49,137 @@
   <header>
     <div class="bar">
       <a class="brand" href="/"><img src="/assets/logo.png" alt="Vemoni" />Vemoni</a>
-      <a class="back" href="/">← Back to site</a>
+      <div class="bar-right">
+        <div class="lang" id="lang"><button data-lang="en">EN</button><button data-lang="ru">RU</button></div>
+        <a class="back" href="/" data-i18n="back">← Back to site</a>
+      </div>
     </div>
   </header>
 
   <main class="wrap">
-    <h1>Privacy Policy</h1>
-    <div class="updated">Last updated: 12 July 2026</div>
+    <h1 data-i18n="h1">Privacy Policy</h1>
+    <div class="updated" data-i18n="updated">Last updated: 12 July 2026</div>
+    <p class="lead" data-i18n="lead">This Privacy Policy explains what information Vemoni (“Vemoni”, “we”, “us”) collects when you use our Discord verification bot, our websites at vemoni.info, and the partner, buyer and investor dashboards (together, the “Service”), and how we use and protect it.</p>
 
-    <p class="lead">This Privacy Policy explains what information Vemoni (“Vemoni”, “we”, “us”) collects when you use our Discord verification bot, our websites at vemoni.info, and the partner, buyer and investor dashboards (together, the “Service”), and how we use and protect it.</p>
+    <h2 data-i18n="h_intro">1. Introduction</h2>
+    <p data-i18n="p_intro">By adding the Vemoni bot to a Discord server, completing a verification, or signing in to any Vemoni dashboard, you agree to the practices described in this Policy. If you do not agree, please do not use the Service.</p>
 
-    <h2>1. Introduction</h2>
-    <p>By adding the Vemoni bot to a Discord server, completing a verification, or signing in to any Vemoni dashboard, you agree to the practices described in this Policy. If you do not agree, please do not use the Service.</p>
-
-    <h2>2. Information We Collect</h2>
-    <p>We collect only the data needed to run verification, the advertising network and payouts:</p>
+    <h2 data-i18n="h_collect">2. Information We Collect</h2>
+    <p data-i18n="p_collect">We collect only the data needed to run verification, the advertising network and payouts:</p>
     <ul>
-      <li><strong>Discord account data</strong> — your Discord user ID, username, global (display) name and avatar, obtained through the Discord API or Discord OAuth when you sign in.</li>
-      <li><strong>Server data</strong> — the IDs and names of Discord servers where the bot is added, verification cards you create, and roles the bot manages.</li>
-      <li><strong>Verification &amp; join records</strong> — which member verified on which server, which sponsor server a member joined through an ad, timestamps, and whether the member stayed or left (used to count joins and calculate payouts).</li>
-      <li><strong>Payment details you provide</strong> — for partners: payout requisites such as a crypto wallet address, a Telegram user ID (for automatic USDT transfers), or card/other details you enter; for buyers: wallet top-up and campaign records; for investors: investment positions.</li>
-      <li><strong>Balances and transactions</strong> — earnings, charges, withdrawals and their status.</li>
-      <li><strong>Technical data</strong> — basic session and request information (for example an authentication token stored in your browser) needed to keep you signed in and to secure the Service.</li>
+      <li data-i18n="li_discord"><strong>Discord account data</strong> — your Discord user ID, username, global (display) name and avatar, obtained through the Discord API or Discord OAuth when you sign in.</li>
+      <li data-i18n="li_server"><strong>Server data</strong> — the IDs and names of Discord servers where the bot is added, verification cards you create, and roles the bot manages.</li>
+      <li data-i18n="li_records"><strong>Verification &amp; join records</strong> — which member verified on which server, which sponsor server a member joined through an ad, timestamps, and whether the member stayed or left.</li>
+      <li data-i18n="li_payment"><strong>Payment details you provide</strong> — for partners: payout requisites such as a crypto wallet address, a Telegram user ID (for automatic USDT transfers), or card/other details; for buyers: wallet top-up and campaign records; for investors: investment positions.</li>
+      <li data-i18n="li_balances"><strong>Balances and transactions</strong> — earnings, charges, withdrawals and their status.</li>
+      <li data-i18n="li_technical"><strong>Technical data</strong> — basic session and request information (for example an authentication token stored in your browser) needed to keep you signed in and to secure the Service.</li>
     </ul>
-    <p>We do <strong>not</strong> collect the content of your private messages, and we do not read messages in your server beyond what is required for the verification flow.</p>
+    <p data-i18n="p_collect_note">We do <strong>not</strong> collect the content of your private messages, and we do not read messages in your server beyond what is required for the verification flow.</p>
 
-    <h2>3. How We Use Your Information</h2>
+    <h2 data-i18n="h_use">3. How We Use Your Information</h2>
     <ul>
-      <li>To operate the verification bot and grant the verified role.</li>
-      <li>To run the advertising network — showing sponsor invites during verification and matching joins to campaigns.</li>
-      <li>To count verified joins and to calculate, process and pay out earnings.</li>
-      <li>To provide and personalise the partner, buyer, investor and admin dashboards.</li>
-      <li>To detect and prevent fraud, abuse and manipulation of join counts.</li>
-      <li>To communicate with you about your account, payouts and important changes.</li>
-    </ul>
-
-    <h2>4. How We Share Information</h2>
-    <p>We do not sell your personal data. We share limited data only where necessary to operate the Service:</p>
-    <ul>
-      <li><strong>Discord</strong> — we interact with the Discord API to provide verification and read the public data described above, subject to Discord’s own terms and privacy policy.</li>
-      <li><strong>Payment providers</strong> — to send payouts and process top-ups we use third‑party payment services (such as Crypto Pay / CryptoBot on Telegram). Only the details needed to complete a transaction are shared with them.</li>
-      <li><strong>Legal</strong> — we may disclose data if required by law or to protect the rights, safety and integrity of the Service.</li>
+      <li data-i18n="li_use1">To operate the verification bot and grant the verified role.</li>
+      <li data-i18n="li_use2">To run the advertising network — showing sponsor invites during verification and matching joins to campaigns.</li>
+      <li data-i18n="li_use3">To count verified joins and to calculate, process and pay out earnings.</li>
+      <li data-i18n="li_use4">To provide and personalise the partner, buyer, investor and admin dashboards.</li>
+      <li data-i18n="li_use5">To detect and prevent fraud, abuse and manipulation of join counts.</li>
+      <li data-i18n="li_use6">To communicate with you about your account, payouts and important changes.</li>
     </ul>
 
-    <h2>5. Data Security</h2>
-    <p>We take reasonable technical and organisational measures to protect your data against loss, misuse and unauthorised access. No method of transmission or storage is completely secure, and we cannot guarantee absolute security.</p>
+    <h2 data-i18n="h_share">4. How We Share Information</h2>
+    <p data-i18n="p_share">We do not sell your personal data. We share limited data only where necessary to operate the Service:</p>
+    <ul>
+      <li data-i18n="li_share_discord"><strong>Discord</strong> — we interact with the Discord API to provide verification and read the public data described above, subject to Discord’s own terms and privacy policy.</li>
+      <li data-i18n="li_share_pay"><strong>Payment providers</strong> — to send payouts and process top-ups we use third‑party payment services (such as Crypto Pay / CryptoBot on Telegram). Only the details needed to complete a transaction are shared.</li>
+      <li data-i18n="li_share_legal"><strong>Legal</strong> — we may disclose data if required by law or to protect the rights, safety and integrity of the Service.</li>
+    </ul>
 
-    <h2>6. Your Data Protection Rights</h2>
-    <p>You may request access to, correction of, or deletion of your personal data, and you may withdraw the bot from your server at any time. To exercise these rights, contact us at <a href="mailto:support@vemoni.info">support@vemoni.info</a>. Note that some records (for example completed transactions) may be retained where we are required to keep them.</p>
+    <h2 data-i18n="h_security">5. Data Security</h2>
+    <p data-i18n="p_security">We take reasonable technical and organisational measures to protect your data against loss, misuse and unauthorised access. No method of transmission or storage is completely secure, and we cannot guarantee absolute security.</p>
 
-    <h2>7. Data Retention</h2>
-    <p>We keep your data only for as long as needed to provide the Service, resolve disputes, prevent abuse and comply with legal obligations. When data is no longer needed, we delete or anonymise it. Removing the bot or requesting deletion stops further collection.</p>
+    <h2 data-i18n="h_rights">6. Your Data Protection Rights</h2>
+    <p data-i18n="p_rights">You may request access to, correction of, or deletion of your personal data, and you may withdraw the bot from your server at any time. To exercise these rights, contact us on our <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">support server</a>. Note that some records (for example completed transactions) may be retained where we are required to keep them.</p>
 
-    <h2>8. Children’s Privacy</h2>
-    <p>The Service is not directed to children. You must meet Discord’s minimum age requirement (at least 13 years old, or the higher age required in your country) to use Discord and, therefore, Vemoni. We do not knowingly collect data from anyone below that age.</p>
+    <h2 data-i18n="h_retention">7. Data Retention</h2>
+    <p data-i18n="p_retention">We keep your data only for as long as needed to provide the Service, resolve disputes, prevent abuse and comply with legal obligations. When data is no longer needed, we delete or anonymise it. Removing the bot or requesting deletion stops further collection.</p>
 
-    <h2>9. Changes to This Policy</h2>
-    <p>We may update this Policy from time to time. Material changes will be reflected by updating the “Last updated” date above and, where appropriate, by notice within the Service. Continued use after changes take effect constitutes acceptance of the updated Policy.</p>
+    <h2 data-i18n="h_children">8. Children’s Privacy</h2>
+    <p data-i18n="p_children">The Service is not directed to children. You must meet Discord’s minimum age requirement (at least 13 years old, or the higher age required in your country) to use Discord and, therefore, Vemoni. We do not knowingly collect data from anyone below that age.</p>
+
+    <h2 data-i18n="h_changes">9. Changes to This Policy</h2>
+    <p data-i18n="p_changes">We may update this Policy from time to time. Material changes will be reflected by updating the “Last updated” date above and, where appropriate, by notice within the Service. Continued use after changes take effect constitutes acceptance of the updated Policy.</p>
 
     <div class="card">
-      <h2 style="margin-top:0">10. Contact</h2>
-      <p style="margin-bottom:0">Questions about this Privacy Policy or your data? Email us at <a href="mailto:support@vemoni.info">support@vemoni.info</a>.</p>
+      <h2 data-i18n="h_contact">10. Contact</h2>
+      <p style="margin-bottom:0" data-i18n="p_contact">Questions about this Privacy Policy or your data? Reach us on our <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">support server</a>.</p>
     </div>
   </main>
 
   <footer>
     <div class="foot">
       <span>© 2026 Vemoni</span>
-      <a href="/privacy/">Privacy Policy</a>
-      <a href="/terms/">Terms of Service</a>
-      <a href="mailto:support@vemoni.info">support@vemoni.info</a>
+      <a href="/privacy/" data-i18n="f_privacy">Privacy Policy</a>
+      <a href="/terms/" data-i18n="f_terms">Terms of Service</a>
+      <a href="https://discord.gg/vemoni" target="_blank" rel="noopener" data-i18n="f_support">Support</a>
     </div>
   </footer>
+
+  <script>
+  var I18N = { ru: {
+    back:'← На сайт',
+    h1:'Политика конфиденциальности',
+    updated:'Обновлено: 12 июля 2026',
+    lead:'Эта Политика конфиденциальности объясняет, какую информацию Vemoni («Vemoni», «мы») собирает, когда вы используете нашего Discord‑бота верификации, сайты на vemoni.info и кабинеты партнёра, покупателя и инвестора (вместе — «Сервис»), и как мы её используем и защищаем.',
+    h_intro:'1. Введение',
+    p_intro:'Добавляя бота Vemoni на Discord‑сервер, проходя верификацию или входя в любой кабинет Vemoni, вы соглашаетесь с практиками, описанными в этой Политике. Если вы не согласны — пожалуйста, не используйте Сервис.',
+    h_collect:'2. Какие данные мы собираем',
+    p_collect:'Мы собираем только те данные, которые нужны для работы верификации, рекламной сети и выплат:',
+    li_discord:'<strong>Данные аккаунта Discord</strong> — ваш Discord ID, имя пользователя, отображаемое имя и аватар, получаемые через Discord API или Discord OAuth при входе.',
+    li_server:'<strong>Данные серверов</strong> — ID и названия Discord‑серверов, где добавлен бот, созданные вами карточки верификации и роли, которыми управляет бот.',
+    li_records:'<strong>Записи о верификациях и заходах</strong> — кто и на каком сервере прошёл верификацию, на какой рекламируемый сервер зашёл участник, метки времени и остался ли участник или ушёл.',
+    li_payment:'<strong>Платёжные данные, которые вы указываете</strong> — для партнёров: реквизиты для выплат (адрес крипто‑кошелька, Telegram ID для авто‑переводов USDT, карта и т.п.); для покупателей: пополнения кошелька и данные кампаний; для инвесторов: инвестиционные позиции.',
+    li_balances:'<strong>Балансы и транзакции</strong> — начисления, списания, выводы и их статус.',
+    li_technical:'<strong>Технические данные</strong> — базовая информация о сессии и запросах (например, токен авторизации в вашем браузере), необходимая для входа и защиты Сервиса.',
+    p_collect_note:'Мы <strong>не</strong> собираем содержимое ваших личных сообщений и не читаем сообщения на вашем сервере сверх того, что необходимо для процесса верификации.',
+    h_use:'3. Как мы используем данные',
+    li_use1:'Для работы бота верификации и выдачи роли.',
+    li_use2:'Для работы рекламной сети — показа приглашений спонсоров при верификации и сопоставления заходов с кампаниями.',
+    li_use3:'Для подсчёта подтверждённых заходов и расчёта, обработки и выплаты вознаграждений.',
+    li_use4:'Для работы и персонализации кабинетов партнёра, покупателя, инвестора и админа.',
+    li_use5:'Для выявления и предотвращения мошенничества, злоупотреблений и накрутки заходов.',
+    li_use6:'Для связи с вами по поводу аккаунта, выплат и важных изменений.',
+    h_share:'4. Как мы передаём данные',
+    p_share:'Мы не продаём ваши персональные данные. Ограниченными данными мы делимся только там, где это нужно для работы Сервиса:',
+    li_share_discord:'<strong>Discord</strong> — мы работаем с Discord API для верификации и читаем публичные данные, описанные выше, в рамках правил и политики Discord.',
+    li_share_pay:'<strong>Платёжные провайдеры</strong> — для выплат и пополнений мы используем сторонние платёжные сервисы (например, Crypto Pay / CryptoBot в Telegram). Передаются только данные, необходимые для проведения операции.',
+    li_share_legal:'<strong>Юридические требования</strong> — мы можем раскрыть данные, если это требуется по закону или для защиты прав, безопасности и целостности Сервиса.',
+    h_security:'5. Безопасность данных',
+    p_security:'Мы применяем разумные технические и организационные меры для защиты ваших данных от потери, неправомерного использования и несанкционированного доступа. Ни один способ передачи или хранения не является абсолютно безопасным, и мы не можем гарантировать полную безопасность.',
+    h_rights:'6. Ваши права на защиту данных',
+    p_rights:'Вы можете запросить доступ к своим персональным данным, их исправление или удаление, а также в любой момент удалить бота со своего сервера. Чтобы воспользоваться этими правами, напишите нам на <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">сервере поддержки</a>. Обратите внимание: некоторые записи (например, завершённые транзакции) могут храниться, если мы обязаны их хранить.',
+    h_retention:'7. Хранение данных',
+    p_retention:'Мы храним ваши данные ровно столько, сколько нужно для работы Сервиса, разрешения споров, предотвращения злоупотреблений и соблюдения закона. Когда данные больше не нужны, мы их удаляем или обезличиваем. Удаление бота или запрос на удаление прекращает дальнейший сбор.',
+    h_children:'8. Конфиденциальность детей',
+    p_children:'Сервис не предназначен для детей. Вы должны соответствовать минимальному возрасту Discord (не менее 13 лет или выше, если это требуется в вашей стране), чтобы пользоваться Discord и, следовательно, Vemoni. Мы сознательно не собираем данные лиц младше этого возраста.',
+    h_changes:'9. Изменения в Политике',
+    p_changes:'Мы можем время от времени обновлять эту Политику. Существенные изменения отражаются обновлением даты «Обновлено» выше и, при необходимости, уведомлением внутри Сервиса. Продолжение использования после вступления изменений в силу означает принятие обновлённой Политики.',
+    h_contact:'10. Контакты',
+    p_contact:'Вопросы о Политике конфиденциальности или ваших данных? Напишите нам на <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">сервере поддержки</a>.',
+    f_privacy:'Политика конфиденциальности', f_terms:'Условия использования', f_support:'Поддержка'
+  } };
+  (function(){
+    var EN = {}; document.querySelectorAll('[data-i18n]').forEach(function(el){ EN[el.dataset.i18n] = el.innerHTML; });
+    function setLang(l){
+      var d = l==='ru' ? I18N.ru : EN;
+      document.querySelectorAll('[data-i18n]').forEach(function(el){ var v = d[el.dataset.i18n]; if(v!=null) el.innerHTML = v; });
+      document.documentElement.lang = l;
+      document.querySelectorAll('#lang button').forEach(function(b){ b.classList.toggle('active', b.dataset.lang===l); });
+      try{ localStorage.setItem('vemonette-lang', l); }catch(e){}
+    }
+    document.querySelectorAll('#lang button').forEach(function(b){ b.addEventListener('click', function(){ setLang(b.dataset.lang); }); });
+    var start='en'; try{ var s=localStorage.getItem('vemonette-lang'); if(s==='ru'||s==='en') start=s; }catch(e){}
+    setLang(start);
+  })();
+  </script>
 </body>
 </html>

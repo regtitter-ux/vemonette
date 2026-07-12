@@ -18,10 +18,14 @@
     body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(900px 460px at 82% -6%,rgba(34,168,240,.14),transparent 60%),radial-gradient(700px 460px at 6% 4%,rgba(87,242,135,.06),transparent 60%)}
     .wrap{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:0 22px}
     header{border-bottom:1px solid var(--stroke)}
-    .bar{max-width:760px;margin:0 auto;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .brand{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:19px;letter-spacing:-.02em}
+    .bar{max-width:760px;margin:0 auto;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .brand{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:19px;letter-spacing:-.02em;flex:none}
     .brand img{width:28px;height:28px;border-radius:50%}
-    .back{color:var(--muted);font-size:14px;font-weight:600;text-decoration:none;transition:color .15s}
+    .bar-right{display:flex;align-items:center;gap:14px}
+    .lang{display:inline-flex;background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:8px;overflow:hidden}
+    .lang button{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;font-weight:700;padding:6px 10px;cursor:pointer;transition:.15s}
+    .lang button.active{background:rgba(92,200,255,.16);color:#fff}
+    .back{color:var(--muted);font-size:14px;font-weight:600;text-decoration:none;transition:color .15s;white-space:nowrap}
     .back:hover{color:#fff}
     main{padding:46px 0 80px}
     h1{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
@@ -35,6 +39,7 @@
     a:hover{text-decoration:underline}
     strong{color:var(--text);font-weight:700}
     .card{background:var(--panel);border:1px solid var(--stroke);border-radius:14px;padding:18px 20px;margin-top:22px}
+    .card h2{margin-top:0}
     footer{border-top:1px solid var(--stroke);margin-top:20px}
     .foot{max-width:760px;margin:0 auto;padding:26px 22px;color:var(--muted);font-size:13.5px;display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;text-align:center}
     .foot a{color:var(--muted)} .foot a:hover{color:#fff;text-decoration:none}
@@ -44,84 +49,148 @@
   <header>
     <div class="bar">
       <a class="brand" href="/"><img src="/assets/logo.png" alt="Vemoni" />Vemoni</a>
-      <a class="back" href="/">← Back to site</a>
+      <div class="bar-right">
+        <div class="lang" id="lang"><button data-lang="en">EN</button><button data-lang="ru">RU</button></div>
+        <a class="back" href="/" data-i18n="back">← Back to site</a>
+      </div>
     </div>
   </header>
 
   <main class="wrap">
-    <h1>Terms of Service</h1>
-    <div class="updated">Last updated: 12 July 2026</div>
+    <h1 data-i18n="h1">Terms of Service</h1>
+    <div class="updated" data-i18n="updated">Last updated: 12 July 2026</div>
+    <p class="lead" data-i18n="lead">These Terms of Service (“Terms”) govern your use of the Vemoni Discord bot, the websites at vemoni.info, and the partner, buyer and investor dashboards (together, the “Service”), operated by Vemoni (“we”, “us”). Please read them carefully.</p>
 
-    <p class="lead">These Terms of Service (“Terms”) govern your use of the Vemoni Discord bot, the websites at vemoni.info, and the partner, buyer and investor dashboards (together, the “Service”), operated by Vemoni (“we”, “us”). Please read them carefully.</p>
+    <h2 data-i18n="h_accept">1. Acceptance of Terms</h2>
+    <p data-i18n="p_accept">By adding the bot, completing a verification, or signing in to any Vemoni dashboard, you agree to be bound by these Terms and by our <a href="/privacy/">Privacy Policy</a>. If you do not agree, do not use the Service.</p>
 
-    <h2>1. Acceptance of Terms</h2>
-    <p>By adding the bot, completing a verification, or signing in to any Vemoni dashboard, you agree to be bound by these Terms and by our <a href="/privacy/">Privacy Policy</a>. If you do not agree, do not use the Service.</p>
-
-    <h2>2. Description of Service</h2>
-    <p>Vemoni provides a personal verification bot for Discord servers together with an advertising network. In short:</p>
+    <h2 data-i18n="h_desc">2. Description of Service</h2>
+    <p data-i18n="p_desc">Vemoni provides a personal verification bot for Discord servers together with an advertising network. In short:</p>
     <ul>
-      <li><strong>Verification</strong> — members of a partner server complete a short, two‑click verification and receive a verified role.</li>
-      <li><strong>Advertising</strong> — during verification a sponsor’s server invite may be shown. Partners earn for verified joins that come through their server; buyers pay to advertise their server to that audience.</li>
-      <li><strong>Payouts</strong> — partner earnings are tracked as a balance and paid out to the details you provide.</li>
-      <li><strong>Investing</strong> — the optional investor feature lets users buy a server’s future invites at a discount, with returns paid from real sales.</li>
+      <li data-i18n="li_desc_verif"><strong>Verification</strong> — members of a partner server complete a short, two‑click verification and receive a verified role.</li>
+      <li data-i18n="li_desc_ads"><strong>Advertising</strong> — during verification a sponsor’s server invite may be shown. Partners earn for verified joins that come through their server; buyers pay to advertise their server to that audience.</li>
+      <li data-i18n="li_desc_pay"><strong>Payouts</strong> — partner earnings are tracked as a balance and paid out to the details you provide.</li>
+      <li data-i18n="li_desc_invest"><strong>Investing</strong> — the optional investor feature lets users buy a server’s future invites at a discount, with returns paid from real sales.</li>
     </ul>
 
-    <h2>3. Eligibility &amp; User Responsibilities</h2>
+    <h2 data-i18n="h_resp">3. Eligibility &amp; User Responsibilities</h2>
     <ul>
-      <li>You must comply with the <a href="https://discord.com/terms" target="_blank" rel="noopener">Discord Terms of Service</a> and Community Guidelines at all times.</li>
-      <li>You must meet Discord’s minimum age requirement to use the Service.</li>
-      <li>You are responsible for the accuracy of the payout details you provide; we are not liable for funds sent to details you entered incorrectly.</li>
-      <li>You are responsible for activity that occurs under your account and on servers you control.</li>
+      <li data-i18n="li_resp1">You must comply with the <a href="https://discord.com/terms" target="_blank" rel="noopener">Discord Terms of Service</a> and Community Guidelines at all times.</li>
+      <li data-i18n="li_resp2">You must meet Discord’s minimum age requirement to use the Service.</li>
+      <li data-i18n="li_resp3">You are responsible for the accuracy of the payout details you provide; we are not liable for funds sent to details you entered incorrectly.</li>
+      <li data-i18n="li_resp4">You are responsible for activity that occurs under your account and on servers you control.</li>
     </ul>
 
-    <h2>4. Prohibited Activities</h2>
-    <p>You agree not to:</p>
+    <h2 data-i18n="h_prohibit">4. Prohibited Activities</h2>
+    <p data-i18n="p_prohibit">You agree not to:</p>
     <ul>
-      <li>Generate fake, automated, self‑botted, incentivised or otherwise fraudulent joins or verifications, or otherwise manipulate join counts, balances or payouts.</li>
-      <li>Advertise content that is illegal, deceptive, malicious, or that violates Discord’s rules (for example scams, malware, or NSFW where not permitted).</li>
-      <li>Use multiple accounts to abuse referrals, payouts or the investor feature.</li>
-      <li>Interfere with, disrupt, reverse‑engineer or attempt to gain unauthorised access to the Service.</li>
+      <li data-i18n="li_pro1">Generate fake, automated, self‑botted, incentivised or otherwise fraudulent joins or verifications, or otherwise manipulate join counts, balances or payouts.</li>
+      <li data-i18n="li_pro2">Advertise content that is illegal, deceptive, malicious, or that violates Discord’s rules (for example scams, malware, or NSFW where not permitted).</li>
+      <li data-i18n="li_pro3">Use multiple accounts to abuse referrals, payouts or the investor feature.</li>
+      <li data-i18n="li_pro4">Interfere with, disrupt, reverse‑engineer or attempt to gain unauthorised access to the Service.</li>
     </ul>
-    <p>We may withhold or reverse earnings, cancel campaigns, and suspend or terminate accounts involved in such activity.</p>
+    <p data-i18n="p_prohibit_note">We may withhold or reverse earnings, cancel campaigns, and suspend or terminate accounts involved in such activity.</p>
 
-    <h2>5. Payments, Earnings &amp; Payouts</h2>
+    <h2 data-i18n="h_pay">5. Payments, Earnings &amp; Payouts</h2>
     <ul>
-      <li>Partner earnings accrue per verified join that is delivered through an active ad, at the rate shown in the dashboard.</li>
-      <li>If a member who was counted <strong>leaves</strong> the sponsor server, the corresponding join may be reversed and the amount clawed back from the partner’s balance.</li>
-      <li>Payouts are created automatically once a partner’s balance reaches the withdrawal threshold and are sent to the requisites you provide. Processing times depend on the payment provider.</li>
-      <li>Buyers fund campaigns by topping up a wallet; charges are made as ads are delivered. Amounts spent on delivered joins are non‑refundable.</li>
-      <li>Investor returns depend on real sales of the invites you purchased and are not guaranteed within any fixed timeframe; specific investor conditions are described in the investor dashboard.</li>
-      <li>All amounts are handled in the currency shown in the dashboard. You are responsible for any taxes that apply to your earnings.</li>
+      <li data-i18n="li_pay1">Partner earnings accrue per verified join that is delivered through an active ad, at the rate shown in the dashboard.</li>
+      <li data-i18n="li_pay2">If a member who was counted <strong>leaves</strong> the sponsor server, the corresponding join may be reversed and the amount clawed back from the partner’s balance.</li>
+      <li data-i18n="li_pay3">Payouts are created automatically once a partner’s balance reaches the withdrawal threshold and are sent to the requisites you provide. Processing times depend on the payment provider.</li>
+      <li data-i18n="li_pay4">Buyers fund campaigns by topping up a wallet; charges are made as ads are delivered. Amounts spent on delivered joins are non‑refundable.</li>
+      <li data-i18n="li_pay5">Investor returns depend on real sales of the invites you purchased and are not guaranteed within any fixed timeframe; specific investor conditions are described in the investor dashboard.</li>
+      <li data-i18n="li_pay6">You are responsible for any taxes that apply to your earnings.</li>
     </ul>
 
-    <h2>6. Service Availability</h2>
-    <p>The Service is provided on an “as is” and “as available” basis. We may modify, suspend or discontinue any part of the Service at any time, and we do not guarantee uninterrupted or error‑free operation.</p>
+    <h2 data-i18n="h_avail">6. Service Availability</h2>
+    <p data-i18n="p_avail">The Service is provided on an “as is” and “as available” basis. We may modify, suspend or discontinue any part of the Service at any time, and we do not guarantee uninterrupted or error‑free operation.</p>
 
-    <h2>7. Limitation of Liability</h2>
-    <p>To the maximum extent permitted by law, Vemoni shall not be liable for any indirect, incidental, special or consequential damages, or for any loss of profits, data, or Discord standing, arising from your use of or inability to use the Service. Our total liability for any claim shall not exceed the amount, if any, you paid to us in the three months preceding the claim.</p>
+    <h2 data-i18n="h_liability">7. Limitation of Liability</h2>
+    <p data-i18n="p_liability">To the maximum extent permitted by law, Vemoni shall not be liable for any indirect, incidental, special or consequential damages, or for any loss of profits, data, or Discord standing, arising from your use of or inability to use the Service. Our total liability for any claim shall not exceed the amount, if any, you paid to us in the three months preceding the claim.</p>
 
-    <h2>8. Termination</h2>
-    <p>You may stop using the Service and remove the bot at any time. We may suspend or terminate your access, with or without notice, if you breach these Terms or if we reasonably believe your use harms the Service or other users. Unpaid balances tied to fraudulent activity may be forfeited.</p>
+    <h2 data-i18n="h_term">8. Termination</h2>
+    <p data-i18n="p_term">You may stop using the Service and remove the bot at any time. We may suspend or terminate your access, with or without notice, if you breach these Terms or if we reasonably believe your use harms the Service or other users. Unpaid balances tied to fraudulent activity may be forfeited.</p>
 
-    <h2>9. Changes to These Terms</h2>
-    <p>We may update these Terms from time to time. Material changes will be reflected by updating the “Last updated” date above. Continued use after changes take effect constitutes acceptance of the updated Terms.</p>
+    <h2 data-i18n="h_changes">9. Changes to These Terms</h2>
+    <p data-i18n="p_changes">We may update these Terms from time to time. Material changes will be reflected by updating the “Last updated” date above. Continued use after changes take effect constitutes acceptance of the updated Terms.</p>
 
-    <h2>10. Governing Law</h2>
-    <p>These Terms are governed by applicable law, without regard to conflict‑of‑law rules. Any disputes will be resolved in the competent courts of the applicable jurisdiction.</p>
+    <h2 data-i18n="h_law">10. Governing Law</h2>
+    <p data-i18n="p_law">These Terms are governed by applicable law, without regard to conflict‑of‑law rules. Any disputes will be resolved in the competent courts of the applicable jurisdiction.</p>
 
     <div class="card">
-      <h2 style="margin-top:0">11. Contact</h2>
-      <p style="margin-bottom:0">Questions about these Terms? Email us at <a href="mailto:support@vemoni.info">support@vemoni.info</a>.</p>
+      <h2 data-i18n="h_contact">11. Contact</h2>
+      <p style="margin-bottom:0" data-i18n="p_contact">Questions about these Terms? Reach us on our <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">support server</a>.</p>
     </div>
   </main>
 
   <footer>
     <div class="foot">
       <span>© 2026 Vemoni</span>
-      <a href="/privacy/">Privacy Policy</a>
-      <a href="/terms/">Terms of Service</a>
-      <a href="mailto:support@vemoni.info">support@vemoni.info</a>
+      <a href="/privacy/" data-i18n="f_privacy">Privacy Policy</a>
+      <a href="/terms/" data-i18n="f_terms">Terms of Service</a>
+      <a href="https://discord.gg/vemoni" target="_blank" rel="noopener" data-i18n="f_support">Support</a>
     </div>
   </footer>
+
+  <script>
+  var I18N = { ru: {
+    back:'← На сайт',
+    h1:'Условия использования',
+    updated:'Обновлено: 12 июля 2026',
+    lead:'Эти Условия использования («Условия») регулируют использование вами Discord‑бота Vemoni, сайтов на vemoni.info и кабинетов партнёра, покупателя и инвестора (вместе — «Сервис»), управляемых Vemoni («мы»). Пожалуйста, внимательно их прочитайте.',
+    h_accept:'1. Принятие условий',
+    p_accept:'Добавляя бота, проходя верификацию или входя в любой кабинет Vemoni, вы соглашаетесь соблюдать эти Условия и нашу <a href="/privacy/">Политику конфиденциальности</a>. Если вы не согласны — не используйте Сервис.',
+    h_desc:'2. Описание сервиса',
+    p_desc:'Vemoni предоставляет персонального бота верификации для Discord‑серверов вместе с рекламной сетью. Кратко:',
+    li_desc_verif:'<strong>Верификация</strong> — участники сервера‑партнёра проходят короткую верификацию в два клика и получают роль.',
+    li_desc_ads:'<strong>Реклама</strong> — во время верификации может показываться приглашение сервера‑спонсора. Партнёры зарабатывают за подтверждённые заходы через свой сервер; покупатели платят за рекламу своего сервера этой аудитории.',
+    li_desc_pay:'<strong>Выплаты</strong> — заработок партнёра учитывается как баланс и выплачивается по указанным вами реквизитам.',
+    li_desc_invest:'<strong>Инвестиции</strong> — опциональная функция инвестора позволяет выкупать будущие инвайты сервера со скидкой, с доходом из реальных продаж.',
+    h_resp:'3. Требования и обязанности пользователя',
+    li_resp1:'Вы обязаны всегда соблюдать <a href="https://discord.com/terms" target="_blank" rel="noopener">Условия использования Discord</a> и правила сообщества.',
+    li_resp2:'Вы должны соответствовать минимальному возрасту Discord для использования Сервиса.',
+    li_resp3:'Вы отвечаете за корректность указанных реквизитов для выплат; мы не несём ответственности за средства, отправленные по неверно введённым вами реквизитам.',
+    li_resp4:'Вы отвечаете за действия под вашим аккаунтом и на серверах, которыми управляете.',
+    h_prohibit:'4. Запрещённые действия',
+    p_prohibit:'Вы соглашаетесь не:',
+    li_pro1:'Создавать фейковые, автоматизированные, сельф‑ботовые, мотивированные или иным образом мошеннические заходы/верификации, а также накручивать заходы, балансы или выплаты.',
+    li_pro2:'Рекламировать контент, который незаконен, вводит в заблуждение, вредоносен или нарушает правила Discord (например, скам, вредоносное ПО, NSFW где не разрешено).',
+    li_pro3:'Использовать несколько аккаунтов для злоупотребления рефералами, выплатами или функцией инвестора.',
+    li_pro4:'Вмешиваться в работу Сервиса, нарушать её, декомпилировать или пытаться получить несанкционированный доступ.',
+    p_prohibit_note:'Мы можем удерживать или отменять начисления, отменять кампании и приостанавливать или блокировать аккаунты, вовлечённые в такую деятельность.',
+    h_pay:'5. Платежи, заработок и выплаты',
+    li_pay1:'Заработок партнёра начисляется за каждый подтверждённый заход, доставленный через активную рекламу, по ставке, указанной в кабинете.',
+    li_pay2:'Если засчитанный участник <strong>покидает</strong> сервер‑спонсор, соответствующий заход может быть отменён, а сумма списана с баланса партнёра.',
+    li_pay3:'Выплаты создаются автоматически, как только баланс партнёра достигает порога вывода, и отправляются по указанным реквизитам. Сроки обработки зависят от платёжного провайдера.',
+    li_pay4:'Покупатели финансируют кампании пополнением кошелька; списания происходят по мере показа рекламы. Суммы, потраченные на доставленные заходы, возврату не подлежат.',
+    li_pay5:'Доход инвестора зависит от реальных продаж выкупленных инвайтов и не гарантирован в какой‑либо фиксированный срок; конкретные условия описаны в кабинете инвестора.',
+    li_pay6:'Вы самостоятельно отвечаете за любые налоги, применимые к вашему заработку.',
+    h_avail:'6. Доступность сервиса',
+    p_avail:'Сервис предоставляется на условиях «как есть» и «по мере доступности». Мы можем изменять, приостанавливать или прекращать любую часть Сервиса в любое время и не гарантируем бесперебойной или безошибочной работы.',
+    h_liability:'7. Ограничение ответственности',
+    p_liability:'В максимально допустимой законом степени Vemoni не несёт ответственности за любые косвенные, случайные, специальные или последующие убытки, а также за упущенную выгоду, потерю данных или репутации в Discord, возникшие из‑за использования или невозможности использования Сервиса. Наша совокупная ответственность по любому требованию не превышает сумму, которую вы уплатили нам за три месяца до возникновения требования (если таковая была).',
+    h_term:'8. Прекращение',
+    p_term:'Вы можете прекратить использование Сервиса и удалить бота в любое время. Мы можем приостановить или прекратить ваш доступ, с уведомлением или без, если вы нарушаете эти Условия или если мы обоснованно считаем, что ваше использование вредит Сервису или другим пользователям. Невыплаченные балансы, связанные с мошеннической деятельностью, могут быть аннулированы.',
+    h_changes:'9. Изменения условий',
+    p_changes:'Мы можем время от времени обновлять эти Условия. Существенные изменения отражаются обновлением даты «Обновлено» выше. Продолжение использования после вступления изменений в силу означает принятие обновлённых Условий.',
+    h_law:'10. Применимое право',
+    p_law:'Эти Условия регулируются применимым правом без учёта коллизионных норм. Любые споры разрешаются в компетентных судах соответствующей юрисдикции.',
+    h_contact:'11. Контакты',
+    p_contact:'Вопросы по Условиям? Напишите нам на <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">сервере поддержки</a>.',
+    f_privacy:'Политика конфиденциальности', f_terms:'Условия использования', f_support:'Поддержка'
+  } };
+  (function(){
+    var EN = {}; document.querySelectorAll('[data-i18n]').forEach(function(el){ EN[el.dataset.i18n] = el.innerHTML; });
+    function setLang(l){
+      var d = l==='ru' ? I18N.ru : EN;
+      document.querySelectorAll('[data-i18n]').forEach(function(el){ var v = d[el.dataset.i18n]; if(v!=null) el.innerHTML = v; });
+      document.documentElement.lang = l;
+      document.querySelectorAll('#lang button').forEach(function(b){ b.classList.toggle('active', b.dataset.lang===l); });
+      try{ localStorage.setItem('vemonette-lang', l); }catch(e){}
+    }
+    document.querySelectorAll('#lang button').forEach(function(b){ b.addEventListener('click', function(){ setLang(b.dataset.lang); }); });
+    var start='en'; try{ var s=localStorage.getItem('vemonette-lang'); if(s==='ru'||s==='en') start=s; }catch(e){}
+    setLang(start);
+  })();
+  </script>
 </body>
 </html>
