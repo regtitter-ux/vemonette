@@ -130,6 +130,7 @@ const RU = {
   hero_sub: 'Краткий обзор: что делает Vemoni, как это работает и какие за этим цифры.',
   hero_cta: 'Читать ↓',
   invite_bot: 'Добавить бота', nav_login: 'Войти через Discord',
+  menu_partner: 'Кабинет партнёра', menu_order: 'Кабинет покупателя', menu_invest: 'Кабинет инвестора', menu_admin: 'Админка', menu_logout: 'Выйти',
   viz_buyers: 'Покупатели', viz_partners: 'Партнёры',
   stat1_label: 'Уже выплачено партнёрам',
   stat2_label: 'довольных покупателей',
@@ -441,4 +442,38 @@ setLang(startLang);
   }
   window.addEventListener('resize', () => { cancelAnimationFrame(raf); layout(); draw(); });
   requestAnimationFrame(() => { layout(); if (reduce) { for (let i = 0; i < 10; i++) spawn(); } draw(); });
+})();
+
+/* ---------- Logged-in user chip + cabinet menu (main page) ---------- */
+(function () {
+  const box = document.getElementById('navUser'); if (!box) return;
+  const loginBtn = document.querySelector('.nav-login');
+  const base = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '');
+  let tok = ''; try { tok = localStorage.getItem('vemoni_tok') || ''; } catch (_) {}
+  const headers = {}; if (tok) headers.Authorization = 'Bearer ' + tok;
+  fetch(base + '/partner/whoami', { credentials: 'include', headers })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => {
+      if (!d || !d.authed) return;
+      if (loginBtn) loginBtn.style.display = 'none';
+      const av = document.getElementById('navAv');
+      if (d.avatar) { av.style.backgroundImage = 'url("' + d.avatar + '")'; }
+      else { av.textContent = ((d.name || 'U').trim()[0] || 'U').toUpperCase(); }
+      if (!d.isAdmin) box.querySelectorAll('[data-admin]').forEach((el) => el.remove());
+      box.hidden = false;
+      const menu = document.getElementById('navMenu');
+      const toggle = (e) => { e.preventDefault(); e.stopPropagation(); menu.hidden = !menu.hidden; };
+      document.getElementById('navBurger').addEventListener('click', toggle);
+      av.addEventListener('click', toggle);
+      menu.addEventListener('click', (e) => e.stopPropagation());
+      document.addEventListener('click', () => { menu.hidden = true; });
+      const lo = document.getElementById('navLogout');
+      if (lo) lo.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try { await fetch(base + '/partner/logout', { method: 'POST', credentials: 'include', headers }); } catch (_) {}
+        try { localStorage.removeItem('vemoni_tok'); } catch (_) {}
+        location.reload();
+      });
+    })
+    .catch(() => {});
 })();
