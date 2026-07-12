@@ -46,18 +46,23 @@
   /* ---- nav ---- */
   nav{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);
     background:rgba(8,11,18,.7);border-bottom:1px solid var(--line)}
-  .nav-in{max-width:var(--maxw);margin:0 auto;padding:13px 22px;display:flex;align-items:center;gap:18px}
-  .brand{display:flex;align-items:center;gap:10px}
+  .nav-in{max-width:var(--maxw);margin:0 auto;padding:11px 22px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:18px}
+  .brand{display:flex;align-items:center;gap:10px;justify-self:start}
   .brand img{width:30px;height:30px;border-radius:8px}
   .brand-name{font-size:18px}
-  .nav-sp{flex:1}
-  .nav-back{color:var(--muted);font-size:14px;font-weight:600;padding:8px 12px;border-radius:10px}
-  .nav-back:hover{color:var(--ink);background:rgba(255,255,255,.05)}
+  .nav-mid{display:flex;align-items:center;gap:4px;justify-self:center}
+  .nav-mid a{color:var(--muted);font-size:14px;font-weight:600;padding:8px 13px;border-radius:9px;white-space:nowrap;transition:.15s}
+  .nav-mid a:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+  .nav-right{display:flex;align-items:center;gap:10px;justify-self:end}
+  .nav-invite{color:var(--muted);font-size:14px;font-weight:600;padding:8px 13px;border-radius:9px;white-space:nowrap;transition:.15s}
+  .nav-invite:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+  .nav-login{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;background:#fff;color:#0a0d15;font-weight:800;font-size:14px;padding:9px 15px;border-radius:10px;transition:background .15s,transform .05s}
+  .nav-login svg{color:#5865f2;flex:none}
+  .nav-login:hover{background:#e7ecf5}
+  .nav-login:active{transform:translateY(1px)}
   .lang{display:inline-flex;gap:2px;padding:3px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:999px}
   .lang button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;cursor:pointer}
   .lang button.active{background:var(--blue);color:#04121f}
-  .nav-cta{background:var(--blue);color:#04121f;font-weight:700;font-size:14px;padding:9px 15px;border-radius:11px;white-space:nowrap}
-  .nav-cta:hover{background:var(--blue-2)}
 
   /* ---- buttons ---- */
   .btn{display:inline-flex;align-items:center;gap:9px;font-weight:700;font-size:15px;padding:14px 22px;border-radius:13px;cursor:pointer;border:1px solid transparent;transition:transform .08s ease,background .15s ease}
@@ -198,9 +203,10 @@
     .viz{height:340px}
     .flow{grid-template-columns:1fr}
     .nums{grid-template-columns:repeat(2,1fr)}
-    .nav-back{display:none}
+    .nav-mid{display:none}
+    .nav-in{grid-template-columns:auto 1fr}
   }
-  @media (max-width:520px){ .nums{grid-template-columns:1fr} }
+  @media (max-width:520px){ .nums{grid-template-columns:1fr} .nav-invite{display:none} .nav-right{gap:8px} .nav-login{padding:8px 12px;font-size:13px} }
 
   /* live "new member joined a sponsor" notifications (bottom-left) */
   .join-toasts{position:fixed;left:20px;bottom:20px;z-index:80;display:flex;flex-direction:column;gap:10px;width:330px;max-width:calc(100vw - 40px);pointer-events:none}
@@ -231,10 +237,19 @@
 <nav>
   <div class="nav-in">
     <a class="brand" href="/"><img src="/assets/logo.png" alt="Vemoni" /><span class="brand-name">Vemoni</span></a>
-    <span class="nav-sp"></span>
-    <a class="nav-back" href="/" data-i18n="nav_back">← Home</a>
-    <div class="lang" id="langSwitch"><button data-lang="en">EN</button><button data-lang="ru">RU</button></div>
-    <a class="nav-cta" href="/order/" data-i18n="nav_cta">Buy advertising</a>
+    <nav class="nav-mid">
+      <a href="/" data-i18n="nav_home">Home</a>
+      <a href="#how" data-i18n="nav_how">How it works</a>
+      <a href="/order/" data-i18n="nav_order">Buy advertising</a>
+    </nav>
+    <div class="nav-right">
+      <a class="nav-invite" href="https://discord.com/oauth2/authorize?client_id=1522609323090509905&amp;permissions=8&amp;integration_type=0&amp;scope=bot" target="_blank" rel="noopener" data-i18n="invite_bot">Invite Bot</a>
+      <a class="nav-login" href="/partner/" data-i18n="nav_login">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M20.317 4.369A19.79 19.79 0 0 0 15.885 3c-.196.35-.42.82-.577 1.19a18.27 18.27 0 0 0-5.487 0A12.6 12.6 0 0 0 9.24 3a19.74 19.74 0 0 0-4.434 1.369C1.61 9.046.73 13.605 1.17 18.1a19.9 19.9 0 0 0 6.073 3.058c.49-.667.927-1.376 1.302-2.122-.716-.269-1.4-.6-2.045-.99.171-.125.34-.255.5-.39a14.2 14.2 0 0 0 12.198 0c.164.14.332.27.5.39-.647.39-1.332.722-2.049.99.375.746.81 1.454 1.3 2.122a19.85 19.85 0 0 0 6.076-3.058c.5-5.177-.838-9.694-3.508-13.731ZM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.955 2.42-2.157 2.42Zm7.96 0c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.946 2.42-2.157 2.42Z"/></svg>
+        Login with Discord
+      </a>
+      <div class="lang" id="langSwitch"><button data-lang="en">EN</button><button data-lang="ru">RU</button></div>
+    </div>
   </div>
 </nav>
 
@@ -416,6 +431,7 @@
 /* ---------------- i18n (EN in markup, RU here; shares the site's lang key) ---------------- */
 const RU = {
   nav_back:'← На главную', nav_cta:'Купить рекламу',
+  nav_home:'Главная', nav_how:'Как это работает', nav_order:'Купить рекламу', invite_bot:'Добавить бота', nav_login:'Войти через Discord',
   hero_pill:'Реклама для Discord',
   hero_h1:'Живые участники —<br /><span class="grad">прямо на ваш сервер</span>',
   hero_sub:'Ваше приглашение показывается внутри верификации, которую проходят на серверах-партнёрах. Тысячи людей каждый день видят ваш сервер и заходят в один клик — а платите вы только за реальных участников, которые остались.',
