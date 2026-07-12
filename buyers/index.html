@@ -217,7 +217,6 @@
   .jt-members{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);min-width:0}
   .jt-members svg{flex:none;opacity:.75}
   .jt-members b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
-  .jt-badge{flex:none;font-weight:800;font-size:12.5px;color:var(--green);background:rgba(63,209,138,.13);border:1px solid rgba(63,209,138,.3);border-radius:999px;padding:3px 11px}
   .jt-x{position:absolute;top:8px;right:9px;width:20px;height:20px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;border-radius:6px;opacity:.55;padding:0}
   .jt-x:hover{opacity:1;background:rgba(255,255,255,.08)}
   @keyframes jt-in{from{transform:translateX(-118%);opacity:0}to{transform:translateX(0);opacity:1}}
@@ -676,8 +675,8 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
   var PPL='<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 1.9-8 4.25V20h16v-1.75C20 15.9 16.42 14 12 14Z"/></svg>';
   var PAL=['#5865f2','#e63b7a','#a855f7','#39c5bb','#f59e0b','#22d3ee','#f472b6','#8b5cf6','#d1004b','#10b981'];
   function strings(){ return document.documentElement.lang==='ru'
-    ? {sub:'получил нового участника',members:'участников'}
-    : {sub:'gained a new member',members:'members'}; }
+    ? {sub:'Участник появился благодаря Vemoni',members:'участников'}
+    : {sub:'Gained a member by Vemoni',members:'members'}; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function fmt(n){ return n==null?'—':Number(n).toLocaleString('en-US'); }
   function colorFor(str){ var h=0; str=String(str||''); for(var i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))>>>0; return PAL[h%PAL.length]; }
@@ -689,8 +688,7 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
     el.innerHTML='<button class="jt-x" aria-label="Close" title="Close">&times;</button>'+
       '<div class="jt-top"><div class="jt-ic" style="background:linear-gradient(150deg,'+col+','+col+'88)">'+ic+'</div>'+
       '<div class="jt-body"><div class="jt-name">'+esc(ev.name)+'</div><div class="jt-sub">'+t.sub+'</div></div></div>'+
-      '<div class="jt-foot"><span class="jt-members">'+PPL+' <b>'+(ev.members!=null?fmt(ev.members):'—')+'</b>&nbsp;'+t.members+'</span>'+
-      '<span class="jt-badge">+1</span></div>';
+      '<div class="jt-foot"><span class="jt-members">'+PPL+' <b>'+(ev.members!=null?fmt(ev.members):'—')+'</b>&nbsp;'+t.members+'</span></div>';
     var close=function(){ el.classList.add('out'); setTimeout(function(){ el.remove(); },420); };
     el.querySelector('.jt-x').addEventListener('click',close);
     host.appendChild(el);
