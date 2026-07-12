@@ -333,63 +333,77 @@ setLang(startLang);
 })();
 
 /* ---------- Live credit notifications (bottom-left) ----------
-   Real-time "someone just earned" pops, drawn from the live featured-servers
-   feed (FEED): real server names, avatars and member counts, with the real
-   $0.05-per-join rate. Newest slides in at the bottom-left; a few stack up. */
+   REAL "someone just earned" pops, polled from the API (/credits-feed): each is
+   an actual confirmed paid join — the sponsor server that gained a member, its
+   live member count and the real payout. New credits are queued and popped one
+   at a time; when there's no fresh activity, the corner stays quiet. */
 (function creditToasts() {
   const host = document.getElementById('creditToasts');
   if (!host) return;
-  const AMOUNT = '+$0.05';
+  const base = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '');
   const MAX = 3;
   const PPL = '<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 1.9-8 4.25V20h16v-1.75C20 15.9 16.42 14 12 14Z"/></svg>';
+  const PAL = ['#5865f2', '#e63b7a', '#a855f7', '#39c5bb', '#f59e0b', '#22d3ee', '#f472b6', '#8b5cf6', '#d1004b', '#10b981'];
   const strings = () => (document.documentElement.lang === 'ru')
     ? { sub: 'начисление за подтверждённый заход', members: 'участников' }
     : { sub: 'credited for a verified join', members: 'members' };
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const colorFor = (str) => { let h = 0; str = String(str || ''); for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0; return PAL[h % PAL.length]; };
 
-  // Weighted pick: bigger servers pop a little more often (feels real, not uniform).
-  function pickServer() {
-    const pool = (Array.isArray(FEED) ? FEED : []).filter((s) => s && s.name);
-    if (!pool.length) return null;
-    const withM = pool.filter((s) => Number(s.members) > 0);
-    const base = withM.length ? withM : pool;
-    const wt = (s) => Math.max(1, Math.sqrt(Number(s.members) || 1));
-    let r = Math.random() * base.reduce((a, s) => a + wt(s), 0);
-    for (const s of base) { r -= wt(s); if (r <= 0) return s; }
-    return base[base.length - 1];
-  }
-  function iconHTML(s) {
-    const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null);
-    const letter = esc((s.letter || (s.name || 'S').trim()[0] || 'S').toUpperCase());
-    return src
-      ? `<img src="${esc(src)}" alt="" onerror="this.parentNode.textContent='${letter}'" />`
-      : letter;
-  }
-  function show() {
-    const s = pickServer(); if (!s) return;
+  function render(ev) {
     const t = strings();
+    const col = colorFor(ev.name);
+    const letter = esc((String(ev.name || 'S').trim()[0] || 'S').toUpperCase());
+    const ic = ev.icon
+      ? `<img src="${esc(ev.icon)}" alt="" onerror="this.parentNode.textContent='${letter}'" />`
+      : letter;
+    const amt = '+$' + (Number(ev.amount) || 0).toFixed(2);
     const el = document.createElement('div');
     el.className = 'ctoast';
-    el.style.setProperty('--ic', s.color || 'var(--blurple)');
     el.innerHTML =
       `<button class="ctoast-x" aria-label="Close" title="Close">&times;</button>` +
       `<div class="ctoast-top">` +
-        `<div class="ctoast-ic" style="background:${esc(s.accent || s.color || 'var(--blurple)')}">${iconHTML(s)}</div>` +
-        `<div class="ctoast-body"><div class="ctoast-name">${esc(s.name)}</div><div class="ctoast-sub">${t.sub}</div></div>` +
+        `<div class="ctoast-ic" style="background:linear-gradient(150deg,${col},${col}88)">${ic}</div>` +
+        `<div class="ctoast-body"><div class="ctoast-name">${esc(ev.name)}</div><div class="ctoast-sub">${t.sub}</div></div>` +
       `</div>` +
       `<div class="ctoast-foot">` +
-        `<span class="ctoast-members">${PPL} <b>${s.members != null ? fmt(s.members) : '—'}</b>&nbsp;${t.members}</span>` +
-        `<span class="ctoast-amt">${AMOUNT}</span>` +
+        `<span class="ctoast-members">${PPL} <b>${ev.members != null ? fmt(ev.members) : '—'}</b>&nbsp;${t.members}</span>` +
+        `<span class="ctoast-amt">${amt}</span>` +
       `</div>`;
     const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 420); };
     el.querySelector('.ctoast-x').addEventListener('click', close);
     host.appendChild(el);
     while (host.children.length > MAX) host.firstElementChild.remove();
-    el._t = setTimeout(close, 5200 + Math.random() * 1600);
+    setTimeout(close, 5200 + Math.random() * 1600);
   }
-  function loop() {
-    if (!document.hidden) show();
-    setTimeout(loop, 4800 + Math.random() * 5200); // ~5–10s between pops
+
+  let lastTs = 0;          // newest credit timestamp already queued
+  let firstLoad = true;
+  const queue = [];        // pending real credits, oldest-first
+  const keyOf = (e) => `${e.ts}|${e.name}`;
+  const seen = new Set();
+
+  async function poll() {
+    try {
+      const r = await fetch(base + '/credits-feed', { cache: 'no-store' });
+      if (r.ok) {
+        const d = await r.json();
+        const evs = (Array.isArray(d.events) ? d.events : [])
+          .filter((e) => e && e.name).sort((a, b) => (a.ts || 0) - (b.ts || 0)); // oldest-first
+        let fresh = evs.filter((e) => (e.ts || 0) > lastTs && !seen.has(keyOf(e)));
+        // On first load, only surface the last few so we don't dump a backlog.
+        if (firstLoad) { fresh = fresh.slice(-3); firstLoad = false; }
+        else fresh = fresh.slice(-8);
+        for (const e of fresh) { seen.add(keyOf(e)); if ((e.ts || 0) > lastTs) lastTs = e.ts || 0; queue.push(e); }
+      }
+    } catch (_) { /* offline / API down → try again next tick */ }
+    setTimeout(poll, 18000 + Math.random() * 8000); // ~18–26s between polls
   }
-  setTimeout(loop, 2800); // first pop shortly after load
+
+  (function popLoop() {
+    if (!document.hidden && queue.length) render(queue.shift());
+    setTimeout(popLoop, 5000 + Math.random() * 2800); // ~5–8s between pops
+  })();
+
+  setTimeout(poll, 700);
 })();
