@@ -95,15 +95,17 @@ function setupCabNav(who) {
         if (nmName) nmName.textContent = name;
         if (nmUser) nmUser.textContent = who.username ? '@' + who.username : ('ID ' + (who.userId || ''));
         if (nmAv) { if (who.avatar) nmAv.style.backgroundImage = 'url("' + who.avatar + '")'; else nmAv.textContent = letter; }
-        const cabAv = document.getElementById('cabBurger');
+        const cabAv = document.getElementById('cabAv');
         if (cabAv) { if (who.avatar) cabAv.style.backgroundImage = 'url("' + who.avatar + '")'; else cabAv.textContent = letter; }
         const nmBanner = document.getElementById('nmBanner');
         if (nmBanner && who.banner) { nmBanner.style.backgroundImage = 'url("' + who.banner + '")'; nmBanner.style.backgroundSize = 'cover'; nmBanner.style.backgroundPosition = 'center'; }
         else if (who.avatar) bannerFromAvatar(who.avatar);
     }
-    const b = document.getElementById('cabBurger'), menu = document.getElementById('navMenu');
-    if (b && menu && !b.dataset.wired) { b.dataset.wired = '1';
-        b.addEventListener('click', (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; });
+    const b = document.getElementById('cabBurger'), av = document.getElementById('cabAv'), menu = document.getElementById('navMenu');
+    if (menu && !menu.dataset.wired) { menu.dataset.wired = '1';
+        const toggle = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; };
+        if (b) b.addEventListener('click', toggle);
+        if (av) av.addEventListener('click', toggle);
         menu.addEventListener('click', (e) => e.stopPropagation());
         document.addEventListener('click', () => { menu.hidden = true; });
     }
