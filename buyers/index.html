@@ -201,6 +201,29 @@
     .nav-back{display:none}
   }
   @media (max-width:520px){ .nums{grid-template-columns:1fr} }
+
+  /* live "new member joined a sponsor" notifications (bottom-left) */
+  .join-toasts{position:fixed;left:20px;bottom:20px;z-index:80;display:flex;flex-direction:column;gap:10px;width:330px;max-width:calc(100vw - 40px);pointer-events:none}
+  .jt{pointer-events:auto;position:relative;display:flex;flex-direction:column;gap:9px;padding:13px 15px 12px;background:linear-gradient(158deg,var(--panel-2),var(--panel));border:1px solid var(--line-2);border-radius:15px;box-shadow:var(--shadow);overflow:hidden;animation:jt-in .55s cubic-bezier(.22,.61,.36,1)}
+  .jt::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(var(--green),#2fae72)}
+  .jt.out{animation:jt-out .4s ease forwards}
+  .jt-top{display:flex;align-items:center;gap:12px;padding-right:16px}
+  .jt-ic{width:42px;height:42px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  .jt-ic img{width:100%;height:100%;object-fit:cover;display:block}
+  .jt-body{flex:1;min-width:0}
+  .jt-name{font-weight:700;font-size:14px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .jt-sub{font-size:11.5px;color:var(--muted);margin-top:1px}
+  .jt-foot{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .jt-members{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);min-width:0}
+  .jt-members svg{flex:none;opacity:.75}
+  .jt-members b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+  .jt-badge{flex:none;font-weight:800;font-size:12.5px;color:var(--green);background:rgba(63,209,138,.13);border:1px solid rgba(63,209,138,.3);border-radius:999px;padding:3px 11px}
+  .jt-x{position:absolute;top:8px;right:9px;width:20px;height:20px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;border-radius:6px;opacity:.55;padding:0}
+  .jt-x:hover{opacity:1;background:rgba(255,255,255,.08)}
+  @keyframes jt-in{from{transform:translateX(-118%);opacity:0}to{transform:translateX(0);opacity:1}}
+  @keyframes jt-out{to{transform:translateX(-118%);opacity:0}}
+  @media (max-width:520px){ .join-toasts{left:12px;right:12px;bottom:12px;width:auto} }
+  @media (prefers-reduced-motion:reduce){ .jt,.jt.out{animation-duration:.01ms} }
 </style>
 <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
 </head>
@@ -636,6 +659,62 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
     };
   }
   schedule();
+})();
+</script>
+
+<!-- live "new member joined a sponsor" notifications -->
+<div id="joinToasts" class="join-toasts" aria-live="polite" aria-label="Live joins"></div>
+<script>
+/* Real joins to sponsor servers, polled from the API (/joins-feed): each is an
+   actual confirmed member joining an advertised server — server name, avatar and
+   live member count, no payout figures. Queued and popped one at a time; the
+   corner stays quiet when there's no fresh activity. */
+(function joinToasts(){
+  var host=document.getElementById('joinToasts'); if(!host) return;
+  var base=(window.__VEMONI_API_BASE__||'').replace(/\/+$/,'');
+  var MAX=3;
+  var PPL='<svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-4.42 0-8 1.9-8 4.25V20h16v-1.75C20 15.9 16.42 14 12 14Z"/></svg>';
+  var PAL=['#5865f2','#e63b7a','#a855f7','#39c5bb','#f59e0b','#22d3ee','#f472b6','#8b5cf6','#d1004b','#10b981'];
+  function strings(){ return document.documentElement.lang==='ru'
+    ? {sub:'получил нового участника',members:'участников'}
+    : {sub:'gained a new member',members:'members'}; }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function fmt(n){ return n==null?'—':Number(n).toLocaleString('en-US'); }
+  function colorFor(str){ var h=0; str=String(str||''); for(var i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))>>>0; return PAL[h%PAL.length]; }
+  function render(ev){
+    var t=strings(), col=colorFor(ev.name);
+    var letter=esc((String(ev.name||'S').trim()[0]||'S').toUpperCase());
+    var ic=ev.icon?('<img src="'+esc(ev.icon)+'" alt="" onerror="this.parentNode.textContent=\''+letter+'\'" />'):letter;
+    var el=document.createElement('div'); el.className='jt';
+    el.innerHTML='<button class="jt-x" aria-label="Close" title="Close">&times;</button>'+
+      '<div class="jt-top"><div class="jt-ic" style="background:linear-gradient(150deg,'+col+','+col+'88)">'+ic+'</div>'+
+      '<div class="jt-body"><div class="jt-name">'+esc(ev.name)+'</div><div class="jt-sub">'+t.sub+'</div></div></div>'+
+      '<div class="jt-foot"><span class="jt-members">'+PPL+' <b>'+(ev.members!=null?fmt(ev.members):'—')+'</b>&nbsp;'+t.members+'</span>'+
+      '<span class="jt-badge">+1</span></div>';
+    var close=function(){ el.classList.add('out'); setTimeout(function(){ el.remove(); },420); };
+    el.querySelector('.jt-x').addEventListener('click',close);
+    host.appendChild(el);
+    while(host.children.length>MAX) host.firstElementChild.remove();
+    setTimeout(close,5200+Math.random()*1600);
+  }
+  var lastTs=0, firstLoad=true, queue=[], seen={};
+  function keyOf(e){ return e.ts+'|'+e.name; }
+  function poll(){
+    fetch(base+'/joins-feed',{cache:'no-store'})
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(d){
+        if(d&&Array.isArray(d.events)){
+          var evs=d.events.filter(function(e){ return e&&e.name; }).sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+          var fresh=evs.filter(function(e){ return (e.ts||0)>lastTs && !seen[keyOf(e)]; });
+          fresh = firstLoad ? fresh.slice(-3) : fresh.slice(-8); firstLoad=false;
+          fresh.forEach(function(e){ seen[keyOf(e)]=1; if((e.ts||0)>lastTs) lastTs=e.ts||0; queue.push(e); });
+        }
+      })
+      .catch(function(){})
+      .then(function(){ setTimeout(poll, 18000+Math.random()*8000); });
+  }
+  (function popLoop(){ if(!document.hidden && queue.length) render(queue.shift()); setTimeout(popLoop, 5000+Math.random()*2800); })();
+  setTimeout(poll, 700);
 })();
 </script>
 </body>
