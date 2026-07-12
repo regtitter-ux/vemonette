@@ -79,7 +79,12 @@ const WHOLE = {
   'Корректировка баланса':'Balance adjustment','Выплата':'Payout',
   '10% с вывода реферала':"10% of referral's withdrawal",'на основной баланс':'to main balance',
   'перевод не прошёл':'transfer failed','начисление вручную':'manual credit','вывод':'withdrawal',
-  'заход реферала отменён':'referral join reversed','списание вручную':'manual debit'
+  'заход реферала отменён':'referral join reversed','списание вручную':'manual debit',
+  // Referrals tab
+  'Рефералы':'Referrals','Рефералов':'Referrals','Активных':'Active','Заработано с рефералов':'Earned from referrals',
+  'Ожидает вывода':'Pending withdrawal','выведено':'withdrawn','Не удалось загрузить рефералов.':'Could not load referrals.',
+  'Приглашайте пользователей — и получайте 10% от каждого их вывода. Ниже — кого вы пригласили и сколько это принесло. Статистика собрана по уже имеющимся данным.':'Invite users and earn 10% of every withdrawal they make. Below is who you invited and how much it brought in. Stats are reconstructed from existing data.',
+  'У вас пока нет рефералов. Приглашайте пользователей и получайте 10% с каждого их вывода.':'You have no referrals yet. Invite users and earn 10% of each withdrawal they make.'
 };
 function bannerFromAvatar(url) {
     const bn = document.getElementById('nmBanner'); if (!bn || !url) return;
@@ -312,7 +317,41 @@ async function load() {
     loadCards();
     wirePlogFilters();
     loadActivity();
+    loadReferrals();
     refreshEmpties();
+}
+
+// ---- Referrals: who this partner invited and what they earned (10% of each
+// referred user's withdrawals), reconstructed server-side from existing data. ----
+async function loadReferrals() {
+    const cards = $('#refs-cards'), list = $('#refs-list');
+    const { ok, body } = await get('/referrals');
+    if (!ok || !body) { if (list) list.innerHTML = '<div class="muted">Не удалось загрузить рефералов.</div>'; return; }
+    const pct = Math.round((body.rate || 0.1) * 100);
+    if (cards) cards.innerHTML = [
+        { k: 'Рефералов', v: body.count },
+        { k: 'Активных', v: body.activeCount },
+        { k: 'Заработано с рефералов', v: money(body.totalEarned) },
+        { k: 'Ожидает вывода', v: money(body.pending) }
+    ].map((c) => `<div class="pcard"><div class="k">${esc(c.k)}</div><div class="v">${esc(String(c.v))}</div></div>`).join('');
+    const refs = body.referrals || [];
+    if (!refs.length) { if (list) list.innerHTML = `<div class="muted">У вас пока нет рефералов. Приглашайте пользователей и получайте ${pct}% с каждого их вывода.</div>`; return; }
+    list.innerHTML = '<div class="ref-list">' + refs.map(refRow).join('') + '</div>';
+}
+function refRow(r) {
+    const name = r.name || r.username || ('ID ' + r.userId);
+    const letter = (String(name).trim()[0] || '?').toUpperCase();
+    const av = r.avatar
+        ? `<span class="ref-av" style="background-image:url('${esc(r.avatar)}')"></span>`
+        : `<span class="ref-av ref-av-l">${esc(letter)}</span>`;
+    const handle = r.username ? '@' + esc(r.username) : ('ID ' + esc(r.userId));
+    const dim = r.active ? '' : ' ref-idle';
+    return `<div class="ref-row${dim}">
+        ${av}
+        <div class="ref-id"><b>${esc(name)}</b><span class="muted sm">${handle}</span></div>
+        <div class="ref-wd"><span class="muted sm">выведено</span> <b>${money(r.withdrawn)}</b></div>
+        <div class="ref-earn">+${money(r.earned)}</div>
+      </div>`;
 }
 
 // ---- Active ads available to the partner's servers + priority selection ----
