@@ -265,10 +265,37 @@ if (new URLSearchParams(location.search).get('login') === 'denied') {
 }
 $('#logout').addEventListener('click', async () => { await post('/logout'); setTok(''); location.reload(); });
 async function checkAuth() { const { ok, body } = await get('/whoami'); return (ok && body?.authed === true) ? body : null; }
-function setupCabNav(isAdmin) {
+function bannerFromAvatar(url) {
+    const bn = document.getElementById('nmBanner'); if (!bn || !url) return;
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = () => { try {
+        const cv = document.createElement('canvas'); cv.width = cv.height = 16;
+        const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0, 16, 16);
+        const p = cx.getImageData(0, 0, 16, 16).data; let r = 0, g = 0, b = 0, n = 0;
+        for (let i = 0; i < p.length; i += 4) { r += p[i]; g += p[i + 1]; b += p[i + 2]; n++; }
+        r = (r / n) | 0; g = (g / n) | 0; b = (b / n) | 0; const dk = (v) => (v * 0.62) | 0;
+        bn.style.background = 'linear-gradient(135deg,rgb(' + r + ',' + g + ',' + b + '),rgb(' + dk(r) + ',' + dk(g) + ',' + dk(b) + '))';
+    } catch (_) {} };
+    img.src = url;
+}
+function setupCabNav(who) {
     const path = location.pathname;
-    document.querySelectorAll('.cab-nav [data-cn]').forEach((a) => { if (path.indexOf('/' + a.dataset.cn) === 0) a.classList.add('active'); });
-    if (isAdmin) document.querySelectorAll('.cab-nav [data-cn="admin"]').forEach((a) => (a.hidden = false));
+    document.querySelectorAll('.nav-menu [data-cn]').forEach((a) => { if (path.indexOf('/' + a.dataset.cn) === 0) a.classList.add('active'); });
+    if (who && who.isAdmin) document.querySelectorAll('.nav-menu [data-cn="admin"]').forEach((a) => (a.hidden = false));
+    if (who) {
+        const name = who.name || who.username || 'User', letter = (String(name).trim()[0] || 'U').toUpperCase();
+        const nmAv = document.getElementById('nmAv'), nmName = document.getElementById('nmName'), nmUser = document.getElementById('nmUser');
+        if (nmName) nmName.textContent = name;
+        if (nmUser) nmUser.textContent = who.username ? '@' + who.username : ('ID ' + (who.userId || ''));
+        if (nmAv) { if (who.avatar) nmAv.style.backgroundImage = 'url("' + who.avatar + '")'; else nmAv.textContent = letter; }
+        if (who.avatar) bannerFromAvatar(who.avatar);
+    }
+    const b = document.getElementById('cabBurger'), menu = document.getElementById('navMenu');
+    if (b && menu && !b.dataset.wired) { b.dataset.wired = '1';
+        b.addEventListener('click', (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; });
+        menu.addEventListener('click', (e) => e.stopPropagation());
+        document.addEventListener('click', () => { menu.hidden = true; });
+    }
 }
 
 async function enterApp() {
@@ -549,4 +576,4 @@ function srvRow(campId, s) {
 
 // ---------- Boot ----------
 applyLang();
-(async () => { const who = await checkAuth(); if (who) { enterApp(); setupCabNav(who.isAdmin); } })();
+(async () => { const who = await checkAuth(); if (who) { enterApp(); setupCabNav(who); } })();

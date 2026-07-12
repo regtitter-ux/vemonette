@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Инвест-кабинет</title>
-  <link rel="stylesheet" href="/partner/partner.css?v=19" />
+  <link rel="stylesheet" href="/partner/partner.css?v=20" />
   <link rel="stylesheet" href="/investor/investor.css?v=4" />
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
 </head>
@@ -46,19 +46,29 @@
 <div id="app" hidden>
   <header class="topbar">
     <a class="brand-sm" href="/"><img src="/assets/logo.png" alt="Vemoni" /><span>Vemoni</span></a>
-    <nav class="cab-nav" id="cab-nav">
-      <a href="/" class="cn-link">Главная</a>
-      <a href="/order/" class="cn-link" data-cn="order">Заказы</a>
-      <a href="/partner/" class="cn-link" data-cn="partner">Партнёр</a>
-      <a href="/investor/" class="cn-link" data-cn="investor">Инвест</a>
-      <a href="/admin/" class="cn-link" data-cn="admin" hidden>Админка</a>
-    </nav>
     <div class="top-right">
       <span class="bal-pill"><span class="muted sm">Инвест-счёт</span> <b id="inv-balance">$0.00</b></span>
       <button id="inv-topup" class="btn ghost sm">＋ Пополнить</button>
       <button id="inv-withdraw" class="btn ghost sm">Вывести</button>
       <div class="lang-switch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
-      <button id="logout" class="btn ghost sm">Выйти</button>
+      <div class="cab-menu">
+        <button class="cab-burger" id="cabBurger" aria-label="Меню"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" width="20" height="20" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="nav-menu" id="navMenu" hidden>
+          <div class="nm-head">
+            <div class="nm-banner" id="nmBanner"></div>
+            <div class="nm-id"><div class="nm-av" id="nmAv"></div><div class="nm-txt"><b id="nmName">User</b><span id="nmUser"></span></div></div>
+          </div>
+          <div class="nm-items">
+            <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg> <span>Главная</span></a>
+            <a href="/order/" data-cn="order"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg> <span>Заказы</span></a>
+            <a href="/partner/" data-cn="partner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.7-5 5.5-5s5.5 2 5.5 5"/><path d="M16.5 15.2c2 .4 3.5 2 3.5 4.3"/><circle cx="17.5" cy="8.5" r="2.3"/></svg> <span>Партнёр</span></a>
+            <a href="/investor/" data-cn="investor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l5-5 3.5 3.5L20 8"/><path d="M16 8h4v4"/></svg> <span>Инвест</span></a>
+            <a href="/admin/" data-cn="admin" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.2-3 7.4-7 9-4-1.6-7-4.8-7-9V6l7-3Z"/></svg> <span>Админка</span></a>
+            <div class="nm-sep"></div>
+            <button class="nav-logout" id="logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/></svg> <span>Выйти</span></button>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -83,6 +93,6 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/investor/investor.js?v=10"></script>
+<script src="/investor/investor.js?v=11"></script>
 </body>
 </html>
