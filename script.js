@@ -351,6 +351,7 @@ setLang(startLang);
   const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = 'assets/logo.png';
   let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
   let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0;
+  let spinVel = velY; // current spin speed; eases back to velY after a manual drag
 
   const NDOTS = 560, dots = [];
   (function () { const g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < NDOTS; i++) { const y = 1 - 2 * (i + 0.5) / NDOTS; const rr = Math.sqrt(1 - y * y); const th = g * i; dots.push([Math.cos(th) * rr, y, Math.sin(th) * rr]); } })();
@@ -419,7 +420,7 @@ setLang(startLang);
 
   function draw() {
     ctx.clearRect(0, 0, W, H);
-    if (!dragging && !reduce) rotY += velY;
+    if (!dragging && !reduce) { rotY += spinVel; spinVel += (velY - spinVel) * 0.04; } // ease momentum back to the base speed
 
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     const g = ctx.createRadialGradient(cx, cy, R * 0.15, cx, cy, R * 1.35);
@@ -507,7 +508,7 @@ setLang(startLang);
 
   // rotate by dragging with the left mouse button (tracked on window so a fast
   // drag outside the canvas keeps working), or with one finger on touch
-  const rotBy = (dx, dy) => { rotY += dx * 0.006; rotX += dy * 0.006; rotX = Math.max(-1.15, Math.min(1.15, rotX)); };
+  const rotBy = (dx, dy) => { const vx = dx * 0.006; rotY += vx; rotX += dy * 0.006; rotX = Math.max(-1.15, Math.min(1.15, rotX)); spinVel = Math.max(-0.15, Math.min(0.15, vx)); };
   const stopDrag = () => { dragging = false; wrap.style.cursor = ''; };
   wrap.addEventListener('mousedown', (e) => { if (e.button !== 0) return; e.preventDefault(); dragging = true; lastX = e.clientX; lastY = e.clientY; wrap.style.cursor = 'grabbing'; });
   window.addEventListener('mousemove', (e) => { if (!dragging) return; if (!(e.buttons & 1)) { stopDrag(); return; } rotBy(e.clientX - lastX, e.clientY - lastY); lastX = e.clientX; lastY = e.clientY; });
