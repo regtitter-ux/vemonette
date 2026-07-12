@@ -510,8 +510,6 @@ setLang(startLang);
       const fade = dep > 0 ? 1 : 0.32;
       if (it.kind === 'b') {
         const rr = 8;
-        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.7 * fade;
-        const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2); gg.addColorStop(0, BUY); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2, 0, 7); ctx.fill(); ctx.restore();
         ctx.globalAlpha = fade;
         if (buyerImgOk) { const s = rr * 2.64; ctx.drawImage(buyerImg, p[0] - s / 2, p[1] - s / 2, s, s); } else userGlyph(p[0], p[1], rr, BUY);
         ctx.globalAlpha = 1;
