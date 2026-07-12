@@ -70,7 +70,16 @@ const WHOLE = {
   'лимит показов исчерпан':'display limit reached','нет активных реклам':'no active ads',
   // granular no-ad reasons (filter options)
   'Реклама отключена':'Ads disabled','Отключена на сервере':'Disabled on server','Рекламы скрыты':'Ads hidden',
-  'Уже в рекламе':'Already in the ad','Лимит показов':'Display limit','Нет реклам':'No ads'
+  'Уже в рекламе':'Already in the ad','Лимит показов':'Display limit','Нет реклам':'No ads',
+  // money credits / debits (log rows + filter options)
+  'Начисления':'Credits','По сумме':'By amount','Без оплаты':'Unpaid',
+  'Оплачено — заход':'Paid — join','Реферальный бонус':'Referral bonus','Вывод из инвестиций':'Investment withdrawal',
+  'Возврат выплаты':'Payout refund','Начисление вручную':'Manual credit','Выплата средств':'Payout',
+  'Возврат реф. бонуса':'Referral bonus reversed','Списание вручную':'Manual debit','Участник ушёл (возврат)':'Member left (clawback)',
+  'Корректировка баланса':'Balance adjustment','Выплата':'Payout',
+  '10% с вывода реферала':"10% of referral's withdrawal",'на основной баланс':'to main balance',
+  'перевод не прошёл':'transfer failed','начисление вручную':'manual credit','вывод':'withdrawal',
+  'заход реферала отменён':'referral join reversed','списание вручную':'manual debit'
 };
 function bannerFromAvatar(url) {
     const bn = document.getElementById('nmBanner'); if (!bn || !url) return;
@@ -581,16 +590,25 @@ const PLOG_LABEL = {
     grant_dup_join: { cls: 'n', title: NOPAY, tag: 'уже был на сервере' },
     grant_already_verified: { cls: 'n', title: 'Повторная попытка', tag: 'уже верифицирован' },
     debit_left: { cls: 'd', title: 'Списание', tag: 'участник ушёл' },
-    unverify_left: { cls: 'u', title: 'Снята верификация', tag: 'участник ушёл' }
+    unverify_left: { cls: 'u', title: 'Снята верификация', tag: 'участник ушёл' },
+    // money credits
+    credit_referral_bonus: { cls: 'g', title: 'Реферальный бонус', tag: '10% с вывода реферала' },
+    credit_invest_withdraw: { cls: 'g', title: 'Вывод из инвестиций', tag: 'на основной баланс' },
+    credit_payout_refund: { cls: 'g', title: 'Возврат выплаты', tag: 'перевод не прошёл' },
+    credit_admin_credit: { cls: 'g', title: 'Корректировка баланса', tag: 'начисление вручную' },
+    // money debits
+    debit_payout: { cls: 'd', title: 'Выплата средств', tag: 'вывод' },
+    debit_referral_clawback: { cls: 'd', title: 'Возврат реф. бонуса', tag: 'заход реферала отменён' },
+    debit_admin_debit: { cls: 'd', title: 'Корректировка баланса', tag: 'списание вручную' }
 };
 function plogLabel(e) {
     return PLOG_LABEL[`${e.type}_${e.reason}`] || { cls: 'n', title: e.type, tag: e.reason || '' };
 }
 function plogRow(e, servers, users) {
     const L = plogLabel(e);
-    const amt = e.type === 'debit'
+    const amt = (e.type === 'debit' && e.amount)
         ? `<span class="plog-amt neg">−${money(e.amount)}</span>`
-        : (e.type === 'grant' && e.reason === 'paid' && e.amount ? `<span class="plog-amt pos">+${money(e.amount)}</span>` : '');
+        : ((e.type === 'credit' || (e.type === 'grant' && e.reason === 'paid')) && e.amount ? `<span class="plog-amt pos">+${money(e.amount)}</span>` : '');
     const sv = e.guildId ? (servers[e.guildId] || e.guildId) : '';
     const uname = e.userId ? (users && users[e.userId]) : '';
     const usr = e.userId ? `<span class="plog-usr">${uname ? `<b>${esc(uname)}</b> · ` : ''}ID ${esc(e.userId)}</span>` : '';

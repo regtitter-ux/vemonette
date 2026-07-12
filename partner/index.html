@@ -123,22 +123,36 @@
         <select id="plf-type" class="plog-sel">
           <option value="">Все типы</option>
           <option value="grant">Выдача верификации</option>
+          <option value="credit">Начисления</option>
           <option value="debit">Списания</option>
           <option value="unverify">Снятие верификации</option>
         </select>
         <select id="plf-reason" class="plog-sel">
           <option value="">Все причины</option>
-          <option value="paid">Оплачено</option>
-          <option value="no_ad">Рекламы не было</option>
-          <option value="ads_off">Реклама отключена</option>
-          <option value="server_off">Отключена на сервере</option>
-          <option value="all_hidden">Рекламы скрыты</option>
-          <option value="already_member">Уже в рекламе</option>
-          <option value="capped">Лимит показов</option>
-          <option value="no_inventory">Нет реклам</option>
-          <option value="dup_join">Уже был на сервере</option>
-          <option value="already_verified">Уже верифицирован</option>
-          <option value="left">Участник ушёл</option>
+          <optgroup label="Начисления">
+            <option value="paid">Оплачено — заход</option>
+            <option value="referral_bonus">Реферальный бонус</option>
+            <option value="invest_withdraw">Вывод из инвестиций</option>
+            <option value="payout_refund">Возврат выплаты</option>
+            <option value="admin_credit">Начисление вручную</option>
+          </optgroup>
+          <optgroup label="Списания">
+            <option value="payout">Выплата средств</option>
+            <option value="left">Участник ушёл (возврат)</option>
+            <option value="referral_clawback">Возврат реф. бонуса</option>
+            <option value="admin_debit">Списание вручную</option>
+          </optgroup>
+          <optgroup label="Без оплаты">
+            <option value="no_ad">Рекламы не было</option>
+            <option value="ads_off">Реклама отключена</option>
+            <option value="server_off">Отключена на сервере</option>
+            <option value="all_hidden">Рекламы скрыты</option>
+            <option value="already_member">Уже в рекламе</option>
+            <option value="capped">Лимит показов</option>
+            <option value="no_inventory">Нет реклам</option>
+            <option value="dup_join">Уже был на сервере</option>
+            <option value="already_verified">Уже верифицирован</option>
+          </optgroup>
         </select>
         <select id="plf-server" class="plog-sel"><option value="">Все серверы</option></select>
         <select id="plf-period" class="plog-sel">
@@ -150,6 +164,7 @@
         <select id="plf-sort" class="plog-sel">
           <option value="">Сначала новые</option>
           <option value="oldest">Сначала старые</option>
+          <option value="amount">По сумме</option>
         </select>
         <input id="plf-user" class="plog-inp" type="text" placeholder="ID пользователя" />
       </div>
@@ -188,6 +203,6 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/partner/partner.js?v=27"></script>
+<script src="/partner/partner.js?v=28"></script>
 </body>
 </html>
