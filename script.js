@@ -439,6 +439,7 @@ setLang(startLang);
         for (let k = 1; k < tr.length; k++) { const a = k / tr.length; ctx.globalAlpha = a * 0.8; ctx.lineWidth = 0.5 + 2.4 * a; ctx.strokeStyle = GREEN; ctx.beginPath(); ctx.moveTo(tr[k - 1][0], tr[k - 1][1]); ctx.lineTo(tr[k][0], tr[k][1]); ctx.stroke(); }
         ctx.globalAlpha = 1;
         const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 7); gg.addColorStop(0, GREEN); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 7, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fill();
+        if (v[2] > 0.15) { ctx.save(); ctx.font = '800 9px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = GREEN; ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3); ctx.fillText('$', p[0], p[1] - 9); ctx.restore(); ctx.globalAlpha = 1; }
       } else { pt.trail.length = 0; }
     }
     ctx.restore(); ctx.globalAlpha = 1;
@@ -482,12 +483,13 @@ setLang(startLang);
     raf = requestAnimationFrame(draw);
   }
 
+  // rotate by holding the RIGHT mouse button and dragging (tracked on window so
+  // a fast drag outside the canvas keeps working)
   wrap.addEventListener('contextmenu', (e) => e.preventDefault());
-  wrap.addEventListener('pointerdown', (e) => { if (e.button !== 2) return; dragging = true; lastX = e.clientX; lastY = e.clientY; try { wrap.setPointerCapture(e.pointerId); } catch (_) {} wrap.style.cursor = 'grabbing'; });
-  wrap.addEventListener('pointermove', (e) => { if (!dragging) return; rotY += (e.clientX - lastX) * 0.006; rotX += (e.clientY - lastY) * 0.006; rotX = Math.max(-1.15, Math.min(1.15, rotX)); lastX = e.clientX; lastY = e.clientY; });
-  const endDrag = () => { dragging = false; wrap.style.cursor = ''; };
-  wrap.addEventListener('pointerup', endDrag);
-  wrap.addEventListener('pointercancel', endDrag);
+  wrap.addEventListener('mousedown', (e) => { if (e.button !== 2) return; e.preventDefault(); dragging = true; lastX = e.clientX; lastY = e.clientY; wrap.style.cursor = 'grabbing'; });
+  window.addEventListener('mousemove', (e) => { if (!dragging) return; rotY += (e.clientX - lastX) * 0.006; rotX += (e.clientY - lastY) * 0.006; rotX = Math.max(-1.15, Math.min(1.15, rotX)); lastX = e.clientX; lastY = e.clientY; });
+  window.addEventListener('mouseup', (e) => { if (e.button === 2 && dragging) { dragging = false; wrap.style.cursor = ''; } });
+  wrap.addEventListener('mouseenter', () => { if (!dragging) wrap.style.cursor = 'grab'; });
 
   window.addEventListener('resize', () => { cancelAnimationFrame(raf); layout(); draw(); });
   requestAnimationFrame(() => { layout(); buildNodes(); for (let i = 0; i < 10; i++) spawn(); draw(); });
