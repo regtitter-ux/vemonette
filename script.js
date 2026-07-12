@@ -333,117 +333,129 @@ setLang(startLang);
   requestAnimationFrame(() => setTimeout(run, 320));
 })();
 
-/* ---------- Hero flow visualization (partner version) ----------
-   Payments stream from buyers (left) through the Vemoni hub to partner servers
-   (right); each partner shows a live counter of what it earned from Vemoni.
-   Vizceral/sFlow-style: particles ride quadratic Bézier curves; additive-glow
-   bloom + tapered trails for a neon, alive feel. */
+/* ---------- Hero globe visualization ----------
+   A rotating dotted planet with partner nodes (server avatars) and buyer nodes,
+   linked by animated arcs carrying traffic (blue) and money (green). Auto-spins;
+   hold the RIGHT mouse button and drag to rotate it. Original canvas code. */
 (function () {
   const wrap = document.getElementById('viz'), canvas = document.getElementById('flow');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
   const cs = getComputedStyle(document.documentElement);
-  const cv = (v, f) => { const x = cs.getPropertyValue(v).trim(); return x || f; };
-  const BLUE = cv('--blue-2', '#5cc8ff'), GREEN = cv('--green', '#57f287'), RED = cv('--red', '#ed4245');
-  const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = 'assets/logo.png';
-  let W = 0, H = 0, dpr = 1, sources = [], hub = {}, dests = [], parts = [], acc = 0, t = 0, raf;
-  const PAY = 0.05, TRAIL = 9;
+  const cvv = (v, f) => { const x = cs.getPropertyValue(v).trim(); return x || f; };
+  const BLUE = cvv('--blue-2', '#5cc8ff'), GREEN = cvv('--green', '#57f287');
+  let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
+  let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0;
+
+  // Fibonacci-sphere surface dots
+  const NDOTS = 540, dots = [];
+  (function () { const g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < NDOTS; i++) { const y = 1 - 2 * (i + 0.5) / NDOTS; const rr = Math.sqrt(1 - y * y); const th = g * i; dots.push([Math.cos(th) * rr, y, Math.sin(th) * rr]); } })();
+
+  const ll = (la, lo) => { la = la * Math.PI / 180; lo = lo * Math.PI / 180; return [Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)]; };
+
+  // Nodes: partners (green, server avatars) + buyers (blue)
+  const NODES = [];
+  function buildNodes() {
+    NODES.length = 0;
+    const feed = (typeof FEED !== 'undefined' && Array.isArray(FEED) ? FEED : []).filter((s) => s && s.name);
+    const pPos = [ll(30, -34), ll(-12, 40), ll(48, 92), ll(4, 150), ll(-40, -100), ll(22, -142)];
+    const bPos = [ll(-6, 8), ll(42, -72), ll(-32, 122), ll(60, -6), ll(-54, 62), ll(10, -166), ll(36, 172)];
+    pPos.forEach((p, i) => { const s = feed[i % Math.max(1, feed.length)] || {}; const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null); const n = { p, type: 'p', color: s.color || GREEN, img: null, src }; NODES.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
+    bPos.forEach((p) => NODES.push({ p, type: 'b', color: BLUE }));
+  }
+
+  const ARCS = [];
+  function spawnArc() {
+    const buys = NODES.filter((n) => n.type === 'b'), parts = NODES.filter((n) => n.type === 'p');
+    if (!buys.length || !parts.length) return;
+    const money = Math.random() < 0.5;
+    ARCS.push({ a: buys[(Math.random() * buys.length) | 0].p, b: parts[(Math.random() * parts.length) | 0].p, t: 0, sp: 0.006 + Math.random() * 0.006, col: money ? GREEN : BLUE });
+  }
+
+  function rot(v) {
+    const cyaw = Math.cos(rotY), syaw = Math.sin(rotY);
+    const x = v[0] * cyaw + v[2] * syaw, z1 = -v[0] * syaw + v[2] * cyaw, y = v[1];
+    const cp = Math.cos(rotX), sp = Math.sin(rotX);
+    return [x, y * cp - z1 * sp, y * sp + z1 * cp];
+  }
+  const proj = (v) => [cx + v[0] * R, cy - v[1] * R, v[2]];
+  const bez = (a, c, b, t) => { const u = 1 - t; return [u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1], u * u * a[2] + 2 * u * t * c[2] + t * t * b[2]]; };
 
   function layout() {
     const r = wrap.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
     W = r.width; H = r.height; canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Symmetric layout: hub at ~0.40, buyers and partners the same distance
-    // (0.30·W) either side, so the connection lines mirror; the partner pills
-    // extend right so the whole composition sits centered in the card.
-    const lx = W * 0.10, ns = 6;
-    sources = []; for (let i = 0; i < ns; i++) sources.push({ x: lx, y: H * (0.10 + 0.80 * (i / (ns - 1))), r: 6.5, ph: Math.random() * 6.28 });
-    hub = { x: W * 0.40, y: H * 0.5, r: 30 };
-    const dx = W * 0.70, nd = 5;
-    if (dests.length !== nd) { dests = []; for (let i = 0; i < nd; i++) dests.push({ earned: 20 + Math.random() * 220, ph: Math.random() * 6.28, pulse: 0 }); }
-    for (let i = 0; i < nd; i++) { dests[i].x = dx; dests[i].y = H * (0.12 + 0.76 * (i / (nd - 1))); dests[i].r = 8.5; }
+    cx = W / 2; cy = H / 2; R = Math.min(W, H) * 0.42;
   }
-  const ctrl = (a, b, bend) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 + bend });
-  const qbez = (p0, cx, cy, p1, tt) => { const u = 1 - tt; return { x: u * u * p0.x + 2 * u * tt * cx + tt * tt * p1.x, y: u * u * p0.y + 2 * u * tt * cy + tt * tt * p1.y }; };
-  const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
-
-  function spawn() {
-    const s = sources[(Math.random() * sources.length) | 0];
-    const di = (Math.random() * dests.length) | 0;
-    const c = ctrl(s, hub, (s.y - hub.y) * 0.18);
-    parts.push({ s, di, bad: Math.random() < 0.10, leg: 0, t: 0, sp: 0.0092 + Math.random() * 0.005, cx: c.x, cy: c.y, trail: [], die: 0 });
-  }
-  function glow(x, y, r, c, a) { ctx.globalAlpha = a; const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, c); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
-  function gradLink(a, cx, cy, b, c0, c1, w) { const g = ctx.createLinearGradient(a.x, a.y, b.x, b.y); g.addColorStop(0, c0); g.addColorStop(1, c1); ctx.strokeStyle = g; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.quadraticCurveTo(cx, cy, b.x, b.y); ctx.stroke(); }
 
   function draw() {
-    t += 0.016; ctx.clearRect(0, 0, W, H); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.clearRect(0, 0, W, H);
+    if (!dragging && !reduce) rotY += velY;
 
-    // base connection lines (subtle)
-    ctx.globalCompositeOperation = 'source-over';
-    sources.forEach(s => { const c = ctrl(s, hub, (s.y - hub.y) * 0.12); gradLink(s, c.x, c.y, hub, 'rgba(92,200,255,.03)', 'rgba(92,200,255,.20)', 1.1); });
-    dests.forEach(d => { const c = ctrl(hub, d, (d.y - hub.y) * 0.06); gradLink(hub, c.x, c.y, d, 'rgba(92,200,255,.18)', 'rgba(87,242,135,.34)', 1.3); });
+    // ambient planet glow
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(cx, cy, R * 0.15, cx, cy, R * 1.35);
+    g.addColorStop(0, 'rgba(34,168,240,.12)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.35, 0, 7); ctx.fill();
+    ctx.restore();
 
-    // additive glow layer (bloom)
-    ctx.globalCompositeOperation = 'lighter';
-    glow(hub.x, hub.y, 120, 'rgba(34,168,240,.16)', 1);
-    sources.forEach(s => glow(s.x, s.y, 26, 'rgba(92,200,255,.14)', 1));
-    dests.forEach(d => glow(d.x, d.y, 30, 'rgba(87,242,135,.16)', 1));
-
-    for (let i = parts.length - 1; i >= 0; i--) {
-      const p = parts[i], d = dests[p.di];
-      if (p.die > 0) { const dx = hub.x + (1 - p.die) * 8, dy = hub.y + (1 - p.die) * 26; glow(dx, dy, 12, RED, p.die * .8); p.die -= 0.05; if (p.die <= 0) parts.splice(i, 1); continue; }
-      p.t += p.sp * (p.leg === 1 ? 1.25 : 1);
-      let pos;
-      if (p.leg === 0) { pos = qbez(p.s, p.cx, p.cy, hub, Math.min(1, p.t)); if (p.t >= 1) { if (p.bad) { p.die = 1; continue; } p.leg = 1; p.t = 0; const c = ctrl(hub, d, (d.y - hub.y) * 0.06); p.cx = c.x; p.cy = c.y; } }
-      else { pos = qbez(hub, p.cx, p.cy, d, Math.min(1, p.t)); if (p.t >= 1) { d.earned += PAY; d.pulse = 1; parts.splice(i, 1); continue; } }
-      p.trail.push({ x: pos.x, y: pos.y }); if (p.trail.length > TRAIL) p.trail.shift();
-      const col = p.leg === 0 ? BLUE : GREEN, tr = p.trail;
-      for (let k = 1; k < tr.length; k++) { const a = k / tr.length; ctx.globalAlpha = a * 0.85; ctx.lineWidth = 0.5 + 2.6 * a; ctx.strokeStyle = col; ctx.beginPath(); ctx.moveTo(tr[k - 1].x, tr[k - 1].y); ctx.lineTo(tr[k].x, tr[k].y); ctx.stroke(); }
-      ctx.globalAlpha = 1;
-      glow(pos.x, pos.y, 8, col, .9);
-      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(pos.x, pos.y, 1.9, 0, 7); ctx.fill();
+    // surface dots
+    for (const d of dots) { const v = rot(d), p = proj(v), dep = v[2];
+      ctx.globalAlpha = dep > 0 ? (0.22 + 0.5 * dep) : (0.05 + 0.1 * (1 + dep));
+      ctx.fillStyle = dep > 0 ? 'rgb(122,192,255)' : 'rgb(64,104,152)';
+      ctx.beginPath(); ctx.arc(p[0], p[1], dep > 0 ? (0.7 + 1.0 * dep) : 0.6, 0, 7); ctx.fill();
     }
-    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
 
-    // source nodes (buyers)
-    sources.forEach(s => { const pl = 1 + Math.sin(t * 1.6 + s.ph) * 0.12;
-      ctx.beginPath(); ctx.arc(s.x, s.y, s.r * pl, 0, 7); ctx.fillStyle = '#0c1526'; ctx.fill();
-      ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(92,200,255,.7)'; ctx.stroke();
-      ctx.beginPath(); ctx.arc(s.x, s.y, 2, 0, 7); ctx.fillStyle = BLUE; ctx.fill();
-    });
+    // arcs + travelling particles
+    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+    for (let i = ARCS.length - 1; i >= 0; i--) { const arc = ARCS[i]; arc.t += arc.sp; if (arc.t >= 1) { ARCS.splice(i, 1); continue; }
+      const mx = arc.a[0] + arc.b[0], my = arc.a[1] + arc.b[1], mz = arc.a[2] + arc.b[2];
+      const ml = Math.hypot(mx, my, mz) || 1, lift = 1.34;
+      const c = [mx / ml * lift, my / ml * lift, mz / ml * lift];
+      let prev = null;
+      for (let s = 0; s <= 20; s++) { const v = rot(bez(arc.a, c, arc.b, s / 20)), p = proj(v);
+        if (prev && v[2] > -0.15) { ctx.strokeStyle = arc.col; ctx.globalAlpha = 0.26 * (v[2] > 0 ? 1 : 0.4); ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(p[0], p[1]); ctx.stroke(); }
+        prev = p;
+      }
+      const v = rot(bez(arc.a, c, arc.b, arc.t)), p = proj(v);
+      if (v[2] > -0.05) { ctx.globalAlpha = 1; const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 6); gg.addColorStop(0, arc.col); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 6, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.7, 0, 7); ctx.fill(); }
+    }
+    ctx.restore(); ctx.globalAlpha = 1;
 
-    // hub (Vemoni)
-    ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r, 0, 7); ctx.fillStyle = '#0a1322'; ctx.fill();
-    ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r, 0, 7); ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(34,168,240,.32)'; ctx.stroke();
-    ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r + 5, t * 0.8, t * 0.8 + 1.5); ctx.strokeStyle = BLUE; ctx.lineWidth = 2.2; ctx.stroke();
-    ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r + 5, t * 0.8 + Math.PI, t * 0.8 + Math.PI + 1.0); ctx.strokeStyle = 'rgba(92,200,255,.5)'; ctx.lineWidth = 2.2; ctx.stroke();
-    ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r + 11, -t * 0.5, -t * 0.5 + 0.7); ctx.strokeStyle = 'rgba(87,242,135,.45)'; ctx.lineWidth = 1.8; ctx.stroke();
-    if (logoOk) { const s = hub.r * 1.3; ctx.save(); ctx.beginPath(); ctx.arc(hub.x, hub.y, hub.r - 7, 0, 7); ctx.clip(); ctx.drawImage(logo, hub.x - s / 2, hub.y - s / 2, s, s); ctx.restore(); }
+    // nodes, back-to-front
+    const order = NODES.map((n) => { const v = rot(n.p); return { n, v, p: proj(v) }; }).sort((a, b) => a.v[2] - b.v[2]);
+    for (const it of order) { const n = it.n, v = it.v, p = it.p, dep = v[2]; if (dep < -0.2) continue;
+      const fade = dep > 0 ? 1 : 0.32, rr = n.type === 'p' ? 11 : 6;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.85 * fade;
+      const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2.2); gg.addColorStop(0, n.color); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2.2, 0, 7); ctx.fill(); ctx.restore();
+      ctx.globalAlpha = fade;
+      if (n.type === 'p' && n.img) {
+        ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore();
+        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.lineWidth = 1.6; ctx.strokeStyle = n.color; ctx.stroke();
+      } else {
+        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = n.type === 'p' ? '#0a1a13' : '#0c1526'; ctx.fill();
+        ctx.lineWidth = 1.7; ctx.strokeStyle = n.color; ctx.stroke();
+        ctx.beginPath(); ctx.arc(p[0], p[1], 2, 0, 7); ctx.fillStyle = n.color; ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
 
-    // partner nodes + earnings pills
-    ctx.textBaseline = 'middle';
-    dests.forEach(d => {
-      if (d.pulse > 0) { ctx.beginPath(); ctx.arc(d.x, d.y, d.r + (1 - d.pulse) * 15, 0, 7); ctx.strokeStyle = 'rgba(87,242,135,' + (d.pulse * .55) + ')'; ctx.lineWidth = 2; ctx.stroke(); d.pulse -= 0.045; if (d.pulse < 0) d.pulse = 0; }
-      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 7); ctx.fillStyle = '#0a1a13'; ctx.fill();
-      ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 7); ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(87,242,135,.6)'; ctx.stroke();
-      ctx.beginPath(); ctx.arc(d.x, d.y, 2, 0, 7); ctx.fillStyle = GREEN; ctx.fill();
-      ctx.font = '800 12.5px Roboto,system-ui,sans-serif';
-      const txt = '$' + d.earned.toFixed(2), tw = ctx.measureText(txt).width;
-      const cx = d.x + d.r + 10, cw = tw + 18, ch = 22;
-      rr(cx, d.y - ch / 2, cw, ch, 11); ctx.fillStyle = 'rgba(87,242,135,.10)'; ctx.fill();
-      ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(87,242,135,.3)'; ctx.stroke();
-      ctx.textAlign = 'left'; ctx.fillStyle = GREEN; ctx.fillText(txt, cx + 9, d.y + .5);
-    });
-    ctx.textBaseline = 'alphabetic';
-
-    acc++; if (acc >= 7 && parts.length < 46) { acc = 0; spawn(); }
-    if (!reduce) raf = requestAnimationFrame(draw);
+    if (!reduce && Math.random() < 0.07 && ARCS.length < 14) spawnArc();
+    raf = requestAnimationFrame(draw);
   }
-  window.addEventListener('resize', () => { cancelAnimationFrame(raf); layout(); draw(); });
-  requestAnimationFrame(() => { layout(); if (reduce) { for (let i = 0; i < 10; i++) spawn(); } draw(); });
-})();
 
+  // rotate by holding the right mouse button and dragging
+  wrap.addEventListener('contextmenu', (e) => e.preventDefault());
+  wrap.addEventListener('pointerdown', (e) => { if (e.button !== 2) return; dragging = true; lastX = e.clientX; lastY = e.clientY; try { wrap.setPointerCapture(e.pointerId); } catch (_) {} wrap.style.cursor = 'grabbing'; });
+  wrap.addEventListener('pointermove', (e) => { if (!dragging) return; rotY += (e.clientX - lastX) * 0.006; rotX += (e.clientY - lastY) * 0.006; rotX = Math.max(-1.15, Math.min(1.15, rotX)); lastX = e.clientX; lastY = e.clientY; });
+  const endDrag = () => { dragging = false; wrap.style.cursor = ''; };
+  wrap.addEventListener('pointerup', endDrag);
+  wrap.addEventListener('pointercancel', endDrag);
+
+  window.addEventListener('resize', () => { cancelAnimationFrame(raf); layout(); draw(); });
+  requestAnimationFrame(() => { layout(); buildNodes(); for (let i = 0; i < 6; i++) spawnArc(); draw(); });
+})();
 /* ---------- Logged-in user chip + cabinet menu (main page) ---------- */
 (function () {
   const box = document.getElementById('navUser'); if (!box) return;
