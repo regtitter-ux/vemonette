@@ -64,6 +64,8 @@ const TR = {
   'Выкуп':'Buy-in','продажа':'resale','возврат':'return',
   'Выкуп инвайтов':'Buy invites','Ваши инвайты':'Your invites',
   'Куплено':'Bought','Продано':'Sold','Осталось':'Outstanding','Вложено':'Invested','Заработано':'Earned',
+  // minimum-buyout line + card notes (split by <b>, so caught as substrings)
+  'Минимум выкупа:':'Minimum buyout:','инвайтов':'invites','дней продаж сервера':"days of the server's sales",'дней продаж':'days of sales','ждут продажи':'awaiting sale',
   // buy / topup / withdraw
   'Сколько инвайтов выкупить?':'How many invites to buy?','Минимум':'Minimum','Неверное число':'Invalid number',
   'Выкуплено инвайтов':'Invites bought','Недостаточно средств на инвест-счёте. Пополните счёт.':'Not enough on the investment account. Top it up.',
