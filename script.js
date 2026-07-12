@@ -451,14 +451,41 @@ setLang(startLang);
   const base = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '');
   let tok = ''; try { tok = localStorage.getItem('vemoni_tok') || ''; } catch (_) {}
   const headers = {}; if (tok) headers.Authorization = 'Bearer ' + tok;
+  // Average the avatar to a dominant colour and use it as a Discord-style banner.
+  function bannerFromAvatar(url) {
+    const bn = document.getElementById('nmBanner'); if (!bn) return;
+    const img = new Image(); img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const cv = document.createElement('canvas'); cv.width = cv.height = 16;
+        const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0, 16, 16);
+        const p = cx.getImageData(0, 0, 16, 16).data;
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let i = 0; i < p.length; i += 4) { r += p[i]; g += p[i + 1]; b += p[i + 2]; n++; }
+        r = (r / n) | 0; g = (g / n) | 0; b = (b / n) | 0;
+        const dk = (v) => (v * 0.62) | 0;
+        bn.style.background = 'linear-gradient(135deg, rgb(' + r + ',' + g + ',' + b + '), rgb(' + dk(r) + ',' + dk(g) + ',' + dk(b) + '))';
+      } catch (_) { /* tainted / decode fail → keep the default banner */ }
+    };
+    img.src = url;
+  }
   fetch(base + '/partner/whoami', { credentials: 'include', headers })
     .then((r) => (r.ok ? r.json() : null))
     .then((d) => {
       if (!d || !d.authed) return;
       if (loginBtn) loginBtn.style.display = 'none';
+      const name = d.name || d.username || 'User';
+      const letter = (name.trim()[0] || 'U').toUpperCase();
       const av = document.getElementById('navAv');
       if (d.avatar) { av.style.backgroundImage = 'url("' + d.avatar + '")'; }
-      else { av.textContent = ((d.name || 'U').trim()[0] || 'U').toUpperCase(); }
+      else { av.textContent = letter; }
+      // profile header inside the menu
+      const nmAv = document.getElementById('nmAv'), nmName = document.getElementById('nmName'), nmUser = document.getElementById('nmUser');
+      if (nmName) nmName.textContent = name;
+      if (nmUser) nmUser.textContent = d.username ? '@' + d.username : ('ID ' + (d.userId || ''));
+      if (nmAv) { if (d.avatar) nmAv.style.backgroundImage = 'url("' + d.avatar + '")'; else nmAv.textContent = letter; }
+      // Discord-style: no real banner → tint it from the avatar's dominant colour
+      if (d.avatar) bannerFromAvatar(d.avatar);
       if (!d.isAdmin) box.querySelectorAll('[data-admin]').forEach((el) => el.remove());
       box.hidden = false;
       const menu = document.getElementById('navMenu');

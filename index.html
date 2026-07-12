@@ -13,7 +13,7 @@
   <!-- Load fonts without blocking first paint; drop the unused 900 weight -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" /></noscript>
-  <link rel="stylesheet" href="styles.css?v=18" />
+  <link rel="stylesheet" href="styles.css?v=19" />
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
 </head>
 <body>
@@ -48,11 +48,36 @@
           </button>
           <button class="nav-av" id="navAv" aria-label="Account"></button>
           <div class="nav-menu" id="navMenu" hidden>
-            <a href="/partner/" data-i18n="menu_partner">Partner cabinet</a>
-            <a href="/order/" data-i18n="menu_order">Buyer cabinet</a>
-            <a href="/investor/" data-i18n="menu_invest">Investor cabinet</a>
-            <a href="/admin/" data-admin data-i18n="menu_admin">Admin panel</a>
-            <a href="#" class="nav-logout" id="navLogout" data-i18n="menu_logout">Log out</a>
+            <div class="nm-head">
+              <div class="nm-banner" id="nmBanner"></div>
+              <div class="nm-id">
+                <div class="nm-av" id="nmAv"></div>
+                <div class="nm-txt"><b id="nmName">User</b><span id="nmUser"></span></div>
+              </div>
+            </div>
+            <div class="nm-items">
+              <a href="/partner/">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.7-5 5.5-5s5.5 2 5.5 5"/><path d="M16.5 15.2c2 .4 3.5 2 3.5 4.3"/><circle cx="17.5" cy="8.5" r="2.3"/></svg>
+                <span data-i18n="menu_partner">Partner cabinet</span>
+              </a>
+              <a href="/order/">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg>
+                <span data-i18n="menu_order">Buyer cabinet</span>
+              </a>
+              <a href="/investor/">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l5-5 3.5 3.5L20 8"/><path d="M16 8h4v4"/></svg>
+                <span data-i18n="menu_invest">Investor cabinet</span>
+              </a>
+              <a href="/admin/" data-admin>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.2-3 7.4-7 9-4-1.6-7-4.8-7-9V6l7-3Z"/></svg>
+                <span data-i18n="menu_admin">Admin panel</span>
+              </a>
+              <div class="nm-sep"></div>
+              <a href="#" class="nav-logout" id="navLogout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/></svg>
+                <span data-i18n="menu_logout">Log out</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
@@ -367,6 +392,6 @@
     </div>
   </footer>
 
-  <script src="script.js?v=15" defer></script>
+  <script src="script.js?v=16" defer></script>
 </body>
 </html>
