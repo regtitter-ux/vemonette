@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Vteme — социальная сеть</title>
   <meta name="description" content="Vteme — простая социальная сеть с мессенджером. Прототип в стиле первых версий ВКонтакте." />
-  <meta name="theme-color" content="#45688e" />
+  <meta name="theme-color" content="#17212b" />
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <style>
@@ -247,6 +247,88 @@
       .prof-name{font-size:18px}
       .bnav a{font-size:8px}
     }
+
+    /* ═══════════ Тёмная тема (в стиле Telegram Desktop) ═══════════ */
+    :root{
+      --header:#17212b; --header-d:#17212b;
+      --page:#0e1621; --panel:#17212b; --border:rgba(255,255,255,.07);
+      --link:#6ab3f3; --link-h:#8ec8f7;
+      --text:#e9edf1; --muted:#6d7f8f; --soft:#8696a7;
+      --btn-d:#4b83c2; --hi:#202b36;
+      --unread:#1b2633; --bubble-in:#182533; --bubble-out:#2b5278;
+    }
+    body{background:var(--page);color:var(--text)}
+    .top{background:#17212b;border-bottom:1px solid #0a0f16}
+    .search input{background:#242f3d;border-color:#242f3d;color:#e9edf1}
+    .search input::placeholder{color:#6d7f8f}
+    .top-right a{color:#c6d3df}
+    .top-right a:hover{color:#fff}
+    .menu a{color:var(--link);border-bottom-color:rgba(255,255,255,.05)}
+    .menu a:hover{background:#202b36}
+    .menu a.active{background:#2b5278;color:#fff;box-shadow:none}
+    .menu .cnt{color:#6ab3f3}
+    .side-note,.side-note a{color:#6d7f8f}
+    .panel{background:var(--panel);border-color:var(--border)}
+    .panel-h{background:#1c2733;border-bottom-color:var(--border);color:#e9edf1}
+    .panel-h .lite{color:#6d7f8f}
+    .btn{background:#5288c1;border-color:#4b83c2;color:#fff !important}
+    .btn:hover{background:#5c95d0}
+    .btn.gray{background:#242f3d;border-color:#2b3a4a;color:#c6d3df !important}
+    .btn.gray:hover{background:#2b3a4a}
+    .btn.danger{background:#c0574f;border-color:#a94a44}
+    .prof-name{color:#fff}
+    .prof-status{color:#8696a7}
+    .prof-acts a{color:var(--link)}
+    .info-row{border-bottom-color:rgba(255,255,255,.06)}
+    .info-row .v{color:#e9edf1}
+    .online{color:#4dcd5e}
+    .composer textarea{background:#242f3d;border-color:#242f3d;color:#e9edf1}
+    .composer textarea:focus{border-color:#5288c1}
+    .composer-prev img{border-color:var(--border)}
+    .post{border-bottom-color:rgba(255,255,255,.05)}
+    .post-text{color:#e9edf1}
+    .post-photo img{border-color:var(--border)}
+    .cmts{border-top-color:rgba(255,255,255,.06)}
+    .cmt .cb{background:#202b36}
+    .cmt .ct{color:#e9edf1}
+    .cmt-form input,.im-foot input,.field input,.field textarea{background:#242f3d;border-color:#242f3d;color:#e9edf1}
+    .cmt-form input:focus,.im-foot input:focus,.field input:focus,.field textarea:focus{border-color:#5288c1}
+    .fcard{border-color:rgba(255,255,255,.07)}
+    .fcard .fn{color:#e9edf1}
+    .im-list{border-right-color:var(--border)}
+    .dlg{border-bottom-color:rgba(255,255,255,.05)}
+    .dlg:hover{background:#202b36}
+    .dlg.active{background:#2b5278}
+    .dlg.active .dlg-name,.dlg.active .dlg-prev,.dlg.active .dlg-time{color:#fff}
+    .dlg.unread{background:#1b2633}
+    .dlg-name{color:#e9edf1}
+    .dlg.unread .dlg-name{color:#6ab3f3}
+    .dlg .badge,.bnav .bdg{background:#5288c1}
+    .im-head{background:#1c2733;border-bottom-color:var(--border)}
+    .im-head .hn{color:#e9edf1}
+    .im-back{color:var(--link)}
+    .im-body{background:#0e1621}
+    .msg{color:#e9edf1}
+    .msg.in{background:#182533}
+    .msg.out{background:#2b5278}
+    .msg .t{color:rgba(233,237,241,.5)}
+    .im-foot{background:#1c2733;border-top-color:var(--border)}
+    .ph{border-color:var(--border)}
+    .ph-add{background:#1c2733;border-color:#33404f;color:#6d7f8f}
+    .modal{background:rgba(0,0,0,.6)}
+    .modal-box{background:#17212b}
+    .modal-h{background:#1c2733;border-bottom-color:var(--border);color:#e9edf1}
+    .modal-h .x{color:#6d7f8f}
+    .field label{color:#6d7f8f}
+    .bnav{background:#17212b;border-top-color:var(--border)}
+    .bnav a{color:#6d7f8f}
+    .bnav a.active{color:#6ab3f3}
+    .empty,.foot,.foot a{color:#6d7f8f}
+    #v-messages.chat-open .im-chat{background:#0e1621}
+    ::-webkit-scrollbar{width:8px;height:8px}
+    ::-webkit-scrollbar-thumb{background:#2b3a4a;border-radius:4px}
+    ::-webkit-scrollbar-thumb:hover{background:#35485b}
+    ::-webkit-scrollbar-track{background:transparent}
   </style>
 </head>
 <body>
