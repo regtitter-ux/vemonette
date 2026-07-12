@@ -490,9 +490,11 @@ setLang(startLang);
   // rotate by dragging with the left mouse button (tracked on window so a fast
   // drag outside the canvas keeps working), or with one finger on touch
   const rotBy = (dx, dy) => { rotY += dx * 0.006; rotX += dy * 0.006; rotX = Math.max(-1.15, Math.min(1.15, rotX)); };
+  const stopDrag = () => { dragging = false; wrap.style.cursor = ''; };
   wrap.addEventListener('mousedown', (e) => { if (e.button !== 0) return; e.preventDefault(); dragging = true; lastX = e.clientX; lastY = e.clientY; wrap.style.cursor = 'grabbing'; });
-  window.addEventListener('mousemove', (e) => { if (!dragging) return; rotBy(e.clientX - lastX, e.clientY - lastY); lastX = e.clientX; lastY = e.clientY; });
-  window.addEventListener('mouseup', () => { if (dragging) { dragging = false; wrap.style.cursor = ''; } });
+  window.addEventListener('mousemove', (e) => { if (!dragging) return; if (!(e.buttons & 1)) { stopDrag(); return; } rotBy(e.clientX - lastX, e.clientY - lastY); lastX = e.clientX; lastY = e.clientY; });
+  window.addEventListener('mouseup', stopDrag);
+  window.addEventListener('blur', stopDrag);
   wrap.addEventListener('mouseenter', () => { if (!dragging) wrap.style.cursor = 'grab'; });
   wrap.addEventListener('touchstart', (e) => { if (e.touches.length !== 1) return; dragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; }, { passive: true });
   wrap.addEventListener('touchmove', (e) => { if (!dragging || e.touches.length !== 1) return; const t = e.touches[0]; rotBy(t.clientX - lastX, t.clientY - lastY); lastX = t.clientX; lastY = t.clientY; e.preventDefault(); }, { passive: false });
