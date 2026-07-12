@@ -74,6 +74,7 @@ const TR = {
   'На сервере нет активной карточки верификации':'The server has no active verification card','Выберите сервер':'Select a server','Не удалось убрать':'Could not remove',
   'Пополнить инвест-счёт, $':'Top up investment account, $','Инвест-счёт пополнен на':'Investment account topped up by','Финансовая сверка':'Financial reconciliation','Бэкапы':'Backups',
   'Сделать бэкап сейчас':'Back up now','Аудит-лог действий':'Action audit log','Ботов онлайн':'Bots online',
+  'Бот добавлен на сервер':'Bot added to a server','Бот удалён с сервера':'Bot removed from a server','Создана карточка верификации':'Verification card created','Удалена карточка верификации':'Verification card deleted','↗ ссылка':'↗ link',
   '🟢 онлайн':'🟢 online','🔴 офлайн':'🔴 offline','Алерты':'Alerts','⚠️ выключены':'⚠️ off',
   'Задайте ALERT_CHANNEL в Railway':'Set ALERT_CHANNEL in Railway',
   'Продажи рекламы (всего)':'Ad sales (total)','за 30д':'30d','Предоплата на кошельках':'Prepaid in wallets',
@@ -513,14 +514,25 @@ function renderSysBackup(bk, alertOn) {
         ? `Последний бэкап: <b>${escapeHtml(relTime(last.at))}</b> · локально: ${last.local ? '✅' : '❌'} · офсайт: ${last.offsite ? '✅' : '❌'} · файлов: ${last.files}. Офсайт-копия: ${off}.`
         : `Бэкап ещё не запускался в этой сессии (первый — через пару минут после старта). Офсайт-копия: ${off}.`;
 }
+const AUDIT_LABEL = {
+    'bot.join': 'Бот добавлен на сервер',
+    'bot.leave': 'Бот удалён с сервера',
+    'card.create': 'Создана карточка верификации',
+    'card.delete': 'Удалена карточка верификации'
+};
 function renderSysAudit(entries) {
     const box = $('#sys-audit'); if (!box) return;
+    // linkify server/card URLs in the detail (escape first, then wrap URLs)
+    const linkify = (s) => escapeHtml(String(s || '')).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">↗ ссылка</a>');
+    const actCell = (a) => AUDIT_LABEL[a]
+        ? `${escapeHtml(AUDIT_LABEL[a])} <code class="muted">${escapeHtml(a)}</code>`
+        : `<code>${escapeHtml(a)}</code>`;
     const rows = entries.map((e) => `
         <tr>
           <td class="muted" style="white-space:nowrap">${escapeHtml(relTime(e.ts))}</td>
           <td>${escapeHtml(e.userName || e.userId || '—')}</td>
-          <td><code>${escapeHtml(e.action)}</code></td>
-          <td class="muted">${escapeHtml(e.detail || '')}</td>
+          <td>${actCell(e.action)}</td>
+          <td class="muted">${linkify(e.detail)}</td>
         </tr>`).join('');
     box.innerHTML = `<thead><tr><th>Когда</th><th>Кто</th><th>Действие</th><th>Детали</th></tr></thead>
         <tbody>${rows || '<tr><td colspan="4" class="muted">Пока пусто</td></tr>'}</tbody>`;
