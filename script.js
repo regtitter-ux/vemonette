@@ -572,8 +572,10 @@ setLang(startLang);
       if (nmName) nmName.textContent = name;
       if (nmUser) nmUser.textContent = d.username ? '@' + d.username : ('ID ' + (d.userId || ''));
       if (nmAv) { if (d.avatar) nmAv.style.backgroundImage = 'url("' + d.avatar + '")'; else nmAv.textContent = letter; }
-      // Discord-style: no real banner → tint it from the avatar's dominant colour
-      if (d.avatar) bannerFromAvatar(d.avatar);
+      // real Discord banner if the user has one; otherwise tint from avatar colour
+      const nmBanner = document.getElementById('nmBanner');
+      if (nmBanner && d.banner) { nmBanner.style.backgroundImage = 'url("' + d.banner + '")'; nmBanner.style.backgroundSize = 'cover'; nmBanner.style.backgroundPosition = 'center'; }
+      else if (d.avatar) bannerFromAvatar(d.avatar);
       if (!d.isAdmin) box.querySelectorAll('[data-admin]').forEach((el) => el.remove());
       box.hidden = false;
       const menu = document.getElementById('navMenu');
