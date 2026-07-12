@@ -61,7 +61,7 @@ const TR = {
   'Отток (клаубэк, 30д)':'Churn (clawback, 30d)','доля ушедших из засчитанных':'share of counted joins that left',
   'Активные кампании':'Active campaigns','Покупатели за 30д':'Buyers 30d','всего':'total',
   'Спрос (не доставлено)':'Demand (undelivered)','сумма остатков активных кампаний':'sum of active campaign remainders',
-  'Пропускная способность':'Throughput','средняя за 7 дней':'7-day average','Хватит на':'Covers',
+  'Производительность':'Performance','средняя за 7 дней':'7-day average','Хватит на':'Covers',
   '🔴 перепродажа — заказов больше, чем сеть тянет':'🔴 oversold — more orders than the network can deliver','🟢 в норме':'🟢 healthy',
   'Выручка':'Revenue','Заходы':'Joins',
   // system
@@ -411,7 +411,7 @@ async function renderBI() {
     const invBox = $('#bi-inventory');
     if (invBox) invBox.innerHTML = [
         card('Спрос (не доставлено)', `${inv.demand} заходов`, 'сумма остатков активных кампаний'),
-        card('Пропускная способность', `${inv.capacityPerDay}/день`, 'средняя за 7 дней'),
+        card('Производительность', `${inv.capacityPerDay}/день`, 'средняя за 7 дней'),
         card('Хватит на', inv.coverageDays == null ? '—' : `${inv.coverageDays} дн.`, inv.oversold ? '🔴 перепродажа — заказов больше, чем сеть тянет' : '🟢 в норме', inv.oversold)
     ].join('');
     const weeksBox = $('#bi-weeks');
