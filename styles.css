@@ -112,6 +112,7 @@ main, .nav, .footer { position: relative; z-index: 1; }
 
 /* Logged-in user: avatar + burger menu with cabinet links */
 .nav-user { position: relative; display: flex; align-items: center; gap: 8px; }
+.nav-user[hidden], .nav-menu[hidden] { display: none; } /* let the hidden attribute win over display:flex */
 .nav-burger { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 9px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--stroke-2); color: var(--muted); cursor: pointer; transition: background 0.15s, color 0.15s; }
 .nav-burger:hover { color: var(--text); background: rgba(255, 255, 255, 0.1); }
 .nav-av { width: 36px; height: 36px; border-radius: 50%; padding: 0; background-size: cover; background-position: center; background-color: var(--blurple); color: #fff; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid var(--stroke-2); overflow: hidden; }
