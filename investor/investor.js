@@ -33,7 +33,8 @@ let invLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '')
 if (invLang !== 'en' && invLang !== 'ru') invLang = 'ru';
 const WHOLE = {
   'Выйти':'Log out','Вывести':'Withdraw','Инвест-счёт':'Investment account','Отмена':'Cancel',
-  'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin'
+  'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin',
+  'Партнёрам':'For partners','Покупателям':'For buyers','Инвесторам':'For investors','Администраторам':'For admins'
 };
 function bannerFromAvatar(url) {
     const bn = document.getElementById('nmBanner'); if (!bn || !url) return;
