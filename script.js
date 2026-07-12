@@ -577,6 +577,8 @@ setLang(startLang);
       if (nmBanner && d.banner) { nmBanner.style.backgroundImage = 'url("' + d.banner + '")'; nmBanner.style.backgroundSize = 'cover'; nmBanner.style.backgroundPosition = 'center'; }
       else if (d.avatar) bannerFromAvatar(d.avatar);
       if (!d.isAdmin) box.querySelectorAll('[data-admin]').forEach((el) => el.remove());
+      // highlight the section the user is currently on
+      box.querySelectorAll('.nm-items a').forEach((a) => { if (a.getAttribute('href') === location.pathname) a.classList.add('active'); });
       box.hidden = false;
       const menu = document.getElementById('navMenu');
       const toggle = (e) => { e.preventDefault(); e.stopPropagation(); menu.hidden = !menu.hidden; };
