@@ -88,8 +88,10 @@
 
   /* ---- flow canvas viz ---- */
   .viz{position:relative;border:1px solid var(--line);border-radius:22px;overflow:hidden;
-    background:linear-gradient(180deg,#0c1220,#090d16);box-shadow:var(--shadow);height:430px}
+    background:linear-gradient(180deg,#0c1220,#090d16);box-shadow:var(--shadow);height:430px;touch-action:none}
   .viz canvas{display:block;width:100%;height:100%}
+  .viz-tip{position:absolute;transform:translate(-50%,-100%);z-index:3;pointer-events:none;white-space:nowrap;padding:4px 9px;border-radius:7px;font-size:12px;font-weight:700;color:#eaf2ff;background:rgba(10,16,28,.92);border:1px solid rgba(120,160,220,.28);box-shadow:0 6px 18px rgba(0,0,0,.45)}
+  .viz-tip[hidden]{display:none}
   .viz-legend{position:absolute;left:16px;bottom:14px;display:flex;gap:16px;font-size:12px;color:var(--muted);font-weight:600}
   .viz-legend span{display:inline-flex;align-items:center;gap:7px}
   .viz-legend i{width:9px;height:9px;border-radius:50%;display:inline-block}
@@ -272,11 +274,10 @@
       </div>
       <div class="viz" id="viz" aria-hidden="true">
         <canvas id="flow"></canvas>
-        <div class="viz-count"><b class="mono" id="flowCount">0</b><small data-i18n="viz_count">joins delivered</small></div>
         <div class="viz-legend">
-          <span><i style="background:var(--blue)"></i> <span data-i18n="viz_l1">Partners</span></span>
-          <span><i style="background:var(--blue-2)"></i> <span data-i18n="viz_l2">Vemoni</span></span>
-          <span><i style="background:var(--green)"></i> <span data-i18n="viz_l3">Your server</span></span>
+          <span><i style="background:#86b6ff"></i> <span data-i18n="viz_l1">Buyers</span></span>
+          <span><i style="background:var(--blue-2)"></i> <span>Vemoni</span></span>
+          <span><i style="background:var(--green)"></i> <span data-i18n="viz_l3">Partners</span></span>
         </div>
       </div>
     </div>
@@ -437,7 +438,7 @@ const RU = {
   hero_sub:'Ваше приглашение показывается внутри верификации, которую проходят на серверах-партнёрах. Тысячи людей каждый день видят ваш сервер и заходят в один клик — а платите вы только за реальных участников, которые остались.',
   hero_cta1:'Запустить кампанию →', hero_cta2:'Как это работает',
   tag1:'за 100 заходов', tag2:'проверка через Discord', tag3:'платите за оставшихся',
-  viz_count:'заходов доставлено', viz_l1:'Партнёры', viz_l2:'Vemoni', viz_l3:'Ваш сервер',
+  viz_count:'заходов доставлено', viz_l1:'Покупатели', viz_l2:'Vemoni', viz_l3:'Партнёры',
   mech_eye:'Как мы вас рекламируем',
   mech_h2:'Ваша реклама там, где уже есть внимание',
   mech_sub:'Не баннер, который прокручивают. Ваше приглашение показывается внутри двухкликовой верификации, которую новые участники серверов-партнёров проходят осознанно.',
@@ -499,97 +500,125 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
 });},{threshold:.4});
 ['nMembers','nJoins'].forEach((id)=>{ const el=document.getElementById(id); if(el) io.observe(el); });
 
-/* ---------------- hero flow visualization ----------------
-   Verified members stream from partner communities, through the Vemoni hub,
-   into the buyer's server. Bots / leavers are peeled off and fade at the hub.
-   Style follows the Vizceral / sFlow "particles on Bézier paths" approach:
-   colour = traffic type, glow + trail for readability, gradient flow lines. */
+/* ---------------- hero globe visualization (ported from the main page) ----------------
+   A rotating planet: buyers scatter as points and send signals to Vemoni
+   verification centres, which fan them out across partner servers. Drag with
+   the left button (or one finger) to rotate; hover a node for its label. */
 (function(){
   const wrap=document.getElementById('viz'), canvas=document.getElementById('flow');
   if(!canvas) return;
   const ctx=canvas.getContext('2d');
-  const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   const cs=getComputedStyle(document.documentElement);
-  const cv=(v,f)=>{ const x=cs.getPropertyValue(v).trim(); return x||f; };
-  const BLUE=cv('--blue','#37a6ff'), BLUE2=cv('--blue-2','#7cc6ff'), GREEN=cv('--green','#3fd18a'), RED=cv('--red','#ff6b74');
+  const cvv=(v,f)=>{ const x=cs.getPropertyValue(v).trim(); return x||f; };
+  const BLUE=cvv('--blue-2','#7cc6ff'), GREEN=cvv('--green','#3fd18a'), BUY='#86b6ff';
   const logo=new Image(); let logoOk=false; logo.onload=()=>{logoOk=true}; logo.src='/assets/logo.png';
-  let W=0,H=0,dpr=1, sources=[], hub={}, dest={}, parts=[], delivered=0, acc=0, t=0, raf;
-  const countEl=document.getElementById('flowCount');
 
-  function layout(){
-    const r=wrap.getBoundingClientRect(); dpr=Math.min(2,window.devicePixelRatio||1);
-    W=r.width; H=r.height; canvas.width=W*dpr; canvas.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
-    const lx=W*0.135, n=6;
-    sources=[]; for(let i=0;i<n;i++) sources.push({x:lx, y:H*(0.11+0.78*(i/(n-1))), r:8.5, ph:Math.random()*6.28});
-    hub={x:W*0.52, y:H*0.5, r:30};
-    dest={x:W*0.855, y:H*0.5, r:26, pulse:0, arc:0};
-  }
-  const ctrl=(a,b,bend)=>({x:(a.x+b.x)/2, y:(a.y+b.y)/2+bend});
-  const qbez=(p0,cx,cy,p1,tt)=>{ const u=1-tt; return {x:u*u*p0.x+2*u*tt*cx+tt*tt*p1.x, y:u*u*p0.y+2*u*tt*cy+tt*tt*p1.y}; };
+  // partner avatars come from the managed server feed
+  const API=(window.__VEMONI_API_BASE__||'').replace(/\/+$/,'');
+  let FEED=[];
+  function iconUrl(id,icon){ if(!id||!icon) return null; const ext=String(icon).startsWith('a_')?'gif':'png'; return 'https://cdn.discordapp.com/icons/'+id+'/'+icon+'.'+ext+'?size=128'; }
+  fetch(API+'/feed',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.servers)&&d.servers.length){ FEED=d.servers; buildNodes(); } }).catch(()=>{});
 
-  function spawn(){
-    const s=sources[(Math.random()*sources.length)|0];
-    const c=ctrl(s,hub,(s.y-hub.y)*0.16);           // warp curve toward centre (Vizceral-style)
-    parts.push({ s, bad:Math.random()<0.20, leg:0, t:0, sp:0.010+Math.random()*0.006, cx:c.x, cy:c.y, px:s.x, py:s.y, die:0 });
+  let W=0,H=0,dpr=1, cx=0,cy=0,R=0, raf;
+  let rotY=0.5, rotX=-0.32, velY=0.0016, dragging=false, lastX=0, lastY=0;
+
+  const NDOTS=560, dots=[];
+  (function(){ const g=Math.PI*(3-Math.sqrt(5)); for(let i=0;i<NDOTS;i++){ const y=1-2*(i+0.5)/NDOTS; const rr=Math.sqrt(1-y*y); const th=g*i; dots.push([Math.cos(th)*rr,y,Math.sin(th)*rr]); } })();
+  const ll=(la,lo)=>{ la=la*Math.PI/180; lo=lo*Math.PI/180; return [Math.cos(la)*Math.cos(lo),Math.sin(la),Math.cos(la)*Math.sin(lo)]; };
+
+  const PARTNERS=[], CENTERS=[], BUYERS=[];
+  const dist2=(a,b)=>(a[0]-b[0])**2+(a[1]-b[1])**2+(a[2]-b[2])**2;
+  const nearest=(p,arr)=>{ let bi=0,bd=Infinity; arr.forEach((n,i)=>{ const d=dist2(p,n.p); if(d<bd){bd=d;bi=i;} }); return arr[bi]; };
+  function buildNodes(){
+    PARTNERS.length=CENTERS.length=BUYERS.length=0;
+    const all=(Array.isArray(FEED)?FEED:[]).filter(s=>s&&s.name);
+    const withIcon=all.filter(s=>s.img||(s.id&&s.icon));
+    const feed=withIcon.length?withIcon:all;
+    const pPos=[ll(34,-40),ll(-16,46),ll(52,96),ll(2,156),ll(-42,-104),ll(24,-150),ll(-30,8),ll(62,-20),ll(10,118),ll(-58,130)];
+    const cPos=[ll(16,-8),ll(-10,90),ll(44,-100),ll(-38,152),ll(0,40)];
+    const bPos=[ll(8,26),ll(48,-66),ll(-28,116),ll(64,6),ll(-56,44),ll(20,-174),ll(40,168),ll(-6,-54),ll(30,-118),ll(-46,-20),ll(56,128),ll(-18,74)];
+    pPos.forEach((p,i)=>{ const s=feed[i%Math.max(1,feed.length)]||{}; const src=s.img||iconUrl(s.id,s.icon); const n={p,color:s.color||GREEN,img:null,src,name:s.name||null}; PARTNERS.push(n); if(src){ const im=new Image(); im.crossOrigin='anonymous'; im.onload=()=>{n.img=im;}; im.src=src; } });
+    cPos.forEach(p=>CENTERS.push({p}));
+    bPos.forEach(p=>BUYERS.push({p,center:null}));
+    BUYERS.forEach(bn=>{ bn.center=nearest(bn.p,CENTERS); });
   }
-  function softGlow(x,y,r,c,a){ ctx.save(); ctx.globalAlpha=a; const g=ctx.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,c); g.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill(); ctx.restore(); }
-  function gradStroke(a,cx,cy,b,c0,c1,w){ const g=ctx.createLinearGradient(a.x,a.y,b.x,b.y); g.addColorStop(0,c0); g.addColorStop(1,c1); ctx.strokeStyle=g; ctx.lineWidth=w; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.quadraticCurveTo(cx,cy,b.x,b.y); ctx.stroke(); }
+
+  const PARTS=[];
+  function spawn(){ if(!BUYERS.length||!CENTERS.length) return; const bn=BUYERS[(Math.random()*BUYERS.length)|0], c=bn.center; if(!c) return; PARTS.push({ kind:'in', a:bn.p, b:c.p, ctr:c, t:0, sp:0.008+Math.random()*0.005, trail:[] }); }
+  function fanOut(c){ if(!PARTNERS.length) return; const k=Math.random()<0.3 ? 2+((Math.random()*3)|0) : 1; for(let n=0;n<k;n++){ const pn=PARTNERS[(Math.random()*PARTNERS.length)|0]; PARTS.push({ kind:'out', a:c.p, b:pn.p, t:0, sp:0.009+Math.random()*0.006, trail:[] }); } }
+
+  function rot(v){ const cyw=Math.cos(rotY),syw=Math.sin(rotY); const x=v[0]*cyw+v[2]*syw, z1=-v[0]*syw+v[2]*cyw, y=v[1]; const cp=Math.cos(rotX),sp=Math.sin(rotX); return [x, y*cp-z1*sp, y*sp+z1*cp]; }
+  const proj=(v)=>[cx+v[0]*R, cy-v[1]*R, v[2]];
+  const bez=(a,c,b,t)=>{ const u=1-t; return [u*u*a[0]+2*u*t*c[0]+t*t*b[0], u*u*a[1]+2*u*t*c[1]+t*t*b[1], u*u*a[2]+2*u*t*c[2]+t*t*b[2]]; };
+  const ctrlR=(a,b,lift)=>{ const mx=a[0]+b[0],my=a[1]+b[1],mz=a[2]+b[2],ml=Math.hypot(mx,my,mz)||1; return [mx/ml*lift,my/ml*lift,mz/ml*lift]; };
+  function drawArc(a,b,color,alpha,lift){ const c=ctrlR(a,b,lift); let prev=null; for(let s=0;s<=20;s++){ const v=rot(bez(a,c,b,s/20)), p=proj(v); if(prev&&v[2]>-0.15){ ctx.strokeStyle=color; ctx.globalAlpha=alpha*(v[2]>0?1:0.35); ctx.lineWidth=1.1; ctx.beginPath(); ctx.moveTo(prev[0],prev[1]); ctx.lineTo(p[0],p[1]); ctx.stroke(); } prev=p; } }
+  function userGlyph(px,py,r,color){ ctx.fillStyle=color; ctx.beginPath(); ctx.arc(px,py-r*0.26,r*0.32,0,7); ctx.fill(); ctx.beginPath(); ctx.arc(px,py+r*0.6,r*0.56,Math.PI,2*Math.PI); ctx.closePath(); ctx.fill(); }
+
+  function layout(){ const r=wrap.getBoundingClientRect(); dpr=Math.min(2,window.devicePixelRatio||1); W=r.width; H=r.height; canvas.width=W*dpr; canvas.height=H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); cx=W/2; cy=H/2; R=Math.min(W,H)*0.42; }
 
   function draw(){
-    t+=0.016;
     ctx.clearRect(0,0,W,H);
-    ctx.lineCap='round';
-    // ambient glows
-    softGlow(hub.x,hub.y,96,'rgba(55,166,255,.14)',1);
-    softGlow(dest.x,dest.y,74,'rgba(63,209,138,.13)',1);
-    // flow lines (gradient, warped to centre)
-    sources.forEach(s=>{ const c=ctrl(s,hub,(s.y-hub.y)*0.10); gradStroke(s,c.x,c.y,hub,'rgba(124,198,255,.04)','rgba(124,198,255,.28)',1.3); });
-    { const c=ctrl(hub,dest,0); gradStroke(hub,c.x,c.y,dest,'rgba(124,198,255,.28)','rgba(63,209,138,.5)',2.2); }
-    // source nodes (partner communities)
-    sources.forEach(s=>{ const pl=1+Math.sin(t*1.7+s.ph)*0.14;
-      softGlow(s.x,s.y,s.r*2.6,'rgba(55,166,255,.10)',1);
-      ctx.beginPath(); ctx.arc(s.x,s.y,s.r*pl,0,7); ctx.fillStyle='#111c30'; ctx.fill();
-      ctx.lineWidth=1.4; ctx.strokeStyle='rgba(124,198,255,.5)'; ctx.stroke();
-      ctx.beginPath(); ctx.arc(s.x,s.y,2.3,0,7); ctx.fillStyle=BLUE2; ctx.fill();
-    });
-    // particles + trails
-    for(let i=parts.length-1;i>=0;i--){ const p=parts[i];
-      if(p.die>0){ ctx.save(); ctx.globalAlpha=p.die; const dx=hub.x+(1-p.die)*10, dy=hub.y+(1-p.die)*30; softGlow(dx,dy,10,RED,p.die*.9); ctx.fillStyle=RED; ctx.beginPath(); ctx.arc(dx,dy,3,0,7); ctx.fill(); ctx.restore(); p.die-=0.05; if(p.die<=0) parts.splice(i,1); continue; }
-      p.t += p.sp*(p.leg===1?1.3:1);
-      let pos;
-      if(p.leg===0){ pos=qbez(p.s,p.cx,p.cy,hub,Math.min(1,p.t)); if(p.t>=1){ if(p.bad){ p.die=1; continue; } p.leg=1; p.t=0; const c=ctrl(hub,dest,0); p.cx=c.x; p.cy=c.y; } }
-      else { pos=qbez(hub,p.cx,p.cy,dest,Math.min(1,p.t)); if(p.t>=1){ delivered++; dest.pulse=1; dest.arc=(dest.arc+0.018)%1; if(countEl) countEl.textContent=delivered.toLocaleString('en-US'); parts.splice(i,1); continue; } }
-      const c = p.leg===0 ? BLUE : GREEN;
-      ctx.strokeStyle=c; ctx.globalAlpha=.45; ctx.lineWidth=2.1; ctx.beginPath(); ctx.moveTo(p.px,p.py); ctx.lineTo(pos.x,pos.y); ctx.stroke(); ctx.globalAlpha=1;
-      softGlow(pos.x,pos.y,7,c,.85);
-      ctx.beginPath(); ctx.arc(pos.x,pos.y,2.4,0,7); ctx.fillStyle='#fff'; ctx.fill();
-      p.px=pos.x; p.py=pos.y;
+    if(!dragging&&!reduce) rotY+=velY;
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    const g=ctx.createRadialGradient(cx,cy,R*0.15,cx,cy,R*1.35); g.addColorStop(0,'rgba(34,168,240,.12)'); g.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,R*1.35,0,7); ctx.fill(); ctx.restore();
+    if(logoOk){ ctx.save(); ctx.globalAlpha=0.11; const s=R*0.85; ctx.drawImage(logo,cx-s/2,cy-s/2,s,s); ctx.restore(); }
+    for(const d of dots){ const v=rot(d), p=proj(v), dep=v[2]; ctx.globalAlpha=dep>0?(0.22+0.5*dep):(0.05+0.1*(1+dep)); ctx.fillStyle=dep>0?'rgb(122,192,255)':'rgb(64,104,152)'; ctx.beginPath(); ctx.arc(p[0],p[1],dep>0?(0.7+1.0*dep):0.6,0,7); ctx.fill(); }
+    ctx.globalAlpha=1;
+    ctx.save(); ctx.lineCap='round';
+    BUYERS.forEach(b=>{ if(b.center) drawArc(b.p,b.center.p,BUY,0.13,1.26); });
+    ctx.restore(); ctx.globalAlpha=1;
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    for(let i=PARTS.length-1;i>=0;i--){ const pt=PARTS[i]; pt.t+=pt.sp;
+      const col=pt.kind==='in'?BUY:GREEN;
+      const seg=[pt.a, ctrlR(pt.a,pt.b,1.26), pt.b];
+      if(pt.t>=1){ if(pt.kind==='in') fanOut(pt.ctr); PARTS.splice(i,1); continue; }
+      const v=rot(bez(seg[0],seg[1],seg[2],pt.t)), p=proj(v);
+      if(pt.kind==='out') drawArc(pt.a,pt.b,GREEN,0.1,1.26);
+      if(v[2]>-0.05){
+        pt.trail.push([p[0],p[1]]); if(pt.trail.length>9) pt.trail.shift();
+        const tr=pt.trail; ctx.lineCap='round';
+        for(let k=1;k<tr.length;k++){ const a=k/tr.length; ctx.globalAlpha=a*0.8; ctx.lineWidth=0.5+2.4*a; ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(tr[k-1][0],tr[k-1][1]); ctx.lineTo(tr[k][0],tr[k][1]); ctx.stroke(); }
+        ctx.globalAlpha=1;
+        const gg=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],7); gg.addColorStop(0,col); gg.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(p[0],p[1],7,0,7); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(p[0],p[1],1.8,0,7); ctx.fill();
+        if(v[2]>0.15){ ctx.save(); ctx.font='800 9px Inter,system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=col; ctx.globalAlpha=Math.min(1,(v[2]-0.15)*3); ctx.fillText('$',p[0],p[1]-9); ctx.restore(); ctx.globalAlpha=1; }
+      } else { pt.trail.length=0; }
     }
-    // hub (Vemoni logo, clean — no fill tint)
-    softGlow(hub.x,hub.y,hub.r+14,'rgba(55,166,255,.20)',1);
-    ctx.beginPath(); ctx.arc(hub.x,hub.y,hub.r,0,7); ctx.fillStyle='#0b1424'; ctx.fill();
-    ctx.beginPath(); ctx.arc(hub.x,hub.y,hub.r,0,7); ctx.lineWidth=1.6; ctx.strokeStyle='rgba(55,166,255,.35)'; ctx.stroke();
-    ctx.beginPath(); ctx.arc(hub.x,hub.y,hub.r, t*0.9, t*0.9+1.4); ctx.strokeStyle=BLUE2; ctx.lineWidth=2.4; ctx.stroke();
-    if(logoOk){ const s=hub.r*1.25; ctx.save(); ctx.beginPath(); ctx.arc(hub.x,hub.y,hub.r-6,0,7); ctx.clip(); ctx.drawImage(logo,hub.x-s/2,hub.y-s/2,s,s); ctx.restore(); }
-    // destination (buyer server)
-    if(dest.pulse>0){ ctx.beginPath(); ctx.arc(dest.x,dest.y,dest.r+(1-dest.pulse)*22,0,7); ctx.strokeStyle='rgba(63,209,138,'+(dest.pulse*.55)+')'; ctx.lineWidth=2; ctx.stroke(); dest.pulse-=0.045; if(dest.pulse<0)dest.pulse=0; }
-    ctx.beginPath(); ctx.arc(dest.x,dest.y,dest.r,0,7); ctx.fillStyle='#0b1a15'; ctx.fill();
-    ctx.beginPath(); ctx.arc(dest.x,dest.y,dest.r,0,7); ctx.lineWidth=1.6; ctx.strokeStyle='rgba(63,209,138,.35)'; ctx.stroke();
-    ctx.beginPath(); ctx.arc(dest.x,dest.y,dest.r,-Math.PI/2,-Math.PI/2+dest.arc*6.283); ctx.strokeStyle=GREEN; ctx.lineWidth=2.6; ctx.stroke();
-    ctx.fillStyle=GREEN; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='700 15px Inter,sans-serif'; ctx.fillText('✓',dest.x,dest.y+1);
-    ctx.textBaseline='alphabetic'; ctx.font='800 10.5px Sora,Inter,sans-serif'; ctx.fillStyle=GREEN;
-    ctx.fillText(document.documentElement.lang==='ru'?'ВАШ СЕРВЕР':'YOUR SERVER', dest.x, dest.y+dest.r+16);
+    ctx.restore(); ctx.globalAlpha=1;
+    const all=[];
+    BUYERS.forEach(n=>all.push({n,kind:'b'})); PARTNERS.forEach(n=>all.push({n,kind:'p'})); CENTERS.forEach(n=>all.push({n,kind:'c'}));
+    all.forEach(it=>{ it.v=rot(it.n.p); it.p=proj(it.v); it.n._sx=it.p[0]; it.n._sy=it.p[1]; it.n._dep=it.v[2]; it.n._kind=it.kind; });
+    all.sort((a,b)=>a.v[2]-b.v[2]);
+    for(const it of all){ const n=it.n, v=it.v, p=it.p, dep=v[2]; if(dep<-0.2) continue;
+      const fade=dep>0?1:0.32;
+      if(it.kind==='b'){ const rr=8; ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.7*fade; const gg=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],rr*2); gg.addColorStop(0,BUY); gg.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(p[0],p[1],rr*2,0,7); ctx.fill(); ctx.restore(); ctx.globalAlpha=fade; ctx.beginPath(); ctx.arc(p[0],p[1],rr,0,7); ctx.fillStyle='#0c1526'; ctx.fill(); ctx.beginPath(); ctx.arc(p[0],p[1],rr,0,7); ctx.lineWidth=1.4; ctx.strokeStyle='rgba(134,182,255,.7)'; ctx.stroke(); userGlyph(p[0],p[1],rr,BUY); ctx.globalAlpha=1; }
+      else if(it.kind==='p'){ const rr=13; ctx.globalAlpha=fade; if(n.img){ ctx.save(); ctx.beginPath(); ctx.arc(p[0],p[1],rr,0,7); ctx.clip(); ctx.drawImage(n.img,p[0]-rr,p[1]-rr,rr*2,rr*2); ctx.restore(); } else { ctx.beginPath(); ctx.arc(p[0],p[1],rr,0,7); ctx.fillStyle='#0a1a13'; ctx.fill(); ctx.lineWidth=1.6; ctx.strokeStyle=n.color; ctx.stroke(); ctx.beginPath(); ctx.arc(p[0],p[1],2,0,7); ctx.fillStyle=n.color; ctx.fill(); } ctx.globalAlpha=1; }
+      else { const rr=11; ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=0.9*fade; const gg=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],rr*2.4); gg.addColorStop(0,'rgba(34,168,240,.5)'); gg.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(p[0],p[1],rr*2.4,0,7); ctx.fill(); ctx.restore(); ctx.globalAlpha=fade; ctx.beginPath(); ctx.arc(p[0],p[1],rr,0,7); ctx.fillStyle='#0a1420'; ctx.fill(); ctx.beginPath(); ctx.arc(p[0],p[1],rr,0,7); ctx.lineWidth=1.6; ctx.strokeStyle='rgba(92,200,255,.75)'; ctx.stroke(); if(logoOk){ const s=rr*1.4; ctx.save(); ctx.beginPath(); ctx.arc(p[0],p[1],rr-3,0,7); ctx.clip(); ctx.drawImage(logo,p[0]-s/2,p[1]-s/2,s,s); ctx.restore(); } ctx.globalAlpha=1; }
+    }
+    if(!reduce && Math.random()<0.09 && PARTS.length<22) spawn();
+    raf=requestAnimationFrame(draw);
+  }
 
-    acc++; if(acc>=9 && parts.length<46){ acc=0; spawn(); }
-    if(!reduce) raf=requestAnimationFrame(draw);
-  }
-  function start(){
-    layout();
-    if(reduce){ for(let i=0;i<16;i++){ spawn(); const p=parts[parts.length-1]; p.leg=Math.random()<0.4?1:0; p.t=Math.random(); if(p.leg===1){ const c=ctrl(hub,dest,0); p.cx=c.x; p.cy=c.y; } } }
-    draw();
-  }
+  const rotBy=(dx,dy)=>{ rotY+=dx*0.006; rotX+=dy*0.006; rotX=Math.max(-1.15,Math.min(1.15,rotX)); };
+  const stopDrag=()=>{ dragging=false; wrap.style.cursor=''; };
+  wrap.addEventListener('mousedown',(e)=>{ if(e.button!==0) return; e.preventDefault(); dragging=true; lastX=e.clientX; lastY=e.clientY; wrap.style.cursor='grabbing'; });
+  window.addEventListener('mousemove',(e)=>{ if(!dragging) return; if(!(e.buttons&1)){ stopDrag(); return; } rotBy(e.clientX-lastX,e.clientY-lastY); lastX=e.clientX; lastY=e.clientY; });
+  window.addEventListener('mouseup',stopDrag);
+  window.addEventListener('blur',stopDrag);
+  wrap.addEventListener('mouseenter',()=>{ if(!dragging) wrap.style.cursor='grab'; });
+  wrap.addEventListener('touchstart',(e)=>{ if(e.touches.length!==1) return; dragging=true; lastX=e.touches[0].clientX; lastY=e.touches[0].clientY; },{passive:true});
+  wrap.addEventListener('touchmove',(e)=>{ if(!dragging||e.touches.length!==1) return; const t=e.touches[0]; rotBy(t.clientX-lastX,t.clientY-lastY); lastX=t.clientX; lastY=t.clientY; e.preventDefault(); },{passive:false});
+  const endTouch=()=>{ dragging=false; };
+  wrap.addEventListener('touchend',endTouch); wrap.addEventListener('touchcancel',endTouch);
+
+  const tip=document.createElement('div'); tip.className='viz-tip'; tip.hidden=true; wrap.appendChild(tip);
+  const LABELS={ b:{ru:'Покупатель рекламы',en:'Ad buyer'}, c:{ru:'Бот-верификатор',en:'Verification bot'} };
+  function pickHover(mx,my){ let best=null,bd=Infinity; const scan=(arr,kind,rr)=>arr.forEach(n=>{ if((n._dep||-1)<=0.02) return; const dx=n._sx-mx,dy=n._sy-my,d=dx*dx+dy*dy,hit=(rr+5)*(rr+5); if(d<hit&&d<bd){bd=d;best={n,kind};} }); scan(PARTNERS,'p',13); scan(CENTERS,'c',11); scan(BUYERS,'b',8); return best; }
+  wrap.addEventListener('mousemove',(e)=>{ if(dragging){ tip.hidden=true; return; } const r=canvas.getBoundingClientRect(); const h=pickHover(e.clientX-r.left,e.clientY-r.top); if(!h){ tip.hidden=true; if(!dragging) wrap.style.cursor='grab'; return; } const lng=document.documentElement.lang==='ru'?'ru':'en'; tip.textContent=h.kind==='p'?(h.n.name||(lng==='ru'?'Сервер-партнёр':'Partner server')):LABELS[h.kind][lng]; tip.style.left=h.n._sx+'px'; tip.style.top=(h.n._sy-14)+'px'; tip.hidden=false; wrap.style.cursor='pointer'; });
+  wrap.addEventListener('mouseleave',()=>{ tip.hidden=true; });
+
   window.addEventListener('resize',()=>{ cancelAnimationFrame(raf); layout(); draw(); });
-  requestAnimationFrame(start);
+  requestAnimationFrame(()=>{ layout(); buildNodes(); for(let i=0;i<10;i++) spawn(); draw(); });
 })();
 
 /* ---------------- live "joins in real time" feed ----------------
