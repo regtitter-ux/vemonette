@@ -483,7 +483,7 @@ setLang(startLang);
         ctx.globalAlpha = 1;
       } else if (it.kind === 'p') {
         const rr = 13; ctx.globalAlpha = fade;
-        if (n.img) { ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore(); }
+        if (n.img) { ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.fillStyle = '#0e1a2c'; ctx.fillRect(p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore(); } // opaque backing so transparent (SVG) avatars don't shimmer over the starfield
         else { ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0a1a13'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = n.color; ctx.stroke(); ctx.beginPath(); ctx.arc(p[0], p[1], 2, 0, 7); ctx.fillStyle = n.color; ctx.fill(); }
         ctx.globalAlpha = 1;
       } else {
