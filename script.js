@@ -436,7 +436,6 @@ setLang(startLang);
       ctx.globalAlpha = fade;
       if (n.type === 'p' && n.img) {
         ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore();
-        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.lineWidth = 1.6; ctx.strokeStyle = n.color; ctx.stroke();
       } else {
         ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = n.type === 'p' ? '#0a1a13' : '#0c1526'; ctx.fill();
         ctx.lineWidth = 1.7; ctx.strokeStyle = n.color; ctx.stroke();
