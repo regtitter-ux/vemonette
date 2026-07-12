@@ -598,14 +598,14 @@ function cardBlock(c, deleted) {
           · Роль: ${role}${avg}
         </div>
         ${delMeta}
-        <table class="card-stats">
+        <div class="table-wrap"><table class="card-stats">
           <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
           <tbody>
             ${statRow('1. Клик (начали)', st.clicks)}
             ${statRow('2. Заход проверен', st.checked)}
             ${statRow('3. Остались', st.stayed)}
           </tbody>
-        </table>
+        </table></div>
         <div class="cardrow-actions">${actions}</div>
       </div>`;
 }
