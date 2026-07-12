@@ -351,7 +351,7 @@ setLang(startLang);
   const BLUE = cvv('--blue-2', '#5cc8ff'), GREEN = cvv('--green', '#57f287'), BUY = '#86b6ff', TRAFFIC = '#b9a3ff';
   const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = 'assets/logo.png';
   const users = new Image(); let usersOk = false; users.onload = () => { usersOk = true; }; users.src = 'assets/users.png';
-  const buyerImg = new Image(); let buyerImgOk = false; buyerImg.onload = () => { buyerImgOk = true; }; buyerImg.src = 'assets/buyer.png';
+  const buyerImg = new Image(); let buyerImgOk = false; buyerImg.onload = () => { buyerImgOk = true; }; buyerImg.src = 'assets/suit.png';
   let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
   let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0;
   let spinVel = velY; // current spin speed; eases back to velY after a manual drag
@@ -513,7 +513,7 @@ setLang(startLang);
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.7 * fade;
         const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2); gg.addColorStop(0, BUY); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2, 0, 7); ctx.fill(); ctx.restore();
         ctx.globalAlpha = fade;
-        if (buyerImgOk) { const s = rr * 2.4; ctx.drawImage(buyerImg, p[0] - s / 2, p[1] - s / 2, s, s); } else userGlyph(p[0], p[1], rr, BUY);
+        if (buyerImgOk) { const s = rr * 2.64; ctx.drawImage(buyerImg, p[0] - s / 2, p[1] - s / 2, s, s); } else userGlyph(p[0], p[1], rr, BUY);
         ctx.globalAlpha = 1;
       } else if (it.kind === 'p') {
         const rr = 13; ctx.globalAlpha = fade;
