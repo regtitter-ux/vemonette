@@ -554,7 +554,7 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
   const reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   const cs=getComputedStyle(document.documentElement);
   const cvv=(v,f)=>{ const x=cs.getPropertyValue(v).trim(); return x||f; };
-  const BLUE=cvv('--blue-2','#7cc6ff'), GREEN=cvv('--green','#3fd18a'), BUY='#86b6ff';
+  const BLUE=cvv('--blue-2','#7cc6ff'), GREEN=cvv('--green','#3fd18a'), BUY='#86b6ff', TRAFFIC='#b9a3ff';
   const logo=new Image(); let logoOk=false; logo.onload=()=>{logoOk=true}; logo.src='/assets/logo.png';
 
   // partner avatars come from the managed server feed
@@ -590,6 +590,9 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
   const PARTS=[];
   function spawn(){ if(!BUYERS.length||!CENTERS.length) return; const bn=BUYERS[(Math.random()*BUYERS.length)|0], c=bn.center; if(!c) return; PARTS.push({ kind:'in', a:bn.p, b:c.p, ctr:c, t:0, sp:0.008+Math.random()*0.005, trail:[] }); }
   function fanOut(c){ if(!PARTNERS.length) return; const k=Math.random()<0.3 ? 2+((Math.random()*3)|0) : 1; for(let n=0;n<k;n++){ const pn=PARTNERS[(Math.random()*PARTNERS.length)|0]; PARTS.push({ kind:'out', a:c.p, b:pn.p, t:0, sp:0.009+Math.random()*0.006, trail:[] }); } }
+  // once a partner is paid, it sends traffic back the other way: partner -> centre -> buyer
+  function sendTraffic(partnerPoint){ if(!CENTERS.length) return; const c=nearest(partnerPoint,CENTERS); PARTS.push({ kind:'ret1', a:partnerPoint, b:c.p, ctr:c, t:0, sp:0.009+Math.random()*0.005, trail:[] }); }
+  function trafficToBuyer(c){ if(!BUYERS.length) return; const bn=BUYERS[(Math.random()*BUYERS.length)|0]; PARTS.push({ kind:'ret2', a:c.p, b:bn.p, t:0, sp:0.009+Math.random()*0.005, trail:[] }); }
 
   function rot(v){ const cyw=Math.cos(rotY),syw=Math.sin(rotY); const x=v[0]*cyw+v[2]*syw, z1=-v[0]*syw+v[2]*cyw, y=v[1]; const cp=Math.cos(rotX),sp=Math.sin(rotX); return [x, y*cp-z1*sp, y*sp+z1*cp]; }
   const proj=(v)=>[cx+v[0]*R, cy-v[1]*R, v[2]];
@@ -613,18 +616,23 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
     ctx.restore(); ctx.globalAlpha=1;
     ctx.save(); ctx.globalCompositeOperation='lighter';
     for(let i=PARTS.length-1;i>=0;i--){ const pt=PARTS[i]; pt.t+=pt.sp;
-      const col=pt.kind==='in'?BUY:GREEN;
+      const money=pt.kind==='in'||pt.kind==='out';
+      const col=pt.kind==='in'?BUY:pt.kind==='out'?GREEN:TRAFFIC;
       const seg=[pt.a, ctrlR(pt.a,pt.b,1.26), pt.b];
-      if(pt.t>=1){ if(pt.kind==='in') fanOut(pt.ctr); PARTS.splice(i,1); continue; }
+      if(pt.t>=1){ if(pt.kind==='in') fanOut(pt.ctr); else if(pt.kind==='out') sendTraffic(pt.b); else if(pt.kind==='ret1') trafficToBuyer(pt.ctr); PARTS.splice(i,1); continue; }
       const v=rot(bez(seg[0],seg[1],seg[2],pt.t)), p=proj(v);
-      if(pt.kind==='out') drawArc(pt.a,pt.b,GREEN,0.1,1.26);
+      if(!money) drawArc(pt.a,pt.b,TRAFFIC,0.1,1.26);
+      else if(pt.kind==='out') drawArc(pt.a,pt.b,GREEN,0.1,1.26);
       if(v[2]>-0.05){
         pt.trail.push([p[0],p[1]]); if(pt.trail.length>9) pt.trail.shift();
         const tr=pt.trail; ctx.lineCap='round';
         for(let k=1;k<tr.length;k++){ const a=k/tr.length; ctx.globalAlpha=a*0.8; ctx.lineWidth=0.5+2.4*a; ctx.strokeStyle=col; ctx.beginPath(); ctx.moveTo(tr[k-1][0],tr[k-1][1]); ctx.lineTo(tr[k][0],tr[k][1]); ctx.stroke(); }
         ctx.globalAlpha=1;
         const gg=ctx.createRadialGradient(p[0],p[1],0,p[0],p[1],7); gg.addColorStop(0,col); gg.addColorStop(1,'rgba(0,0,0,0)'); ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(p[0],p[1],7,0,7); ctx.fill(); ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(p[0],p[1],1.8,0,7); ctx.fill();
-        if(v[2]>0.15){ ctx.save(); ctx.font='800 9px Inter,system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=col; ctx.globalAlpha=Math.min(1,(v[2]-0.15)*3); ctx.fillText('$',p[0],p[1]-9); ctx.restore(); ctx.globalAlpha=1; }
+        if(v[2]>0.15){ ctx.save(); ctx.globalAlpha=Math.min(1,(v[2]-0.15)*3);
+          if(money){ ctx.font='800 9px Inter,system-ui,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle=col; ctx.fillText('$',p[0],p[1]-9); }
+          else { userGlyph(p[0],p[1]-10,5,TRAFFIC); }
+          ctx.restore(); ctx.globalAlpha=1; }
       } else { pt.trail.length=0; }
     }
     ctx.restore(); ctx.globalAlpha=1;

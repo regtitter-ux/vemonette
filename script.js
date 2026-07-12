@@ -344,7 +344,7 @@ setLang(startLang);
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
   const cs = getComputedStyle(document.documentElement);
   const cvv = (v, f) => { const x = cs.getPropertyValue(v).trim(); return x || f; };
-  const BLUE = cvv('--blue-2', '#5cc8ff'), GREEN = cvv('--green', '#57f287'), BUY = '#86b6ff';
+  const BLUE = cvv('--blue-2', '#5cc8ff'), GREEN = cvv('--green', '#57f287'), BUY = '#86b6ff', TRAFFIC = '#b9a3ff';
   const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = 'assets/logo.png';
   let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
   let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0;
@@ -388,6 +388,9 @@ setLang(startLang);
       PARTS.push({ kind: 'out', a: c.p, b: pn.p, t: 0, sp: 0.009 + Math.random() * 0.006, trail: [] });
     }
   }
+  // once a partner is paid, it sends traffic back the other way: partner -> centre -> buyer
+  function sendTraffic(partnerPoint) { if (!CENTERS.length) return; const c = nearest(partnerPoint, CENTERS); PARTS.push({ kind: 'ret1', a: partnerPoint, b: c.p, ctr: c, t: 0, sp: 0.009 + Math.random() * 0.005, trail: [] }); }
+  function trafficToBuyer(c) { if (!BUYERS.length) return; const bn = BUYERS[(Math.random() * BUYERS.length) | 0]; PARTS.push({ kind: 'ret2', a: c.p, b: bn.p, t: 0, sp: 0.009 + Math.random() * 0.005, trail: [] }); }
 
   function rot(v) {
     const cyw = Math.cos(rotY), syw = Math.sin(rotY);
@@ -439,18 +442,23 @@ setLang(startLang);
     // travelling money particles: buyer -> centre (blue), centre -> partner (green)
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     for (let i = PARTS.length - 1; i >= 0; i--) { const pt = PARTS[i]; pt.t += pt.sp;
-      const col = pt.kind === 'in' ? BUY : GREEN;
+      const money = pt.kind === 'in' || pt.kind === 'out';
+      const col = pt.kind === 'in' ? BUY : pt.kind === 'out' ? GREEN : TRAFFIC;
       const seg = [pt.a, ctrlR(pt.a, pt.b, 1.26), pt.b];
-      if (pt.t >= 1) { if (pt.kind === 'in') fanOut(pt.ctr); PARTS.splice(i, 1); continue; }
+      if (pt.t >= 1) { if (pt.kind === 'in') fanOut(pt.ctr); else if (pt.kind === 'out') sendTraffic(pt.b); else if (pt.kind === 'ret1') trafficToBuyer(pt.ctr); PARTS.splice(i, 1); continue; }
       const v = rot(bez(seg[0], seg[1], seg[2], pt.t)), p = proj(v);
-      if (pt.kind === 'out') drawArc(pt.a, pt.b, GREEN, 0.1, 1.26); // trace the fan-out line while it travels
+      if (!money) drawArc(pt.a, pt.b, TRAFFIC, 0.1, 1.26); // trace the return traffic line
+      else if (pt.kind === 'out') drawArc(pt.a, pt.b, GREEN, 0.1, 1.26); // trace the fan-out line while it travels
       if (v[2] > -0.05) {
         pt.trail.push([p[0], p[1]]); if (pt.trail.length > 9) pt.trail.shift();
         const tr = pt.trail; ctx.lineCap = 'round';
         for (let k = 1; k < tr.length; k++) { const a = k / tr.length; ctx.globalAlpha = a * 0.8; ctx.lineWidth = 0.5 + 2.4 * a; ctx.strokeStyle = col; ctx.beginPath(); ctx.moveTo(tr[k - 1][0], tr[k - 1][1]); ctx.lineTo(tr[k][0], tr[k][1]); ctx.stroke(); }
         ctx.globalAlpha = 1;
         const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 7); gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 7, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fill();
-        if (v[2] > 0.15) { ctx.save(); ctx.font = '800 9px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3); ctx.fillText('$', p[0], p[1] - 9); ctx.restore(); ctx.globalAlpha = 1; }
+        if (v[2] > 0.15) { ctx.save(); ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3);
+          if (money) { ctx.font = '800 9px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText('$', p[0], p[1] - 9); }
+          else { userGlyph(p[0], p[1] - 10, 5, TRAFFIC); } // traffic = a member travelling to the buyer
+          ctx.restore(); ctx.globalAlpha = 1; }
       } else { pt.trail.length = 0; }
     }
     ctx.restore(); ctx.globalAlpha = 1;
