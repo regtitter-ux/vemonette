@@ -41,6 +41,14 @@ b{color:#fff}
 .bal-pill .muted{font-weight:600}
 
 .wrap{max-width:860px;margin:0 auto;padding:28px 20px 60px;display:flex;flex-direction:column;gap:28px}
+/* cabinet section tabs */
+.p-tabs{display:flex;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--stroke);margin-bottom:-4px}
+.p-tab{background:transparent;border:0;color:var(--muted);font:inherit;font-size:14px;font-weight:600;padding:10px 16px;border-radius:8px 8px 0 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s,background .15s}
+.p-tab:hover{color:var(--text);background:rgba(255,255,255,.04)}
+.p-tab.active{color:var(--blue-2);border-bottom-color:var(--blue)}
+.p-pane{display:flex;flex-direction:column;gap:28px}
+.p-pane:not(.active){display:none}
+.p-empty{padding:24px 4px;text-align:center}
 h1{font-size:24px;margin-bottom:6px}
 h2{font-size:18px;margin-bottom:14px}
 .card{background:var(--panel);border:1px solid var(--stroke);border-radius:var(--radius);padding:22px}

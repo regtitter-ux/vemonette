@@ -48,6 +48,9 @@ const WHOLE = {
   'час':'hour','день':'day','неделя':'week','месяц':'month','всего':'total','Воронка':'Funnel',
   'Сервер':'Server','Роль':'Role','Баланс':'Balance','Дата':'Date','Сумма':'Amount','Статус':'Status',
   'Зашло':'Joined','Осталось':'Stayed','Ушли':'Left','Заработано':'Earned','Выйти':'Log out','Отмена':'Cancel','Сохранить':'Save',
+  // section tabs
+  'Обзор':'Overview','Рекламы':'Ads','Карточки':'Cards','Журнал':'Activity','Выплаты':'Payouts',
+  'Пока нет активных реклам и истории показов.':'No active ads or shown-ad history yet.','У вас пока нет карточек верификации.':'You have no verification cards yet.',
   'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin',
   // Activity log
   'Журнал активности':'Activity log','Все типы':'All types','Выдача верификации':'Verification granted',
@@ -238,7 +241,23 @@ async function enterApp() {
     setInterval(load, 20000);
 }
 
+// Section tabs: show one category at a time instead of one long scroll.
+function wireTabs() {
+    const tabs = document.querySelectorAll('#p-tabs .p-tab');
+    tabs.forEach((b) => { if (b.dataset.wired) return; b.dataset.wired = '1'; b.onclick = () => {
+        tabs.forEach((x) => x.classList.toggle('active', x === b));
+        document.querySelectorAll('.p-pane').forEach((p) => p.classList.toggle('active', p.dataset.pane === b.dataset.pane));
+    }; });
+}
+// Per-tab empty placeholders — shown only when that tab's sections are all hidden.
+function refreshEmpties() {
+    const vis = (id) => { const e = $('#' + id); return e && !e.hidden; };
+    const a = $('#ads-empty'); if (a) a.hidden = vis('pads-section') || vis('adhist-section');
+    const c = $('#cards-empty'); if (c) c.hidden = vis('vcards-section');
+}
+
 async function load() {
+    wireTabs();
     const { ok, body } = await get('/me');
     if (ok) render(body);
     loadPartnerAds();
@@ -246,6 +265,7 @@ async function load() {
     loadCards();
     wirePlogFilters();
     loadActivity();
+    refreshEmpties();
 }
 
 // ---- Active ads available to the partner's servers + priority selection ----
@@ -256,6 +276,7 @@ async function loadPartnerAds() {
     if (!ok) return;
     pAds = body || { priorityCampaign: null, servers: [] };
     renderPartnerAds();
+    refreshEmpties();
 }
 function renderPartnerAds() {
     const section = $('#pads-section');
@@ -359,8 +380,9 @@ async function loadCards() {
     const list = body.cards || [];
     lastPCards = list;
     const section = $('#vcards-section');
-    if (!list.length) { section.hidden = true; return; }
+    if (!list.length) { section.hidden = true; refreshEmpties(); return; }
     section.hidden = false;
+    refreshEmpties();
     const avgEl = $('#vcards-avg');
     if (avgEl) {
         if (body.avgVerifySeconds != null) { avgEl.textContent = `⏱ Среднее время от клика до проверенного захода: ~${fmtSec(body.avgVerifySeconds)}`; avgEl.hidden = false; }
@@ -458,6 +480,7 @@ async function loadAdHistory() {
     const { ok, body } = await get('/ad-history');
     if (!ok) return;
     renderAdHistory(body.servers || []);
+    refreshEmpties();
 }
 function srvIcon(name, url) {
     const initial = esc((String(name || '?')[0] || '?').toUpperCase());
