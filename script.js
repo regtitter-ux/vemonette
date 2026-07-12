@@ -479,8 +479,8 @@ setLang(startLang);
         ctx.globalAlpha = 1;
         const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 7); gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 7, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fill();
         if (v[2] > 0.15) { ctx.save(); ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3);
-          if (money) { ctx.font = '800 9px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText('$', p[0], p[1] - 9); }
-          else { userGlyph(p[0], p[1] - 10, 5, TRAFFIC); } // traffic = a member travelling to the buyer
+          if (money) { ctx.font = '800 18px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText('$', p[0], p[1] - 13); }
+          else { userGlyph(p[0], p[1] - 15, 10, TRAFFIC); } // traffic = a member travelling to the buyer
           ctx.restore(); ctx.globalAlpha = 1; }
       } else { pt.trail.length = 0; }
     }
