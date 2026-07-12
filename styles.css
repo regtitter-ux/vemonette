@@ -1,9 +1,9 @@
 :root {
-  --bg: #181e2a;
-  --band: #141a27;
-  --bg-2: #1c2330;
-  --panel: #222a3a;
-  --panel-2: #263042;
+  --bg: #080b12;
+  --band: #0b101b;
+  --bg-2: #0b101b;
+  --panel: #0f1626;
+  --panel-2: #131d31;
   --stroke: rgba(255, 255, 255, 0.07);
   --stroke-2: rgba(255, 255, 255, 0.14);
   --text: #eef2f8;
