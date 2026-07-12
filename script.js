@@ -513,9 +513,7 @@ setLang(startLang);
         ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.7 * fade;
         const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2); gg.addColorStop(0, BUY); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2, 0, 7); ctx.fill(); ctx.restore();
         ctx.globalAlpha = fade;
-        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0c1526'; ctx.fill();
-        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.lineWidth = 1.4; ctx.strokeStyle = 'rgba(134,182,255,.7)'; ctx.stroke();
-        if (buyerImgOk) { const s = rr * 1.9; ctx.drawImage(buyerImg, p[0] - s / 2, p[1] - s / 2, s, s); } else userGlyph(p[0], p[1], rr, BUY);
+        if (buyerImgOk) { const s = rr * 2.4; ctx.drawImage(buyerImg, p[0] - s / 2, p[1] - s / 2, s, s); } else userGlyph(p[0], p[1], rr, BUY);
         ctx.globalAlpha = 1;
       } else if (it.kind === 'p') {
         const rr = 13; ctx.globalAlpha = fade;
