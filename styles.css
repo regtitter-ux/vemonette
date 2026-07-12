@@ -400,8 +400,11 @@ section[id] { scroll-margin-top: 82px; }
   .nav-inner { padding: 11px 16px; gap: 8px; }
   .nav-invite { display: none; } /* keep just Login + lang on phones */
   .nav-actions { gap: 8px; }
-  .nav-login { height: 38px; padding: 0 12px; font-size: 13px; }
+  .nav-login { height: 38px; padding: 0 11px; font-size: 13px; }
+  .nav-login span { display: none; } /* icon-only login so the row fits a phone */
+  .nav-user { margin-right: 0; }
   .brand-name { font-size: 20px; }
+  .figure-row { flex-direction: column; } /* stack the two big numbers so "1,000,000+" fits */
   .hero { padding: 40px 16px 30px; }
   .section-head, .intro-body, .faq, .sim-grid, .steps, .pay-inner, .footer,
   .connect-section, .connect-box { padding-left: 16px; padding-right: 16px; }
