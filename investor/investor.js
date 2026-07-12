@@ -321,7 +321,7 @@ function serverAction(s, name, minInv) {
     if (s.investable === false) {
         return `<span class="muted sm">Сейчас ниже порога активности (нужно ≥ ${PRICING.minDaily} заходов/сутки) — выкуп недоступен</span>`;
     }
-    return `<button class="btn primary sm" data-buy="${esc(s.serverId)}" data-name="${name}" data-min="${minInv}">Выкуп инвайтов</button>`;
+    return `<button class="btn ghost sm" data-buy="${esc(s.serverId)}" data-name="${name}" data-min="${minInv}">Выкуп инвайтов</button>`;
 }
 
 async function buy(serverId, name, min) {
