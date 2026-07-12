@@ -418,7 +418,7 @@ setLang(startLang);
     const y = p[1] - 16 - 24 * fl.t;
     const a = (fl.t < 0.15 ? fl.t / 0.15 : 1 - (fl.t - 0.15) / 0.85) * Math.min(1, v[2] / 0.3);
     ctx.save(); ctx.globalAlpha = Math.max(0, a); ctx.textBaseline = 'middle'; ctx.font = '800 12px Roboto,system-ui,sans-serif';
-    if (fl.kind === 'money') { ctx.textAlign = 'center'; ctx.fillStyle = GREEN; ctx.fillText('+$0.5', p[0], y); }
+    if (fl.kind === 'money') { ctx.textAlign = 'center'; ctx.fillStyle = GREEN; ctx.fillText('+$', p[0], y); }
     else { ctx.textAlign = 'left'; ctx.fillStyle = BUY; ctx.fillText('+', p[0] - 8, y); userGlyph(p[0] + 4, y, 5, BUY); }
     ctx.restore(); ctx.globalAlpha = 1;
   }
