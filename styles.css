@@ -21,7 +21,10 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; overscroll-behavior-y: none; }
+/* On touch, scroll instantly and kill the rubber-band bounce so a fast fling to
+   the very bottom stops dead instead of animating a settling jerk. */
+@media (pointer: coarse) { html { scroll-behavior: auto; } }
 /* Hide scrollbars everywhere (content still scrolls via wheel/touch/drag) */
 * { scrollbar-width: none; -ms-overflow-style: none; }
 *::-webkit-scrollbar { width: 0; height: 0; display: none; }
@@ -58,13 +61,13 @@ main, .nav, .footer { position: relative; z-index: 1; }
   bottom: -1px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 46 H1440 V26 C1152 2 864 50 720 26 C576 6 288 50 0 26 Z' fill='%23080b12'/%3E%3C/svg%3E");
 }
-/* Each divider gets its own irregular multi-hump wave — no mirror symmetry, no two alike */
-.intro-section.wave-band::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 0 H1440 V20 C1350 6 1270 30 1160 22 C1040 13 1000 40 870 30 C740 22 690 4 560 15 C440 26 330 40 210 24 C120 12 60 26 0 17 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
-.intro-section.wave-band::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 46 H1440 V26 C1360 40 1250 14 1130 24 C1000 35 940 9 820 20 C690 32 640 45 510 33 C380 20 300 7 180 22 C110 31 50 17 0 29 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
-.pay-section.wave-band::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 0 H1440 V24 C1320 38 1240 9 1120 22 C990 36 930 11 800 24 C680 36 610 5 470 18 C340 30 260 41 140 26 C90 19 40 31 0 22 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
-.pay-section.wave-band::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 46 H1440 V22 C1350 7 1280 35 1150 24 C1020 13 950 40 810 29 C680 18 620 43 490 31 C360 18 280 5 160 20 C100 29 40 15 0 27 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
-.faq-section.wave-band::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 0 H1440 V26 C1340 9 1230 35 1110 24 C980 12 920 41 780 30 C650 20 590 3 450 18 C320 32 240 43 120 26 C70 18 30 31 0 20 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
-.faq-section.wave-band::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 46 H1440 V20 C1330 36 1220 7 1090 22 C960 35 900 11 760 24 C630 36 560 5 430 20 C300 34 220 45 100 28 C50 20 20 33 0 24 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
+/* Shallow, irregular dividers — asymmetric (no mirror line) and each a different pattern */
+.intro-section.wave-band::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 0 H1440 V26 C1180 17 980 29 780 24 C560 17 240 30 0 25 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
+.intro-section.wave-band::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 46 H1440 V23 C1290 30 1180 18 1050 24 C900 30 760 18 620 24 C430 30 170 18 0 24 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
+.pay-section.wave-band::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 0 H1440 V24 C1300 18 1190 30 1050 23 C890 18 760 30 620 24 C440 18 180 30 0 25 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
+.pay-section.wave-band::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 46 H1440 V24 C1210 30 1000 18 820 24 C600 30 280 18 0 23 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
+.faq-section.wave-band::before { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 0 H1440 V25 C1200 17 1010 30 850 24 C630 17 290 29 0 23 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
+.faq-section.wave-band::after { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 46' preserveAspectRatio='none'%3E%3Cpath d='M0 46 H1440 V23 C1320 30 1200 18 1060 24 C900 30 750 18 610 24 C420 30 160 18 0 25 Z' fill='%23080b12'/%3E%3C/svg%3E"); }
 
 /* Buttons — pill, uppercase (serverstats style) */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.04em; padding: 12px 22px; border-radius: 999px; border: 1px solid transparent; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease; }
