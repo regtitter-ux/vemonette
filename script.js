@@ -352,12 +352,15 @@ setLang(startLang);
   function layout() {
     const r = wrap.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
     W = r.width; H = r.height; canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Symmetric layout: hub at ~0.40, buyers and partners the same distance
+    // (0.30·W) either side, so the connection lines mirror; the partner pills
+    // extend right so the whole composition sits centered in the card.
     const lx = W * 0.10, ns = 6;
-    sources = []; for (let i = 0; i < ns; i++) sources.push({ x: lx, y: H * (0.12 + 0.76 * (i / (ns - 1))), r: 6.5, ph: Math.random() * 6.28 });
+    sources = []; for (let i = 0; i < ns; i++) sources.push({ x: lx, y: H * (0.10 + 0.80 * (i / (ns - 1))), r: 6.5, ph: Math.random() * 6.28 });
     hub = { x: W * 0.40, y: H * 0.5, r: 30 };
-    const dx = W * 0.60, nd = 5;
+    const dx = W * 0.70, nd = 5;
     if (dests.length !== nd) { dests = []; for (let i = 0; i < nd; i++) dests.push({ earned: 20 + Math.random() * 220, ph: Math.random() * 6.28, pulse: 0 }); }
-    for (let i = 0; i < nd; i++) { dests[i].x = dx; dests[i].y = H * (0.14 + 0.72 * (i / (nd - 1))); dests[i].r = 8.5; }
+    for (let i = 0; i < nd; i++) { dests[i].x = dx; dests[i].y = H * (0.12 + 0.76 * (i / (nd - 1))); dests[i].r = 8.5; }
   }
   const ctrl = (a, b, bend) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 + bend });
   const qbez = (p0, cx, cy, p1, tt) => { const u = 1 - tt; return { x: u * u * p0.x + 2 * u * tt * cx + tt * tt * p1.x, y: u * u * p0.y + 2 * u * tt * cy + tt * tt * p1.y }; };
