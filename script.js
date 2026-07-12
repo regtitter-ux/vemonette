@@ -173,6 +173,7 @@ const RU = {
   connect_h2: 'Остались вопросы?',
   connect_p: 'Свяжитесь с нами в Discord<br />Спрашивайте что угодно: настройка, сроки, нюансы.',
   connect_btn: 'Сервер поддержки',
+  footer_privacy: 'Политика конфиденциальности', footer_terms: 'Условия использования', footer_rights: 'Все права защищены.',
 };
 
 // Capture the original English content once, then translate on demand.
