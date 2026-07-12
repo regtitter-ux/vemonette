@@ -127,6 +127,8 @@ h2{font-size:18px;margin-bottom:14px}
 .cab-menu{position:relative}
 .cab-burger{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--stroke-2);color:var(--muted);cursor:pointer;transition:.15s}
 .cab-burger:hover{color:var(--text);background:rgba(255,255,255,.1)}
+.cab-av{width:38px;height:38px;border-radius:50%;padding:0;border:1px solid var(--stroke-2);background-size:cover;background-position:center;background-color:var(--panel-2);color:var(--text);font-weight:700;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
+.cab-av:hover{border-color:var(--blue)}
 .nav-menu{position:absolute;top:calc(100% + 12px);right:0;width:262px;background:var(--panel);border:1px solid var(--stroke-2);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px -24px rgba(0,0,0,.85);z-index:60}
 .nav-menu[hidden]{display:none}
 .nm-head{position:relative;padding:0 14px 12px}

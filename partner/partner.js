@@ -94,6 +94,8 @@ function setupCabNav(who) {
         if (nmName) nmName.textContent = name;
         if (nmUser) nmUser.textContent = who.username ? '@' + who.username : ('ID ' + (who.userId || ''));
         if (nmAv) { if (who.avatar) nmAv.style.backgroundImage = 'url("' + who.avatar + '")'; else nmAv.textContent = letter; }
+        const cabAv = document.getElementById('cabBurger');
+        if (cabAv) { if (who.avatar) cabAv.style.backgroundImage = 'url("' + who.avatar + '")'; else cabAv.textContent = letter; }
         const nmBanner = document.getElementById('nmBanner');
         if (nmBanner && who.banner) { nmBanner.style.backgroundImage = 'url("' + who.banner + '")'; nmBanner.style.backgroundSize = 'cover'; nmBanner.style.backgroundPosition = 'center'; }
         else if (who.avatar) bannerFromAvatar(who.avatar);
