@@ -430,7 +430,7 @@ setLang(startLang);
     const a = (fl.t < 0.15 ? fl.t / 0.15 : 1 - (fl.t - 0.15) / 0.85) * Math.min(1, v[2] / 0.3);
     ctx.save(); ctx.globalAlpha = Math.max(0, a); ctx.textBaseline = 'middle'; ctx.font = '800 12px Roboto,system-ui,sans-serif';
     if (fl.kind === 'money') { ctx.textAlign = 'center'; ctx.fillStyle = GREEN; ctx.fillText('+$', p[0], y); }
-    else { const s = 18; ctx.textAlign = 'right'; ctx.fillStyle = BUY; ctx.fillText('+', p[0] - s / 2 - 2, y); if (usersOk) ctx.drawImage(users, p[0] - s / 2, y - s / 2, s, s); else groupGlyph(p[0], y, 9, BUY); }
+    else { const s = 18; ctx.textAlign = 'right'; ctx.fillStyle = TRAFFIC; ctx.fillText('+', p[0] - s / 2 - 2, y); if (usersOk) ctx.drawImage(users, p[0] - s / 2, y - s / 2, s, s); else groupGlyph(p[0], y, 9, TRAFFIC); }
     ctx.restore(); ctx.globalAlpha = 1;
   }
 
