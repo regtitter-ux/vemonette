@@ -371,7 +371,7 @@ setLang(startLang);
     const withIcon = all.filter((s) => s.img || (s.id && s.icon));
     const feed = withIcon.length ? withIcon : all;
     const pPos = [ll(34, -40), ll(-16, 46), ll(52, 96), ll(2, 156), ll(-42, -104), ll(24, -150), ll(-30, 8), ll(62, -20), ll(10, 118), ll(-58, 130)];
-    const cPos = [ll(16, -8), ll(-10, 90), ll(44, -100), ll(-38, 152), ll(0, 40)];
+    const cPos = [ll(12, 24)]; // a single verification-bot centre
     const bPos = [ll(8, 26), ll(48, -66), ll(-28, 116), ll(64, 6), ll(-56, 44), ll(20, -174), ll(40, 168), ll(-6, -54), ll(30, -118), ll(-46, -20), ll(56, 128), ll(-18, 74)];
     pPos.forEach((p, i) => { const s = feed[i % Math.max(1, feed.length)] || {}; const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
     cPos.forEach((p) => CENTERS.push({ p }));
