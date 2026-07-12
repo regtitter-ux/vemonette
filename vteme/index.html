@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vteme — социальная сеть</title>
+  <meta name="description" content="Vteme — простая социальная сеть с мессенджером. Набросок в стиле первых версий ВКонтакте." />
+  <link rel="icon" type="image/png" href="/assets/logo.png" />
+  <link rel="apple-touch-icon" href="/assets/logo.png" />
+  <style>
+    /* ── Ретро-облик ранних соцсетей: Tahoma, светлый фон, синий хедер ── */
+    :root{
+      --header:#5b7ba6; --header-d:#45688e;
+      --page:#e7ebf0; --panel:#fff; --border:#dbe0e5;
+      --link:#2b587a; --link-h:#345e8a;
+      --text:#31465e; --muted:#909399; --soft:#7d7f83;
+      --hi:#f7f9fb; --btn:#5b7ba6; --btn-d:#4a6a95;
+      --unread:#eef2f7; --bubble-in:#f0f2f5; --bubble-out:#dbe7f5;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      background:var(--page);color:var(--text);
+      font-family:Tahoma,Geneva,Verdana,Arial,sans-serif;font-size:12px;line-height:1.45;
+    }
+    a{color:var(--link);text-decoration:none;cursor:pointer}
+    a:hover{color:var(--link-h);text-decoration:underline}
+    img{display:block}
+
+    /* Header */
+    .top{background:linear-gradient(var(--header),var(--header-d));border-bottom:1px solid #3c5c80;position:sticky;top:0;z-index:20}
+    .top-in{max-width:928px;margin:0 auto;height:44px;display:flex;align-items:center;gap:16px;padding:0 12px}
+    .logo{color:#fff;font-weight:bold;font-size:19px;letter-spacing:.5px;text-decoration:none;font-family:Tahoma,sans-serif}
+    .logo:hover{text-decoration:none;color:#fff}
+    .logo b{color:#cde0f5;font-weight:bold}
+    .search{flex:1;max-width:280px}
+    .search input{width:100%;height:24px;border:1px solid #3c5c80;border-radius:2px;padding:0 8px;font:12px Tahoma,sans-serif;color:#31465e;background:#fff}
+    .search input::placeholder{color:#9aa7b3}
+    .top-right{margin-left:auto;display:flex;align-items:center;gap:10px;color:#cde0f5;font-size:11px}
+    .top-right a{color:#e6eef8}
+    .top-right a:hover{color:#fff}
+    .top-me{display:flex;align-items:center;gap:7px}
+    .top-me .av{width:22px;height:22px;border-radius:2px;font-size:10px}
+
+    /* Layout */
+    .wrap{max-width:928px;margin:0 auto;padding:12px;display:flex;gap:12px;align-items:flex-start}
+    .side{width:170px;flex:none}
+    .content{flex:1;min-width:0}
+
+    /* Left menu */
+    .menu{background:var(--panel);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+    .menu a{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;color:var(--link);border-bottom:1px solid #eef1f4;font-size:12px}
+    .menu a:last-child{border-bottom:0}
+    .menu a:hover{background:var(--hi);text-decoration:none}
+    .menu a.active{background:#e8eef5;color:#31465e;font-weight:bold;box-shadow:inset 3px 0 0 var(--header)}
+    .menu .cnt{color:#c26058;font-weight:bold;font-size:11px}
+    .side-note{margin-top:10px;color:var(--muted);font-size:10px;line-height:1.5;padding:0 4px}
+    .side-note a{color:var(--muted);text-decoration:underline}
+
+    /* Panels */
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:3px;margin-bottom:12px}
+    .panel-h{background:linear-gradient(#fbfcfd,#f2f4f7);border-bottom:1px solid var(--border);padding:8px 14px;font-weight:bold;color:#4a6280;font-size:13px;display:flex;justify-content:space-between;align-items:center}
+    .panel-h .lite{font-weight:normal}
+    .panel-b{padding:14px}
+
+    /* Avatars (initials, no external images) */
+    .av{border-radius:3px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold;text-transform:uppercase;font-family:Tahoma,sans-serif;flex:none;overflow:hidden}
+    .c0{background:linear-gradient(135deg,#7b9fd0,#5b7ba6)}
+    .c1{background:linear-gradient(135deg,#e39aa6,#c96b7c)}
+    .c2{background:linear-gradient(135deg,#8fc9a0,#5fa377)}
+    .c3{background:linear-gradient(135deg,#e6b877,#cf9445)}
+    .c4{background:linear-gradient(135deg,#b49ad8,#8a6bc0)}
+    .c5{background:linear-gradient(135deg,#7fc4cf,#4f9aa8)}
+
+    /* Buttons */
+    .btn{display:inline-block;background:linear-gradient(#6d8db6,var(--btn-d));border:1px solid #3f5f8a;border-radius:3px;color:#fff !important;padding:5px 14px;font:bold 12px Tahoma,sans-serif;cursor:pointer;text-decoration:none}
+    .btn:hover{background:linear-gradient(#5f80ac,#3f5f8a);text-decoration:none}
+    .btn.sm{padding:3px 10px;font-size:11px}
+    .btn.gray{background:linear-gradient(#f6f7f9,#e7ebef);border-color:#c7ced6;color:#43607e !important}
+    .btn.gray:hover{background:linear-gradient(#eef1f4,#dfe4ea)}
+
+    /* Profile */
+    .prof{display:flex;gap:16px}
+    .prof-l{width:170px;flex:none}
+    .prof-photo{width:170px;height:210px;border-radius:3px;font-size:52px}
+    .prof-acts{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+    .prof-acts a{font-size:11px;display:block;padding:2px 0}
+    .prof-r{flex:1;min-width:0}
+    .prof-name{font-size:20px;font-weight:bold;color:#31465e;margin:0 0 2px}
+    .prof-status{color:var(--soft);font-style:italic;margin-bottom:14px}
+    .info-row{display:flex;padding:3px 0;border-bottom:1px dotted #e6e9ed}
+    .info-row .k{width:120px;color:var(--muted);flex:none}
+    .info-row .v{color:#31465e}
+    .online{color:#7a9b3f;font-weight:bold}
+
+    /* Wall / feed */
+    .composer textarea{width:100%;min-height:44px;resize:vertical;border:1px solid #c7ced6;border-radius:3px;padding:7px 9px;font:12px Tahoma,sans-serif;color:#31465e}
+    .composer textarea:focus{outline:0;border-color:#8ba6c6}
+    .composer-row{display:flex;justify-content:space-between;align-items:center;margin-top:7px}
+    .composer-row .tools{color:var(--muted);font-size:11px}
+    .composer-row .tools a{margin-right:10px}
+    .post{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid #eef1f4}
+    .post:last-child{border-bottom:0;padding-bottom:0}
+    .post .av{width:44px;height:44px;font-size:15px}
+    .post-main{flex:1;min-width:0}
+    .post-head{margin-bottom:2px}
+    .post-head .who{font-weight:bold;color:var(--link)}
+    .post-time{color:var(--muted);font-size:10px;margin-left:6px}
+    .post-text{color:#31465e;white-space:pre-wrap;word-wrap:break-word}
+    .post-acts{margin-top:5px;color:var(--muted);font-size:11px;display:flex;gap:14px}
+    .post-acts a{color:var(--muted)}
+    .post-acts a.liked{color:#c26058;font-weight:bold}
+
+    /* Friends grid */
+    .friends{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+    .friend{display:flex;gap:9px;align-items:center}
+    .friend .av{width:50px;height:50px;font-size:17px}
+    .friend .fn{font-weight:bold}
+    .friend .fs{color:var(--muted);font-size:10px}
+    .friend .fs.on{color:#7a9b3f}
+
+    /* Messenger */
+    .im{display:flex;height:460px}
+    .im-list{width:220px;flex:none;border-right:1px solid var(--border);overflow-y:auto}
+    .dlg{display:flex;gap:9px;padding:9px 11px;border-bottom:1px solid #eef1f4;cursor:pointer;align-items:flex-start}
+    .dlg:hover{background:var(--hi)}
+    .dlg.active{background:#e8eef5}
+    .dlg.unread{background:var(--unread)}
+    .dlg .av{width:38px;height:38px;font-size:14px}
+    .dlg-main{flex:1;min-width:0}
+    .dlg-top{display:flex;justify-content:space-between;gap:6px}
+    .dlg-name{font-weight:bold;color:#31465e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .dlg.unread .dlg-name{color:#2b587a}
+    .dlg-time{color:var(--muted);font-size:10px;flex:none}
+    .dlg-prev{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+    .dlg .badge{background:#c26058;color:#fff;font-size:10px;font-weight:bold;border-radius:9px;min-width:16px;height:16px;padding:0 4px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:2px}
+
+    .im-chat{flex:1;display:flex;flex-direction:column;min-width:0}
+    .im-head{padding:9px 14px;border-bottom:1px solid var(--border);background:#f7f9fb;display:flex;align-items:center;gap:9px}
+    .im-head .av{width:30px;height:30px;font-size:12px}
+    .im-head .n{font-weight:bold;color:#31465e}
+    .im-head .s{color:var(--muted);font-size:10px}
+    .im-head .s.on{color:#7a9b3f}
+    .im-body{flex:1;overflow-y:auto;padding:14px;background:#fcfdfe;display:flex;flex-direction:column;gap:8px}
+    .msg{max-width:76%;padding:7px 11px;border-radius:9px;position:relative;word-wrap:break-word;white-space:pre-wrap}
+    .msg .t{display:block;color:var(--muted);font-size:9px;margin-top:3px;text-align:right}
+    .msg.in{background:var(--bubble-in);align-self:flex-start;border-top-left-radius:2px}
+    .msg.out{background:var(--bubble-out);align-self:flex-end;border-top-right-radius:2px}
+    .im-sep{align-self:center;color:var(--muted);font-size:10px;margin:4px 0}
+    .im-foot{border-top:1px solid var(--border);padding:9px;display:flex;gap:8px;background:#f7f9fb}
+    .im-foot input{flex:1;height:30px;border:1px solid #c7ced6;border-radius:3px;padding:0 10px;font:12px Tahoma,sans-serif;color:#31465e}
+    .im-foot input:focus{outline:0;border-color:#8ba6c6}
+    .im-empty{flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);text-align:center;padding:20px}
+
+    /* Photos */
+    .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+    .ph{aspect-ratio:1/1;border-radius:3px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:26px;cursor:pointer}
+
+    .foot{max-width:928px;margin:0 auto;padding:16px 12px 30px;color:var(--muted);font-size:10px;text-align:center}
+    .foot a{color:var(--muted);text-decoration:underline;margin:0 6px}
+
+    .view{display:none}
+    .view.show{display:block}
+
+    @media (max-width:720px){
+      .wrap{flex-direction:column}
+      .side{width:100%}
+      .menu{display:flex;flex-wrap:wrap}
+      .menu a{flex:1 0 auto;border-bottom:0;border-right:1px solid #eef1f4;justify-content:center;gap:5px}
+      .prof{flex-direction:column}
+      .prof-l,.prof-photo{width:100%}
+      .prof-photo{height:240px}
+      .im{height:auto;flex-direction:column}
+      .im-list{width:100%;max-height:200px;border-right:0;border-bottom:1px solid var(--border)}
+      .search{display:none}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Верхняя панель ── -->
+  <div class="top">
+    <div class="top-in">
+      <a class="logo" href="#" onclick="go('profile');return false">V<b>teme</b></a>
+      <div class="search"><input type="text" placeholder="Поиск людей, групп..." /></div>
+      <div class="top-right">
+        <div class="top-me">
+          <span class="av c0" style="width:22px;height:22px">АС</span>
+          <a href="#" onclick="go('profile');return false">Алекс</a>
+        </div>
+        <span>·</span>
+        <a href="/">выход</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <!-- ── Левое меню ── -->
+    <div class="side">
+      <nav class="menu" id="menu">
+        <a data-view="profile"  onclick="go('profile');return false">Моя страница</a>
+        <a data-view="friends"  onclick="go('friends');return false">Друзья <span class="cnt">6</span></a>
+        <a data-view="messages" onclick="go('messages');return false">Сообщения <span class="cnt" id="mCnt">3</span></a>
+        <a data-view="photos"   onclick="go('photos');return false">Фотографии</a>
+        <a data-view="news"      onclick="go('news');return false">Новости</a>
+        <a data-view="groups"    onclick="go('groups');return false">Группы <span class="cnt">4</span></a>
+      </nav>
+      <div class="side-note">
+        Vteme · набросок соцсети<br>
+        Прототип в стиле первых версий ВКонтакте.<br>
+        <a href="/">← вернуться на Vemoni</a>
+      </div>
+    </div>
+
+    <!-- ── Контент ── -->
+    <div class="content">
+
+      <!-- Моя страница -->
+      <section class="view show" id="v-profile">
+        <div class="panel">
+          <div class="panel-b">
+            <div class="prof">
+              <div class="prof-l">
+                <div class="av c0 prof-photo">АС</div>
+                <div class="prof-acts">
+                  <a href="#">Редактировать страницу</a>
+                  <a href="#">Изменить фотографию</a>
+                  <a href="#">Мои настройки</a>
+                </div>
+              </div>
+              <div class="prof-r">
+                <h1 class="prof-name">Алекс Смирнов</h1>
+                <div class="prof-status">люблю выходные и хороший кофе ☕</div>
+                <div class="info-row"><div class="k">Статус:</div><div class="v"><span class="online">online</span></div></div>
+                <div class="info-row"><div class="k">День рождения:</div><div class="v">14 марта 1996</div></div>
+                <div class="info-row"><div class="k">Город:</div><div class="v"><a href="#">Санкт-Петербург</a></div></div>
+                <div class="info-row"><div class="k">Семейное положение:</div><div class="v">не женат</div></div>
+                <div class="info-row"><div class="k">Деятельность:</div><div class="v">веб-разработчик</div></div>
+                <div class="info-row"><div class="k">Интересы:</div><div class="v">музыка, велосипед, кино</div></div>
+                <div style="margin-top:12px">
+                  <a class="btn sm" href="#" onclick="go('messages');return false">Написать сообщение</a>
+                  <a class="btn sm gray" href="#" onclick="go('friends');return false">Мои друзья</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-h">Моя стена</div>
+          <div class="panel-b">
+            <div class="composer">
+              <textarea id="wallInput" placeholder="Что у вас нового?"></textarea>
+              <div class="composer-row">
+                <span class="tools"><a href="#" onclick="return false">Фотография</a><a href="#" onclick="return false">Видео</a><a href="#" onclick="return false">Аудио</a></span>
+                <button class="btn sm" onclick="postWall()">Добавить</button>
+              </div>
+            </div>
+            <div id="wall" style="margin-top:6px"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Друзья -->
+      <section class="view" id="v-friends">
+        <div class="panel">
+          <div class="panel-h">Мои друзья <span class="lite" id="frCount">— 6 друзей</span></div>
+          <div class="panel-b"><div class="friends" id="friends"></div></div>
+        </div>
+      </section>
+
+      <!-- Сообщения -->
+      <section class="view" id="v-messages">
+        <div class="panel">
+          <div class="panel-h">Сообщения <span class="lite" id="imTitle"></span></div>
+          <div class="im">
+            <div class="im-list" id="dialogs"></div>
+            <div class="im-chat" id="chat">
+              <div class="im-empty">Выберите диалог слева, чтобы начать переписку</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Фотографии -->
+      <section class="view" id="v-photos">
+        <div class="panel">
+          <div class="panel-h">Мои фотографии <span class="lite">— 12 фотографий</span></div>
+          <div class="panel-b"><div class="photos" id="photos"></div></div>
+        </div>
+      </section>
+
+      <!-- Новости -->
+      <section class="view" id="v-news">
+        <div class="panel">
+          <div class="panel-h">Новости друзей</div>
+          <div class="panel-b"><div id="news"></div></div>
+        </div>
+      </section>
+
+      <!-- Группы -->
+      <section class="view" id="v-groups">
+        <div class="panel">
+          <div class="panel-h">Мои группы <span class="lite">— 4 группы</span></div>
+          <div class="panel-b"><div class="friends" id="groups"></div></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="foot">
+    Vteme — учебный набросок социальной сети · это прототип, а не рабочий сервис ·
+    <a href="/">Vemoni</a><a href="/privacy/">Конфиденциальность</a><a href="/terms/">Условия</a>
+    <br>© 2026
+  </div>
+
+  <script>
+  /* ───────── Данные (моки) ───────── */
+  var PEOPLE = [
+    {id:1, name:'Марина Котова',   c:'c1', on:true,  city:'Москва'},
+    {id:2, name:'Дима Орлов',      c:'c2', on:false, city:'Казань'},
+    {id:3, name:'Настя Белова',    c:'c4', on:true,  city:'Санкт-Петербург'},
+    {id:4, name:'Игорь Волков',    c:'c3', on:false, city:'Новосибирск'},
+    {id:5, name:'Лена Соколова',   c:'c5', on:true,  city:'Екатеринбург'},
+    {id:6, name:'Паша Зайцев',     c:'c0', on:false, city:'Самара'}
+  ];
+  var GROUPS = [
+    {name:'Подслушано',        c:'c2', sub:'42 108 участников'},
+    {name:'Типичный SPb',      c:'c1', sub:'18 940 участников'},
+    {name:'Музыка 24/7',       c:'c4', sub:'9 331 участник'},
+    {name:'Веб-разработка',    c:'c5', sub:'5 602 участника'}
+  ];
+  var WALL = [
+    {who:'Алекс Смирнов', c:'c0', time:'сегодня в 12:04', text:'Наконец-то пятница! Кто на велопрогулку вечером? 🚲', likes:5, liked:false},
+    {who:'Марина Котова', c:'c1', time:'вчера в 21:17', text:'Оставила тебе фотки с выходных на стене, глянь :)', likes:2, liked:false}
+  ];
+  var NEWS = [
+    {who:'Настя Белова', c:'c4', time:'15 минут назад', text:'Досмотрела сериал за ночь. Не делайте так 🙈', likes:12, liked:false},
+    {who:'Дима Орлов',   c:'c2', time:'40 минут назад', text:'Собрал новый пк. Теперь всё летает 🚀', likes:8, liked:false},
+    {who:'Лена Соколова',c:'c5', time:'сегодня в 10:22', text:'Кофе + дождь + любимая книга = идеальное утро.', likes:19, liked:false},
+    {who:'Игорь Волков', c:'c3', time:'сегодня в 09:05', text:'Кто-нибудь ездил в Карелию летом? Посоветуйте маршрут.', likes:4, liked:false}
+  ];
+  /* Диалоги мессенджера */
+  var DIALOGS = [
+    {pid:1, unread:2, msgs:[
+      {out:false, t:'11:40', text:'Приветик! Ты завтра свободен?'},
+      {out:true,  t:'11:42', text:'Привет! Вроде да, а что планируешь?'},
+      {out:false, t:'11:43', text:'Хотела в парк на великах 🚲'},
+      {out:false, t:'11:43', text:'Ну и кофе потом'}
+    ]},
+    {pid:3, unread:1, msgs:[
+      {out:false, t:'вчера', text:'Скинь пожалуйста тот трек, что вчера ставил'}
+    ]},
+    {pid:2, unread:0, msgs:[
+      {out:true,  t:'вчера', text:'Спасибо за помощь с настройкой!'},
+      {out:false, t:'вчера', text:'Да не за что, обращайся 👍'}
+    ]},
+    {pid:5, unread:0, msgs:[
+      {out:false, t:'пн', text:'Увидимся на встрече в субботу?'},
+      {out:true,  t:'пн', text:'Обязательно буду!'}
+    ]}
+  ];
+  var REPLIES = ['Ого, круто!','Ахах, согласна 😄','Понял тебя','Договорились 👍','Сейчас наберу','Класс! Давай так и сделаем','Ну ты даёшь :)'];
+
+  /* ───────── Утилиты ───────── */
+  function person(id){ for(var i=0;i<PEOPLE.length;i++) if(PEOPLE[i].id===id) return PEOPLE[i]; return null; }
+  function initials(name){ var p=name.trim().split(/\s+/); return (p[0][0]+(p[1]?p[1][0]:'')).toUpperCase(); }
+  function esc(s){ return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  var replyTimer = null;
+
+  /* ───────── Навигация ───────── */
+  function go(view){
+    document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('show'); });
+    var el=document.getElementById('v-'+view); if(el) el.classList.add('show');
+    document.querySelectorAll('#menu a').forEach(function(a){ a.classList.toggle('active', a.dataset.view===view); });
+    window.scrollTo(0,0);
+  }
+
+  /* ───────── Стена / Новости ───────── */
+  function renderPosts(el, arr, key){
+    el.innerHTML = arr.map(function(p,i){
+      return '<div class="post">'+
+        '<div class="av '+p.c+'">'+initials(p.who)+'</div>'+
+        '<div class="post-main">'+
+          '<div class="post-head"><span class="who">'+esc(p.who)+'</span><span class="post-time">'+p.time+'</span></div>'+
+          '<div class="post-text">'+esc(p.text)+'</div>'+
+          '<div class="post-acts">'+
+            '<a href="#" class="'+(p.liked?'liked':'')+'" onclick="like(\''+key+'\','+i+');return false">'+(p.liked?'♥':'♡')+' Мне нравится ('+p.likes+')</a>'+
+            '<a href="#" onclick="return false">Комментировать</a>'+
+          '</div>'+
+        '</div></div>';
+    }).join('');
+  }
+  function like(key,i){
+    var arr = key==='wall'?WALL:NEWS;
+    var p=arr[i]; p.liked=!p.liked; p.likes+=p.liked?1:-1;
+    if(key==='wall') renderPosts(document.getElementById('wall'),WALL,'wall');
+    else renderPosts(document.getElementById('news'),NEWS,'news');
+  }
+  function postWall(){
+    var ta=document.getElementById('wallInput'); var v=ta.value.trim(); if(!v) return;
+    WALL.unshift({who:'Алекс Смирнов',c:'c0',time:'только что',text:v,likes:0,liked:false});
+    ta.value=''; renderPosts(document.getElementById('wall'),WALL,'wall');
+  }
+
+  /* ───────── Друзья / Группы / Фото ───────── */
+  function renderFriends(){
+    document.getElementById('friends').innerHTML = PEOPLE.map(function(p){
+      return '<div class="friend">'+
+        '<div class="av '+p.c+'">'+initials(p.name)+'</div>'+
+        '<div><div class="fn"><a href="#" onclick="return false">'+esc(p.name)+'</a></div>'+
+        '<div class="fs '+(p.on?'on':'')+'">'+(p.on?'online':'был(а) недавно')+' · '+p.city+'</div></div>'+
+      '</div>';
+    }).join('');
+  }
+  function renderGroups(){
+    document.getElementById('groups').innerHTML = GROUPS.map(function(g){
+      return '<div class="friend">'+
+        '<div class="av '+g.c+'">'+initials(g.name)+'</div>'+
+        '<div><div class="fn"><a href="#" onclick="return false">'+esc(g.name)+'</a></div>'+
+        '<div class="fs">'+g.sub+'</div></div></div>';
+    }).join('');
+  }
+  function renderPhotos(){
+    var cls=['c0','c1','c2','c3','c4','c5']; var ic=['🌆','🏔','🚲','☕','🎸','🐶','🌊','🍕','📷','🎬','🌸','🚗'];
+    document.getElementById('photos').innerHTML = ic.map(function(e,i){
+      return '<div class="ph '+cls[i%6]+'">'+e+'</div>';
+    }).join('');
+  }
+
+  /* ───────── Мессенджер ───────── */
+  var activeDlg = null;
+  function totalUnread(){ var n=0; DIALOGS.forEach(function(d){ n+=d.unread; }); return n; }
+  function updateBadge(){
+    var n=totalUnread(); var el=document.getElementById('mCnt');
+    if(n>0){ el.textContent=n; el.style.display=''; } else el.style.display='none';
+  }
+  function renderDialogs(){
+    document.getElementById('dialogs').innerHTML = DIALOGS.map(function(d,i){
+      var p=person(d.pid); var last=d.msgs[d.msgs.length-1];
+      var prev=(last.out?'Вы: ':'')+last.text;
+      return '<div class="dlg '+(activeDlg===i?'active':'')+' '+(d.unread?'unread':'')+'" onclick="openDlg('+i+')">'+
+        '<div class="av '+p.c+'">'+initials(p.name)+'</div>'+
+        '<div class="dlg-main"><div class="dlg-top"><span class="dlg-name">'+esc(p.name)+'</span><span class="dlg-time">'+last.t+'</span></div>'+
+        '<div class="dlg-prev">'+esc(prev)+'</div></div>'+
+        (d.unread?'<span class="badge">'+d.unread+'</span>':'')+
+      '</div>';
+    }).join('');
+    document.getElementById('imTitle').textContent = totalUnread()?('— '+totalUnread()+' новых'):'';
+  }
+  function openDlg(i){
+    activeDlg=i; var d=DIALOGS[i]; d.unread=0; var p=person(d.pid);
+    var chat=document.getElementById('chat');
+    chat.innerHTML =
+      '<div class="im-head"><div class="av '+p.c+'">'+initials(p.name)+'</div>'+
+        '<div><div class="n">'+esc(p.name)+'</div><div class="s '+(p.on?'on':'')+'">'+(p.on?'в сети':'был(а) недавно')+'</div></div></div>'+
+      '<div class="im-body" id="imBody"></div>'+
+      '<div class="im-foot"><input id="imInput" type="text" placeholder="Введите сообщение..." autocomplete="off"><button class="btn" onclick="sendMsg()">Отправить</button></div>';
+    renderMsgs();
+    var inp=document.getElementById('imInput');
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); sendMsg(); } });
+    inp.focus();
+    renderDialogs(); updateBadge();
+  }
+  function renderMsgs(){
+    var d=DIALOGS[activeDlg]; var body=document.getElementById('imBody');
+    body.innerHTML = d.msgs.map(function(m){
+      return '<div class="msg '+(m.out?'out':'in')+'">'+esc(m.text)+'<span class="t">'+m.t+'</span></div>';
+    }).join('');
+    body.scrollTop=body.scrollHeight;
+  }
+  function nowTime(){ var dt=new Date(); return (dt.getHours()<10?'0':'')+dt.getHours()+':'+(dt.getMinutes()<10?'0':'')+dt.getMinutes(); }
+  function sendMsg(){
+    var inp=document.getElementById('imInput'); var v=inp.value.trim(); if(!v||activeDlg===null) return;
+    var d=DIALOGS[activeDlg];
+    d.msgs.push({out:true,t:nowTime(),text:v});
+    inp.value=''; renderMsgs(); renderDialogs();
+    // Имитация ответа собеседника
+    if(replyTimer) clearTimeout(replyTimer);
+    replyTimer=setTimeout(function(){
+      var r=REPLIES[Math.floor(Math.random()*REPLIES.length)];
+      d.msgs.push({out:false,t:nowTime(),text:r});
+      if(activeDlg!==null && DIALOGS[activeDlg]===d) renderMsgs();
+      renderDialogs();
+    }, 1200+Math.random()*1200);
+  }
+
+  /* ───────── Инициализация ───────── */
+  renderPosts(document.getElementById('wall'),WALL,'wall');
+  renderPosts(document.getElementById('news'),NEWS,'news');
+  renderFriends(); renderGroups(); renderPhotos();
+  renderDialogs(); updateBadge();
+  go('profile');
+  </script>
+</body>
+</html>
