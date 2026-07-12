@@ -490,7 +490,8 @@ setLang(startLang);
         const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 7); gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 7, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fill();
         if (v[2] > 0.15) { ctx.save(); ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3);
           if (money) { ctx.font = '800 18px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText('$', p[0], p[1] - 13); }
-          else if (usersOk) { ctx.globalCompositeOperation = 'source-over'; const s = 24; ctx.drawImage(users, p[0] - s / 2, p[1] - 15 - s / 2, s, s); } // members travelling to the buyer
+          else if (pt.kind === 'ret1') { userGlyph(p[0], p[1] - 15, 10, TRAFFIC); } // partner -> bot: a single member
+          else if (usersOk) { ctx.globalCompositeOperation = 'source-over'; const s = 24; ctx.drawImage(users, p[0] - s / 2, p[1] - 15 - s / 2, s, s); } // bot -> buyer: members
           else { groupGlyph(p[0], p[1] - 15, 10, TRAFFIC); }
           ctx.restore(); ctx.globalAlpha = 1; }
       } else { pt.trail.length = 0; }
