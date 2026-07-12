@@ -350,6 +350,7 @@ setLang(startLang);
   const cvv = (v, f) => { const x = cs.getPropertyValue(v).trim(); return x || f; };
   const BLUE = cvv('--blue-2', '#5cc8ff'), GREEN = cvv('--green', '#57f287'), BUY = '#86b6ff', TRAFFIC = '#b9a3ff';
   const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = 'assets/logo.png';
+  const users = new Image(); let usersOk = false; users.onload = () => { usersOk = true; }; users.src = 'assets/users.png';
   let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
   let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0;
   let spinVel = velY; // current spin speed; eases back to velY after a manual drag
@@ -489,7 +490,8 @@ setLang(startLang);
         const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 7); gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 7, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fill();
         if (v[2] > 0.15) { ctx.save(); ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3);
           if (money) { ctx.font = '800 18px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText('$', p[0], p[1] - 13); }
-          else { groupGlyph(p[0], p[1] - 15, 10, TRAFFIC); } // traffic = members travelling to the buyer
+          else if (usersOk) { ctx.globalCompositeOperation = 'source-over'; const s = 24; ctx.drawImage(users, p[0] - s / 2, p[1] - 15 - s / 2, s, s); } // members travelling to the buyer
+          else { groupGlyph(p[0], p[1] - 15, 10, TRAFFIC); }
           ctx.restore(); ctx.globalAlpha = 1; }
       } else { pt.trail.length = 0; }
     }
