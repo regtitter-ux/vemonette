@@ -334,9 +334,9 @@ setLang(startLang);
 })();
 
 /* ---------- Hero globe visualization ----------
-   A rotating dotted planet with partner nodes (server avatars) and buyer nodes,
-   linked by animated arcs carrying traffic (blue) and money (green). Auto-spins;
-   hold the RIGHT mouse button and drag to rotate it. Original canvas code. */
+   Rotating dotted planet. Partner servers (avatars) feed into scattered Vemoni
+   verification centres; from each centre traffic then fans out to buyers.
+   Auto-spins; hold the RIGHT mouse button and drag to rotate. Original code. */
 (function () {
   const wrap = document.getElementById('viz'), canvas = document.getElementById('flow');
   if (!canvas) return;
@@ -344,44 +344,50 @@ setLang(startLang);
   const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
   const cs = getComputedStyle(document.documentElement);
   const cvv = (v, f) => { const x = cs.getPropertyValue(v).trim(); return x || f; };
-  const BLUE = cvv('--blue-2', '#5cc8ff'), GREEN = cvv('--green', '#57f287');
+  const BLUE = cvv('--blue-2', '#5cc8ff'), GREEN = cvv('--green', '#57f287'), BUY = '#86b6ff';
   const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = 'assets/logo.png';
   let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
   let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0;
 
-  // Fibonacci-sphere surface dots
   const NDOTS = 540, dots = [];
   (function () { const g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < NDOTS; i++) { const y = 1 - 2 * (i + 0.5) / NDOTS; const rr = Math.sqrt(1 - y * y); const th = g * i; dots.push([Math.cos(th) * rr, y, Math.sin(th) * rr]); } })();
-
   const ll = (la, lo) => { la = la * Math.PI / 180; lo = lo * Math.PI / 180; return [Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)]; };
 
-  // Nodes: partners (green, server avatars) + buyers (blue)
-  const NODES = [];
+  const PARTNERS = [], CENTERS = [], BUYERS = [];
+  const dist2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+  const nearest = (p, arr) => { let bi = 0, bd = Infinity; arr.forEach((n, i) => { const d = dist2(p, n.p); if (d < bd) { bd = d; bi = i; } }); return arr[bi]; };
   function buildNodes() {
-    NODES.length = 0;
+    PARTNERS.length = CENTERS.length = BUYERS.length = 0;
     const feed = (typeof FEED !== 'undefined' && Array.isArray(FEED) ? FEED : []).filter((s) => s && s.name);
-    const pPos = [ll(30, -34), ll(-12, 40), ll(48, 92), ll(4, 150), ll(-40, -100), ll(22, -142)];
-    const bPos = [ll(-6, 8), ll(42, -72), ll(-32, 122), ll(60, -6), ll(-54, 62), ll(10, -166), ll(36, 172)];
-    pPos.forEach((p, i) => { const s = feed[i % Math.max(1, feed.length)] || {}; const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null); const n = { p, type: 'p', color: s.color || GREEN, img: null, src }; NODES.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
-    bPos.forEach((p) => NODES.push({ p, type: 'b', color: BLUE }));
+    const pPos = [ll(34, -40), ll(-16, 46), ll(52, 96), ll(2, 156), ll(-42, -104), ll(24, -150)];
+    const cPos = [ll(14, -6), ll(-8, 92), ll(40, -96), ll(-36, 150)];
+    const bPos = [ll(6, 24), ll(46, -66), ll(-28, 116), ll(62, 4), ll(-56, 40), ll(18, -172), ll(38, 168), ll(-4, -52)];
+    pPos.forEach((p, i) => { const s = feed[i % Math.max(1, feed.length)] || {}; const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null); const n = { p, color: s.color || GREEN, img: null, src }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
+    cPos.forEach((p) => CENTERS.push({ p, buyers: [] }));
+    bPos.forEach((p) => BUYERS.push({ p }));
+    PARTNERS.forEach((pn) => { pn.center = nearest(pn.p, CENTERS); });
+    BUYERS.forEach((bn) => { nearest(bn.p, CENTERS).buyers.push(bn); });
+    CENTERS.forEach((c) => { if (!c.buyers.length) c.buyers.push(BUYERS[(Math.random() * BUYERS.length) | 0]); });
   }
 
-  const ARCS = [];
-  function spawnArc() {
-    const buys = NODES.filter((n) => n.type === 'b'), parts = NODES.filter((n) => n.type === 'p');
-    if (!buys.length || !parts.length) return;
-    const money = Math.random() < 0.5;
-    ARCS.push({ a: buys[(Math.random() * buys.length) | 0].p, b: parts[(Math.random() * parts.length) | 0].p, t: 0, sp: 0.006 + Math.random() * 0.006, col: money ? GREEN : BLUE });
+  const PARTS = [];
+  function spawn() {
+    if (!PARTNERS.length || !CENTERS.length) return;
+    const pn = PARTNERS[(Math.random() * PARTNERS.length) | 0], c = pn.center; if (!c || !c.buyers.length) return;
+    const b = c.buyers[(Math.random() * c.buyers.length) | 0];
+    PARTS.push({ a: pn.p, c: c.p, b: b.p, leg: 0, t: 0, sp: 0.008 + Math.random() * 0.005 });
   }
 
   function rot(v) {
-    const cyaw = Math.cos(rotY), syaw = Math.sin(rotY);
-    const x = v[0] * cyaw + v[2] * syaw, z1 = -v[0] * syaw + v[2] * cyaw, y = v[1];
+    const cyw = Math.cos(rotY), syw = Math.sin(rotY);
+    const x = v[0] * cyw + v[2] * syw, z1 = -v[0] * syw + v[2] * cyw, y = v[1];
     const cp = Math.cos(rotX), sp = Math.sin(rotX);
     return [x, y * cp - z1 * sp, y * sp + z1 * cp];
   }
   const proj = (v) => [cx + v[0] * R, cy - v[1] * R, v[2]];
   const bez = (a, c, b, t) => { const u = 1 - t; return [u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1], u * u * a[2] + 2 * u * t * c[2] + t * t * b[2]]; };
+  const ctrlR = (a, b, lift) => { const mx = a[0] + b[0], my = a[1] + b[1], mz = a[2] + b[2], ml = Math.hypot(mx, my, mz) || 1; return [mx / ml * lift, my / ml * lift, mz / ml * lift]; };
+  function drawArc(a, b, color, alpha, lift) { const c = ctrlR(a, b, lift); let prev = null; for (let s = 0; s <= 20; s++) { const v = rot(bez(a, c, b, s / 20)), p = proj(v); if (prev && v[2] > -0.15) { ctx.strokeStyle = color; ctx.globalAlpha = alpha * (v[2] > 0 ? 1 : 0.35); ctx.lineWidth = 1.1; ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(p[0], p[1]); ctx.stroke(); } prev = p; } }
 
   function layout() {
     const r = wrap.getBoundingClientRect(); dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -393,17 +399,14 @@ setLang(startLang);
     ctx.clearRect(0, 0, W, H);
     if (!dragging && !reduce) rotY += velY;
 
-    // ambient planet glow
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     const g = ctx.createRadialGradient(cx, cy, R * 0.15, cx, cy, R * 1.35);
     g.addColorStop(0, 'rgba(34,168,240,.12)'); g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.35, 0, 7); ctx.fill();
     ctx.restore();
 
-    // faint Vemoni logo inside the planet (behind the dots, so it stays subtle)
-    if (logoOk) { ctx.save(); ctx.globalAlpha = 0.13; const s = R * 0.9; ctx.drawImage(logo, cx - s / 2, cy - s / 2, s, s); ctx.restore(); }
+    if (logoOk) { ctx.save(); ctx.globalAlpha = 0.11; const s = R * 0.85; ctx.drawImage(logo, cx - s / 2, cy - s / 2, s, s); ctx.restore(); }
 
-    // surface dots
     for (const d of dots) { const v = rot(d), p = proj(v), dep = v[2];
       ctx.globalAlpha = dep > 0 ? (0.22 + 0.5 * dep) : (0.05 + 0.1 * (1 + dep));
       ctx.fillStyle = dep > 0 ? 'rgb(122,192,255)' : 'rgb(64,104,152)';
@@ -411,47 +414,60 @@ setLang(startLang);
     }
     ctx.globalAlpha = 1;
 
-    // arcs + travelling particles
-    ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
-    for (let i = ARCS.length - 1; i >= 0; i--) { const arc = ARCS[i]; arc.t += arc.sp; if (arc.t >= 1) { ARCS.splice(i, 1); continue; }
-      const mx = arc.a[0] + arc.b[0], my = arc.a[1] + arc.b[1], mz = arc.a[2] + arc.b[2];
-      const ml = Math.hypot(mx, my, mz) || 1, lift = 1.34;
-      const c = [mx / ml * lift, my / ml * lift, mz / ml * lift];
-      let prev = null;
-      for (let s = 0; s <= 20; s++) { const v = rot(bez(arc.a, c, arc.b, s / 20)), p = proj(v);
-        if (prev && v[2] > -0.15) { ctx.strokeStyle = arc.col; ctx.globalAlpha = 0.26 * (v[2] > 0 ? 1 : 0.4); ctx.lineWidth = 1.3; ctx.beginPath(); ctx.moveTo(prev[0], prev[1]); ctx.lineTo(p[0], p[1]); ctx.stroke(); }
-        prev = p;
-      }
-      const v = rot(bez(arc.a, c, arc.b, arc.t)), p = proj(v);
-      if (v[2] > -0.05) { ctx.globalAlpha = 1; const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 6); gg.addColorStop(0, arc.col); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 6, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.7, 0, 7); ctx.fill(); }
+    // network lines: partners -> centres (green), centres -> buyers (blue)
+    ctx.save(); ctx.lineCap = 'round';
+    PARTNERS.forEach((pn) => { if (pn.center) drawArc(pn.p, pn.center.p, GREEN, 0.14, 1.26); });
+    CENTERS.forEach((c) => c.buyers.forEach((b) => drawArc(c.p, b.p, BLUE, 0.11, 1.26)));
+    ctx.restore(); ctx.globalAlpha = 1;
+
+    // travelling particles: partner -> centre -> buyer
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (let i = PARTS.length - 1; i >= 0; i--) { const pt = PARTS[i]; pt.t += pt.sp;
+      let seg, col;
+      if (pt.leg === 0) { seg = [pt.a, ctrlR(pt.a, pt.c, 1.26), pt.c]; col = GREEN; if (pt.t >= 1) { pt.leg = 1; pt.t = 0; } }
+      if (pt.leg === 1) { seg = [pt.c, ctrlR(pt.c, pt.b, 1.26), pt.b]; col = BLUE; if (pt.t >= 1) { PARTS.splice(i, 1); continue; } }
+      const v = rot(bez(seg[0], seg[1], seg[2], pt.t)), p = proj(v);
+      if (v[2] > -0.05) { const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 6); gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 6, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.7, 0, 7); ctx.fill(); }
     }
     ctx.restore(); ctx.globalAlpha = 1;
 
     // nodes, back-to-front
-    const order = NODES.map((n) => { const v = rot(n.p); return { n, v, p: proj(v) }; }).sort((a, b) => a.v[2] - b.v[2]);
-    for (const it of order) { const n = it.n, v = it.v, p = it.p, dep = v[2]; if (dep < -0.2) continue;
-      const fade = dep > 0 ? 1 : 0.32, rr = n.type === 'p' ? 11 : 6;
-      // soft glow only for plain (buyer) nodes — avatars get no halo
-      if (!(n.type === 'p' && n.img)) {
-        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.85 * fade;
-        const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2.2); gg.addColorStop(0, n.color); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2.2, 0, 7); ctx.fill(); ctx.restore();
+    const all = [];
+    BUYERS.forEach((n) => all.push({ n, kind: 'b' }));
+    PARTNERS.forEach((n) => all.push({ n, kind: 'p' }));
+    CENTERS.forEach((n) => all.push({ n, kind: 'c' }));
+    all.forEach((it) => { it.v = rot(it.n.p); it.p = proj(it.v); });
+    all.sort((a, b) => a.v[2] - b.v[2]);
+    for (const it of all) { const n = it.n, v = it.v, p = it.p, dep = v[2]; if (dep < -0.2) continue;
+      const fade = dep > 0 ? 1 : 0.32;
+      if (it.kind === 'b') {
+        const rr = 5;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.8 * fade;
+        const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2.2); gg.addColorStop(0, BUY); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2.2, 0, 7); ctx.fill(); ctx.restore();
+        ctx.globalAlpha = fade; ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0c1526'; ctx.fill();
+        ctx.lineWidth = 1.6; ctx.strokeStyle = BUY; ctx.stroke();
+        ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fillStyle = BUY; ctx.fill(); ctx.globalAlpha = 1;
+      } else if (it.kind === 'p') {
+        const rr = 11; ctx.globalAlpha = fade;
+        if (n.img) { ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore(); }
+        else { ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0a1a13'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = n.color; ctx.stroke(); ctx.beginPath(); ctx.arc(p[0], p[1], 2, 0, 7); ctx.fillStyle = n.color; ctx.fill(); }
+        ctx.globalAlpha = 1;
+      } else { // Vemoni verification centre
+        const rr = 13;
+        ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.9 * fade;
+        const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], rr * 2.4); gg.addColorStop(0, 'rgba(34,168,240,.5)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], rr * 2.4, 0, 7); ctx.fill(); ctx.restore();
+        ctx.globalAlpha = fade;
+        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0a1420'; ctx.fill();
+        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.lineWidth = 1.6; ctx.strokeStyle = 'rgba(92,200,255,.75)'; ctx.stroke();
+        if (logoOk) { const s = rr * 1.4; ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr - 3, 0, 7); ctx.clip(); ctx.drawImage(logo, p[0] - s / 2, p[1] - s / 2, s, s); ctx.restore(); }
+        ctx.globalAlpha = 1;
       }
-      ctx.globalAlpha = fade;
-      if (n.type === 'p' && n.img) {
-        ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore();
-      } else {
-        ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = n.type === 'p' ? '#0a1a13' : '#0c1526'; ctx.fill();
-        ctx.lineWidth = 1.7; ctx.strokeStyle = n.color; ctx.stroke();
-        ctx.beginPath(); ctx.arc(p[0], p[1], 2, 0, 7); ctx.fillStyle = n.color; ctx.fill();
-      }
-      ctx.globalAlpha = 1;
     }
 
-    if (!reduce && Math.random() < 0.07 && ARCS.length < 14) spawnArc();
+    if (!reduce && Math.random() < 0.08 && PARTS.length < 18) spawn();
     raf = requestAnimationFrame(draw);
   }
 
-  // rotate by holding the right mouse button and dragging
   wrap.addEventListener('contextmenu', (e) => e.preventDefault());
   wrap.addEventListener('pointerdown', (e) => { if (e.button !== 2) return; dragging = true; lastX = e.clientX; lastY = e.clientY; try { wrap.setPointerCapture(e.pointerId); } catch (_) {} wrap.style.cursor = 'grabbing'; });
   wrap.addEventListener('pointermove', (e) => { if (!dragging) return; rotY += (e.clientX - lastX) * 0.006; rotX += (e.clientY - lastY) * 0.006; rotX = Math.max(-1.15, Math.min(1.15, rotX)); lastX = e.clientX; lastY = e.clientY; });
@@ -460,7 +476,7 @@ setLang(startLang);
   wrap.addEventListener('pointercancel', endDrag);
 
   window.addEventListener('resize', () => { cancelAnimationFrame(raf); layout(); draw(); });
-  requestAnimationFrame(() => { layout(); buildNodes(); for (let i = 0; i < 6; i++) spawnArc(); draw(); });
+  requestAnimationFrame(() => { layout(); buildNodes(); for (let i = 0; i < 8; i++) spawn(); draw(); });
 })();
 /* ---------- Logged-in user chip + cabinet menu (main page) ---------- */
 (function () {
