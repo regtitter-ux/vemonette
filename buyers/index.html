@@ -819,15 +819,26 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function fmt(n){ return n==null?'—':Number(n).toLocaleString('en-US'); }
   function colorFor(str){ var h=0; str=String(str||''); for(var i=0;i<str.length;i++) h=(h*31+str.charCodeAt(i))>>>0; return PAL[h%PAL.length]; }
+  // Each toast is a fresh join, so the shown member count must grow: seed from the
+  // API's number, then go up by at least one per join (and jump up if the API is higher).
+  var counts={};
+  function growCount(ev){
+    if(ev.members==null && counts[ev.name]==null) return null;
+    var api=(ev.members==null)?-Infinity:Number(ev.members);
+    var prev=(counts[ev.name]==null)?-Infinity:counts[ev.name];
+    var v=Math.max(prev+1, api);
+    if(!isFinite(v)) return null;
+    counts[ev.name]=v; return v;
+  }
   function render(ev){
-    var t=strings(), col=colorFor(ev.name);
+    var t=strings(), col=colorFor(ev.name), mc=growCount(ev);
     var letter=esc((String(ev.name||'S').trim()[0]||'S').toUpperCase());
     var ic=ev.icon?('<img src="'+esc(ev.icon)+'" alt="" onerror="this.parentNode.textContent=\''+letter+'\'" />'):letter;
     var el=document.createElement('div'); el.className='jt';
     el.innerHTML='<button class="jt-x" aria-label="Close" title="Close">&times;</button>'+
       '<div class="jt-top"><div class="jt-ic" style="background:linear-gradient(150deg,'+col+','+col+'88)">'+ic+'</div>'+
       '<div class="jt-body"><div class="jt-name">'+esc(ev.name)+'</div><div class="jt-sub">'+t.sub+'</div></div></div>'+
-      '<div class="jt-foot"><span class="jt-members">'+PPL+' <b>'+(ev.members!=null?fmt(ev.members):'—')+'</b>&nbsp;'+t.members+'</span></div>';
+      '<div class="jt-foot"><span class="jt-members">'+PPL+' <b>'+(mc!=null?fmt(mc):'—')+'</b>&nbsp;'+t.members+'</span></div>';
     var close=function(){ el.classList.add('out'); setTimeout(function(){ el.remove(); },420); };
     el.querySelector('.jt-x').addEventListener('click',close);
     host.appendChild(el);
