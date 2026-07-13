@@ -1898,9 +1898,19 @@ async function renderLots() {
     const box = $('#lots-list'); if (!box) return;
     const { ok, body } = await get('/lots');
     if (!ok) { box.innerHTML = '<div class="muted">Не удалось загрузить лоты.</div>'; return; }
+    const tpl = $('#lot-template');
+    if (tpl && document.activeElement !== tpl) tpl.value = body.template || '';
     const list = body.lots || [];
     box.innerHTML = list.length ? list.map(lotCard).join('') : '<div class="muted">Пока нет лотов. Запустите первый выше.</div>';
 }
+const _lotTplSave = document.getElementById('lot-template-save');
+if (_lotTplSave) _lotTplSave.onclick = async () => {
+    _lotTplSave.disabled = true;
+    const { ok, body } = await put('/lots/template', { text: $('#lot-template').value });
+    _lotTplSave.disabled = false;
+    if (ok) { toast('Сообщение сохранено ✓'); if (body?.template != null) $('#lot-template').value = body.template; }
+    else toast(body?.error || 'Не удалось сохранить', 'err');
+};
 function lotCard(l) {
     const active = l.status === 'active';
     const chLink = l.guildId && l.channelId ? `https://discord.com/channels/${l.guildId}/${l.channelId}` : null;

@@ -299,6 +299,10 @@
         <div class="lot-field"><label>Мин. надбавка к ставке</label><input id="lot-step" type="number" min="0.01" step="0.01" placeholder="1" /></div>
         <button class="btn primary" id="lot-launch">Запустить лот</button>
       </div>
+      <h2>Сообщение при запуске</h2>
+      <p class="muted sm">Текст, который бот отправляет в канал при старте лота. Плейсхолдеры: <code>{stays}</code> — кол-во stays, <code>{sb}</code> — начальная цена, <code>{ob}</code> — мин. надбавка к ставке. Работает Markdown Discord.</p>
+      <textarea id="lot-template" rows="5" style="width:100%;max-width:640px" placeholder="# 💹 Лот: {stays} stays ..."></textarea>
+      <div class="actions-row" style="margin-top:8px"><button class="btn primary sm" id="lot-template-save">Сохранить сообщение</button></div>
       <h2>История лотов</h2>
       <div id="lots-list"><div class="muted">Загрузка…</div></div>
     </section>
@@ -361,6 +365,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=69"></script>
+<script src="/admin/admin.js?v=70"></script>
 </body>
 </html>
