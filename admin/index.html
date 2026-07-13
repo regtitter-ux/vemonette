@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="/admin/admin.css?v=28" />
+  <link rel="stylesheet" href="/admin/admin.css?v=29" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -47,6 +47,7 @@
       <button data-tab="templates" class="tab" data-owner-only data-i18n="tab_templates">Шаблоны</button>
       <button data-tab="toggle" class="tab" data-i18n="tab_toggle">Кран</button>
       <button data-tab="feed" class="tab" data-owner-only data-i18n="tab_feed">Лента</button>
+      <button data-tab="lots" class="tab" data-owner-only data-i18n="tab_lots">Лоты</button>
       <button data-tab="system" class="tab" data-owner-only data-i18n="tab_system">Система</button>
       <button data-tab="admins" class="tab" data-owner-only data-i18n="tab_admins">Админы</button>
     </nav>
@@ -288,6 +289,20 @@
       <div class="table-wrap"><table class="stat-table" id="feed-table"></table></div>
     </section>
 
+    <!-- Lots / auctions (owner only) -->
+    <section class="pane" data-pane="lots" hidden>
+      <h1>Лоты</h1>
+      <p class="muted">Аукционы на количество stays. При запуске бот создаёт канал на аукционном сервере, где участники ставят цену числом в чат. Если ставку никто не перебьёт 15 минут — она побеждает и лот закрывается. История и результаты — ниже.</p>
+      <div class="lot-form">
+        <div class="lot-field"><label>Кол-во stays</label><input id="lot-stays" type="number" min="1" step="1" placeholder="100" /></div>
+        <div class="lot-field"><label>Начальная цена</label><input id="lot-start" type="number" min="1" step="0.01" placeholder="10" /></div>
+        <div class="lot-field"><label>Мин. надбавка к ставке</label><input id="lot-step" type="number" min="0.01" step="0.01" placeholder="1" /></div>
+        <button class="btn primary" id="lot-launch">Запустить лот</button>
+      </div>
+      <h2>История лотов</h2>
+      <div id="lots-list"><div class="muted">Загрузка…</div></div>
+    </section>
+
     <!-- Admins (owner only) -->
     <section class="pane" data-pane="admins" hidden>
       <h1>Админы
@@ -346,6 +361,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=68"></script>
+<script src="/admin/admin.js?v=69"></script>
 </body>
 </html>

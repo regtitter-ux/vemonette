@@ -4,8 +4,8 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
 // ---------- i18n (navigation + login chrome; deeper content is RU) ----------
 const I18N = {
-    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_activity: 'Активность', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_system: 'Система', tab_admins: 'Админы', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
-    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_activity: 'Activity', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_system: 'System', tab_admins: 'Admins', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
+    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_activity: 'Активность', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_lots: 'Лоты', tab_system: 'Система', tab_admins: 'Админы', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
+    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_activity: 'Activity', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_lots: 'Lots', tab_system: 'System', tab_admins: 'Admins', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
 };
 let adminLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
 if (!I18N[adminLang]) adminLang = 'ru';
@@ -1892,6 +1892,45 @@ $('#bal-modal').addEventListener('click', (e) => { if (e.target.id === 'bal-moda
 // Load balances when the tab is first opened, and re-fetch on every open so
 // numbers stay fresh without a full page refresh.
 document.querySelector('[data-tab="balances"]').addEventListener('click', loadBalances);
+
+// ---------- Lots / auctions ----------
+async function renderLots() {
+    const box = $('#lots-list'); if (!box) return;
+    const { ok, body } = await get('/lots');
+    if (!ok) { box.innerHTML = '<div class="muted">Не удалось загрузить лоты.</div>'; return; }
+    const list = body.lots || [];
+    box.innerHTML = list.length ? list.map(lotCard).join('') : '<div class="muted">Пока нет лотов. Запустите первый выше.</div>';
+}
+function lotCard(l) {
+    const active = l.status === 'active';
+    const chLink = l.guildId && l.channelId ? `https://discord.com/channels/${l.guildId}/${l.channelId}` : null;
+    const status = active ? '<span class="chip amber">активен</span>' : '<span class="chip">закрыт</span>';
+    const result = l.status === 'closed'
+        ? (l.winnerBid > 0 ? `🏆 <b>${escapeHtml(l.winnerName || ('ID ' + l.winnerId))}</b> — <b>$${l.winnerBid}</b>` : 'закрыт без ставок')
+        : (l.highest > 0 ? `текущая ставка: <b>$${l.highest}</b>${l.highestBidderName ? ' · ' + escapeHtml(l.highestBidderName) : ''}` : 'ставок ещё нет');
+    const bids = (l.bids || []).slice().reverse()
+        .map((b) => `<div class="lot-bid"><span>${escapeHtml(b.name || ('ID ' + b.userId))}</span> <b>$${b.amount}</b> <span class="muted sm">${escapeHtml(relTime(b.ts))}</span></div>`).join('');
+    return `<div class="lot-card">
+        <div class="lot-head"><span class="lot-title">💹 ${l.stays} stays ${status}</span>${chLink ? ` <a class="btn ghost sm" href="${chLink}" target="_blank" rel="noopener">↗ канал</a>` : ''}</div>
+        <div class="lot-meta muted sm">старт $${l.start} · шаг $${l.step} · ставок: ${l.bidsCount} · ${escapeHtml(relTime(l.createdAt))}</div>
+        <div class="lot-result">${result}</div>
+        ${bids ? `<details class="lot-bids"><summary>Ставки (${l.bidsCount})</summary>${bids}</details>` : ''}
+      </div>`;
+}
+const _lotLaunch = document.getElementById('lot-launch');
+if (_lotLaunch) _lotLaunch.onclick = async () => {
+    const stays = Number($('#lot-stays').value), start = Number($('#lot-start').value), step = Number($('#lot-step').value);
+    if (!(stays > 0) || !(start > 0) || !(step > 0)) { toast('Заполни кол-во stays, начальную цену и шаг (числа > 0)', 'err'); return; }
+    _lotLaunch.disabled = true;
+    const { ok, body } = await post('/lots', { stays, start, step });
+    _lotLaunch.disabled = false;
+    if (ok) { toast('Лот запущен ✓'); $('#lot-stays').value = ''; $('#lot-start').value = ''; $('#lot-step').value = ''; renderLots(); }
+    else if (body?.error === 'no-bot-on-guild' || body?.error === 'no-guild') toast('Ни один бот не находится на аукционном сервере.', 'err');
+    else if (body?.error === 'channel-failed') toast('Не удалось создать канал: ' + (body?.detail || ''), 'err');
+    else toast(body?.error || 'Не удалось запустить лот', 'err');
+};
+const _lotsTab = document.querySelector('[data-tab="lots"]');
+if (_lotsTab) _lotsTab.addEventListener('click', renderLots);
 
 // ---------- Activity log across all partners ----------
 const ALOG_ESC = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
