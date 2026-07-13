@@ -225,6 +225,7 @@ const TR = {
   'Реквизиты сохранены':'Requisites saved','Список рефералов сохранён':'Referral list saved','Сохранено':'Saved',
   'Юзер':'User','Всего выведено':'Total withdrawn','Реф-бонус в пуле':'Referral bonus in pool','Реферер':'Referrer',
   'Настройки':'Settings','Изменить баланс':'Change balance','Применить':'Apply','Ставка ($/100 заходов)':'Rate ($/100 joins)','бонус':'bonus',
+  'Баланс заказов':'Order balance','Изменить баланс заказов':'Change order balance','Баланс заказов изменён на':'Order balance changed by','insufficient wallet balance':'Insufficient order balance',
   'Авто-вывод по чеку (USDT-check)':'Auto-payout by check (USDT-check)','Авто-вывод прямым переводом (USDT, без чека)':'Auto-payout by direct transfer (USDT, no check)',
   'Telegram ID получателя, напр. 123456789':'Recipient Telegram ID, e.g. 123456789',
   'Деньги приходят напрямую в @CryptoBot получателю — без чека и подтверждений. Нужен числовой Telegram ID (не @username; узнать можно через @userinfobot). Имеет приоритет над выводом по чеку.':'Money arrives directly in the recipient’s @CryptoBot — no check, no confirmations. Needs a numeric Telegram ID (not @username; find it via @userinfobot). Takes priority over the check payout.',
@@ -1700,6 +1701,15 @@ function wireBalDetailControls(userId) {
         editBalanceField(userId, 'balance', { delta }, `Баланс изменён на ${m[1]}$${m[2]}`);
     };
 
+    const walBtn = apply('wallet');
+    if (walBtn) walBtn.onclick = () => {
+        const raw = $('[data-edit="wallet"]').value.trim().replace(',', '.');
+        const m = raw.match(/^([+-])\s*(\d+(?:\.\d+)?)$/);
+        if (!m) { toast('Введи число с + или -, например +50 или -20', 'err'); return; }
+        const delta = (m[1] === '-' ? -1 : 1) * Number(m[2]);
+        editBalanceField(userId, 'wallet', { delta }, `Баланс заказов изменён на ${m[1]}$${m[2]}`);
+    };
+
     const jbidBtn = apply('joinbid');
     if (jbidBtn) jbidBtn.onclick = () => {
         const joinBid = Number($('[data-edit="joinBid"]').value.replace(',', '.'));
@@ -1786,6 +1796,7 @@ function balDetailHtml(u) {
 
         <div class="kv-grid">
           ${kv('Баланс', money(u.balance))}
+          ${kv('Баланс заказов', money(u.walletBalance || 0))}
           ${kv('Всего выведено', money(u.withdrawnTotal))}
           ${kv('Реф-бонус в пуле', money(u.refBonusAccrued))}
           ${kv('Реферер', u.referrer || '—', true)}
@@ -1798,6 +1809,11 @@ function balDetailHtml(u) {
             <label>Изменить баланс</label>
             <input type="text" data-edit="balance" placeholder="+50 или -20" />
             <div class="actions-row"><button class="btn primary sm" data-edit-act="balance">Применить</button></div>
+          </div>
+          <div class="setting">
+            <label>Изменить баланс заказов</label>
+            <input type="text" data-edit="wallet" placeholder="+50 или -20" />
+            <div class="actions-row"><button class="btn primary sm" data-edit-act="wallet">Применить</button></div>
           </div>
           <div class="setting">
             <label>Ставка ($/100 заходов)${u.boosted ? ` · <span class="chip amber">🔥 бонус ${fmtBoostLeft(u.boostLeftMs)}</span>` : ''}</label>
