@@ -213,6 +213,7 @@ function applyLang() {
     const mgrCard = $('#mgr-card');
     if (CFG.isOwner && mgrCard && !mgrCard.hidden) loadManagers();
     if (lastCampaigns.length) renderCampaigns(lastCampaigns);
+    renderTopup();
 }
 $$('.lang-switch button').forEach((b) => b.addEventListener('click', () => { lang = b.dataset.lang; localStorage.setItem('vemoni_lang', lang); applyLang(); }));
 
@@ -338,6 +339,29 @@ async function loadWallet() {
     WALLET = body;
     $('#wallet-balance').textContent = money(body.balance);
 }
+// The top-up payment box is transient and re-rendered on language switch, so its
+// state lives here and renderTopup() rebuilds it from the current language.
+let topupState = null;
+function renderTopup() {
+    const box = $('#ord-result');
+    if (!box || !topupState) return;
+    if (topupState.mode === 'choose') {
+        box.innerHTML = `
+      <div class="pay-box">
+        <div style="margin-bottom:10px">${esc(t('topup_choose', topupState.amount.toFixed(2)))}</div>
+        <div class="actions-row"><button class="btn primary" id="pm-web">${esc(t('pay_web'))}</button> <button class="btn ghost" id="pm-tg">${esc(t('pay_tg'))}</button></div>
+      </div>`;
+        $('#pm-web').onclick = () => startTopup('/wallet/topup/web', topupState.amount);
+        $('#pm-tg').onclick = () => startTopup('/wallet/topup', topupState.amount);
+    } else if (topupState.mode === 'created') {
+        box.innerHTML = `
+      <div class="pay-box">
+        <div style="margin-bottom:8px">${esc(t(topupState.web ? 'topup_created_web' : 'topup_created', topupState.amount.toFixed(2)))}</div>
+        <a class="btn primary" href="${esc(topupState.invoiceUrl)}" target="_blank" rel="noopener">${esc(t('pay_open'))}</a>
+        <div class="muted sm" style="margin-top:8px;word-break:break-all">${esc(topupState.invoiceUrl)}</div>
+      </div>`;
+    }
+}
 $('#wallet-topup').addEventListener('click', async () => {
     const raw = prompt(t('topup_prompt', WALLET.minTopup || 5));
     if (raw === null) return;
@@ -348,24 +372,14 @@ $('#wallet-topup').addEventListener('click', async () => {
     if (web && !tg) return startTopup('/wallet/topup/web', amount);
     if (tg && !web) return startTopup('/wallet/topup', amount);
     // both available → let the buyer pick
-    $('#ord-result').innerHTML = `
-      <div class="pay-box">
-        <div style="margin-bottom:10px">${esc(t('topup_choose', amount.toFixed(2)))}</div>
-        <div class="actions-row"><button class="btn primary" id="pm-web">${esc(t('pay_web'))}</button> <button class="btn ghost" id="pm-tg">${esc(t('pay_tg'))}</button></div>
-      </div>`;
-    $('#pm-web').onclick = () => startTopup('/wallet/topup/web', amount);
-    $('#pm-tg').onclick = () => startTopup('/wallet/topup', amount);
+    topupState = { mode: 'choose', amount };
+    renderTopup();
 });
 async function startTopup(path, amount) {
     const { ok, body } = await post(path, { amount });
     if (!ok || !body?.invoiceUrl) { toast(errText(body?.error), 'err'); return; }
-    const web = path !== '/wallet/topup';
-    $('#ord-result').innerHTML = `
-      <div class="pay-box">
-        <div style="margin-bottom:8px">${esc(t(web ? 'topup_created_web' : 'topup_created', Number(body.amount).toFixed(2)))}</div>
-        <a class="btn primary" href="${esc(body.invoiceUrl)}" target="_blank" rel="noopener">${esc(t('pay_open'))}</a>
-        <div class="muted sm" style="margin-top:8px;word-break:break-all">${esc(body.invoiceUrl)}</div>
-      </div>`;
+    topupState = { mode: 'created', amount: Number(body.amount), web: path !== '/wallet/topup', invoiceUrl: body.invoiceUrl };
+    renderTopup();
     try { window.open(body.invoiceUrl, '_blank', 'noopener'); } catch (_) {}
 }
 
