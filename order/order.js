@@ -58,6 +58,11 @@ const DICT = {
     servers_btn: 'Серверы показа',
     change_link: 'Сменить ссылку', save: 'Сохранить', cancel: 'Отмена',
     link_ph: 'https://discord.gg/xxxx',
+    limit_label: 'Лимит заходов на эту ссылку (необязательно)',
+    limit_ph: 'напр. 100 — пусто = без лимита',
+    limit_hint: 'По достижении лимита показ встанет на стоп, пока не продолжишь вручную (с той же или новой ссылкой). Пусто — без ограничения, до конца кампании.',
+    resume_limit: 'Продолжить',
+    st_limit: 'Стоп: лимит', relimit_toast: 'Показ возобновлён', limit_bad: 'Лимит должен быть целым числом больше 0',
     link_changed: 'Ссылка обновлена', link_same: 'Это та же ссылка',
     link_nobot: 'На новом сервере нет нашего бота — заходы не проверить. Добавьте бота и повторите.',
     link_hint: 'Новая ссылка должна работать, и на её сервере должен быть наш бот. Прогресс кампании сохранится.',
@@ -133,6 +138,11 @@ const DICT = {
     servers_btn: 'Shown on servers',
     change_link: 'Change link', save: 'Save', cancel: 'Cancel',
     link_ph: 'https://discord.gg/xxxx',
+    limit_label: 'Join limit for this link (optional)',
+    limit_ph: 'e.g. 100 — empty = no limit',
+    limit_hint: 'When the limit is reached, delivery stops until you resume manually (with the same or a new link). Empty — no cap, runs to the end of the campaign.',
+    resume_limit: 'Resume',
+    st_limit: 'Stopped: limit', relimit_toast: 'Delivery resumed', limit_bad: 'Limit must be a whole number greater than 0',
     link_changed: 'Link updated', link_same: 'Same link as before',
     link_nobot: "Our bot isn't on the new server — stays can't be verified. Add the bot and try again.",
     link_hint: 'The new link must work and its server must have our bot. Campaign progress is preserved.',
@@ -474,6 +484,7 @@ $('#ord-buy').addEventListener('click', async () => {
 // ---------- Campaigns ----------
 function statusOf(c) {
     if (c.status === 'active' && c.paused) return { t: t('st_paused'), c: 'amber' };
+    if (c.status === 'active' && c.limitReached) return { t: t('st_limit'), c: 'amber' };
     return ({
         pending_payment: { t: t('st_pending'), c: 'amber' },
         active: { t: t('st_active'), c: 'green' },
@@ -532,14 +543,17 @@ function campCard(c) {
         </div>` : '';
     const canManage = c.status === 'active';
     const pauseBtn = canManage ? `<button class="btn-mini ${c.paused ? 'off' : 'on'}" data-pause="${c.id}">${esc(c.paused ? t('resume') : t('pause'))}</button>` : '';
+    const resumeLimitBtn = (canManage && c.limitReached && !c.paused) ? `<button class="btn-mini on" data-resumelimit="${c.id}">${esc(t('resume_limit'))}</button>` : '';
     const linkBtn = canManage ? `<button class="btn-mini" data-editlink="${c.id}">${esc(t('change_link'))}</button>` : '';
     const srvBtn = (c.status === 'active' || c.status === 'complete') ? `<button class="btn-mini" data-servers="${c.id}">${esc(t('servers_btn'))}</button>` : '';
+    const limitCounter = c.linkLimit ? `<div class="camp-linklimit${c.limitReached ? ' reached' : ''}">${c.linkDelivered}/${c.linkLimit}</div>` : '';
     return `
       <div class="camp" data-id="${c.id}">
         <div class="camp-head">
           <div>
             <div class="camp-title">${esc(c.serverName || t('your_server'))}</div>
             <div class="camp-sub">${esc(c.invite)}</div>
+            ${limitCounter}
           </div>
           <span class="chip ${st.c}">${esc(st.t)}</span>
         </div>
@@ -547,14 +561,17 @@ function campCard(c) {
         <div class="progress"><i style="width:${pct}%"></i></div>
         <div class="camp-nums"><span>${esc(t('delivered'))} <b>${c.delivered}</b> / ${c.purchased}</span><span>${money(c.price)}</span></div>
         ${retentionRow(c.retention)}
-        <div class="camp-actions">${payLink}${pauseBtn}${linkBtn}${srvBtn}</div>
+        <div class="camp-actions">${payLink}${pauseBtn}${resumeLimitBtn}${linkBtn}${srvBtn}</div>
         <div class="link-edit" data-link-edit="${c.id}" hidden>
           <input type="text" class="link-input" data-link-input="${c.id}" value="${esc(c.invite)}" placeholder="${esc(t('link_ph'))}" />
+          <label class="limit-label muted sm">${esc(t('limit_label'))}</label>
+          <input type="number" min="1" step="1" class="link-input limit-input" data-limit-input="${c.id}" value="${c.linkLimit || ''}" placeholder="${esc(t('limit_ph'))}" />
           <div class="link-row">
             <button class="btn-mini on" data-link-save="${c.id}">${esc(t('save'))}</button>
             <button class="btn-mini" data-link-cancel="${c.id}">${esc(t('cancel'))}</button>
           </div>
           <div class="link-hint muted sm">${esc(t('link_hint'))}</div>
+          <div class="link-hint muted sm">${esc(t('limit_hint'))}</div>
         </div>
         <div class="srv-list" data-srv-list="${c.id}" hidden></div>
       </div>`;
@@ -576,16 +593,34 @@ function wireCampaigns(list) {
     $$('#camp-list [data-link-cancel]').forEach((b) => b.onclick = () => {
         const box = $(`[data-link-edit="${b.dataset.linkCancel}"]`); if (box) box.hidden = true;
     });
+    // Resume a campaign that auto-stopped on its per-link limit — re-arm the same
+    // link + same cap (a fresh window from the current delivered count).
+    $$('#camp-list [data-resumelimit]').forEach((b) => b.onclick = async () => {
+        const cur = list.find((x) => x.id === b.dataset.resumelimit);
+        if (!cur) return;
+        b.disabled = true;
+        const { ok, body } = await put(`/campaigns/${cur.id}/invite`, { invite: cur.invite, limit: cur.linkLimit || 0 });
+        b.disabled = false;
+        if (ok) { toast(t('relimit_toast')); loadCampaigns(); }
+        else toast(errText(body?.error), 'err');
+    });
     $$('#camp-list [data-link-save]').forEach((b) => b.onclick = async () => {
         const id = b.dataset.linkSave;
         const input = $(`[data-link-input="${id}"]`);
         const val = (input?.value || '').trim();
         const code = parseInvite(val);
         if (!code) { toast(t('invite_bad'), 'err'); return; }
+        const rawLim = ($(`[data-limit-input="${id}"]`)?.value || '').trim();
+        const limit = rawLim === '' ? 0 : Math.floor(Number(rawLim));
+        if (rawLim !== '' && !(limit > 0)) { toast(t('limit_bad'), 'err'); return; }
         const cur = list.find((x) => x.id === id);
-        if (cur && `https://discord.gg/${code}` === cur.invite) { toast(t('link_same')); return; }
+        const sameLink = cur && `https://discord.gg/${code}` === cur.invite;
+        const sameLimit = cur && (Number(cur.linkLimit) || 0) === limit;
+        // Nothing changed and not currently stopped → no-op. (When stopped on a
+        // limit, re-saving the same values intentionally re-arms/resumes it.)
+        if (sameLink && sameLimit && !(cur && cur.limitReached)) { toast(t('link_same')); return; }
         b.disabled = true;
-        const { ok, body } = await put(`/campaigns/${id}/invite`, { invite: `https://discord.gg/${code}` });
+        const { ok, body } = await put(`/campaigns/${id}/invite`, { invite: `https://discord.gg/${code}`, limit });
         b.disabled = false;
         if (ok) { toast(t('link_changed')); loadCampaigns(); }
         else if (body?.error === 'no-bot') {
