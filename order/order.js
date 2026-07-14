@@ -34,6 +34,7 @@ const DICT = {
     topup_created_web: (a) => `Счёт на $${a} создан. Оплатите с любого криптокошелька — баланс пополнится после подтверждения сети:`,
     topup_choose: (a) => `Пополнение на $${a}. Выберите способ оплаты:`,
     pay_web: 'Крипта (любой кошелёк)', pay_tg: 'CryptoBot (Telegram)', pay_open: 'Открыть оплату', pay_unavail: 'Оплата временно недоступна',
+    pay_other: '‹ Другой способ оплаты',
     launched: 'Кампания запущена! 🎉',
     insufficient: (need) => `Недостаточно средств. Пополните ещё на $${need} и повторите.`,
     my_camps: 'Мои кампании',
@@ -108,6 +109,7 @@ const DICT = {
     topup_created_web: (a) => `Invoice for $${a} created. Pay from any crypto wallet — your balance updates after network confirmation:`,
     topup_choose: (a) => `Top-up of $${a}. Choose a payment method:`,
     pay_web: 'Crypto (any wallet)', pay_tg: 'CryptoBot (Telegram)', pay_open: 'Open payment', pay_unavail: 'Payment is temporarily unavailable',
+    pay_other: '‹ Other payment method',
     launched: 'Campaign launched! 🎉',
     insufficient: (need) => `Not enough balance. Top up $${need} more and try again.`,
     my_camps: 'My campaigns',
@@ -354,12 +356,16 @@ function renderTopup() {
         $('#pm-web').onclick = () => startTopup('/wallet/topup/web', topupState.amount);
         $('#pm-tg').onclick = () => startTopup('/wallet/topup', topupState.amount);
     } else if (topupState.mode === 'created') {
+        const bothMethods = WALLET && WALLET.cryptoWebEnabled && WALLET.cryptoEnabled;
         box.innerHTML = `
       <div class="pay-box">
         <div style="margin-bottom:8px">${esc(t(topupState.web ? 'topup_created_web' : 'topup_created', topupState.amount.toFixed(2)))}</div>
         <a class="btn primary" href="${esc(topupState.invoiceUrl)}" target="_blank" rel="noopener">${esc(t('pay_open'))}</a>
         <div class="muted sm" style="margin-top:8px;word-break:break-all">${esc(topupState.invoiceUrl)}</div>
+        ${bothMethods ? `<div style="margin-top:10px"><button class="btn ghost sm" id="pm-back">${esc(t('pay_other'))}</button></div>` : ''}
       </div>`;
+        const back = $('#pm-back');
+        if (back) back.onclick = () => { topupState = { mode: 'choose', amount: topupState.amount }; renderTopup(); };
     }
 }
 $('#wallet-topup').addEventListener('click', async () => {
