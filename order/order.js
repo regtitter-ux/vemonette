@@ -31,6 +31,9 @@ const DICT = {
     topup_prompt: (min) => `Сумма пополнения в $ (минимум ${min}):`,
     topup_min: (min) => `Минимум $${min}`,
     topup_created: (a) => `Счёт на $${a} создан. Оплатите через CryptoBot — баланс пополнится в течение минуты:`,
+    topup_created_web: (a) => `Счёт на $${a} создан. Оплатите с любого криптокошелька — баланс пополнится после подтверждения сети:`,
+    topup_choose: (a) => `Пополнение на $${a}. Выберите способ оплаты:`,
+    pay_web: 'Крипта (любой кошелёк)', pay_tg: 'CryptoBot (Telegram)', pay_open: 'Открыть оплату', pay_unavail: 'Оплата временно недоступна',
     launched: 'Кампания запущена! 🎉',
     insufficient: (need) => `Недостаточно средств. Пополните ещё на $${need} и повторите.`,
     my_camps: 'Мои кампании',
@@ -102,6 +105,9 @@ const DICT = {
     topup_prompt: (min) => `Top-up amount in $ (min ${min}):`,
     topup_min: (min) => `Minimum $${min}`,
     topup_created: (a) => `Invoice for $${a} created. Pay via CryptoBot — your balance updates within a minute:`,
+    topup_created_web: (a) => `Invoice for $${a} created. Pay from any crypto wallet — your balance updates after network confirmation:`,
+    topup_choose: (a) => `Top-up of $${a}. Choose a payment method:`,
+    pay_web: 'Crypto (any wallet)', pay_tg: 'CryptoBot (Telegram)', pay_open: 'Open payment', pay_unavail: 'Payment is temporarily unavailable',
     launched: 'Campaign launched! 🎉',
     insufficient: (need) => `Not enough balance. Top up $${need} more and try again.`,
     my_camps: 'My campaigns',
@@ -337,14 +343,31 @@ $('#wallet-topup').addEventListener('click', async () => {
     if (raw === null) return;
     const amount = Math.floor(Number(String(raw).replace(',', '.')));
     if (!Number.isFinite(amount) || amount < (WALLET.minTopup || 5)) { toast(t('topup_min', WALLET.minTopup || 5), 'err'); return; }
-    const { ok, body } = await post('/wallet/topup', { amount });
-    if (!ok || !body?.invoiceUrl) { toast(errText(body?.error), 'err'); return; }
+    const web = WALLET.cryptoWebEnabled, tg = WALLET.cryptoEnabled;
+    if (!web && !tg) { toast(t('pay_unavail'), 'err'); return; }
+    if (web && !tg) return startTopup('/wallet/topup/cryptomus', amount);
+    if (tg && !web) return startTopup('/wallet/topup', amount);
+    // both available → let the buyer pick
     $('#ord-result').innerHTML = `
       <div class="pay-box">
-        <div style="margin-bottom:8px">${esc(t('topup_created', Number(body.amount).toFixed(2)))}</div>
-        <a href="${esc(body.invoiceUrl)}" target="_blank" rel="noopener">${esc(body.invoiceUrl)}</a>
+        <div style="margin-bottom:10px">${esc(t('topup_choose', amount.toFixed(2)))}</div>
+        <div class="actions-row"><button class="btn primary" id="pm-web">${esc(t('pay_web'))}</button> <button class="btn ghost" id="pm-tg">${esc(t('pay_tg'))}</button></div>
       </div>`;
+    $('#pm-web').onclick = () => startTopup('/wallet/topup/cryptomus', amount);
+    $('#pm-tg').onclick = () => startTopup('/wallet/topup', amount);
 });
+async function startTopup(path, amount) {
+    const { ok, body } = await post(path, { amount });
+    if (!ok || !body?.invoiceUrl) { toast(errText(body?.error), 'err'); return; }
+    const web = path.includes('cryptomus');
+    $('#ord-result').innerHTML = `
+      <div class="pay-box">
+        <div style="margin-bottom:8px">${esc(t(web ? 'topup_created_web' : 'topup_created', Number(body.amount).toFixed(2)))}</div>
+        <a class="btn primary" href="${esc(body.invoiceUrl)}" target="_blank" rel="noopener">${esc(t('pay_open'))}</a>
+        <div class="muted sm" style="margin-top:8px;word-break:break-all">${esc(body.invoiceUrl)}</div>
+      </div>`;
+    try { window.open(body.invoiceUrl, '_blank', 'noopener'); } catch (_) {}
+}
 
 // ---------- Managers (owner sees management; managers see their price note) ----------
 function setupManagers() {
