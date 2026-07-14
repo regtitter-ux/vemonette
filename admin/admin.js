@@ -1966,8 +1966,10 @@ function cfgFieldHtml(f) {
 }
 async function renderSettings() {
     const box = $('#cfg-list'); if (!box) return;
-    const { ok, body } = await get('/config');
-    if (!ok) { box.innerHTML = '<div class="muted">Не удалось загрузить настройки.</div>'; return; }
+    let ok, body;
+    try { ({ ok, body } = await get('/config')); }
+    catch (e) { box.innerHTML = '<div class="muted">Не удалось загрузить настройки — вероятно, нужен передеплой бэкенда (Railway). Открой DevTools → Network для деталей.</div>'; return; }
+    if (!ok) { box.innerHTML = `<div class="muted">Не удалось загрузить настройки (${body?.error || 'ошибка'}). Возможно, требуется передеплой бэкенда.</div>`; return; }
     const cats = body.categories || [];
     box.innerHTML = cats.map((c) => `
       <div class="cfg-cat">
