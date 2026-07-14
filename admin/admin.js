@@ -4,8 +4,8 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
 // ---------- i18n (navigation + login chrome; deeper content is RU) ----------
 const I18N = {
-    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_activity: 'Активность', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_lots: 'Лоты', tab_system: 'Система', tab_admins: 'Админы', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
-    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_activity: 'Activity', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_lots: 'Lots', tab_system: 'System', tab_admins: 'Admins', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
+    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_activity: 'Активность', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_lots: 'Лоты', tab_system: 'Система', tab_settings: 'Настройки', tab_admins: 'Админы', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
+    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_activity: 'Activity', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_lots: 'Lots', tab_system: 'System', tab_settings: 'Settings', tab_admins: 'Admins', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
 };
 let adminLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
 if (!I18N[adminLang]) adminLang = 'ru';
@@ -1941,6 +1941,71 @@ if (_lotLaunch) _lotLaunch.onclick = async () => {
 };
 const _lotsTab = document.querySelector('[data-tab="lots"]');
 if (_lotsTab) _lotsTab.addEventListener('click', renderLots);
+
+// ---------- Settings (runtime config, owner only) ----------
+function cfgSecretClear(f) {
+    return f.set ? `<label class="cfg-clear muted sm"><input type="checkbox" data-cfg-clear="${f.key}" /> очистить</label>` : '';
+}
+function cfgFieldHtml(f) {
+    const help = f.help ? `<div class="cfg-help muted sm">${escapeHtml(f.help)}</div>` : '';
+    const badge = f.overridden ? '<span class="cfg-badge">переопределено</span>' : '';
+    const live = f.live ? '<span class="cfg-badge live">сразу</span>' : '';
+    let control;
+    if (f.type === 'multiline') {
+        const ph = f.set ? 'Задано (скрыто). Вставь заново, чтобы заменить.' : 'Пусто — по одному значению в строке';
+        control = `<textarea class="cfg-input" rows="4" data-cfg-key="${f.key}" data-secret="1" placeholder="${escapeHtml(ph)}"></textarea>` + cfgSecretClear(f);
+    } else if (f.secret) {
+        const ph = f.set ? '•••••••• (задано)' : (f.def ? 'по умолчанию: ' + f.def : 'не задано');
+        control = `<input class="cfg-input" type="password" autocomplete="new-password" data-cfg-key="${f.key}" data-secret="1" placeholder="${escapeHtml(ph)}" />` + cfgSecretClear(f);
+    } else {
+        const ph = f.def ? 'по умолчанию: ' + f.def : '';
+        const num = f.type === 'number' ? ' step="any"' : '';
+        control = `<input class="cfg-input" type="${f.type === 'number' ? 'number' : 'text'}"${num} data-cfg-key="${f.key}" value="${escapeHtml(f.value || '')}" placeholder="${escapeHtml(ph)}" />`;
+    }
+    return `<div class="cfg-field"><label class="cfg-label">${escapeHtml(f.label)} ${badge}${live}</label>${control}${help}</div>`;
+}
+async function renderSettings() {
+    const box = $('#cfg-list'); if (!box) return;
+    const { ok, body } = await get('/config');
+    if (!ok) { box.innerHTML = '<div class="muted">Не удалось загрузить настройки.</div>'; return; }
+    const cats = body.categories || [];
+    box.innerHTML = cats.map((c) => `
+      <div class="cfg-cat">
+        <h2>${escapeHtml(c.cat)}</h2>
+        <div class="cfg-grid">${c.fields.map(cfgFieldHtml).join('')}</div>
+      </div>`).join('');
+}
+const _cfgSave = document.getElementById('cfg-save');
+if (_cfgSave) _cfgSave.onclick = async () => {
+    const values = {};
+    $$('#cfg-list [data-cfg-key]').forEach((el) => {
+        const key = el.dataset.cfgKey;
+        if (el.dataset.secret === '1') {
+            const clear = document.querySelector(`#cfg-list [data-cfg-clear="${key}"]`);
+            if (clear && clear.checked) values[key] = '';
+            else if (el.value.trim() !== '') values[key] = el.value.trim();
+        } else {
+            values[key] = el.value;
+        }
+    });
+    _cfgSave.disabled = true;
+    const { ok, body } = await put('/config', { values });
+    _cfgSave.disabled = false;
+    const st = $('#cfg-status');
+    if (ok) { toast('Настройки сохранены ✓'); if (st) st.textContent = 'Сохранено. Часть настроек применится после перезапуска.'; renderSettings(); }
+    else toast(body?.error || 'Не удалось сохранить', 'err');
+};
+const _cfgRestart = document.getElementById('cfg-restart');
+if (_cfgRestart) _cfgRestart.onclick = async () => {
+    if (!confirm('Перезапустить сервис, чтобы применить настройки? Боты кратко переподключатся.')) return;
+    _cfgRestart.disabled = true;
+    const { ok } = await post('/config/restart');
+    const st = $('#cfg-status');
+    if (st) st.textContent = ok ? 'Перезапуск… обнови страницу через ~20 сек.' : '';
+    toast(ok ? 'Перезапуск запущен' : 'Не удалось', ok ? 'ok' : 'err');
+};
+const _settingsTab = document.querySelector('[data-tab="settings"]');
+if (_settingsTab) _settingsTab.addEventListener('click', renderSettings);
 
 // ---------- Activity log across all partners ----------
 const ALOG_ESC = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="/admin/admin.css?v=30" />
+  <link rel="stylesheet" href="/admin/admin.css?v=31" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -49,6 +49,7 @@
       <button data-tab="feed" class="tab" data-owner-only data-i18n="tab_feed">Лента</button>
       <button data-tab="lots" class="tab" data-i18n="tab_lots">Лоты</button>
       <button data-tab="system" class="tab" data-owner-only data-i18n="tab_system">Система</button>
+      <button data-tab="settings" class="tab" data-owner-only data-i18n="tab_settings">Настройки</button>
       <button data-tab="admins" class="tab" data-owner-only data-i18n="tab_admins">Админы</button>
     </nav>
     <nav class="cab-links">
@@ -289,6 +290,18 @@
       <div class="table-wrap"><table class="stat-table" id="feed-table"></table></div>
     </section>
 
+    <!-- Settings / runtime config (owner only) -->
+    <section class="pane" data-pane="settings" hidden>
+      <h1>Настройки</h1>
+      <p class="muted">Переменные окружения, которые можно менять без Railway. Большинство применяется после перезапуска (кнопка ниже); токены селф-ботов подхватываются сразу. Корневые секреты (токены ботов, владелец, OAuth) недоступны намеренно.</p>
+      <div class="settings-bar">
+        <button class="btn primary" id="cfg-save">Сохранить</button>
+        <button class="btn" id="cfg-restart">Применить (перезапуск)</button>
+        <span class="muted sm" id="cfg-status"></span>
+      </div>
+      <div id="cfg-list"><div class="muted">Загрузка…</div></div>
+    </section>
+
     <!-- Lots / auctions (owner only) -->
     <section class="pane" data-pane="lots" hidden>
       <h1>Лоты</h1>
@@ -367,6 +380,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=71"></script>
+<script src="/admin/admin.js?v=72"></script>
 </body>
 </html>
