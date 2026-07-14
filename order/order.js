@@ -205,7 +205,7 @@ let toastT;
 function toast(msg, kind = 'ok') { const el = $('#toast'); el.className = `toast ${kind}`; el.textContent = msg; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { el.hidden = true; }, 3500); }
 
 const BOT_INVITE_URL = 'https://discord.com/oauth2/authorize?client_id=1522609323090509905&permissions=2048&integration_type=0&scope=bot';
-let CFG = { pricePer100: 10, minJoins: 100, botInviteUrl: BOT_INVITE_URL };
+let CFG = { pricePer100: 10, minJoins: 1, botInviteUrl: BOT_INVITE_URL };
 let lastCampaigns = [];
 
 // Warning shown when the pasted server has no bot — includes a one-click invite link.
