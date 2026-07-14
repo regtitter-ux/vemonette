@@ -345,7 +345,7 @@ $('#wallet-topup').addEventListener('click', async () => {
     if (!Number.isFinite(amount) || amount < (WALLET.minTopup || 5)) { toast(t('topup_min', WALLET.minTopup || 5), 'err'); return; }
     const web = WALLET.cryptoWebEnabled, tg = WALLET.cryptoEnabled;
     if (!web && !tg) { toast(t('pay_unavail'), 'err'); return; }
-    if (web && !tg) return startTopup('/wallet/topup/cryptomus', amount);
+    if (web && !tg) return startTopup('/wallet/topup/web', amount);
     if (tg && !web) return startTopup('/wallet/topup', amount);
     // both available → let the buyer pick
     $('#ord-result').innerHTML = `
@@ -353,13 +353,13 @@ $('#wallet-topup').addEventListener('click', async () => {
         <div style="margin-bottom:10px">${esc(t('topup_choose', amount.toFixed(2)))}</div>
         <div class="actions-row"><button class="btn primary" id="pm-web">${esc(t('pay_web'))}</button> <button class="btn ghost" id="pm-tg">${esc(t('pay_tg'))}</button></div>
       </div>`;
-    $('#pm-web').onclick = () => startTopup('/wallet/topup/cryptomus', amount);
+    $('#pm-web').onclick = () => startTopup('/wallet/topup/web', amount);
     $('#pm-tg').onclick = () => startTopup('/wallet/topup', amount);
 });
 async function startTopup(path, amount) {
     const { ok, body } = await post(path, { amount });
     if (!ok || !body?.invoiceUrl) { toast(errText(body?.error), 'err'); return; }
-    const web = path.includes('cryptomus');
+    const web = path !== '/wallet/topup';
     $('#ord-result').innerHTML = `
       <div class="pay-box">
         <div style="margin-bottom:8px">${esc(t(web ? 'topup_created_web' : 'topup_created', Number(body.amount).toFixed(2)))}</div>
