@@ -594,6 +594,13 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .vtip-r i { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 auto; }
 .vtip-r span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; color: var(--muted); }
 .vtip-r b { font-variant-numeric: tabular-nums; }
+.vchart-metrics { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+.vmchip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 11px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--stroke-2, #333); background: rgba(255,255,255,.03); color: var(--muted); font-size: 12.5px; font-weight: 600; }
+.vmchip:hover { color: var(--text); }
+.vmchip.active { border-color: var(--vc, #22a8f0); color: var(--text); background: color-mix(in srgb, var(--vc, #22a8f0) 16%, transparent); }
+.vmchip:not(.active) .vchip-dot { opacity: .35; }
+.vchart-note { margin: 0 0 8px; }
 .vchart-servers { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
 .vchip { display: inline-flex; align-items: center; gap: 6px; max-width: 230px; padding: 5px 9px; border-radius: 999px; cursor: pointer;
   border: 1px solid var(--stroke-2, #333); background: rgba(255,255,255,.03); color: var(--muted); font-size: 12px; }

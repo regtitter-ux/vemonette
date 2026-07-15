@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="/admin/admin.css?v=34" />
+  <link rel="stylesheet" href="/admin/admin.css?v=35" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -88,7 +88,7 @@
       <div id="vemoni-funnel"></div>
 
       <h2>Активность верификаций</h2>
-      <p class="muted">Прохождения верификаций по всем серверам с активной карточкой, в реальном времени. По умолчанию — суммарная линия; выбери серверы ниже, чтобы разложить их отдельно (сумма останется пунктиром).</p>
+      <p class="muted">Все серверы с активной карточкой, в реальном времени. Три стадии воронки идут отдельными линиями — любую можно скрыть. Серверы ниже фильтруют график; если оставить включённой одну стадию, выбранные серверы разложатся отдельными линиями для сравнения.</p>
       <div class="vchart-bar">
         <span class="vchart-ranges" id="vchart-ranges">
           <button data-vrange="day" class="active">Сутки</button>
@@ -97,10 +97,12 @@
           <button data-vrange="all">Всё время</button>
         </span>
         <span class="vchart-tiles">
-          <span class="vtile"><i>пик</i><b id="vchart-peak">0</b></span>
-          <span class="vtile"><i>средний</i><b id="vchart-avg">0</b></span>
+          <span class="vtile"><i id="vtile-peak-l">пик</i><b id="vchart-peak">0</b></span>
+          <span class="vtile"><i id="vtile-avg-l">средний</i><b id="vchart-avg">0</b></span>
         </span>
       </div>
+      <div class="vchart-metrics" id="vchart-metrics"></div>
+      <div class="muted sm vchart-note" id="vchart-note" hidden></div>
       <div class="vchart-wrap"><canvas id="vchart"></canvas><div class="vchart-tip" id="vchart-tip" hidden></div></div>
       <div class="vchart-servers" id="vchart-servers"></div>
 
@@ -399,6 +401,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=77"></script>
+<script src="/admin/admin.js?v=78"></script>
 </body>
 </html>

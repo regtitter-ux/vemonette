@@ -1967,56 +1967,92 @@ const _lotsTab = document.querySelector('[data-tab="lots"]');
 if (_lotsTab) _lotsTab.addEventListener('click', renderLots);
 
 // ---------- Verification activity chart (Statistics) ----------
-// Default view is ONE aggregate line across every carded server. Picking servers
-// in the chip row splits them into their own lines and keeps the aggregate as a
-// faint dashed reference, so the picture never turns into spaghetti.
+// The three funnel stages are drawn together as separate lines; any of them can be
+// toggled off. Server chips SCOPE the chart (default: every carded server). With
+// exactly one stage left on, the picked servers split into their own lines so you
+// can compare them — that is the only case where the line count can exceed three.
 let vRange = 'day';
-const vSel = new Set();     // selected guild ids (empty = aggregate only)
+const vSel = new Set();                 // scoped servers (empty = all)
+const VMETRICS = [
+    { k: 'clicks', label: '1. Клик (начали)', short: 'клик', color: '#8b5cf6' },
+    { k: 'checked', label: '2. Заход проверен', short: 'заход', color: '#22a8f0' },
+    { k: 'stayed', label: '3. Остались', short: 'остались', color: '#34c759' }
+];
+const vOn = { clicks: true, checked: true, stayed: true };
 let vData = null;
 let vHover = -1;
 let vTimer = null;
-const VPAL = ['#22a8f0', '#e63b7a', '#a855f7', '#39c5bb', '#f59e0b', '#22d3ee', '#f472b6', '#8b5cf6', '#34c759', '#ff6b3d'];
+const VPAL = ['#22a8f0', '#e63b7a', '#a855f7', '#39c5bb', '#f59e0b', '#22d3ee', '#f472b6', '#8b5cf6'];
 const vColor = (i) => VPAL[i % VPAL.length];
 const VPAD = { l: 44, r: 12, t: 12, b: 26 };
+const vOnList = () => VMETRICS.filter((m) => vOn[m.k]);
 
 async function loadVChart() {
+    const qs = '/verif-series?range=' + encodeURIComponent(vRange) + (vSel.size ? '&servers=' + [...vSel].join(',') : '');
     let r;
-    try { r = await get('/verif-series?range=' + encodeURIComponent(vRange)); } catch { return; }
+    try { r = await get(qs); } catch { return; }
     if (!r.ok || !r.body) return;
     vData = r.body;
-    // Drop selections for servers that no longer appear in this range.
-    const live = new Set((vData.series || []).map((s) => s.gid));
-    for (const g of [...vSel]) if (!live.has(g)) vSel.delete(g);
-    renderVServers(); drawVChart();
+    // Drop picks for servers with no data in this range, then refetch unscoped rows.
+    const live = new Set((vData.servers || []).map((s) => s.gid));
+    let changed = false;
+    for (const g of [...vSel]) if (!live.has(g)) { vSel.delete(g); changed = true; }
+    if (changed) return loadVChart();
+    renderVMetrics(); renderVServers(); drawVChart();
 }
 
-// The series the tiles/tooltip summarize: aggregate, or the sum of the picked servers.
-function vDisplayedTotals() {
+// Compare mode = exactly one stage on + at least one server picked.
+function vCompare() { return vOnList().length === 1 && vSel.size > 0 && ((vData && vData.perServer) || []).length > 0; }
+
+function vLines() {
     if (!vData) return [];
-    if (!vSel.size) return vData.total || [];
-    const n = vData.points || 0;
-    const out = new Array(n).fill(0);
-    for (const s of vData.series || []) if (vSel.has(s.gid)) for (let i = 0; i < n; i++) out[i] += s.data[i] || 0;
-    return out;
+    const on = vOnList();
+    if (!on.length) return [];
+    if (vCompare()) {
+        const m = on[0];
+        return vData.perServer.map((s, i) => ({ data: s[m.k] || [], color: vColor(i), width: 2, name: s.name + ' · ' + m.short }));
+    }
+    return on.map((m) => ({ data: (vData.totals || {})[m.k] || [], color: m.color, width: 2, name: m.label }));
+}
+
+function renderVMetrics() {
+    const box = $('#vchart-metrics'); if (!box) return;
+    box.innerHTML = VMETRICS.map((m) =>
+        `<button class="vmchip${vOn[m.k] ? ' active' : ''}" data-vm="${m.k}" style="--vc:${m.color}"><span class="vchip-dot" style="background:${m.color}"></span><span>${escapeHtml(m.label)}</span></button>`
+    ).join('');
+    box.querySelectorAll('[data-vm]').forEach((b) => b.onclick = () => {
+        const k = b.dataset.vm;
+        if (vOn[k] && vOnList().length === 1) return;   // keep at least one line on screen
+        vOn[k] = !vOn[k];
+        renderVMetrics(); drawVChart();
+    });
+    const note = $('#vchart-note');
+    if (note) {
+        const show = vOn.clicks && (vRange === 'month' || vRange === 'all');
+        note.hidden = !show;
+        if (show) note.textContent = 'Клики хранятся 7 дней — на длинных диапазонах линия «Клик» до этого срока будет пустой.';
+    }
 }
 
 function renderVServers() {
     const box = $('#vchart-servers'); if (!box || !vData) return;
-    const items = (vData.series || []).slice(0, 30);
+    const items = (vData.servers || []).slice(0, 30);
     box.innerHTML =
-        `<button class="vchip${vSel.size === 0 ? ' active' : ''}" data-vsrv="__all"><span class="vchip-dot" style="background:#22a8f0"></span><span>Все серверы</span><i>${vData.sum || 0}</i></button>` +
+        `<button class="vchip${vSel.size === 0 ? ' active' : ''}" data-vsrv="__all" style="--vc:#22a8f0"><span class="vchip-dot" style="background:#22a8f0"></span><span>Все серверы</span></button>` +
         items.map((s, i) => {
             const ic = s.icon
                 ? `<img src="${escapeHtml(s.icon)}" alt="" loading="lazy" onerror="this.remove()" />`
                 : `<span class="vchip-dot" style="background:${vColor(i)}"></span>`;
-            return `<button class="vchip${vSel.has(s.gid) ? ' active' : ''}" data-vsrv="${escapeHtml(s.gid)}" style="--vc:${vColor(i)}" title="${escapeHtml(s.name)}">${ic}<span>${escapeHtml(s.name)}</span><i>${s.total}</i></button>`;
+            const tip = `${s.name} — клик ${s.clicks} · заход ${s.checked} · остались ${s.stayed}`;
+            return `<button class="vchip${vSel.has(s.gid) ? ' active' : ''}" data-vsrv="${escapeHtml(s.gid)}" style="--vc:${vColor(i)}" title="${escapeHtml(tip)}">${ic}<span>${escapeHtml(s.name)}</span><i>${s.checked}</i></button>`;
         }).join('');
     box.querySelectorAll('[data-vsrv]').forEach((b) => b.onclick = () => {
         const g = b.dataset.vsrv;
         if (g === '__all') vSel.clear();
         else if (vSel.has(g)) vSel.delete(g);
-        else vSel.add(g);
-        renderVServers(); drawVChart();
+        else if (vSel.size < 8) vSel.add(g);
+        else { toast('Максимум 8 серверов для сравнения', 'err'); return; }
+        loadVChart();   // scope changed → per-server rows come from the backend
     });
 }
 
@@ -2032,15 +2068,6 @@ function vLabel(i) {
     if (vData.range === 'day') return p2(d.getHours()) + ':' + p2(d.getMinutes());
     if (vData.range === 'week') return p2(d.getDate()) + '.' + p2(d.getMonth() + 1) + ' ' + p2(d.getHours()) + 'ч';
     return p2(d.getDate()) + '.' + p2(d.getMonth() + 1);
-}
-
-function vLines() {
-    const out = [];
-    if (!vData) return out;
-    if (!vSel.size) { out.push({ data: vData.total || [], color: '#22a8f0', width: 2, name: 'Все серверы' }); return out; }
-    out.push({ data: vData.total || [], color: 'rgba(255,255,255,.22)', width: 1.5, dash: [5, 4], name: 'Все серверы', ref: true });
-    (vData.series || []).forEach((s, i) => { if (vSel.has(s.gid)) out.push({ data: s.data, color: vColor(i), width: 2, name: s.name }); });
-    return out;
 }
 
 function drawVChart() {
@@ -2082,35 +2109,39 @@ function drawVChart() {
     }
     for (const l of lines) {
         ctx.beginPath(); ctx.lineWidth = l.width; ctx.strokeStyle = l.color;
-        ctx.setLineDash(l.dash || []);
         for (let i = 0; i < n; i++) { const px = X(i), py = Y(l.data[i] || 0); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); }
-        ctx.stroke(); ctx.setLineDash([]);
+        ctx.stroke();
     }
     if (vHover >= 0 && vHover < n) {
         ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(X(vHover), VPAD.t); ctx.lineTo(X(vHover), VPAD.t + H); ctx.stroke();
         for (const l of lines) {
-            if (l.ref) continue;
             ctx.fillStyle = l.color;
             ctx.beginPath(); ctx.arc(X(vHover), Y(l.data[vHover] || 0), 3.2, 0, Math.PI * 2); ctx.fill();
         }
     }
-    const shown = vDisplayedTotals();
-    const peak = shown.length ? Math.max(...shown) : 0;
-    const avg = shown.length ? (shown.reduce((s, x) => s + x, 0) / shown.length) : 0;
+    // Tiles describe ONE stage (named on the label) so the numbers are unambiguous:
+    // the join stage when it's on, else whichever stage is.
+    const prim = (vOn.checked && VMETRICS[1]) || vOnList()[0] || VMETRICS[1];
+    const arr = vCompare() ? ((lines[0] && lines[0].data) || []) : ((vData.totals || {})[prim.k] || []);
+    const peak = arr.length ? Math.max(...arr) : 0;
+    const avg = arr.length ? arr.reduce((s, x) => s + x, 0) / arr.length : 0;
     const pk = $('#vchart-peak'), av = $('#vchart-avg');
+    const pl = $('#vtile-peak-l'), al = $('#vtile-avg-l');
     if (pk) pk.textContent = Math.round(peak).toLocaleString();
     if (av) av.textContent = (Math.round(avg * 10) / 10).toLocaleString();
+    if (pl) pl.textContent = 'пик · ' + (vCompare() ? prim.short : prim.short);
+    if (al) al.textContent = 'средний · ' + prim.short;
 }
 
 function showVTip(clientX, clientY) {
     const tp = $('#vchart-tip'); if (!tp || !vData || vHover < 0) return;
     const d = vBucketDate(vHover);
     const p2 = (x) => String(x).padStart(2, '0');
-    const when = vData.range === 'month' || vData.range === 'all'
+    const when = (vData.range === 'month' || vData.range === 'all')
         ? `${p2(d.getDate())}.${p2(d.getMonth() + 1)}.${d.getFullYear()}`
         : `${p2(d.getDate())}.${p2(d.getMonth() + 1)} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
-    const rows = vLines().map((l) => [l.name, l.data[vHover] || 0, l.ref ? 'rgba(255,255,255,.45)' : l.color]);
+    const rows = vLines().map((l) => [l.name, l.data[vHover] || 0, l.color]);
     tp.innerHTML = `<div class="vtip-t">${escapeHtml(when)}</div>` + rows.map(([nm, v, c]) =>
         `<div class="vtip-r"><i style="background:${c}"></i><span>${escapeHtml(nm)}</span><b>${v}</b></div>`).join('');
     tp.hidden = false;
