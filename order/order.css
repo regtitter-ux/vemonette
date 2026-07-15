@@ -75,6 +75,11 @@ h2{font-size:18px;margin-bottom:14px}
 /* Campaign cards */
 .camp{background:var(--panel);border:1px solid var(--stroke);border-radius:14px;padding:18px 20px;margin-bottom:14px}
 .camp-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+/* Thin "network is busy" strip above the order form */
+.load-banner{display:flex;align-items:center;gap:8px;margin:0 0 14px;padding:8px 12px;border-radius:9px;
+  border:1px solid rgba(240,160,42,.35);background:rgba(240,160,42,.10);color:#f0a02a;font-size:12.5px;line-height:1.35}
+.load-banner .lb-ico{flex:0 0 auto}
+
 .camp-title{font-weight:800;font-size:15.5px}
 .camp-sub{color:var(--muted);font-size:12.5px;word-break:break-all}
 .camp-linklimit{margin-top:3px;display:inline-block;font-size:12px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}

@@ -63,6 +63,7 @@ const DICT = {
     limit_hint: 'По достижении лимита показ встанет на стоп, пока не продолжишь вручную (с той же или новой ссылкой). Пусто — без ограничения, до конца кампании.',
     resume_limit: 'Продолжить',
     st_limit: 'Стоп: лимит', relimit_toast: 'Показ возобновлён', limit_bad: 'Лимит должен быть целым числом больше 0',
+    load_warn: 'Высокая загруженность сети — выполнение заказов может занять более суток.',
     link_changed: 'Ссылка обновлена', link_same: 'Это та же ссылка',
     link_nobot: 'На новом сервере нет нашего бота — заходы не проверить. Добавьте бота и повторите.',
     link_hint: 'Новая ссылка должна работать, и на её сервере должен быть наш бот. Прогресс кампании сохранится.',
@@ -143,6 +144,7 @@ const DICT = {
     limit_hint: 'When the limit is reached, delivery stops until you resume manually (with the same or a new link). Empty — no cap, runs to the end of the campaign.',
     resume_limit: 'Resume',
     st_limit: 'Stopped: limit', relimit_toast: 'Delivery resumed', limit_bad: 'Limit must be a whole number greater than 0',
+    load_warn: 'High network load — orders may take more than 24 hours to complete.',
     link_changed: 'Link updated', link_same: 'Same link as before',
     link_nobot: "Our bot isn't on the new server — stays can't be verified. Add the bot and try again.",
     link_hint: 'The new link must work and its server must have our bot. Campaign progress is preserved.',
@@ -226,6 +228,16 @@ function applyLang() {
     if (CFG.isOwner && mgrCard && !mgrCard.hidden) loadManagers();
     if (lastCampaigns.length) renderCampaigns(lastCampaigns);
     renderTopup();
+    renderLoadBanner();
+}
+
+// Thin warning strip: the whole order book would take over a day to deliver at
+// the network's recent throughput.
+function renderLoadBanner() {
+    const el = $('#load-banner'); if (!el) return;
+    const on = Boolean(CFG.networkLoad && CFG.networkLoad.overloaded);
+    el.hidden = !on;
+    if (on) el.innerHTML = `<span class="lb-ico">⚠️</span><span>${esc(t('load_warn'))}</span>`;
 }
 $$('.lang-switch button').forEach((b) => b.addEventListener('click', () => { lang = b.dataset.lang; localStorage.setItem('vemoni_lang', lang); applyLang(); }));
 
