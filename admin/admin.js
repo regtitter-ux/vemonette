@@ -1044,24 +1044,30 @@ function renderStats() {
 
     // One Vemoni-wide funnel card (same three stages as a partner card, summed
     // across every server): first click → join verified → still on the server.
+    // Follows the "С рекламой / Без рекламы" switch, so it can't disagree with
+    // the headline cards above it.
     const nf = state.networkFunnel;
     const nfBox = $('#vemoni-funnel');
     if (nfBox && nf) {
+        const side = (noad ? nf.noAd : nf.ads) || {};
         const frow = (label, w) => `<tr><td>${escapeHtml(label)}</td><td class="num">${(w && w.hour) || 0}</td><td class="num">${(w && w.day) || 0}</td><td class="num">${(w && w.week) || 0}</td></tr>`;
         nfBox.innerHTML = `
           <div class="ref-card vemoni-card">
             <div class="ref-head">
               <img class="ref-av vemoni-av" src="/assets/logo.png" alt="Vemoni" />
-              <div class="ref-id"><b>Vemoni · вся сеть</b><span class="muted sm">${Number(nf.servers || 0).toLocaleString()} серверов</span></div>
+              <div class="ref-id"><b>Vemoni · вся сеть</b><span class="muted sm">${Number(nf.servers || 0).toLocaleString()} серверов · ${noad ? 'без рекламы' : 'с рекламой'}</span></div>
             </div>
             <div class="table-wrap" style="margin-top:10px"><table>
               <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
               <tbody>
                 ${frow('1. Клик (начали)', nf.clicks)}
-                ${frow('2. Заход проверен', nf.checked)}
-                ${frow('3. Остались', nf.stayed)}
+                ${frow('2. Заход проверен', side.checked)}
+                ${frow('3. Остались', side.stayed)}
               </tbody>
             </table></div>
+            <div class="muted sm" style="margin-top:8px">${noad
+                ? 'Органические верификации — рекламу не показывали, заход на спонсора не проверялся, поэтому «заход» и «остались» совпадают.'
+                : 'Только верификации с показом рекламы — совпадает с карточками выше.'} Клики не делятся по рекламе: это все начатые верификации.</div>
           </div>`;
     } else if (nfBox) { nfBox.innerHTML = ''; }
 
