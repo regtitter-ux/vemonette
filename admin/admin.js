@@ -1642,7 +1642,9 @@ function renderBalTable(users) {
     const rows = users.map((u) => {
         const bChip = u.balance > 0 ? 'green' : u.balance < 0 ? 'red' : '';
         const reqBadge = u.hasRequisites ? '<span class="chip green">Реквизиты</span>' : '<span class="chip">Нет реквизитов</span>';
-        const auto = u.autoTransfer ? '<span class="chip blue">Авто-перевод</span>' : u.autoPayout ? '<span class="chip blue">Авто-чек</span>' : '';
+        const auto = u.autoLtc ? '<span class="chip green">Авто-LTC</span>'
+            : u.autoTransfer ? '<span class="chip blue">Авто-перевод</span>'
+            : u.autoPayout ? '<span class="chip blue">Авто-чек</span>' : '';
         const name = u.username || 'Неизвестный';
         // Join-check rate ($ per 100 joins). Boosted users show time left.
         const rate = `$${Number(u.joinRate ?? u.joinBid ?? 5).toFixed(2)}`;
@@ -1768,6 +1770,23 @@ function wireBalDetailControls(userId) {
             toast(msg, 'err'); return;
         }
         toast(autoTransfer ? 'Прямой авто-вывод включён' : 'Прямой авто-вывод выключен');
+    };
+    const ltcBtn = $('[data-edit-act="autoltc"]');
+    if (ltcBtn) ltcBtn.onclick = async () => {
+        const autoLtc = $('[data-edit="autoLtc"]').checked;
+        const ltcAddress = $('[data-edit="ltcAddress"]').value.trim();
+        if (autoLtc && !ltcAddress) { toast('Укажите LTC-адрес партнёра', 'err'); return; }
+        const { ok, body } = await put(`/balances/${encodeURIComponent(userId)}/autoltc`, { autoLtc, ltcAddress });
+        if (!ok) {
+            const err = body?.error === 'bad-ltc-address' ? 'Некорректный LTC-адрес'
+                : body?.error === 'ltc-address-required' ? 'Сначала укажите LTC-адрес'
+                : (body?.error || 'Не удалось сохранить');
+            toast(err, 'err');
+            return;
+        }
+        if (autoLtc && body?.payoutReady === false) toast('Включено, но выплаты NOWPayments не настроены (email/пароль)', 'err');
+        else toast(autoLtc ? 'Авто-вывод в LTC включён' : 'Авто-вывод в LTC выключен');
+        loadBalances();
         loadBalances();
     };
 
@@ -1869,6 +1888,20 @@ function balDetailHtml(u) {
               <button class="btn primary sm" data-edit-act="autotransfer">Сохранить</button>
             </div>
             <div class="muted" style="font-size:11.5px;margin-top:6px">Деньги приходят напрямую в @CryptoBot получателю — без чека и подтверждений. Нужен числовой Telegram ID (не @username; узнать можно через @userinfobot). Имеет приоритет над выводом по чеку.</div>
+          </div>
+          <div class="setting wide">
+            <div class="setting autopay" style="padding:0;border:none;background:transparent;">
+              <label>Авто-вывод в LTC на адрес партнёра (NOWPayments)</label>
+              <label class="switch positive">
+                <input type="checkbox" data-edit="autoLtc" ${u.autoLtc ? 'checked' : ''} />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="actions-row" style="gap:8px;margin-top:8px;">
+              <input type="text" data-edit="ltcAddress" placeholder="LTC-адрес партнёра, напр. ltc1q… или L…" value="${escapeHtml(u.ltcAddress || '')}" style="flex:1;" />
+              <button class="btn primary sm" data-edit-act="autoltc">Сохранить</button>
+            </div>
+            <div class="muted" style="font-size:11.5px;margin-top:6px">При достижении порога баланс автоматически уходит в LTC на этот адрес. Сумма конвертируется из $ по курсу NOWPayments. Имеет приоритет над остальными авто-режимами. Требует заполненных «NOWPayments: email/пароль» в Настройках, а у самого NOWPayments — отключённых 2FA на выплаты и белого списка адресов.</div>
           </div>
           <div class="setting wide">
             <label>Реквизиты</label>
