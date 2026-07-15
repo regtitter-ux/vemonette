@@ -576,7 +576,7 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .vemoni-card { border: 1px solid var(--stroke, #2a2a33); border-radius: 12px; padding: 14px 16px; margin: 16px 0; background: rgba(255,255,255,.02); max-width: 560px; }
 .vemoni-card .ref-head { display: flex; align-items: center; gap: 11px; }
 .vemoni-card .ref-av { width: 38px; height: 38px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; flex: 0 0 auto; }
-.vemoni-card .vemoni-av { background: linear-gradient(150deg,#22a8f0,#2f6fe0); color: #fff; font-size: 18px; }
+.vemoni-card .vemoni-av { object-fit: cover; background: transparent; }
 .vemoni-card .ref-id { display: flex; flex-direction: column; line-height: 1.25; }
 .vemoni-card table { width: 100%; border-collapse: collapse; }
 .vemoni-card th, .vemoni-card td { text-align: left; padding: 5px 8px; font-size: 13px; border-bottom: 1px solid var(--stroke, #26262e); }

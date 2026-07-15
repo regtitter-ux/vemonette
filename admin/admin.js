@@ -1050,7 +1050,7 @@ function renderStats() {
         nfBox.innerHTML = `
           <div class="ref-card vemoni-card">
             <div class="ref-head">
-              <span class="ref-av vemoni-av">V</span>
+              <img class="ref-av vemoni-av" src="/assets/logo.png" alt="Vemoni" />
               <div class="ref-id"><b>Vemoni · вся сеть</b><span class="muted sm">${Number(nf.servers || 0).toLocaleString()} серверов</span></div>
             </div>
             <div class="table-wrap" style="margin-top:10px"><table>
