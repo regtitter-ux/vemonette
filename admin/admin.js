@@ -1041,6 +1041,29 @@ function renderStats() {
         `<div class="stat-card"><div class="k">${escapeHtml(c.k)}</div><div class="v">${c.html || escapeHtml(c.v)}</div></div>`
     ).join('');
 
+    // One Vemoni-wide funnel card (same three stages as a partner card, summed
+    // across every server): first click → join verified → still on the server.
+    const nf = state.networkFunnel;
+    const nfBox = $('#vemoni-funnel');
+    if (nfBox && nf) {
+        const frow = (label, w) => `<tr><td>${escapeHtml(label)}</td><td class="num">${(w && w.hour) || 0}</td><td class="num">${(w && w.day) || 0}</td><td class="num">${(w && w.week) || 0}</td></tr>`;
+        nfBox.innerHTML = `
+          <div class="ref-card vemoni-card">
+            <div class="ref-head">
+              <span class="ref-av vemoni-av">V</span>
+              <div class="ref-id"><b>Vemoni · вся сеть</b><span class="muted sm">${Number(nf.servers || 0).toLocaleString()} серверов</span></div>
+            </div>
+            <div class="table-wrap" style="margin-top:10px"><table>
+              <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
+              <tbody>
+                ${frow('1. Клик (начали)', nf.clicks)}
+                ${frow('2. Заход проверен', nf.checked)}
+                ${frow('3. Остались', nf.stayed)}
+              </tbody>
+            </table></div>
+          </div>`;
+    } else if (nfBox) { nfBox.innerHTML = ''; }
+
     // Fast lookup: gid → owner's per-server ad text.
     const adByGid = new Map(state.ads.servers.map((a) => [a.gid, a]));
     const offByGid = state.serverAdsOff || {};
