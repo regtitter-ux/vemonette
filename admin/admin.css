@@ -636,6 +636,13 @@ textarea.cfg-input { resize: vertical; word-break: break-all; }
 .cfg-badge { font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: rgba(240,160,42,.16); color: #f0a02a; }
 .cfg-badge.live { background: rgba(52,199,89,.16); color: #34c759; }
 .cfg-clear { display: inline-flex; align-items: center; gap: 5px; }
+.cfg-srow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cfg-reveal { cursor: pointer; }
+.cfg-reserve { grid-column: 1 / -1; margin-top: 10px; padding: 10px 12px; border-radius: 9px;
+  border: 1px solid var(--stroke, #2a2a33); background: rgba(255,255,255,.02); display: flex; flex-direction: column; gap: 6px; }
+.cfg-res-h { font-size: 12.5px; }
+.cfg-res-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.cfg-res-g { padding: 3px 9px; border-radius: 999px; font-size: 11.5px; background: rgba(52,199,89,.14); color: #34c759; }
 
 .lot-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin: 14px 0 8px; }
 .lot-field { display: flex; flex-direction: column; gap: 5px; }

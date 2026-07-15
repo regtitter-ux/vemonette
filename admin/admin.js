@@ -2192,8 +2192,13 @@ function startVChart() {
 }
 
 // ---------- Settings (runtime config, owner only) ----------
-function cfgSecretClear(f) {
-    return f.set ? `<label class="cfg-clear muted sm"><input type="checkbox" data-cfg-clear="${f.key}" /> очистить</label>` : '';
+// Secrets are masked in the normal view; "Показать" pulls the real value on demand.
+function cfgSecretRow(f) {
+    if (!f.set) return '';
+    return `<div class="cfg-srow">
+        <button type="button" class="btn-mini cfg-reveal" data-cfg-reveal="${f.key}">Показать${f.type === 'multiline' ? ' токены' : ''}</button>
+        <label class="cfg-clear muted sm"><input type="checkbox" data-cfg-clear="${f.key}" /> очистить</label>
+      </div>`;
 }
 function cfgFieldHtml(f) {
     const help = f.help ? `<div class="cfg-help muted sm">${escapeHtml(f.help)}</div>` : '';
@@ -2201,11 +2206,11 @@ function cfgFieldHtml(f) {
     const live = f.live ? '<span class="cfg-badge live">сразу</span>' : '';
     let control;
     if (f.type === 'multiline') {
-        const ph = f.set ? 'Задано (скрыто). Вставь заново, чтобы заменить.' : 'Пусто — по одному значению в строке';
-        control = `<textarea class="cfg-input" rows="4" data-cfg-key="${f.key}" data-secret="1" placeholder="${escapeHtml(ph)}"></textarea>` + cfgSecretClear(f);
+        const ph = f.set ? 'Задано (скрыто). Нажми «Показать токены» или вставь заново, чтобы заменить.' : 'Пусто — по одному значению в строке';
+        control = `<textarea class="cfg-input" rows="4" data-cfg-key="${f.key}" data-secret="1" placeholder="${escapeHtml(ph)}"></textarea>` + cfgSecretRow(f);
     } else if (f.secret) {
         const ph = f.set ? '•••••••• (задано)' : (f.def ? 'по умолчанию: ' + f.def : 'не задано');
-        control = `<input class="cfg-input" type="password" autocomplete="new-password" data-cfg-key="${f.key}" data-secret="1" placeholder="${escapeHtml(ph)}" />` + cfgSecretClear(f);
+        control = `<input class="cfg-input" type="password" autocomplete="new-password" data-cfg-key="${f.key}" data-secret="1" placeholder="${escapeHtml(ph)}" />` + cfgSecretRow(f);
     } else {
         const ph = f.def ? 'по умолчанию: ' + f.def : '';
         const num = f.type === 'number' ? ' step="any"' : '';
@@ -2224,7 +2229,48 @@ async function renderSettings() {
       <div class="cfg-cat">
         <h2>${escapeHtml(c.cat)}</h2>
         <div class="cfg-grid">${c.fields.map(cfgFieldHtml).join('')}</div>
+        ${c.cat.startsWith('Селф-боты') ? cfgReserveHtml(body.reserve) : ''}
       </div>`).join('');
+    wireCfgReveal();
+}
+
+// What the reserve account(s) actually cover right now — a dead/expired token
+// shows up here immediately as a missing server.
+function cfgReserveHtml(r) {
+    if (!r) return '';
+    if (!r.enabled) return `<div class="cfg-reserve muted sm">Резерв выключен — токены не заданы.</div>`;
+    const list = (r.guilds || []);
+    const mode = r.gateway ? 'gateway' : 'REST';
+    return `<div class="cfg-reserve">
+        <div class="cfg-res-h">Резерв активен · <b>${escapeHtml(mode)}</b> · покрыто серверов: <b>${list.length}</b></div>
+        ${list.length
+            ? `<div class="cfg-res-list">${list.map((g) => `<span class="cfg-res-g" title="${escapeHtml(g.id)}">${escapeHtml(g.name)}</span>`).join('')}</div>`
+            : `<div class="muted sm">Ни одного сервера. Если аккаунт куда-то зашёл, а сервера тут нет — токен скорее всего невалиден (в логах: «a token is unauthorized/expired»).</div>`}
+        <div class="muted sm">Кампания запустится только на сервере из этого списка (или где есть наш бот).</div>
+      </div>`;
+}
+
+function wireCfgReveal() {
+    $$('#cfg-list [data-cfg-reveal]').forEach((b) => b.onclick = async () => {
+        const key = b.dataset.cfgReveal;
+        const el = document.querySelector(`#cfg-list [data-cfg-key="${key}"]`);
+        if (!el) return;
+        if (b.dataset.shown === '1') {                       // hide again
+            el.value = '';
+            if (el.tagName === 'INPUT') el.type = 'password';
+            b.dataset.shown = ''; b.textContent = 'Показать' + (el.tagName === 'TEXTAREA' ? ' токены' : '');
+            return;
+        }
+        b.disabled = true;
+        let r;
+        try { r = await get('/config/reveal?key=' + encodeURIComponent(key)); }
+        catch { b.disabled = false; toast('Не удалось получить значение', 'err'); return; }
+        b.disabled = false;
+        if (!r.ok) { toast((r.body && r.body.error) || 'Не удалось получить значение', 'err'); return; }
+        el.value = (r.body && r.body.value) || '';
+        if (el.tagName === 'INPUT') el.type = 'text';
+        b.dataset.shown = '1'; b.textContent = 'Скрыть';
+    });
 }
 const _cfgSave = document.getElementById('cfg-save');
 if (_cfgSave) _cfgSave.onclick = async () => {
