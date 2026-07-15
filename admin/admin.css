@@ -572,6 +572,38 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .plog-pager button:disabled { opacity: .4; cursor: not-allowed; }
 
 /* Lots / auctions */
+/* Verification activity chart (Statistics) */
+.vchart-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0 8px; }
+.vchart-ranges { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.vchart-ranges button { padding: 6px 12px; font-size: 12.5px; font-weight: 600; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--stroke-2, #333); background: rgba(255,255,255,.03); color: var(--muted); }
+.vchart-ranges button:hover { color: var(--text); }
+.vchart-ranges button.active { background: #22a8f0; border-color: #22a8f0; color: #fff; }
+.vchart-tiles { display: inline-flex; gap: 8px; }
+.vtile { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; padding: 6px 12px; border-radius: 9px;
+  border: 1px solid var(--stroke, #2a2a33); background: rgba(255,255,255,.02); min-width: 74px; }
+.vtile i { font-style: normal; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.vtile b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.vchart-wrap { position: relative; border: 1px solid var(--stroke, #2a2a33); border-radius: 12px; background: rgba(255,255,255,.02);
+  padding: 4px 4px 0; overflow: hidden; }
+.vchart-wrap canvas { display: block; cursor: crosshair; }
+.vchart-tip { position: absolute; z-index: 5; pointer-events: none; min-width: 150px; padding: 8px 10px; border-radius: 9px;
+  border: 1px solid var(--stroke-2, #3a3a44); background: rgba(20,20,26,.96); box-shadow: 0 6px 20px rgba(0,0,0,.45); font-size: 12px; }
+.vtip-t { font-weight: 700; margin-bottom: 5px; }
+.vtip-r { display: flex; align-items: center; gap: 6px; line-height: 1.6; }
+.vtip-r i { width: 8px; height: 8px; border-radius: 2px; flex: 0 0 auto; }
+.vtip-r span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; color: var(--muted); }
+.vtip-r b { font-variant-numeric: tabular-nums; }
+.vchart-servers { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+.vchip { display: inline-flex; align-items: center; gap: 6px; max-width: 230px; padding: 5px 9px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--stroke-2, #333); background: rgba(255,255,255,.03); color: var(--muted); font-size: 12px; }
+.vchip:hover { color: var(--text); }
+.vchip.active { border-color: var(--vc, #22a8f0); color: var(--text); background: color-mix(in srgb, var(--vc, #22a8f0) 14%, transparent); }
+.vchip img { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
+.vchip-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.vchip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vchip i { font-style: normal; font-variant-numeric: tabular-nums; opacity: .65; }
+
 /* Vemoni network funnel card (Statistics) */
 .vemoni-card { border: 1px solid var(--stroke, #2a2a33); border-radius: 12px; padding: 14px 16px; margin: 16px 0; background: rgba(255,255,255,.02); max-width: 560px; }
 .vemoni-card .ref-head { display: flex; align-items: center; gap: 11px; }

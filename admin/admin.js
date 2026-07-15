@@ -939,6 +939,7 @@ async function enterApp() {
     applyRole();
     await refresh();
     startLiveRefresh();
+    wireVChart(); loadVChart(); startVChart();
 }
 
 // ---------- Live refresh ----------
@@ -1965,6 +1966,200 @@ if (_lotLaunch) _lotLaunch.onclick = async () => {
 const _lotsTab = document.querySelector('[data-tab="lots"]');
 if (_lotsTab) _lotsTab.addEventListener('click', renderLots);
 
+// ---------- Verification activity chart (Statistics) ----------
+// Default view is ONE aggregate line across every carded server. Picking servers
+// in the chip row splits them into their own lines and keeps the aggregate as a
+// faint dashed reference, so the picture never turns into spaghetti.
+let vRange = 'day';
+const vSel = new Set();     // selected guild ids (empty = aggregate only)
+let vData = null;
+let vHover = -1;
+let vTimer = null;
+const VPAL = ['#22a8f0', '#e63b7a', '#a855f7', '#39c5bb', '#f59e0b', '#22d3ee', '#f472b6', '#8b5cf6', '#34c759', '#ff6b3d'];
+const vColor = (i) => VPAL[i % VPAL.length];
+const VPAD = { l: 44, r: 12, t: 12, b: 26 };
+
+async function loadVChart() {
+    let r;
+    try { r = await get('/verif-series?range=' + encodeURIComponent(vRange)); } catch { return; }
+    if (!r.ok || !r.body) return;
+    vData = r.body;
+    // Drop selections for servers that no longer appear in this range.
+    const live = new Set((vData.series || []).map((s) => s.gid));
+    for (const g of [...vSel]) if (!live.has(g)) vSel.delete(g);
+    renderVServers(); drawVChart();
+}
+
+// The series the tiles/tooltip summarize: aggregate, or the sum of the picked servers.
+function vDisplayedTotals() {
+    if (!vData) return [];
+    if (!vSel.size) return vData.total || [];
+    const n = vData.points || 0;
+    const out = new Array(n).fill(0);
+    for (const s of vData.series || []) if (vSel.has(s.gid)) for (let i = 0; i < n; i++) out[i] += s.data[i] || 0;
+    return out;
+}
+
+function renderVServers() {
+    const box = $('#vchart-servers'); if (!box || !vData) return;
+    const items = (vData.series || []).slice(0, 30);
+    box.innerHTML =
+        `<button class="vchip${vSel.size === 0 ? ' active' : ''}" data-vsrv="__all"><span class="vchip-dot" style="background:#22a8f0"></span><span>Все серверы</span><i>${vData.sum || 0}</i></button>` +
+        items.map((s, i) => {
+            const ic = s.icon
+                ? `<img src="${escapeHtml(s.icon)}" alt="" loading="lazy" onerror="this.remove()" />`
+                : `<span class="vchip-dot" style="background:${vColor(i)}"></span>`;
+            return `<button class="vchip${vSel.has(s.gid) ? ' active' : ''}" data-vsrv="${escapeHtml(s.gid)}" style="--vc:${vColor(i)}" title="${escapeHtml(s.name)}">${ic}<span>${escapeHtml(s.name)}</span><i>${s.total}</i></button>`;
+        }).join('');
+    box.querySelectorAll('[data-vsrv]').forEach((b) => b.onclick = () => {
+        const g = b.dataset.vsrv;
+        if (g === '__all') vSel.clear();
+        else if (vSel.has(g)) vSel.delete(g);
+        else vSel.add(g);
+        renderVServers(); drawVChart();
+    });
+}
+
+function vNiceStep(max) {
+    const raw = Math.max(1, max) / 4;
+    const p = Math.pow(10, Math.floor(Math.log10(Math.max(1, raw))));
+    return (([1, 2, 5, 10].find((k) => k * p >= raw)) || 10) * p;
+}
+function vBucketDate(i) { return new Date((vData.from || 0) + i * (vData.bucketMs || 0)); }
+function vLabel(i) {
+    const d = vBucketDate(i);
+    const p2 = (x) => String(x).padStart(2, '0');
+    if (vData.range === 'day') return p2(d.getHours()) + ':' + p2(d.getMinutes());
+    if (vData.range === 'week') return p2(d.getDate()) + '.' + p2(d.getMonth() + 1) + ' ' + p2(d.getHours()) + 'ч';
+    return p2(d.getDate()) + '.' + p2(d.getMonth() + 1);
+}
+
+function vLines() {
+    const out = [];
+    if (!vData) return out;
+    if (!vSel.size) { out.push({ data: vData.total || [], color: '#22a8f0', width: 2, name: 'Все серверы' }); return out; }
+    out.push({ data: vData.total || [], color: 'rgba(255,255,255,.22)', width: 1.5, dash: [5, 4], name: 'Все серверы', ref: true });
+    (vData.series || []).forEach((s, i) => { if (vSel.has(s.gid)) out.push({ data: s.data, color: vColor(i), width: 2, name: s.name }); });
+    return out;
+}
+
+function drawVChart() {
+    const cv = $('#vchart'); if (!cv || !vData) return;
+    const wrap = cv.parentElement;
+    const cssW = Math.max(320, wrap.clientWidth), cssH = 260;
+    const dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
+    cv.style.width = cssW + 'px'; cv.style.height = cssH + 'px';
+    const ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    const W = cssW - VPAD.l - VPAD.r, H = cssH - VPAD.t - VPAD.b;
+    const n = vData.points || 0;
+    if (!n) return;
+    const lines = vLines();
+    const maxV = Math.max(1, ...lines.map((l) => Math.max(0, ...(l.data || [0]))));
+    const step = vNiceStep(maxV);
+    const top = Math.max(step, Math.ceil(maxV / step) * step);
+    const X = (i) => VPAD.l + (n <= 1 ? W / 2 : (i / (n - 1)) * W);
+    const Y = (v) => VPAD.t + H - (v / top) * H;
+
+    ctx.font = '11px system-ui, -apple-system, sans-serif';
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'right';
+    for (let v = 0; v <= top + 0.001; v += step) {
+        const y = Y(v);
+        ctx.strokeStyle = 'rgba(255,255,255,.06)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(VPAD.l, y); ctx.lineTo(VPAD.l + W, y); ctx.stroke();
+        ctx.fillStyle = 'rgba(255,255,255,.4)';
+        ctx.fillText(String(Math.round(v)), VPAD.l - 6, y);
+    }
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    const ticks = Math.min(6, n);
+    for (let k = 0; k < ticks; k++) {
+        const i = Math.round((k / Math.max(1, ticks - 1)) * (n - 1));
+        ctx.fillStyle = 'rgba(255,255,255,.4)';
+        ctx.fillText(vLabel(i), Math.min(cssW - 18, Math.max(18, X(i))), VPAD.t + H + 6);
+    }
+    for (const l of lines) {
+        ctx.beginPath(); ctx.lineWidth = l.width; ctx.strokeStyle = l.color;
+        ctx.setLineDash(l.dash || []);
+        for (let i = 0; i < n; i++) { const px = X(i), py = Y(l.data[i] || 0); if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py); }
+        ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (vHover >= 0 && vHover < n) {
+        ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(X(vHover), VPAD.t); ctx.lineTo(X(vHover), VPAD.t + H); ctx.stroke();
+        for (const l of lines) {
+            if (l.ref) continue;
+            ctx.fillStyle = l.color;
+            ctx.beginPath(); ctx.arc(X(vHover), Y(l.data[vHover] || 0), 3.2, 0, Math.PI * 2); ctx.fill();
+        }
+    }
+    const shown = vDisplayedTotals();
+    const peak = shown.length ? Math.max(...shown) : 0;
+    const avg = shown.length ? (shown.reduce((s, x) => s + x, 0) / shown.length) : 0;
+    const pk = $('#vchart-peak'), av = $('#vchart-avg');
+    if (pk) pk.textContent = Math.round(peak).toLocaleString();
+    if (av) av.textContent = (Math.round(avg * 10) / 10).toLocaleString();
+}
+
+function showVTip(clientX, clientY) {
+    const tp = $('#vchart-tip'); if (!tp || !vData || vHover < 0) return;
+    const d = vBucketDate(vHover);
+    const p2 = (x) => String(x).padStart(2, '0');
+    const when = vData.range === 'month' || vData.range === 'all'
+        ? `${p2(d.getDate())}.${p2(d.getMonth() + 1)}.${d.getFullYear()}`
+        : `${p2(d.getDate())}.${p2(d.getMonth() + 1)} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+    const rows = vLines().map((l) => [l.name, l.data[vHover] || 0, l.ref ? 'rgba(255,255,255,.45)' : l.color]);
+    tp.innerHTML = `<div class="vtip-t">${escapeHtml(when)}</div>` + rows.map(([nm, v, c]) =>
+        `<div class="vtip-r"><i style="background:${c}"></i><span>${escapeHtml(nm)}</span><b>${v}</b></div>`).join('');
+    tp.hidden = false;
+    const wrap = document.querySelector('.vchart-wrap');
+    const wr = wrap.getBoundingClientRect();
+    let left = clientX - wr.left + 14;
+    if (left + tp.offsetWidth > wr.width) left = clientX - wr.left - tp.offsetWidth - 14;
+    tp.style.left = Math.max(0, left) + 'px';
+    tp.style.top = Math.max(0, Math.min(wr.height - tp.offsetHeight, clientY - wr.top - 10)) + 'px';
+}
+
+function wireVChart() {
+    const cv = $('#vchart');
+    if (cv && !cv._wired) {
+        cv._wired = true;
+        cv.addEventListener('mousemove', (e) => {
+            if (!vData || !vData.points) return;
+            const r = cv.getBoundingClientRect();
+            const W = r.width - VPAD.l - VPAD.r;
+            const rel = (e.clientX - r.left - VPAD.l) / Math.max(1, W);
+            vHover = Math.max(0, Math.min(vData.points - 1, Math.round(rel * (vData.points - 1))));
+            drawVChart(); showVTip(e.clientX, e.clientY);
+        });
+        cv.addEventListener('mouseleave', () => {
+            vHover = -1; drawVChart();
+            const tp = $('#vchart-tip'); if (tp) tp.hidden = true;
+        });
+    }
+    $$('[data-vrange]').forEach((b) => {
+        if (b._wired) return; b._wired = true;
+        b.onclick = () => {
+            vRange = b.dataset.vrange;
+            $$('[data-vrange]').forEach((x) => x.classList.toggle('active', x === b));
+            loadVChart();
+        };
+    });
+    if (!window._vResize) { window._vResize = true; window.addEventListener('resize', () => drawVChart()); }
+}
+
+// Live: refresh while the Statistics pane is actually on screen.
+function startVChart() {
+    clearInterval(vTimer);
+    vTimer = setInterval(() => {
+        const pane = document.querySelector('.pane[data-pane="stats"]');
+        if (!pane || pane.hidden || document.hidden) return;
+        loadVChart();
+    }, 10000);
+}
+
 // ---------- Settings (runtime config, owner only) ----------
 function cfgSecretClear(f) {
     return f.set ? `<label class="cfg-clear muted sm"><input type="checkbox" data-cfg-clear="${f.key}" /> очистить</label>` : '';
@@ -2031,6 +2226,10 @@ if (_cfgRestart) _cfgRestart.onclick = async () => {
 };
 const _settingsTab = document.querySelector('[data-tab="settings"]');
 if (_settingsTab) _settingsTab.addEventListener('click', renderSettings);
+// Redraw the activity chart when the Statistics tab becomes visible (canvas can't
+// size itself while its pane is hidden).
+const _statsTab = document.querySelector('[data-tab="stats"]');
+if (_statsTab) _statsTab.addEventListener('click', () => { wireVChart(); loadVChart(); });
 
 // ---------- Activity log across all partners ----------
 const ALOG_ESC = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
