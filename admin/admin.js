@@ -2290,6 +2290,14 @@ if (_cfgSave) _cfgSave.onclick = async () => {
     _cfgSave.disabled = false;
     const st = $('#cfg-status');
     if (ok) { toast('Настройки сохранены ✓'); if (st) st.textContent = 'Сохранено. Часть настроек применится после перезапуска.'; renderSettings(); }
+    else if (body?.error === 'bad-tokens') {
+        // Nothing was saved — name the offending lines so they can be fixed.
+        const lines = (body.bad || []).map((b) => `строка ${b.line}${b.id ? ` (id ${b.id})` : ''} — ${b.reason}`).join('; ');
+        const msg = `Не сохранено: нерабочие токены → ${lines}${body.okCount ? `. Рабочих: ${body.okCount}` : ''}`;
+        toast('Нерабочие токены — не сохранено', 'err');
+        if (st) st.textContent = msg;
+    }
+    else if (body?.error === 'token-check-failed') { toast('Не удалось проверить токены — попробуй ещё раз', 'err'); }
     else toast(body?.error || 'Не удалось сохранить', 'err');
 };
 const _cfgRestart = document.getElementById('cfg-restart');
