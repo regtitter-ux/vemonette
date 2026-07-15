@@ -559,7 +559,7 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
   // partner avatars come from the managed server feed
   const API=(window.__VEMONI_API_BASE__||'').replace(/\/+$/,'');
   let FEED=[];
-  function iconUrl(id,icon){ if(!id||!icon) return null; const ext=String(icon).startsWith('a_')?'gif':'png'; return 'https://cdn.discordapp.com/icons/'+id+'/'+icon+'.'+ext+'?size=128'; }
+  function iconUrl(id,icon){ if(!id||!icon) return null; return 'https://cdn.discordapp.com/icons/'+id+'/'+icon+'.png?size=128'; } // static png: broken animated .gif icons render fine as png
   fetch(API+'/feed',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{ if(d&&Array.isArray(d.servers)&&d.servers.length){ FEED=d.servers; buildNodes(); } }).catch(()=>{});
 
   let W=0,H=0,dpr=1, cx=0,cy=0,R=0, raf;

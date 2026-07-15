@@ -17,8 +17,11 @@ const BADGE = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 
 
 function iconUrl(id, icon) {
   if (!id || !icon) return null;
-  const ext = icon.startsWith('a_') ? 'gif' : 'png';
-  return `https://cdn.discordapp.com/icons/${id}/${icon}.${ext}?size=128`;
+  // Always request the STATIC png — some servers' animated (a_) icons have a
+  // broken .gif on Discord's CDN (HTTP 415) that renders as a broken avatar;
+  // the static frame always loads. (Feed avatars are tiny; animation isn't worth
+  // the risk of a broken image.)
+  return `https://cdn.discordapp.com/icons/${id}/${icon}.png?size=128`;
 }
 
 function cardHTML(s) {

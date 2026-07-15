@@ -816,7 +816,7 @@ if (_cardScanBtn) _cardScanBtn.onclick = async () => {
 // ---------- Home-page server feed (owner only) ----------
 function feedIcon(s) {
     const url = s.img || (s.id && s.icon
-        ? `https://cdn.discordapp.com/icons/${s.id}/${s.icon}.${String(s.icon).startsWith('a_') ? 'gif' : 'png'}?size=64`
+        ? `https://cdn.discordapp.com/icons/${s.id}/${s.icon}.png?size=64` // static png: broken animated .gif icons render fine as png
         : null);
     const letter = escapeHtml(((s.letter || s.name || '?')[0] || '?').toUpperCase());
     const bg = s.color || '#5865f2';
