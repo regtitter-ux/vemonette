@@ -137,6 +137,7 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .vcard-head a{color:var(--blue-2);text-decoration:none}
 .vcard-head a:hover{text-decoration:underline}
 .vcard-meta{margin-top:8px;font-size:13px;color:var(--muted)}
+.vcard-members{margin:3px 0 0 31px;font-size:12px}
 .vcard .table-wrap{display:inline-block;min-width:min(100%,360px)}
 .vcard table{font-size:12.5px}
 .vcard-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}

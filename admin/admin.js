@@ -628,6 +628,7 @@ function cardBlock(c, deleted) {
     return `
       <div class="cardrow${deleted ? ' deleted' : ''}" data-mid="${escapeHtml(c.messageId)}">
         <div class="cardrow-head">${cardGuildIcon(c)}<span><b>${escapeHtml(c.guildName || 'Unknown Server')}</b> · ${chan}${link}</span></div>
+        ${c.memberCount != null ? `<div class="cardrow-members muted sm">👥 ${Number(c.memberCount).toLocaleString()}</div>` : ''}
         <div class="cardrow-meta">
           Владелец: <b>${owner}</b> <button class="btn-mini copy-id" data-copy="${escapeHtml(c.creatorId || '')}">Copy ID</button>
           · Роль: ${role}${avg}

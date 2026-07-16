@@ -457,9 +457,11 @@ function pcardBlock(c) {
     const chan = c.channelName ? '#' + esc(c.channelName) : esc(c.channelId || '');
     const link = c.link ? ` · <a href="${esc(c.link)}" target="_blank" rel="noopener">↗ сообщение</a>` : '';
     const avg = c.avgVerifySeconds != null ? ` · ⏱ ~${esc(fmtSec(c.avgVerifySeconds))}` : '';
+    const members = c.memberCount != null ? `<div class="vcard-members muted sm">👥 ${Number(c.memberCount).toLocaleString()}</div>` : '';
     return `
       <div class="vcard" data-mid="${esc(c.messageId)}">
         <div class="vcard-head">${srvIcon(c.guildName, c.guildIcon)}<span><b>${esc(c.guildName || 'Сервер')}</b> · ${chan}${link}</span></div>
+        ${members}
         <div class="vcard-meta">Роль: ${role}${avg}</div>
         <div class="table-wrap" style="margin-top:12px"><table>
           <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
