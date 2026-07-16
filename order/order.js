@@ -42,6 +42,9 @@ const DICT = {
     tab_all: 'Все заказы', tab_all_done: 'Все завершённые',
     no_all_camps: 'Активных заказов в сети нет.', no_all_done: 'Завершённых заказов нет.',
     q_showing: 'Показывается', q_waiting: (p, tot) => `В очереди · ${p} из ${tot}`, q_nobot: 'Ждёт бота',
+    q_verifier_off: 'Проверка недоступна',
+    st_verifier_off: 'Проверка недоступна',
+    autopause_warn: 'Кампания на паузе: на вашем сервере больше некому проверять заходы (наш чекер выгнан/забанен или потерял доступ). Верните бота — показ возобновится автоматически. Пока на паузе списаний нет.',
     by_buyer: 'Заказчик:',
     no_active_camps: 'Активных кампаний нет.', no_done_camps: 'Завершённых кампаний пока нет.',
     loading: 'Загрузка…',
@@ -127,6 +130,9 @@ const DICT = {
     tab_all: 'All orders', tab_all_done: 'All completed',
     no_all_camps: 'No active orders on the network.', no_all_done: 'No completed orders.',
     q_showing: 'Showing', q_waiting: (p, tot) => `In queue · ${p} of ${tot}`, q_nobot: 'Waiting for bot',
+    q_verifier_off: 'Checker offline',
+    st_verifier_off: 'Checker offline',
+    autopause_warn: 'Campaign paused: joins can no longer be verified on your server (our checker was kicked/banned or lost access). Add our bot back — delivery resumes automatically. No charges while paused.',
     by_buyer: 'Buyer:',
     no_active_camps: 'No active campaigns.', no_done_camps: 'No completed campaigns yet.',
     loading: 'Loading…',
@@ -506,6 +512,7 @@ $('#ord-buy').addEventListener('click', async () => {
 
 // ---------- Campaigns ----------
 function statusOf(c) {
+    if (c.status === 'active' && c.autoPaused) return { t: t('st_verifier_off'), c: 'red' };
     if (c.status === 'active' && c.paused) return { t: t('st_paused'), c: 'amber' };
     if (c.status === 'active' && c.limitReached) return { t: t('st_limit'), c: 'amber' };
     return ({
@@ -592,7 +599,12 @@ function campCard(c) {
     const payLink = c.status === 'pending_payment' && c.invoiceUrl
         ? `<a class="btn-mini" href="${esc(c.invoiceUrl)}" target="_blank" rel="noopener">${esc(t('pay'))}</a>` : '';
     const needBot = c.botPresent === false && c.status !== 'complete' && c.status !== 'cancelled';
-    const botWarn = needBot ? `
+    const botWarn = c.autoPaused ? `
+        <div class="warn">
+          ⚠️ ${esc(t('autopause_warn'))}
+          <a class="btn-mini" href="${esc(CFG.botInviteUrl || '#')}" target="_blank" rel="noopener">${esc(t('add_bot'))}</a>
+        </div>`
+        : needBot ? `
         <div class="warn">
           ⚠️ ${esc(t('bot_warn'))}
           <a class="btn-mini" href="${esc(CFG.botInviteUrl || '#')}" target="_blank" rel="noopener">${esc(t('add_bot'))}</a>
@@ -609,6 +621,7 @@ function campCard(c) {
     if (q && q.state === 'showing') queueBadge = `<span class="qbadge showing"><span class="qdot"></span>${esc(t('q_showing'))}</span>`;
     else if (q && q.state === 'waiting') queueBadge = `<span class="qbadge waiting"><span class="qdot"></span>${esc(t('q_waiting', q.position, q.total))}</span>`;
     else if (q && q.state === 'no_bot') queueBadge = `<span class="qbadge nobot"><span class="qdot"></span>${esc(t('q_nobot'))}</span>`;
+    else if (q && q.state === 'verifier_off') queueBadge = `<span class="qbadge nobot"><span class="qdot"></span>${esc(t('q_verifier_off'))}</span>`;
     // Admin view only: who the order belongs to.
     const buyerRow = c.admin ? `<div class="camp-buyer muted sm">${esc(t('by_buyer'))} <b>${esc(c.buyerName || c.buyerId || '—')}</b></div>` : '';
     return `
