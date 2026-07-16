@@ -39,6 +39,10 @@ const DICT = {
     insufficient: (need) => `Недостаточно средств. Пополните ещё на $${need} и повторите.`,
     my_camps: 'Мои кампании',
     tab_active: 'Активные', tab_finished: 'Завершено',
+    tab_all: 'Все заказы', tab_all_done: 'Все завершённые',
+    no_all_camps: 'Активных заказов в сети нет.', no_all_done: 'Завершённых заказов нет.',
+    q_showing: 'Показывается', q_waiting: (p, tot) => `В очереди · ${p} из ${tot}`, q_nobot: 'Ждёт бота',
+    by_buyer: 'Заказчик:',
     no_active_camps: 'Активных кампаний нет.', no_done_camps: 'Завершённых кампаний пока нет.',
     loading: 'Загрузка…',
     rate: (p) => `· $${p} за 100 заходов`,
@@ -120,6 +124,10 @@ const DICT = {
     insufficient: (need) => `Not enough balance. Top up $${need} more and try again.`,
     my_camps: 'My campaigns',
     tab_active: 'Active', tab_finished: 'Completed',
+    tab_all: 'All orders', tab_all_done: 'All completed',
+    no_all_camps: 'No active orders on the network.', no_all_done: 'No completed orders.',
+    q_showing: 'Showing', q_waiting: (p, tot) => `In queue · ${p} of ${tot}`, q_nobot: 'Waiting for bot',
+    by_buyer: 'Buyer:',
     no_active_camps: 'No active campaigns.', no_done_camps: 'No completed campaigns yet.',
     loading: 'Loading…',
     rate: (p) => `· $${p} per 100 stays`,
@@ -226,7 +234,7 @@ function applyLang() {
     if (note && CFG.isManager) note.textContent = t('mgr_you', CFG.pricePer100);
     const mgrCard = $('#mgr-card');
     if (CFG.isOwner && mgrCard && !mgrCard.hidden) loadManagers();
-    if (lastCampaigns.length) renderCampaigns(lastCampaigns);
+    if (lastCampaigns.length || adminActive.length || adminDone.length) renderCampaigns();
     renderTopup();
     renderLoadBanner();
 }
@@ -345,10 +353,13 @@ async function enterApp() {
     setupManagers();
     loadWallet();
     loadCampaigns();
-    // Auto-refresh, but NOT while the user has an inline panel open (change-link
-    // editor or the "Shown on servers" list) — re-rendering the list rebuilds its
-    // HTML and would snap the open panel shut under the user.
-    setInterval(() => { if (!anyPanelOpen()) loadCampaigns(); }, 15000);
+    // Admins/owners: prime the "all orders" counts so the extra tabs show numbers
+    // before they're opened.
+    if (isAdminView()) { loadAdminCampaigns('active'); loadAdminCampaigns('done'); }
+    // Auto-refresh the visible tab, but NOT while the user has an inline panel open
+    // (change-link editor / "Shown on servers" list) — re-rendering rebuilds the
+    // HTML and would snap the open panel shut. 8s keeps the queue badges live.
+    setInterval(() => { if (!anyPanelOpen() && !document.hidden) reloadCurrentTab(); }, 8000);
     setInterval(loadWallet, 15000);
 }
 function anyPanelOpen() {
@@ -506,36 +517,69 @@ function statusOf(c) {
     })[c.status] || { t: c.status, c: '' };
 }
 
+let adminActive = [], adminDone = [];
+const isAdminView = () => Boolean(CFG.isAdmin || CFG.isOwner);
+
 async function loadCampaigns() {
     const { ok, body } = await get('/campaigns');
     if (!ok) return;
     lastCampaigns = body.campaigns || [];
-    renderCampaigns(lastCampaigns);
+    renderCampaigns();
+}
+// Admin/owner: every buyer's orders (scope 'active' | 'done').
+async function loadAdminCampaigns(scope) {
+    const { ok, body } = await get('/all-campaigns?scope=' + scope);
+    if (!ok) return;
+    if (scope === 'done') adminDone = body.campaigns || []; else adminActive = body.campaigns || [];
+    renderCampaigns();
+}
+// Refresh whatever the visible tab shows — used by the real-time poll and after edits.
+function reloadCurrentTab() {
+    if (campTab === 'all') return loadAdminCampaigns('active');
+    if (campTab === 'all-done') return loadAdminCampaigns('done');
+    return loadCampaigns();
 }
 
 let campTab = 'active';
-function renderCampaigns(list) {
+function renderCampaigns() {
     const tabs = $('#camp-tabs');
     const box = $('#camp-list');
-    if (!list.length) { if (tabs) tabs.hidden = true; box.innerHTML = `<div class="muted">${esc(t('no_camps'))}</div>`; return; }
+    const admin = isAdminView();
+    const active = lastCampaigns.filter((c) => c.status === 'active');
+    const finished = lastCampaigns.filter((c) => c.status !== 'active');
 
-    // Split into running (active/paused) and finished (completed/cancelled/invalid).
-    const active = list.filter((c) => c.status === 'active');
-    const finished = list.filter((c) => c.status !== 'active');
-    if (campTab === 'finished' && !finished.length) campTab = 'active';
+    // A non-admin with no orders at all: the simple empty state, no tabs.
+    if (!admin && !lastCampaigns.length) { if (tabs) tabs.hidden = true; box.innerHTML = `<div class="muted">${esc(t('no_camps'))}</div>`; return; }
+    if ((campTab === 'all' || campTab === 'all-done') && !admin) campTab = 'active';
+    if (campTab === 'finished' && !finished.length && !admin) campTab = 'active';
 
     if (tabs) {
         tabs.hidden = false;
         const btn = (key, id, n) => `<button data-camptab="${id}" class="${campTab === id ? 'active' : ''}">${esc(t(key))} <span class="cnt">${n}</span></button>`;
-        tabs.innerHTML = btn('tab_active', 'active', active.length) + btn('tab_finished', 'finished', finished.length);
-        tabs.querySelectorAll('[data-camptab]').forEach((b) => b.onclick = () => { campTab = b.dataset.camptab; renderCampaigns(lastCampaigns); });
+        let html = btn('tab_active', 'active', active.length) + btn('tab_finished', 'finished', finished.length);
+        if (admin) html += btn('tab_all', 'all', adminActive.length) + btn('tab_all_done', 'all-done', adminDone.length);
+        tabs.innerHTML = html;
+        tabs.querySelectorAll('[data-camptab]').forEach((b) => b.onclick = () => {
+            campTab = b.dataset.camptab;
+            if (campTab === 'all') loadAdminCampaigns('active');
+            else if (campTab === 'all-done') loadAdminCampaigns('done');
+            else renderCampaigns();
+        });
     }
 
-    const shown = campTab === 'finished' ? finished : active;
-    if (!shown.length) { box.innerHTML = `<div class="muted">${esc(campTab === 'finished' ? t('no_done_camps') : t('no_active_camps'))}</div>`; return; }
+    const shown = campTab === 'all' ? adminActive
+        : campTab === 'all-done' ? adminDone
+        : campTab === 'finished' ? finished : active;
+    if (!shown.length) {
+        const empty = campTab === 'all' ? t('no_all_camps') : campTab === 'all-done' ? t('no_all_done')
+            : campTab === 'finished' ? t('no_done_camps') : t('no_active_camps');
+        box.innerHTML = `<div class="muted">${esc(empty)}</div>`;
+        return;
+    }
     box.innerHTML = shown.map(campCard).join('');
     wireCampaigns(shown);
 }
+
 
 function retentionRow(r) {
     if (!r || (r.d1 == null && r.d7 == null && r.d30 == null)) return '';
@@ -559,6 +603,14 @@ function campCard(c) {
     const linkBtn = canManage ? `<button class="btn-mini" data-editlink="${c.id}">${esc(t('change_link'))}</button>` : '';
     const srvBtn = (c.status === 'active' || c.status === 'complete') ? `<button class="btn-mini" data-servers="${c.id}">${esc(t('servers_btn'))}</button>` : '';
     const limitCounter = c.linkLimit ? `<div class="camp-linklimit${c.limitReached ? ' reached' : ''}">${c.linkDelivered}/${c.linkLimit}</div>` : '';
+    // Live queue badge: is this order being shown in verifications now, or waiting.
+    const q = c.queue;
+    let queueBadge = '';
+    if (q && q.state === 'showing') queueBadge = `<span class="qbadge showing"><span class="qdot"></span>${esc(t('q_showing'))}</span>`;
+    else if (q && q.state === 'waiting') queueBadge = `<span class="qbadge waiting"><span class="qdot"></span>${esc(t('q_waiting', q.position, q.total))}</span>`;
+    else if (q && q.state === 'no_bot') queueBadge = `<span class="qbadge nobot"><span class="qdot"></span>${esc(t('q_nobot'))}</span>`;
+    // Admin view only: who the order belongs to.
+    const buyerRow = c.admin ? `<div class="camp-buyer muted sm">${esc(t('by_buyer'))} <b>${esc(c.buyerName || c.buyerId || '—')}</b></div>` : '';
     return `
       <div class="camp" data-id="${c.id}">
         <div class="camp-head">
@@ -566,8 +618,9 @@ function campCard(c) {
             <div class="camp-title">${esc(c.serverName || t('your_server'))}</div>
             <div class="camp-sub">${esc(c.invite)}</div>
             ${limitCounter}
+            ${buyerRow}
           </div>
-          <span class="chip ${st.c}">${esc(st.t)}</span>
+          <span class="camp-chips">${queueBadge}<span class="chip ${st.c}">${esc(st.t)}</span></span>
         </div>
         ${botWarn}
         <div class="progress"><i style="width:${pct}%"></i></div>
@@ -593,7 +646,7 @@ function wireCampaigns(list) {
     $$('#camp-list [data-pause]').forEach((b) => b.onclick = async () => {
         const c = list.find((x) => x.id === b.dataset.pause);
         const { ok } = await post(`/campaigns/${b.dataset.pause}/pause`, { paused: !c.paused });
-        if (ok) { toast(!c.paused ? t('paused_toast') : t('resumed_toast')); loadCampaigns(); }
+        if (ok) { toast(!c.paused ? t('paused_toast') : t('resumed_toast')); reloadCurrentTab(); }
     });
     // Change the invite link mid-flight — toggle inline editor, then save.
     $$('#camp-list [data-editlink]').forEach((b) => b.onclick = () => {
@@ -613,7 +666,7 @@ function wireCampaigns(list) {
         b.disabled = true;
         const { ok, body } = await put(`/campaigns/${cur.id}/invite`, { invite: cur.invite, limit: cur.linkLimit || 0 });
         b.disabled = false;
-        if (ok) { toast(t('relimit_toast')); loadCampaigns(); }
+        if (ok) { toast(t('relimit_toast')); reloadCurrentTab(); }
         else toast(errText(body?.error), 'err');
     });
     $$('#camp-list [data-link-save]').forEach((b) => b.onclick = async () => {
@@ -634,7 +687,7 @@ function wireCampaigns(list) {
         b.disabled = true;
         const { ok, body } = await put(`/campaigns/${id}/invite`, { invite: `https://discord.gg/${code}`, limit });
         b.disabled = false;
-        if (ok) { toast(t('link_changed')); loadCampaigns(); }
+        if (ok) { toast(t('link_changed')); reloadCurrentTab(); }
         else if (body?.error === 'no-bot') {
             const box = $(`[data-link-edit="${id}"]`);
             if (box) {
