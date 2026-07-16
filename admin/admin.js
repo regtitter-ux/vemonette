@@ -2328,7 +2328,7 @@ if (_cfgSave) _cfgSave.onclick = async () => {
     const { ok, body } = await put('/config', { values });
     _cfgSave.disabled = false;
     const st = $('#cfg-status');
-    if (ok) { toast('Настройки сохранены ✓'); if (st) st.textContent = 'Сохранено. Часть настроек применится после перезапуска.'; renderSettings(); }
+    if (ok) { toast('Настройки сохранены ✓'); if (st) st.textContent = 'Сохранено — применяется сразу.'; renderSettings(); }
     else if (body?.error === 'bad-tokens') {
         // Nothing was saved — name the offending lines so they can be fixed.
         const lines = (body.bad || []).map((b) => `строка ${b.line}${b.id ? ` (id ${b.id})` : ''} — ${b.reason}`).join('; ');
