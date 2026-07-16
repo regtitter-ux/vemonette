@@ -143,8 +143,9 @@ const TR = {
   'можно вывести':'can withdraw','вывод от':'withdraw from','Ставка за заход':'Rate per join','Заходов оплачено':'Joins paid',' начислено':' credited','Всего выведено':'Total withdrawn','буст':'boost',
   // active ads + priority / hide
   'Активные рекламы':'Active ads',
-  'Рекламы, доступные выбранному серверу. Для каждого сервера отдельно можно: отметить рекламу приоритетной (★), чтобы показывать её первой, пока кампания не завершится или вы не выберете другую; либо скрыть рекламу, чтобы она не показывалась на этом сервере. Без приоритета работает обычное умное распределение.':'Ads available to the selected server. For each server separately you can: mark an ad as priority (★) to show it first until its campaign finishes or you pick another; or hide an ad so it is not shown on that server. Without a priority the normal smart distribution applies.',
+  'Рекламы, доступные выбранному серверу, в порядке очереди показа: «Показывается» — та, что крутится сейчас, остальные ждут своей очереди. Для каждого сервера отдельно можно отметить рекламу приоритетной (★), чтобы показывать её первой, пока кампания не завершится или вы не выберете другую; либо скрыть рекламу, чтобы она не показывалась на этом сервере.':'Ads available to the selected server, in show-queue order: “Showing” is the one running right now, the rest wait their turn. For each server separately you can mark an ad as priority (★) to show it first until its campaign finishes or you pick another; or hide an ad so it is not shown on that server.',
   'Приоритет':'Priority','Скрыто':'Hidden','Скрыть':'Hide','Показать':'Show','Сейчас нет активных реклам, доступных этому серверу.':'There are no active ads available to this server right now.',
+  'Показывается':'Showing','В очереди · ':'In queue · ',
   'Приоритет установлен':'Priority set','Приоритет снят':'Priority cleared','Эта реклама сейчас недоступна.':'This ad is not available right now.','Не удалось сохранить приоритет.':'Could not save the priority.',
   'Реклама скрыта на этом сервере':'Ad hidden on this server','Реклама снова показывается':'Ad is shown again','Не удалось изменить видимость рекламы.':'Could not change the ad visibility.',
   // activity-log directions (who joined/left which sponsor)
@@ -395,16 +396,24 @@ function renderPartnerAds() {
 
     const s = servers.find((x) => x.guildId === pAdsSel) || servers[0];
     const ads = s.ads || [];
-    $('#pads-list').innerHTML = ads.length ? ads.map((a) => `
+    $('#pads-list').innerHTML = ads.length ? ads.map((a) => {
+      // Live queue position on this server: what's showing now vs waiting its
+      // turn (strict FIFO by paid time; priority ★ jumps to the front). Hidden
+      // ads aren't served, so they carry no queue position.
+      const qb = a.isHidden ? ''
+        : a.showing ? '<span class="pad-badge show">Показывается</span>'
+        : a.queuePos ? `<span class="pad-badge queue">В очереди · ${a.queuePos}</span>` : '';
+      return `
       <div class="pad-row${a.isPriority ? ' pad-prio' : ''}${a.isHidden ? ' pad-hidden' : ''}">
         <label class="pad-check" title="Приоритет">
           <input type="checkbox" data-prio="${esc(a.campaignId)}" ${a.isPriority ? 'checked' : ''} ${a.isHidden ? 'disabled' : ''} />
           <span class="pad-star">★</span>
         </label>
-        <div class="pad-main">${srvIcon(a.sponsorName, a.sponsorIcon)}<span class="pad-name">${esc(a.sponsorName || a.sponsorGuildId)}</span>${a.isPriority ? '<span class="pad-badge">Приоритет</span>' : ''}${a.isHidden ? '<span class="pad-badge hid">Скрыто</span>' : ''}</div>
+        <div class="pad-main">${srvIcon(a.sponsorName, a.sponsorIcon)}<span class="pad-name">${esc(a.sponsorName || a.sponsorGuildId)}</span>${a.isPriority ? '<span class="pad-badge">Приоритет</span>' : ''}${qb}${a.isHidden ? '<span class="pad-badge hid">Скрыто</span>' : ''}</div>
         <div class="pad-remain"><b>${a.delivered}/${a.purchased}</b></div>
         <button class="btn-mini${a.isHidden ? '' : ' off'}" data-hide="${esc(a.campaignId)}" data-h="${a.isHidden ? '1' : '0'}">${a.isHidden ? 'Показать' : 'Скрыть'}</button>
-      </div>`).join('') : '<div class="muted">Сейчас нет активных реклам, доступных этому серверу.</div>';
+      </div>`;
+    }).join('') : '<div class="muted">Сейчас нет активных реклам, доступных этому серверу.</div>';
 
     const lockRows = () => $('#pads-list').querySelectorAll('input,button').forEach((x) => (x.disabled = true));
 

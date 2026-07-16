@@ -175,6 +175,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .pad-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pad-badge{flex:none;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--amber);background:rgba(245,179,0,.16);border-radius:999px;padding:2px 9px}
 .pad-badge.hid{color:var(--muted);background:rgba(255,255,255,.08)}
+.pad-badge.show{color:#37d67a;background:rgba(55,214,122,.15)}
+.pad-badge.queue{color:var(--muted);background:rgba(255,255,255,.06);text-transform:none;letter-spacing:0;font-weight:700}
 .pad-remain{flex:none;display:inline-flex;align-items:center;gap:6px}
 .pad-remain b{font-variant-numeric:tabular-nums}
 .pad-row .btn-mini{flex:none}
