@@ -145,7 +145,7 @@ const TR = {
   'Активные рекламы':'Active ads',
   'Рекламы, доступные выбранному серверу, в порядке очереди показа: «Показывается» — та, что крутится сейчас, остальные ждут своей очереди. Для каждого сервера отдельно можно отметить рекламу приоритетной (★), чтобы показывать её первой, пока кампания не завершится или вы не выберете другую; либо скрыть рекламу, чтобы она не показывалась на этом сервере.':'Ads available to the selected server, in show-queue order: “Showing” is the one running right now, the rest wait their turn. For each server separately you can mark an ad as priority (★) to show it first until its campaign finishes or you pick another; or hide an ad so it is not shown on that server.',
   'Приоритет':'Priority','Скрыто':'Hidden','Скрыть':'Hide','Показать':'Show','Сейчас нет активных реклам, доступных этому серверу.':'There are no active ads available to this server right now.',
-  'Показывается':'Showing','В очереди №':'In queue #',
+  'Показывается':'Showing','Место в очереди №':'Queue position #',
   'Приоритет установлен':'Priority set','Приоритет снят':'Priority cleared','Эта реклама сейчас недоступна.':'This ad is not available right now.','Не удалось сохранить приоритет.':'Could not save the priority.',
   'Реклама скрыта на этом сервере':'Ad hidden on this server','Реклама снова показывается':'Ad is shown again','Не удалось изменить видимость рекламы.':'Could not change the ad visibility.',
   // activity-log directions (who joined/left which sponsor)
@@ -402,7 +402,7 @@ function renderPartnerAds() {
       // ads aren't served, so they carry no queue position.
       const qb = a.isHidden ? ''
         : a.showing ? '<span class="pad-badge show">Показывается</span>'
-        : a.queuePos ? `<span class="pad-badge queue">В очереди №${a.queuePos}</span>` : '';
+        : a.queuePos ? `<span class="pad-badge queue">Место в очереди №${a.queuePos}</span>` : '';
       return `
       <div class="pad-row${a.isPriority ? ' pad-prio' : ''}${a.isHidden ? ' pad-hidden' : ''}">
         <label class="pad-check" title="Приоритет">
