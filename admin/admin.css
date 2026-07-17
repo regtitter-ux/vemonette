@@ -648,13 +648,14 @@ textarea.cfg-input { resize: vertical; word-break: break-all; }
 .lot-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; margin: 14px 0 8px; }
 .lot-field { display: flex; flex-direction: column; gap: 5px; }
 .lot-field label { font-size: 12px; color: var(--muted); font-weight: 600; }
-.lot-field input, #lot-template {
+.lot-field input, #lot-template, #lot-channel-name {
   background: var(--bg); color: var(--text);
   border: 1px solid var(--stroke-2); border-radius: 8px;
   padding: 9px 12px; font-size: 13.5px; font-family: inherit;
 }
 .lot-field input { width: 170px; }
-.lot-field input:focus, #lot-template:focus { outline: none; border-color: var(--blue); }
+.lot-field input:focus, #lot-template:focus, #lot-channel-name:focus { outline: none; border-color: var(--blue); }
+#lot-channel-name { display: block; box-sizing: border-box; }
 #lot-template { display: block; resize: vertical; min-height: 110px; line-height: 1.5; }
 #lots-list { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 .lot-card { background: var(--panel); border: 1px solid var(--stroke); border-radius: 12px; padding: 14px 16px; }
