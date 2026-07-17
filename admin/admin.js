@@ -1964,6 +1964,8 @@ async function renderLots() {
     if (!ok) { box.innerHTML = '<div class="muted">Не удалось загрузить лоты.</div>'; return; }
     const tpl = $('#lot-template');
     if (tpl && document.activeElement !== tpl) tpl.value = body.template || '';
+    const chn = $('#lot-channel-name');
+    if (chn && document.activeElement !== chn) chn.value = body.channelName || '';
     const list = body.lots || [];
     box.innerHTML = list.length ? list.map(lotCard).join('') : '<div class="muted">Пока нет лотов. Запустите первый выше.</div>';
 }
@@ -1973,6 +1975,14 @@ if (_lotTplSave) _lotTplSave.onclick = async () => {
     const { ok, body } = await put('/lots/template', { text: $('#lot-template').value });
     _lotTplSave.disabled = false;
     if (ok) { toast('Сообщение сохранено ✓'); if (body?.template != null) $('#lot-template').value = body.template; }
+    else toast(body?.error || 'Не удалось сохранить', 'err');
+};
+const _lotChanSave = document.getElementById('lot-channel-save');
+if (_lotChanSave) _lotChanSave.onclick = async () => {
+    _lotChanSave.disabled = true;
+    const { ok, body } = await put('/lots/channel-name', { text: $('#lot-channel-name').value });
+    _lotChanSave.disabled = false;
+    if (ok) { toast('Название сохранено ✓'); if (body?.channelName != null) $('#lot-channel-name').value = body.channelName; }
     else toast(body?.error || 'Не удалось сохранить', 'err');
 };
 function lotCard(l) {

@@ -334,6 +334,12 @@
         <button class="btn primary" id="lot-launch">Запустить лот</button>
       </div>
       <div data-owner-only>
+        <h2>Название канала</h2>
+        <p class="muted sm">Имя канала, который бот создаёт при запуске лота. Плейсхолдер: <code>{stays}</code> — кол-во заходов в лоте (как и в сообщении). Discord сам приводит к нижнему регистру и заменяет пробелы дефисами.</p>
+        <input id="lot-channel-name" type="text" maxlength="100" style="width:100%;max-width:640px" placeholder="💹﹒{stays}-stays" />
+        <div class="actions-row" style="margin-top:8px"><button class="btn primary sm" id="lot-channel-save">Сохранить название</button></div>
+      </div>
+      <div data-owner-only>
         <h2>Сообщение при запуске</h2>
         <p class="muted sm">Текст, который бот отправляет в канал при старте лота. Плейсхолдеры: <code>{stays}</code> — кол-во stays, <code>{sb}</code> — начальная цена, <code>{ob}</code> — мин. надбавка к ставке. Работает Markdown Discord.</p>
         <textarea id="lot-template" rows="5" style="width:100%;max-width:640px" placeholder="# 💹 Лот: {stays} stays ..."></textarea>
@@ -401,6 +407,6 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=84"></script>
+<script src="/admin/admin.js?v=85"></script>
 </body>
 </html>
