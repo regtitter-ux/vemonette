@@ -75,6 +75,7 @@ const DICT = {
     link_nobot: 'На новом сервере нет нашего бота — заходы не проверить. Добавьте бота и повторите.',
     link_hint: 'Новая ссылка должна работать, и на её сервере должен быть наш бот. Прогресс кампании сохранится.',
     paused_toast: 'Кампания на паузе', resumed_toast: 'Кампания возобновлена',
+    pin: 'В приоритет', unpin: 'Снять приоритет', pinned: 'Приоритет', pinned_toast: 'Приоритет установлен — заказ показывается первым', unpinned_toast: 'Приоритет снят',
     srv_loading: 'Загрузка…', srv_error: 'Ошибка', srv_empty: 'Пока нет доставленных заходов по серверам.',
     disable: 'Отключить', disabled: 'Выключен',
     srv_off: 'Сервер отключён', srv_on: 'Сервер включён',
@@ -163,6 +164,7 @@ const DICT = {
     link_nobot: "Our bot isn't on the new server — stays can't be verified. Add the bot and try again.",
     link_hint: 'The new link must work and its server must have our bot. Campaign progress is preserved.',
     paused_toast: 'Campaign paused', resumed_toast: 'Campaign resumed',
+    pin: 'Prioritize', unpin: 'Unpin', pinned: 'Priority', pinned_toast: 'Priority set — this order shows first', unpinned_toast: 'Priority cleared',
     srv_loading: 'Loading…', srv_error: 'Error', srv_empty: 'No delivered stays per server yet.',
     disable: 'Disable', disabled: 'Disabled',
     srv_off: 'Server disabled', srv_on: 'Server enabled',
@@ -525,7 +527,9 @@ function statusOf(c) {
 }
 
 let adminActive = [], adminDone = [];
-const isAdminView = () => Boolean(CFG.isAdmin || CFG.isOwner);
+// Owner, assigned admins AND sales managers get the two "all orders" views —
+// that's where the service-side priority pin is set.
+const isAdminView = () => Boolean(CFG.isAdmin || CFG.isOwner || CFG.isManager);
 
 async function loadCampaigns() {
     const { ok, body } = await get('/campaigns');
@@ -614,6 +618,12 @@ function campCard(c) {
     const resumeLimitBtn = (canManage && c.limitReached && !c.paused) ? `<button class="btn-mini on" data-resumelimit="${c.id}">${esc(t('resume_limit'))}</button>` : '';
     const linkBtn = canManage ? `<button class="btn-mini" data-editlink="${c.id}">${esc(t('change_link'))}</button>` : '';
     const srvBtn = (c.status === 'active' || c.status === 'complete') ? `<button class="btn-mini" data-servers="${c.id}">${esc(t('servers_btn'))}</button>` : '';
+    // Service priority pin (only in the "all orders" staff view, active orders):
+    // pins one campaign to the front of the queue network-wide. Partner per-server
+    // pins still override it in delivery.
+    const prioBtn = (c.admin && c.status === 'active')
+        ? `<button class="btn-mini ${c.pinned ? 'on' : ''}" data-prio="${c.id}" data-pinned="${c.pinned ? '1' : '0'}">${c.pinned ? '★ ' + esc(t('unpin')) : '☆ ' + esc(t('pin'))}</button>`
+        : '';
     const limitCounter = c.linkLimit ? `<div class="camp-linklimit${c.limitReached ? ' reached' : ''}">${c.linkDelivered}/${c.linkLimit}</div>` : '';
     // Live queue badge: is this order being shown in verifications now, or waiting.
     const q = c.queue;
@@ -633,13 +643,13 @@ function campCard(c) {
             ${limitCounter}
             ${buyerRow}
           </div>
-          <span class="camp-chips">${queueBadge}<span class="chip ${st.c}">${esc(st.t)}</span></span>
+          <span class="camp-chips">${c.pinned ? `<span class="chip pin">★ ${esc(t('pinned'))}</span>` : ''}${queueBadge}<span class="chip ${st.c}">${esc(st.t)}</span></span>
         </div>
         ${botWarn}
         <div class="progress"><i style="width:${pct}%"></i></div>
         <div class="camp-nums"><span>${esc(t('delivered'))} <b>${c.delivered}</b> / ${c.purchased}</span><span>${money(c.price)}</span></div>
         ${retentionRow(c.retention)}
-        <div class="camp-actions">${payLink}${pauseBtn}${resumeLimitBtn}${linkBtn}${srvBtn}</div>
+        <div class="camp-actions">${payLink}${prioBtn}${pauseBtn}${resumeLimitBtn}${linkBtn}${srvBtn}</div>
         <div class="link-edit" data-link-edit="${c.id}" hidden>
           <input type="text" class="link-input" data-link-input="${c.id}" value="${esc(c.invite)}" placeholder="${esc(t('link_ph'))}" />
           <label class="limit-label muted sm">${esc(t('limit_label'))}</label>
@@ -660,6 +670,16 @@ function wireCampaigns(list) {
         const c = list.find((x) => x.id === b.dataset.pause);
         const { ok } = await post(`/campaigns/${b.dataset.pause}/pause`, { paused: !c.paused });
         if (ok) { toast(!c.paused ? t('paused_toast') : t('resumed_toast')); reloadCurrentTab(); }
+    });
+    // Service priority pin (staff, all-orders view): toggle this campaign as the
+    // global front-of-queue pin. Sending an empty id clears the pin.
+    $$('#camp-list [data-prio]').forEach((b) => b.onclick = async () => {
+        const pinned = b.dataset.pinned === '1';
+        b.disabled = true;
+        const { ok, body } = await put('/priority', { campaignId: pinned ? '' : b.dataset.prio });
+        b.disabled = false;
+        if (ok) { toast(pinned ? t('unpinned_toast') : t('pinned_toast')); reloadCurrentTab(); }
+        else toast(errText(body?.error), 'err');
     });
     // Change the invite link mid-flight — toggle inline editor, then save.
     $$('#camp-list [data-editlink]').forEach((b) => b.onclick = () => {
