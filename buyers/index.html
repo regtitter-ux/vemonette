@@ -311,7 +311,7 @@
           <a class="btn btn-ghost" href="#how" data-i18n="hero_cta2">See how it works</a>
         </div>
         <div class="hero-tags">
-          <span><i></i> <b>$10</b> <span data-i18n="tag1">per 100 joins</span></span>
+          <span><i></i> <b class="js-price100">$10</b> <span data-i18n="tag1">per 100 joins</span></span>
           <span><i></i> <span data-i18n="tag2">verified against Discord</span></span>
           <span><i></i> <span data-i18n="tag3">pay only for stays</span></span>
         </div>
@@ -411,7 +411,7 @@
           <h3 data-i18n="stays_h3">We watch every join, not just the click</h3>
           <p data-i18n="stays_p">Each join is verified live against Discord. If someone leaves your server afterwards, we detect it and it stops counting — so your money follows real, lasting members, never a number that walked away.</p>
           <div class="stays-sum">
-            <span class="big grad">$10</span>
+            <span class="big grad js-price100">$10</span>
             <span class="lbl" data-i18n="stays_price">per 100 verified joins that stick — fixed price, no hidden fees.</span>
           </div>
         </div>
@@ -436,7 +436,7 @@
       <div class="nums">
         <div class="num"><b class="mono k" id="nMembers">0</b><span data-i18n="n1">members across the network, combined</span></div>
         <div class="num"><b class="mono k" id="nJoins">0</b><span data-i18n="n2">joins already delivered to buyers</span></div>
-        <div class="num"><b class="k">$10</b><span data-i18n="n3">per 100 verified joins — flat</span></div>
+        <div class="num"><b class="k js-price100">$10</b><span data-i18n="n3">per 100 verified joins — flat</span></div>
         <div class="num"><b class="k" data-i18n="n4b">Live</b><span data-i18n="n4">stats on every order, in real time</span></div>
       </div>
     </div>
@@ -805,6 +805,15 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
       if(lo) lo.addEventListener('click',async(e)=>{ e.preventDefault(); try{ await fetch(base+'/partner/logout',{method:'POST',credentials:'include',headers}); }catch(_){} try{ localStorage.removeItem('vemoni_tok'); }catch(_){} setAuthed(false); location.reload(); });
     })
     .catch(()=>{});
+})();
+</script>
+
+<!-- live retail join price: replace the hardcoded $10 with the current number -->
+<script>
+(function(){
+  var base=(window.__VEMONI_API_BASE__||'').replace(/\/+$/,'');
+  function apply(p){ p=Number(p); if(!(p>0)) return; document.querySelectorAll('.js-price100').forEach(function(el){ el.textContent='$'+p; }); }
+  fetch(base+'/pricing',{cache:'no-store'}).then(function(r){ return r.ok?r.json():null; }).then(function(d){ if(d&&d.pricePer100!=null) apply(d.pricePer100); }).catch(function(){});
 })();
 </script>
 
