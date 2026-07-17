@@ -47,7 +47,7 @@ const DICT = {
     autopause_warn: 'Кампания на паузе: на вашем сервере больше некому проверять заходы (наш чекер выгнан/забанен или потерял доступ). Верните бота — показ возобновится автоматически. Пока на паузе списаний нет.',
     by_buyer: 'Заказчик:',
     no_active_camps: 'Активных кампаний нет.', no_done_camps: 'Завершённых кампаний пока нет.',
-    loading: 'Загрузка…',
+    loading: 'Загрузка…', load_error: 'Не удалось загрузить заказы.', retry: 'Повторить',
     rate: (p) => `· $${p} за 100 заходов`,
     invite_bad: 'Вставьте корректную ссылку на Discord-сервер, например https://discord.gg/xxxx',
     invite_min: (n) => `Минимум ${n} заходов`,
@@ -136,7 +136,7 @@ const DICT = {
     autopause_warn: 'Campaign paused: joins can no longer be verified on your server (our checker was kicked/banned or lost access). Add our bot back — delivery resumes automatically. No charges while paused.',
     by_buyer: 'Buyer:',
     no_active_camps: 'No active campaigns.', no_done_camps: 'No completed campaigns yet.',
-    loading: 'Loading…',
+    loading: 'Loading…', load_error: 'Could not load your orders.', retry: 'Retry',
     rate: (p) => `· $${p} per 100 stays`,
     invite_bad: 'Paste a valid Discord server invite, e.g. https://discord.gg/xxxx',
     invite_min: (n) => `Minimum ${n} stays`,
@@ -532,17 +532,28 @@ let adminActive = [], adminDone = [];
 const isAdminView = () => Boolean(CFG.isAdmin || CFG.isOwner || CFG.isManager);
 
 async function loadCampaigns() {
-    const { ok, body } = await get('/campaigns');
-    if (!ok) return;
+    let ok = false, body = null;
+    try { ({ ok, body } = await get('/campaigns')); } catch { ok = false; }
+    // Never leave the list stuck on "Загрузка…": on failure show a retry, unless
+    // we already have data (a transient poll error shouldn't wipe the list).
+    if (!ok) { if (!lastCampaigns.length) showCampError(); return; }
     lastCampaigns = body.campaigns || [];
     renderCampaigns();
 }
 // Admin/owner: every buyer's orders (scope 'active' | 'done').
 async function loadAdminCampaigns(scope) {
-    const { ok, body } = await get('/all-campaigns?scope=' + scope);
-    if (!ok) return;
+    let ok = false, body = null;
+    try { ({ ok, body } = await get('/all-campaigns?scope=' + scope)); } catch { ok = false; }
+    if (!ok) { if (!adminActive.length && !adminDone.length) showCampError(); return; }
     if (scope === 'done') adminDone = body.campaigns || []; else adminActive = body.campaigns || [];
     renderCampaigns();
+}
+// A load error placeholder with a retry button (so a slow/failed fetch never
+// looks like an eternal spinner).
+function showCampError() {
+    const box = $('#camp-list'); if (!box) return;
+    box.innerHTML = `<div class="muted">${esc(t('load_error'))} <button class="btn-mini" id="camp-retry">${esc(t('retry'))}</button></div>`;
+    const r = $('#camp-retry'); if (r) r.onclick = () => { box.innerHTML = `<div class="muted">${esc(t('loading'))}</div>`; reloadCurrentTab(); };
 }
 // Refresh whatever the visible tab shows — used by the real-time poll and after edits.
 function reloadCurrentTab() {
