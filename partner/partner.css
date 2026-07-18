@@ -247,3 +247,11 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .myref-row input{flex:1 1 220px;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--stroke-2);border-radius:8px;padding:9px 12px;font-size:13.5px;font-family:inherit}
 .myref-row input:focus{outline:none;border-color:var(--blue)}
 #myref-msg{margin-top:8px}
+
+/* referral link block */
+.my-reflink:empty{display:none}
+.reflink-box{background:var(--panel);border:1px solid var(--stroke);border-radius:12px;padding:14px 16px}
+.reflink-head{margin-bottom:10px}
+.reflink-row{display:flex;gap:10px;flex-wrap:wrap}
+.reflink-row input{flex:1 1 260px;min-width:0;background:var(--bg);color:var(--blue-2);border:1px solid var(--stroke-2);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit}
+.reflink-row input:focus{outline:none;border-color:var(--blue)}

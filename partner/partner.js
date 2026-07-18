@@ -90,7 +90,10 @@ const WHOLE = {
   'Вас кто-то пригласил? Впишите его Discord ID — он будет получать реф-бонус с ваших выводов. Указать можно только один раз.':'Were you invited? Enter their Discord ID — they will earn a referral bonus from your withdrawals. Can be set only once.',
   'Discord ID реферра':'Referrer Discord ID','Реферр сохранён':'Referrer saved',
   'Реферр уже указан — изменить нельзя.':'Referrer already set — cannot change.','Нельзя указать самого себя.':"You can't refer yourself.",
-  'Введите корректный Discord ID.':'Enter a valid Discord ID.','Не удалось сохранить.':'Could not save.'
+  'Введите корректный Discord ID.':'Enter a valid Discord ID.','Не удалось сохранить.':'Could not save.',
+  'Ваша реферальная ссылка':'Your referral link',
+  '— делитесь ей: каждый, кто войдёт по ней, станет вашим рефералом, и вы получите реф-бонус с его выводов.':'— share it: everyone who signs in via it becomes your referral and you earn a referral bonus from their withdrawals.',
+  'Скопировать':'Copy','Ссылка скопирована':'Link copied','Реферр засчитан':'Referrer applied'
 };
 function bannerFromAvatar(url) {
     const bn = document.getElementById('nmBanner'); if (!bn || !url) return;
@@ -330,6 +333,29 @@ async function load() {
 
 // ---- Referrals: who this partner invited and what they earned (10% of each
 // referred user's withdrawals), reconstructed server-side from existing data. ----
+// "Your referral link" — share it; whoever signs in via it becomes your referral
+// automatically (their ?ref=<your id> is applied on login). You earn pct% of
+// their withdrawals.
+function renderRefLink(pct) {
+    const box = $('#my-reflink'); if (!box) return;
+    const myId = window.__PARTNER_ID__ || '';
+    if (!/^\d{17,20}$/.test(String(myId))) { box.innerHTML = ''; return; }
+    const link = `${location.origin}/partner/?ref=${myId}`;
+    box.innerHTML = `
+      <div class="reflink-box">
+        <div class="reflink-head"><b>Ваша реферальная ссылка</b> <span class="muted sm">— делитесь ей: каждый, кто войдёт по ней, станет вашим рефералом, и вы получите реф-бонус с его выводов.</span></div>
+        <div class="reflink-row">
+          <input id="reflink-input" type="text" readonly value="${esc(link)}" />
+          <button class="btn primary sm" id="reflink-copy">Скопировать</button>
+        </div>
+      </div>`;
+    const inp = $('#reflink-input'), btn = $('#reflink-copy');
+    if (btn) btn.onclick = async () => {
+        try { await navigator.clipboard.writeText(link); } catch (_) { if (inp) { inp.focus(); inp.select(); try { document.execCommand('copy'); } catch (_) {} } }
+        toast('Ссылка скопирована');
+    };
+}
+
 // "Your referrer" — the person who invited THIS user. Set once from here (the web
 // equivalent of the /bal "Referrer" button); locked afterwards.
 function renderMyReferrer(ref, pct) {
@@ -367,6 +393,7 @@ async function loadReferrals() {
     const { ok, body } = await get('/referrals');
     if (!ok || !body) { if (list) list.innerHTML = '<div class="muted">Не удалось загрузить рефералов.</div>'; return; }
     const pct = Math.round((body.rate || 0.1) * 100);
+    renderRefLink(pct);
     renderMyReferrer(body.myReferrer, pct);
     if (cards) cards.innerHTML = [
         { k: 'Рефералов', v: body.count },
@@ -863,9 +890,24 @@ $('#p-req-save').addEventListener('click', async () => {
     if (ok) toast('Реквизиты сохранены'); else toast(body?.error || 'Не удалось сохранить', 'err');
 });
 
+// Referral link: capture ?ref=<id> BEFORE login and remember it (it survives the
+// Discord OAuth redirect); it's applied automatically once the user logs in.
+(() => { try { const m = (location.search || '').match(/[?&]ref=(\d{17,20})/); if (m) { localStorage.setItem('vemoni_ref', m[1]); history.replaceState(null, '', location.pathname + location.hash); } } catch (_) {} })();
+
+// Apply a stored referral link once we know who logged in: set the new user's
+// referrer to whoever created the link (backend rejects self / already-set).
+async function consumeRefLink(myId) {
+    let ref = ''; try { ref = localStorage.getItem('vemoni_ref') || ''; } catch (_) {}
+    if (!/^\d{17,20}$/.test(ref)) return;
+    try { localStorage.removeItem('vemoni_ref'); } catch (_) {}   // consume once
+    if (ref === String(myId)) return;                              // own link → ignore
+    const { ok } = await put('/referrer', { referrerId: ref });
+    if (ok) { toast('Реферр засчитан'); loadReferrals(); }        // else already-set/invalid → silent
+}
+
 // Boot
 (async () => {
     const who = await checkAuth();
-    if (who) { enterApp(); setupCabNav(who); }
+    if (who) { window.__PARTNER_ID__ = who.userId || window.__PARTNER_ID__; enterApp(); setupCabNav(who); consumeRefLink(who.userId); }
     else { setAuthed(false); document.documentElement.classList.remove('pre-auth'); $('#login').hidden = false; $('#app').hidden = true; }
 })();
