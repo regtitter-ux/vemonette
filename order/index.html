@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/order/order.css?v=28" />
-  <link rel="stylesheet" href="/order/dmall.css?v=1" />
+  <link rel="stylesheet" href="/order/dmall.css?v=2" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';
   </script>
@@ -120,108 +120,89 @@
 <!-- ============================ DMALL console (shell) ============================ -->
   <div id="dmall" hidden>
     <nav class="dm-tabsbar">
-      <button class="dm-tab active" data-dtab="templates"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="dm-tab-txt">Шаблоны</span></button>
-      <button class="dm-tab" data-dtab="bots"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="11" rx="2.5"/><path d="M12 8V4M8 13h.01M16 13h.01"/></svg><span class="dm-tab-txt">Боты</span></button>
-      <button class="dm-tab" data-dtab="launch"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13c-1.5.5-3 2-3 6 4 0 5.5-1.5 6-3M12 15l-3-3 1-4c1.5-4 5-6 9-6 0 4-2 7.5-6 9l-4 1M9 12l3 3"/></svg><span class="dm-tab-txt">Запуск</span></button>
-      <button class="dm-tab" data-dtab="tasks"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg><span class="dm-tab-txt">Задачи</span><span class="dm-badge">1</span></button>
-      <button class="dm-tab" data-dtab="stats"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="dm-tab-txt">Статистика</span></button>
+      <button class="dm-tab active" data-dtab="templates"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="dm-tab-txt" data-dm="tab_templates">Templates</span></button>
+      <button class="dm-tab" data-dtab="launch"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13c-1.5.5-3 2-3 6 4 0 5.5-1.5 6-3M12 15l-3-3 1-4c1.5-4 5-6 9-6 0 4-2 7.5-6 9l-4 1M9 12l3 3"/></svg><span class="dm-tab-txt" data-dm="tab_launch">Launch</span></button>
+      <button class="dm-tab" data-dtab="tasks"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg><span class="dm-tab-txt" data-dm="tab_tasks">Tasks</span><span class="dm-badge">1</span></button>
+      <button class="dm-tab" data-dtab="stats"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="dm-tab-txt" data-dm="tab_stats">Stats</span></button>
     </nav>
 
-    <!-- ============ Шаблоны ============ -->
+    <!-- ============ Templates ============ -->
     <section class="dm-panel active" data-dpanel="templates">
       <div class="dm-cols">
         <!-- form -->
         <div class="dm-card">
-          <div class="dm-card-h"><h2 id="dm-form-title">Новый шаблон</h2><button class="dm-btn ghost sm" id="dm-example">Пример Nitro</button></div>
+          <div class="dm-card-h"><h2 id="dm-form-title" data-dm="new_tpl">New template</h2><button class="dm-btn ghost sm" id="dm-example" data-dm="example">Nitro example</button></div>
 
-          <div class="dm-field"><label class="dm-label">Название</label><input class="dm-input" id="dm-t-name" placeholder="Nitro / Robux giveaway" /></div>
+          <div class="dm-field"><label class="dm-label" data-dm="f_name">Name</label><input class="dm-input" id="dm-t-name" placeholder="Nitro / Robux giveaway" /></div>
           <div class="dm-field"><label class="dm-label">content</label><textarea class="dm-textarea" id="dm-t-content" data-preview placeholder="Congratulations <@USER_ID> 🎉"></textarea></div>
-          <div class="dm-chips"><span class="dm-chips-lbl">Получатель:</span><button class="dm-chip" data-insert="&lt;@USER_ID&gt;" data-target="dm-t-content">&lt;@USER_ID&gt;</button><button class="dm-chip" data-insert="&lt;@USERNAME&gt;" data-target="dm-t-content">&lt;@USERNAME&gt;</button><button class="dm-chip" data-insert="&lt;@DISPLAY_NAME&gt;" data-target="dm-t-content">&lt;@DISPLAY_NAME&gt;</button></div>
-          <div class="dm-chips"><span class="dm-chips-lbl">Ссылка:</span><span class="dm-chip link">{{LINK}}</span></div>
+          <div class="dm-chips"><span class="dm-chips-lbl" data-dm="recipient">Recipient:</span><button class="dm-chip" data-insert="&lt;@USER_ID&gt;" data-target="dm-t-content">&lt;@USER_ID&gt;</button><button class="dm-chip" data-insert="&lt;@USERNAME&gt;" data-target="dm-t-content">&lt;@USERNAME&gt;</button><button class="dm-chip" data-insert="&lt;@DISPLAY_NAME&gt;" data-target="dm-t-content">&lt;@DISPLAY_NAME&gt;</button></div>
+          <div class="dm-chips"><span class="dm-chips-lbl" data-dm="link_lbl">Link:</span><span class="dm-chip link">{{LINK}}</span></div>
 
-          <div class="dm-divide"><h3>Эмбед</h3></div>
+          <div class="dm-divide"><h3 data-dm="embed_h">Embed</h3></div>
           <div class="dm-field"><label class="dm-label">author.name</label><input class="dm-input" id="dm-t-author" data-preview placeholder="" /></div>
           <div class="dm-field"><label class="dm-label">author.url</label><input class="dm-input" id="dm-t-authorurl" placeholder="{{LINK}}" /></div>
-          <div class="dm-chips"><span class="dm-chips-lbl">Ссылка:</span><span class="dm-chip link">{{LINK}}</span></div>
+          <div class="dm-chips"><span class="dm-chips-lbl" data-dm="link_lbl">Link:</span><span class="dm-chip link">{{LINK}}</span></div>
           <div class="dm-field"><label class="dm-label">description</label><textarea class="dm-textarea" id="dm-t-desc" data-preview placeholder=""></textarea></div>
-          <div class="dm-chips"><span class="dm-chips-lbl">Получатель:</span><button class="dm-chip" data-insert="&lt;@USER_ID&gt;" data-target="dm-t-desc">&lt;@USER_ID&gt;</button><button class="dm-chip" data-insert="&lt;@USERNAME&gt;" data-target="dm-t-desc">&lt;@USERNAME&gt;</button><button class="dm-chip" data-insert="&lt;@DISPLAY_NAME&gt;" data-target="dm-t-desc">&lt;@DISPLAY_NAME&gt;</button></div>
+          <div class="dm-chips"><span class="dm-chips-lbl" data-dm="recipient">Recipient:</span><button class="dm-chip" data-insert="&lt;@USER_ID&gt;" data-target="dm-t-desc">&lt;@USER_ID&gt;</button><button class="dm-chip" data-insert="&lt;@USERNAME&gt;" data-target="dm-t-desc">&lt;@USERNAME&gt;</button><button class="dm-chip" data-insert="&lt;@DISPLAY_NAME&gt;" data-target="dm-t-desc">&lt;@DISPLAY_NAME&gt;</button></div>
           <div class="dm-field"><label class="dm-label">color</label>
             <div class="dm-color-row"><input class="dm-input" id="dm-t-color" data-preview value="#5865f2" /><input type="color" class="dm-swatch" id="dm-t-colorpick" value="#5865f2" /></div>
           </div>
           <div class="dm-field"><label class="dm-label">footer.text</label><input class="dm-input" id="dm-t-footer" data-preview placeholder="" /></div>
-          <div class="dm-field"><label class="dm-label">thumbnail.url</label><input class="dm-input" id="dm-t-thumb" data-preview placeholder="https://… или загрузите файл ниже" />
-            <div class="dm-upload"><div class="dm-upload-th" id="dm-thumb-prev">?</div><div class="dm-upload-main"><button class="dm-file-btn">Выбрать файл</button><div class="dm-upload-hint">PNG, JPEG, WEBP или GIF до 8 МБ · внешний URL или загрузка на сервер</div></div></div>
+          <div class="dm-field"><label class="dm-label">thumbnail.url</label><input class="dm-input" id="dm-t-thumb" data-preview data-dm-ph="ph_upload" placeholder="https://… or upload a file below" />
+            <div class="dm-upload"><div class="dm-upload-th" id="dm-thumb-prev">?</div><div class="dm-upload-main"><button class="dm-file-btn" data-dm="choose_file">Choose file</button><div class="dm-upload-hint" data-dm="upload_hint">PNG, JPEG, WEBP or GIF up to 8 MB · external URL or server upload</div></div></div>
           </div>
-          <div class="dm-field"><label class="dm-label">image.url</label><input class="dm-input" id="dm-t-image" data-preview placeholder="https://… или загрузите файл ниже" />
-            <div class="dm-upload"><div class="dm-upload-th" id="dm-image-prev">?</div><div class="dm-upload-main"><button class="dm-file-btn">Выбрать файл</button><div class="dm-upload-hint">PNG, JPEG, WEBP или GIF до 8 МБ · внешний URL или загрузка на сервер</div></div></div>
+          <div class="dm-field"><label class="dm-label">image.url</label><input class="dm-input" id="dm-t-image" data-preview data-dm-ph="ph_upload" placeholder="https://… or upload a file below" />
+            <div class="dm-upload"><div class="dm-upload-th" id="dm-image-prev">?</div><div class="dm-upload-main"><button class="dm-file-btn" data-dm="choose_file">Choose file</button><div class="dm-upload-hint" data-dm="upload_hint">PNG, JPEG, WEBP or GIF up to 8 MB · external URL or server upload</div></div></div>
           </div>
 
-          <div class="dm-divide"><h3>Профиль бота</h3><p>Имя, аватар и custom status выставляются при первом подключении бота к рассылке (один раз за run). Discord — не чаще ~1 смены имени в час.</p></div>
-          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-name" /> Установить имя бота</label>
-          <div class="dm-reveal" id="dm-rv-name"><div class="dm-field"><label class="dm-label">username</label><input class="dm-input" id="dm-t-username" data-preview value="Newspaper" /><div class="dm-hint">Сохранится как «Newspaper»</div></div></div>
-          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-av" /> Установить аватар</label>
-          <div class="dm-reveal" id="dm-rv-av"><div class="dm-upload"><div class="dm-upload-th" id="dm-av-prev">?</div><div class="dm-upload-main"><button class="dm-file-btn">Выбрать файл</button><div class="dm-upload-hint">PNG, JPEG, WEBP или GIF до 8 МБ · внешний URL или загрузка на сервер</div></div></div></div>
-          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-status" /> Установить кастомный статус</label>
-          <div class="dm-reveal" id="dm-rv-status"><div class="dm-field"><label class="dm-label">customStatus</label><input class="dm-input" id="dm-t-status" value="Important Notice" /><div class="dm-hint">16/128 · пусто = не менять presence</div></div></div>
+          <div class="dm-divide"><h3 data-dm="bot_profile">Bot profile</h3><p data-dm="bot_profile_p">Name, avatar and custom status are applied on the bot's first connection to a broadcast (once per run). Discord — no more than ~1 name change per hour.</p></div>
+          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-name" /> <span data-dm="set_name">Set bot name</span></label>
+          <div class="dm-reveal" id="dm-rv-name"><div class="dm-field"><label class="dm-label">username</label><input class="dm-input" id="dm-t-username" data-preview value="Newspaper" /><div class="dm-hint" data-dm="saved_as">Saved as “Newspaper”</div></div></div>
+          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-av" /> <span data-dm="set_avatar">Set avatar</span></label>
+          <div class="dm-reveal" id="dm-rv-av"><div class="dm-upload"><div class="dm-upload-th" id="dm-av-prev">?</div><div class="dm-upload-main"><button class="dm-file-btn" data-dm="choose_file">Choose file</button><div class="dm-upload-hint" data-dm="upload_hint">PNG, JPEG, WEBP or GIF up to 8 MB · external URL or server upload</div></div></div></div>
+          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-status" /> <span data-dm="set_status">Set custom status</span></label>
+          <div class="dm-reveal" id="dm-rv-status"><div class="dm-field"><label class="dm-label">customStatus</label><input class="dm-input" id="dm-t-status" value="Important Notice" /><div class="dm-hint" data-dm="status_hint">16/128 · empty = keep presence</div></div></div>
 
-          <div class="dm-divide"><h3>Кнопка (link)</h3></div>
+          <div class="dm-divide"><h3 data-dm="button_link">Button (link)</h3></div>
           <div class="dm-field"><label class="dm-label">label</label><input class="dm-input" id="dm-t-btnlabel" data-preview placeholder="Check" /></div>
           <div class="dm-field"><label class="dm-label">url</label><input class="dm-input" id="dm-t-btnurl" placeholder="{{LINK}}" /></div>
-          <div class="dm-chips"><span class="dm-chips-lbl">Ссылка:</span><span class="dm-chip link">{{LINK}}</span></div>
+          <div class="dm-chips"><span class="dm-chips-lbl" data-dm="link_lbl">Link:</span><span class="dm-chip link">{{LINK}}</span></div>
           <div class="dm-field"><label class="dm-label">emoji</label><input class="dm-input" id="dm-t-btnemoji" data-preview placeholder="🎁" /></div>
 
-          <div class="dm-form-actions"><button class="dm-btn primary" id="dm-save">Создать шаблон</button><button class="dm-btn ghost" id="dm-cancel" hidden>Отмена</button></div>
+          <div class="dm-form-actions"><button class="dm-btn primary" id="dm-save" data-dm="create_tpl">Create template</button><button class="dm-btn ghost" id="dm-cancel" data-dm="cancel" hidden>Cancel</button></div>
         </div>
 
         <!-- preview + saved -->
         <div>
           <div class="dm-card">
-            <div class="dm-card-h"><h2>Предпросмотр</h2></div>
-            <div class="dm-preview empty" id="dm-preview"><span>Предпросмотр появится здесь</span></div>
+            <div class="dm-card-h"><h2 data-dm="preview">Preview</h2></div>
+            <div class="dm-preview empty" id="dm-preview"><span data-dm="preview_empty">Preview will appear here</span></div>
           </div>
 
-          <div class="dm-saved-h">Сохранённые шаблоны</div>
+          <div class="dm-saved-h" data-dm="saved_tpls">Saved templates</div>
           <div id="dm-saved-list">
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-tpl-meta">с кнопкой · author · аватар · бот «Newspaper» · статус «Important Notice» · 17.07.26, 18:15</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm">Изменить</button><button class="dm-btn ghost sm">Дублировать</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия) (копия)</div><div class="dm-tpl-meta">с кнопкой · author · аватар · бот «Newspaper» · статус «Important Notice» · 13.07.26, 21:31</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm">Изменить</button><button class="dm-btn ghost sm">Дублировать</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR</div><div class="dm-tpl-meta">с кнопкой · author · аватар · бот «Newspaper» · статус «Important Notice» · 11.06.26, 11:11</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm">Изменить</button><button class="dm-btn ghost sm">Дублировать</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">Nitro / Robux giveaway</div><div class="dm-tpl-meta">с кнопкой · аватар · бот «Gregory» · статус «Important Notice» · 05.06.26, 15:03</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm">Изменить</button><button class="dm-btn ghost sm">Дублировать</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">Вам были выданы права **Администратора** на сервере</div><div class="dm-tpl-meta">статус «Официальное сообщение от Discord» · 31.05.26, 15:44</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm">Изменить</button><button class="dm-btn ghost sm">Дублировать</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">Вы были приглашены пообщаться</div><div class="dm-tpl-meta">с кнопкой · аватар · бот «Discord» · статус «Официальное сообщение от Discord» · 30.05.26, 17:57</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm">Изменить</button><button class="dm-btn ghost sm">Дублировать</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">Хочешь получить халявные робуксы? То</div><div class="dm-tpl-meta">статус «Официальное сообщение от Discord» · 30.05.26, 16:11</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm">Изменить</button><button class="dm-btn ghost sm">Дублировать</button></div></div>
+            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-tpl-meta" data-dm="meta1">with button · author · avatar · bot «Newspaper» · status «Important Notice» · 17.07.26, 18:15</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
+            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия) (копия)</div><div class="dm-tpl-meta" data-dm="meta2">with button · author · avatar · bot «Newspaper» · status «Important Notice» · 13.07.26, 21:31</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
+            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR</div><div class="dm-tpl-meta" data-dm="meta3">with button · author · avatar · bot «Newspaper» · status «Important Notice» · 11.06.26, 11:11</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
+            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">Nitro / Robux giveaway</div><div class="dm-tpl-meta" data-dm="meta4">with button · avatar · bot «Gregory» · status «Important Notice» · 05.06.26, 15:03</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
+            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title" data-dm-html="tpl_title5">You've been granted **Administrator** on the server</div><div class="dm-tpl-meta" data-dm="meta5">status «Official message from Discord» · 31.05.26, 15:44</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
+            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title" data-dm="tpl_title6">You've been invited to chat</div><div class="dm-tpl-meta" data-dm="meta6">with button · avatar · bot «Discord» · status «Official message from Discord» · 30.05.26, 17:57</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
+            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title" data-dm="tpl_title7">Want free robux? Th</div><div class="dm-tpl-meta" data-dm="meta7">status «Official message from Discord» · 30.05.26, 16:11</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ============ Боты ============ -->
-    <section class="dm-panel" data-dpanel="bots">
-      <div class="dm-card">
-        <div class="dm-card-h"><h2>Статистика пула</h2></div>
-        <p class="dm-sub">Список аккаунтов и управление пулом доступны только администратору.</p>
-        <div class="dm-pool">
-          <span class="dm-pill">Всего: <b>3755</b></span>
-          <span class="dm-pill g">Свободно: <b>115</b></span>
-          <span class="dm-pill">Занято: <b>8</b></span>
-          <span class="dm-pill r">Инвалидных: <b>3632</b></span>
-          <span class="dm-pill">Онлайн: <b>0</b></span>
-          <span class="dm-pill">На серверах: <b>38</b></span>
-          <span class="dm-pill p">Карантин: <b>3 293</b></span>
-          <span class="dm-pill">Отправлено: <b>1 765 109</b></span>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ Запуск ============ -->
+    <!-- ============ Launch ============ -->
     <section class="dm-panel" data-dpanel="launch">
       <div class="dm-card">
-        <div class="dm-card-h"><h2>Запуск рассылки</h2></div>
+        <div class="dm-card-h"><h2 data-dm="launch_h">Start a broadcast</h2></div>
 
-        <div class="dm-field"><label class="dm-label">Шаблон сообщения</label>
+        <div class="dm-field"><label class="dm-label" data-dm="msg_tpl">Message template</label>
           <select class="dm-select"><option>100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</option><option>Nitro / Robux giveaway</option></select>
         </div>
 
-        <div class="dm-field"><label class="dm-label">Предпросмотр</label>
+        <div class="dm-field"><label class="dm-label" data-dm="preview">Preview</label>
           <div class="dm-preview">
             <div class="dm-msg">
               <div class="dm-av"></div>
@@ -235,122 +216,104 @@
           </div>
         </div>
 
-        <div class="dm-divide"><h3>Повторы и кулдауны</h3><p>Ссылка назначения нужна для шаблонов с [[LINK]] и для фильтров по конкретному серверу. Кулдауны можно комбинировать: дни и часы складываются (максимум 365 дней).</p></div>
-        <div class="dm-field"><label class="dm-label">Ссылка назначения</label><input class="dm-input" placeholder="https://discord.gg/abc123" /><div class="dm-hint">В шаблоне есть [[LINK]] — укажите инвайт или внешний URL</div></div>
-        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title">Дедуп по таргету</div><div class="dm-tr-sub">Не слать тем, кто уже попал на этот сервер или ссылку<br>Укажите ссылку назначения выше.</div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
-        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title">Глобальный кулдаун</div><div class="dm-tr-sub">Не слать, если участник получал любую рекламу за период ниже</div><div class="dm-cool-row">за последние <input class="dm-input dm-num" /> дн. <input class="dm-input dm-num" /> ч.</div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
-        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title">Кулдаун по таргету</div><div class="dm-tr-sub">Не слать, если уже получал рассылку на этот сервер/ссылку за период ниже</div><div class="dm-cool-row">за последние <input class="dm-input dm-num" /> дн. <input class="dm-input dm-num" /> ч.</div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
+        <div class="dm-divide"><h3 data-dm="repeats">Repeats &amp; cooldowns</h3><p data-dm="repeats_p">The destination link is needed for templates with [[LINK]] and for per-server filters. Cooldowns can be combined: days and hours add up (max 365 days).</p></div>
+        <div class="dm-field"><label class="dm-label" data-dm="dest_link">Destination link</label><input class="dm-input" placeholder="https://discord.gg/abc123" /><div class="dm-hint" data-dm="dest_hint">The template has [[LINK]] — enter an invite or external URL</div></div>
+        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="dedup_t">Dedup by target</div><div class="dm-tr-sub" data-dm-html="dedup_t_sub">Don't send to those who already joined this server or link<br>Enter the destination link above.</div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
+        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="cool_g">Global cooldown</div><div class="dm-tr-sub" data-dm="cool_g_sub">Don't send if the member received any ad within the period below</div><div class="dm-cool-row"><span data-dm="within_last">within the last</span> <input class="dm-input dm-num" /> <span data-dm="days">d</span> <input class="dm-input dm-num" /> <span data-dm="hours">h</span></div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
+        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="cool_t">Cooldown by target</div><div class="dm-tr-sub" data-dm="cool_t_sub">Don't send if they already got a broadcast for this server/link within the period below</div><div class="dm-cool-row"><span data-dm="within_last">within the last</span> <input class="dm-input dm-num" /> <span data-dm="days">d</span> <input class="dm-input dm-num" /> <span data-dm="hours">h</span></div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
 
-        <div class="dm-divide"><h3>Сервер</h3><p>Выберите назначенный сервер или укажите новый guild — для нового нужен OAuth-канал; селфбот должен быть на сервере.</p></div>
-        <div class="dm-field"><label class="dm-label">Назначенный сервер</label><select class="dm-select"><option>— Выберите или укажите ID ниже —</option></select></div>
-        <div class="dm-field"><label class="dm-label">ID сервера (guild)</label><input class="dm-input" placeholder="1369076925389078609" /><div class="dm-hint">Введите ID сервера</div></div>
+        <div class="dm-divide"><h3 data-dm="server_h">Server</h3><p data-dm="server_p">Choose an assigned server or enter a new guild — a new one needs an OAuth channel; the selfbot must be on the server.</p></div>
+        <div class="dm-field"><label class="dm-label" data-dm="assigned_server">Assigned server</label><select class="dm-select"><option data-dm="opt_choose_id">— Choose or enter an ID below —</option></select></div>
+        <div class="dm-field"><label class="dm-label" data-dm="guild_id">Server ID (guild)</label><input class="dm-input" placeholder="1369076925389078609" /><div class="dm-hint" data-dm="guild_id_hint">Enter the server ID</div></div>
 
-        <div class="dm-divide"><h3>Исключение участников сервера</h3><p>Необязательно: если указать сервер, его участники из guild_members не попадут в очередь рассылки. Без ID исключения не применяется.</p></div>
-        <div class="dm-field"><label class="dm-label">Сервер для исключения</label><select class="dm-select"><option>— Выберите сервер —</option></select></div>
+        <div class="dm-divide"><h3 data-dm="exclude_h">Exclude the server's members</h3><p data-dm="exclude_p">Optional: if you specify a server, its guild_members won't enter the broadcast queue. Without an ID, no exclusion is applied.</p></div>
+        <div class="dm-field"><label class="dm-label" data-dm="exclude_server">Server to exclude</label><select class="dm-select"><option data-dm="opt_choose_server">— Choose a server —</option></select></div>
 
-        <div class="dm-divide"><h3>Кому отправлять</h3><p>Все участники, только роли или конкретные ID. Исключение по ролям и участникам применяется после фильтра аудитории. Дедуп по ссылке — отдельно, в блоке выше.</p></div>
-        <div class="dm-field"><label class="dm-label">Аудитория</label><select class="dm-select"><option>Все участники</option><option>Только роли</option><option>Конкретные ID</option></select></div>
-        <div class="dm-field"><label class="dm-label">Исключить участников (ID)</label><textarea class="dm-textarea" placeholder="ID через запятую или с новой строки"></textarea></div>
-        <div class="dm-field"><label class="dm-label">Приоритет по онлайн-статусу</label><select class="dm-select"><option>Без приоритета</option><option>Сначала в сети, потом офлайн</option></select></div>
+        <div class="dm-divide"><h3 data-dm="whom_h">Who to send to</h3><p data-dm="whom_p">All members, only roles, or specific IDs. Role/member exclusions apply after the audience filter. Link dedup is separate, in the block above.</p></div>
+        <div class="dm-field"><label class="dm-label" data-dm="audience">Audience</label><select class="dm-select"><option data-dm="aud_all">All members</option><option data-dm="aud_roles">Only roles</option><option data-dm="aud_ids">Specific IDs</option></select></div>
+        <div class="dm-field"><label class="dm-label" data-dm="exclude_members">Exclude members (IDs)</label><textarea class="dm-textarea" data-dm-ph="ph_ids" placeholder="IDs comma-separated or one per line"></textarea></div>
+        <div class="dm-field"><label class="dm-label" data-dm="online_prio">Priority by online status</label><select class="dm-select"><option data-dm="no_prio">No priority</option><option data-dm="online_first">Online first, then offline</option></select></div>
 
-        <div class="dm-divide"><h3>Пул ботов</h3></div>
-        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title">Выйти с сервера после рассылки</div><div class="dm-tr-sub">Все боты, которые участвовали в этой рассылке, покинут сервер по её окончании</div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
-        <div class="dm-poolbox"><b>115</b> свободных из 3 755 в пуле<div class="dm-poolsub">7 занято · 3 633 инвалидных · 3 294 в карантине</div></div>
+        <div class="dm-divide"><h3 data-dm="bot_pool">Bot pool</h3></div>
+        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="leave_after">Leave the server after the broadcast</div><div class="dm-tr-sub" data-dm="leave_after_sub">All bots that took part in this broadcast will leave the server when it ends</div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
+        <div class="dm-poolbox" data-dm-html="poolbox"><b>115</b> free of 3 755 in the pool<div class="dm-poolsub">7 busy · 3 633 invalid · 3 294 in quarantine</div></div>
 
-        <div class="dm-divide"><h3>Количество сообщений</h3></div>
-        <div class="dm-field"><label class="dm-label">Сколько сообщений отправить</label><input class="dm-input" id="dm-l-count" value="1000" />
+        <div class="dm-divide"><h3 data-dm="msg_count">Message count</h3></div>
+        <div class="dm-field"><label class="dm-label" data-dm="how_many">How many messages to send</label><input class="dm-input" id="dm-l-count" value="1000" />
           <div class="dm-quick"><button data-amt="100">100</button><button data-amt="500">500</button><button data-amt="1000">1 000</button><button data-amt="5000">5 000</button><button data-amt="10000">10 000</button></div>
         </div>
-        <div class="dm-hint" style="margin-top:10px">Ботов нужно: <b>2</b></div>
+        <div class="dm-hint" data-dm-html="bots_needed" style="margin-top:10px">Bots needed: <b>2</b></div>
         <div class="dm-summary">
-          <div class="dm-sum-top">Суммарно сообщений: 1 000</div>
-          <div class="dm-sum-hint">Ботов посчитает бэкенд автоматически</div>
-          <div class="dm-sum-row"><span class="dm-sum-key">Сервер:</span> <b>—</b></div>
-          <div class="dm-sum-row"><span class="dm-sum-key">Исключение участников:</span> <b>не задано</b></div>
-          <div class="dm-sum-row"><span class="dm-sum-key">Ботов (оценка):</span> <b>2</b></div>
-          <div class="dm-sum-row"><span class="dm-sum-key">Аудитория:</span> <b>Все участники</b></div>
-          <div class="dm-sum-row"><span class="dm-sum-key">Онлайн:</span> <b>Без приоритета</b></div>
+          <div class="dm-sum-top" data-dm="sum_total">Total messages: 1 000</div>
+          <div class="dm-sum-hint" data-dm="sum_hint">Bots are counted by the backend automatically</div>
+          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_server">Server:</span> <b>—</b></div>
+          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_exclude">Member exclusion:</span> <b data-dm="not_set">not set</b></div>
+          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_bots">Bots (estimate):</span> <b>2</b></div>
+          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_aud">Audience:</span> <b data-dm="aud_all">All members</b></div>
+          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_online">Online:</span> <b data-dm="no_prio">No priority</b></div>
         </div>
-        <button class="dm-btn primary full" style="margin-top:16px" disabled>Запустить рассылку</button>
-        <div class="dm-hint" style="text-align:center;margin-top:8px">Активных рассылок: 1 — можно запустить ещё на другой сервер</div>
+        <button class="dm-btn primary full" style="margin-top:16px" data-dm="start_broadcast" disabled>Start broadcast</button>
+        <div class="dm-hint" data-dm="active_hint" style="text-align:center;margin-top:8px">Active broadcasts: 1 — you can start another on a different server</div>
       </div>
     </section>
 
-    <!-- ============ Задачи ============ -->
+    <!-- ============ Tasks ============ -->
     <section class="dm-panel" data-dpanel="tasks">
       <div class="dm-task on">
-        <div class="dm-task-h"><div><div class="dm-task-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-task-date">19.07.26, 00:01</div></div><span class="dm-status dm">РАССЫЛКА В ЛС</span></div>
+        <div class="dm-task-h"><div><div class="dm-task-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-task-date">19.07.26, 00:01</div></div><span class="dm-status dm" data-dm="st_dm">DM BROADCAST</span></div>
         <div class="dm-bigrow">
-          <div class="dm-bigbox g"><div class="dm-bb-ic">⟳</div><div><div class="dm-bb-k">Боты на сервере</div><div class="dm-bb-v">7/28</div></div></div>
-          <div class="dm-bigbox b"><div class="dm-bb-ic">✉</div><div><div class="dm-bb-k">Рассылка в ЛС</div><div class="dm-bb-v">Идёт</div></div></div>
+          <div class="dm-bigbox g"><div class="dm-bb-ic">⟳</div><div><div class="dm-bb-k" data-dm="bots_on_server">Bots on server</div><div class="dm-bb-v">7/28</div></div></div>
+          <div class="dm-bigbox b"><div class="dm-bb-ic">✉</div><div><div class="dm-bb-k" data-dm="dm_broadcast">DM broadcast</div><div class="dm-bb-v" data-dm="running">Running</div></div></div>
         </div>
-        <div class="dm-mini">
-          <div class="dm-minibox"><div class="dm-mb-k">👍 Нужно</div><div class="dm-mb-v">28</div></div>
-          <div class="dm-minibox"><div class="dm-mb-k">👥 На сервере</div><div class="dm-mb-v">7/28</div></div>
-          <div class="dm-minibox"><div class="dm-mb-k">↧ Дозагружено</div><div class="dm-mb-v b">+16</div></div>
-          <div class="dm-minibox"><div class="dm-mb-k">⏳ Ждут входа</div><div class="dm-mb-v b">+4</div></div>
-          <div class="dm-minibox"><div class="dm-mb-k">⚠ Ошибки входа</div><div class="dm-mb-v r">3</div></div>
-          <div class="dm-minibox"><div class="dm-mb-k">✈ Шпгот</div><div class="dm-mb-v">7</div></div>
-          <div class="dm-minibox"><div class="dm-mb-k">🔥 Сгорело</div><div class="dm-mb-v">11</div></div>
-        </div>
-        <div class="dm-prog-lbl"><span>Отправка сообщений</span><span><b>60%</b> · 8 345 / 14 000</span></div>
+        <div class="dm-prog-lbl"><span data-dm="sending">Sending messages</span><span><b>60%</b> · 8 345 / 14 000</span></div>
         <div class="dm-prog"><span style="width:60%"></span></div>
-        <div class="dm-task-note">С сервера: 90 119 · в очереди 87 420</div>
-        <div class="dm-route"><span class="dm-r-from">С 🍒 matching · <span class="dm-r-mut">chat · decor · art · guilds · games · giveaways · …</span></span><span class="dm-r-arrow">→ КУДА</span><span class="dm-r-to">❤️ valentines · <span class="dm-r-mut">social · giveaways · emotes</span> · <span class="dm-r-inv">discord.gg/valentines</span></span></div>
-        <div class="dm-aud"><b>Аудитория</b> Все участники · Сначала в сети, потом офлайн</div>
-        <div class="dm-task-acts"><button class="dm-btn ghost sm">Подробнее</button><button class="dm-btn danger sm">Стоп</button></div>
+        <div class="dm-task-note" data-dm="note1">From the server: 90 119 · queued 87 420</div>
+        <div class="dm-route"><span class="dm-r-from"><span data-dm="route_from">From</span> 🍒 matching · <span class="dm-r-mut">chat · decor · art · guilds · games · giveaways · …</span></span><span class="dm-r-arrow" data-dm="route_to">→ TO</span><span class="dm-r-to">❤️ valentines · <span class="dm-r-mut">social · giveaways · emotes</span> · <span class="dm-r-inv">discord.gg/valentines</span></span></div>
+        <div class="dm-aud" data-dm-html="task_aud"><b>Audience</b> All members · Online first, then offline</div>
+        <div class="dm-task-acts"><button class="dm-btn danger sm" data-dm="stop">Stop</button></div>
       </div>
 
       <div class="dm-task">
-        <div class="dm-task-h"><div><div class="dm-task-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-task-date">18.07.26, 23:57</div></div><span class="dm-status err">ОШИБКА</span></div>
+        <div class="dm-task-h"><div><div class="dm-task-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-task-date">18.07.26, 23:57</div></div><span class="dm-status err" data-dm="st_err">ERROR</span></div>
         <div class="dm-bigrow">
-          <div class="dm-bigbox g"><div class="dm-bb-ic">✓</div><div><div class="dm-bb-k">Боты</div><div class="dm-bb-v">Готово</div></div></div>
-          <div class="dm-bigbox"><div class="dm-bb-ic">✉</div><div><div class="dm-bb-k">Рассылка в ЛС</div><div class="dm-bb-v">—</div></div></div>
+          <div class="dm-bigbox g"><div class="dm-bb-ic">✓</div><div><div class="dm-bb-k" data-dm="bots_k">Bots</div><div class="dm-bb-v" data-dm="done">Done</div></div></div>
+          <div class="dm-bigbox"><div class="dm-bb-ic">✉</div><div><div class="dm-bb-k" data-dm="dm_broadcast">DM broadcast</div><div class="dm-bb-v">—</div></div></div>
         </div>
-        <div class="dm-mini">
-          <div class="dm-minibox"><div class="dm-mb-k">👍 Нужно</div><div class="dm-mb-v">50</div></div>
-          <div class="dm-minibox"><div class="dm-mb-k">⚠ Ошибки входа</div><div class="dm-mb-v r">1</div></div>
-        </div>
-        <div class="dm-route"><span class="dm-r-from">С /admiring ♡ giveaways , social & guilds</span><span class="dm-r-arrow">→ КУДА</span><span class="dm-r-to"><span class="dm-r-inv">discord.gg/fGKpQCzZK</span></span></div>
-        <div class="dm-aud"><b>Аудитория</b> Все участники · Сначала в сети, потом офлайн</div>
-        <div class="dm-task-err">Не удалось добавить ботов на сервер: нет прав или неверный oauth_channel_id. Проверьте права на добавление ботов и OAuth.</div>
-        <div class="dm-task-acts"><button class="dm-btn ghost sm">Повторить</button><button class="dm-btn ghost sm">В запуск</button></div>
+        <div class="dm-route"><span class="dm-r-from"><span data-dm="route_from">From</span> /admiring ♡ giveaways , social & guilds</span><span class="dm-r-arrow" data-dm="route_to">→ TO</span><span class="dm-r-to"><span class="dm-r-inv">discord.gg/fGKpQCzZK</span></span></div>
+        <div class="dm-aud" data-dm-html="task_aud"><b>Audience</b> All members · Online first, then offline</div>
+        <div class="dm-task-err" data-dm="err1">Failed to add bots to the server: no permissions or wrong oauth_channel_id. Check bot-add permissions and OAuth.</div>
+        <div class="dm-task-acts"><button class="dm-btn ghost sm" data-dm="retry">Retry</button></div>
       </div>
 
       <div class="dm-task">
-        <div class="dm-task-h"><div><div class="dm-task-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-task-date">18.07.26, 23:57</div></div><span class="dm-status stop">ОСТАНОВЛЕНА</span></div>
+        <div class="dm-task-h"><div><div class="dm-task-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-task-date">18.07.26, 23:57</div></div><span class="dm-status stop" data-dm="st_stop">STOPPED</span></div>
         <div class="dm-bigrow">
-          <div class="dm-bigbox g"><div class="dm-bb-ic">✓</div><div><div class="dm-bb-k">Боты</div><div class="dm-bb-v">Готово</div></div></div>
-          <div class="dm-bigbox g"><div class="dm-bb-ic">✓</div><div><div class="dm-bb-k">Рассылка в ЛС</div><div class="dm-bb-v">Готово</div></div></div>
+          <div class="dm-bigbox g"><div class="dm-bb-ic">✓</div><div><div class="dm-bb-k" data-dm="bots_k">Bots</div><div class="dm-bb-v" data-dm="done">Done</div></div></div>
+          <div class="dm-bigbox g"><div class="dm-bb-ic">✓</div><div><div class="dm-bb-k" data-dm="dm_broadcast">DM broadcast</div><div class="dm-bb-v" data-dm="done">Done</div></div></div>
         </div>
-        <div class="dm-mini">
-          <div class="dm-minibox"><div class="dm-mb-k">👍 Нужно</div><div class="dm-mb-v">174</div></div>
-          <div class="dm-minibox"><div class="dm-mb-k">↧ Дозагружено</div><div class="dm-mb-v b">+4</div></div>
-          <div class="dm-minibox"><div class="dm-mb-k">⏳ Ждут входа</div><div class="dm-mb-v b">+1</div></div>
-        </div>
-        <div class="dm-task-note">С сервера: 90 115 · в очереди 87 416</div>
-        <div class="dm-prog-lbl"><span>Сообщ.</span><span><b>13</b> / 86 999</span></div>
+        <div class="dm-task-note" data-dm="note3">From the server: 90 115 · queued 87 416</div>
+        <div class="dm-prog-lbl"><span data-dm="msg_short">Msg.</span><span><b>13</b> / 86 999</span></div>
         <div class="dm-prog"><span style="width:2%"></span></div>
-        <div class="dm-route"><span class="dm-r-from">С 🍒 matching · <span class="dm-r-mut">chat · decor · art · guilds · games · giveaways · …</span></span><span class="dm-r-arrow">→ КУДА</span><span class="dm-r-to">Egirl World™ | 24/7 Active Chats #ask2dm · <span class="dm-r-inv">discord.gg/baddie</span></span></div>
-        <div class="dm-aud"><b>Аудитория</b> Все участники · Сначала в сети, потом офлайн</div>
-        <div class="dm-task-acts"><button class="dm-btn ghost sm">Повторить</button><button class="dm-btn ghost sm">В запуск</button></div>
+        <div class="dm-route"><span class="dm-r-from"><span data-dm="route_from">From</span> 🍒 matching · <span class="dm-r-mut">chat · decor · art · guilds · games · giveaways · …</span></span><span class="dm-r-arrow" data-dm="route_to">→ TO</span><span class="dm-r-to">Egirl World™ | 24/7 Active Chats #ask2dm · <span class="dm-r-inv">discord.gg/baddie</span></span></div>
+        <div class="dm-aud" data-dm-html="task_aud"><b>Audience</b> All members · Online first, then offline</div>
+        <div class="dm-task-acts"><button class="dm-btn ghost sm" data-dm="retry">Retry</button></div>
       </div>
     </section>
 
-    <!-- ============ Статистика (placeholder — awaiting screenshots) ============ -->
+    <!-- ============ Stats (placeholder — awaiting screenshots) ============ -->
     <section class="dm-panel" data-dpanel="stats">
-      <div class="dm-card"><div class="dm-empty">Статистика — скоро.</div></div>
+      <div class="dm-card"><div class="dm-empty" data-dm="stats_soon">Stats — coming soon.</div></div>
     </section>
   </div>
 
   <!-- floating notifications -->
-  <button class="dm-nbell" id="dm-nbell" hidden aria-label="Уведомления"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dm-nbell-dot"></span></button>
+  <button class="dm-nbell" id="dm-nbell" hidden aria-label="Notifications"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dm-nbell-dot"></span></button>
   <div class="dm-notif" id="dm-notif">
-    <div class="dm-notif-h"><h3>Уведомления</h3><button class="dm-btn ghost sm" id="dm-notif-close">✕</button></div>
+    <div class="dm-notif-h"><h3 data-dm="notifications">Notifications</h3><button class="dm-btn ghost sm" id="dm-notif-close">✕</button></div>
     <div class="dm-notif-list">
-      <div class="dm-nitem"><div class="dm-n-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div><div class="dm-n-body"><div class="dm-n-txt">Рассылка: бота <b>Bot #3704</b> кикнули с сервера «matching · chat · decor · art · guilds · games · giveaways · tags · emojis». Это сделали не мы — рассылка продолжается, подключаем замену.</div><button class="dm-btn ghost sm" style="margin-top:8px">Открыть рассылки</button><div class="dm-n-time">2 минуты назад</div></div></div>
-      <div class="dm-nitem"><div class="dm-n-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div><div class="dm-n-body"><div class="dm-n-txt">Рассылка: бота <b>Bot #3537</b> кикнули с сервера «/admiring ♡ giveaways , social & guilds». Это сделали не мы — рассылка продолжается, подключаем замену.</div><button class="dm-btn ghost sm" style="margin-top:8px">Открыть рассылки</button><div class="dm-n-time">Час назад</div></div></div>
-      <div class="dm-nitem"><div class="dm-n-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div><div class="dm-n-body"><div class="dm-n-txt">Рассылка: бота <b>Bot #3539</b> кикнули с сервера «/admiring ♡ giveaways , social & guilds». Это сделали не мы — рассылка продолжается, подключаем замену.</div><button class="dm-btn ghost sm" style="margin-top:8px">Открыть рассылки</button><div class="dm-n-time">Час назад</div></div></div>
+      <div class="dm-nitem"><div class="dm-n-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div><div class="dm-n-body"><div class="dm-n-txt" data-dm-html="notif1">Broadcast: bot <b>Bot #3704</b> was kicked from «matching · chat · decor · art · guilds · games · giveaways · tags · emojis». It wasn't us — the broadcast continues, connecting a replacement.</div><button class="dm-btn ghost sm" data-dm="open_broadcasts" style="margin-top:8px">Open broadcasts</button><div class="dm-n-time" data-dm="time1">2 minutes ago</div></div></div>
+      <div class="dm-nitem"><div class="dm-n-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div><div class="dm-n-body"><div class="dm-n-txt" data-dm-html="notif2">Broadcast: bot <b>Bot #3537</b> was kicked from «/admiring ♡ giveaways , social & guilds». It wasn't us — the broadcast continues, connecting a replacement.</div><button class="dm-btn ghost sm" data-dm="open_broadcasts" style="margin-top:8px">Open broadcasts</button><div class="dm-n-time" data-dm="time2">An hour ago</div></div></div>
+      <div class="dm-nitem"><div class="dm-n-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div><div class="dm-n-body"><div class="dm-n-txt" data-dm-html="notif3">Broadcast: bot <b>Bot #3539</b> was kicked from «/admiring ♡ giveaways , social & guilds». It wasn't us — the broadcast continues, connecting a replacement.</div><button class="dm-btn ghost sm" data-dm="open_broadcasts" style="margin-top:8px">Open broadcasts</button><div class="dm-n-time" data-dm="time2">An hour ago</div></div></div>
     </div>
   </div>
   </main>
@@ -358,6 +321,6 @@
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=37"></script>
-<script src="/order/dmall.js?v=1"></script>
+<script src="/order/dmall.js?v=2"></script>
 </body>
 </html>

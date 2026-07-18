@@ -233,8 +233,8 @@
 .dm-minibox .dm-mb-v.b{ color:#7d8cff; }
 .dm-prog-lbl{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px; color:var(--dm-mut); margin:12px 0 6px; }
 .dm-prog-lbl b{ color:var(--dm-txt); }
-.dm-prog{ height:8px; border-radius:999px; background:var(--dm-inset); overflow:hidden; }
-.dm-prog > span{ display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,#5865f2,#8a5cf6); }
+.dm-prog{ height:10px; background:var(--bg); border:1px solid var(--stroke-2); border-radius:999px; overflow:hidden; margin:14px 0 8px; }
+.dm-prog > span{ display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,var(--blue),var(--blue-2)); }
 .dm-task-note{ color:var(--dm-mut); font-size:12px; margin:8px 0; }
 .dm-route{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; background:var(--dm-card-2); border:1px solid var(--dm-line); border-radius:10px; padding:10px 12px; font-size:12.5px; margin:8px 0; }
 .dm-route .dm-r-from,.dm-route .dm-r-to{ display:flex; align-items:center; gap:6px; min-width:0; }
