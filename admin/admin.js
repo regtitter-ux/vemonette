@@ -310,6 +310,24 @@ const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 const escapeHtml = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
 ));
+// Deep-links into the partner cabinet: a username → that user's cabinet (admin
+// acting-as); a server name → its owner's cabinet at that server's card.
+let GUILD_CARD = {};   // guildId -> { ownerId, messageId }
+const CAB = '/partner/';
+function userLink(id, label) {
+    id = String(id || '');
+    const text = escapeHtml(label != null ? String(label) : id);
+    if (!/^\d{17,20}$/.test(id)) return text;
+    return `<a class="ulink" href="${CAB}?as=${id}" title="Открыть кабинет партнёра">${text}</a>`;
+}
+function serverLink(gid, label) {
+    gid = String(gid || '');
+    const text = escapeHtml(label != null ? String(label) : gid);
+    const c = GUILD_CARD[gid];
+    if (!c) return text;
+    return `<a class="ulink" href="${CAB}?as=${c.ownerId}&card=${c.messageId}" title="Открыть карточку в кабинете партнёра">${text}</a>`;
+}
+async function loadGuildCards() { try { const { ok, body } = await get('/guild-cards'); if (ok && body && body.guildCards) GUILD_CARD = body.guildCards; } catch (_) {} }
 const relTime = (ms) => {
     if (!ms) return '';
     const diff = Date.now() - ms;
@@ -482,7 +500,7 @@ async function renderInvestServers() {
     box.innerHTML = `
       <thead><tr><th>Сервер</th><th>Действие</th></tr></thead>
       <tbody>${enabled.length ? enabled.map((s) => `
-        <tr><td>${escapeHtml(s.name || s.serverId)} <span class="gid">${escapeHtml(s.serverId)}</span>${s.hasCard ? '' : ' <span class="chip red">нет активной карточки</span>'}</td>
+        <tr><td>${serverLink(s.serverId, s.name || s.serverId)} <span class="gid">${escapeHtml(s.serverId)}</span>${s.hasCard ? '' : ' <span class="chip red">нет активной карточки</span>'}</td>
         <td><button class="btn-mini off" data-invest-del="${escapeHtml(s.serverId)}">Убрать</button></td></tr>`).join('')
         : '<tr><td colspan="2" class="muted">Пока не добавлено ни одного сервера</td></tr>'}</tbody>`;
     box.querySelectorAll('[data-invest-del]').forEach((b) => b.onclick = async () => {
@@ -609,7 +627,7 @@ function renderFallback() {
 
 function cardBlock(c, deleted) {
     const st = c.stats || {};
-    const owner = c.creatorName ? `${escapeHtml(c.creatorName)}` : escapeHtml(c.creatorId || '—');
+    const owner = userLink(c.creatorId, c.creatorName || c.creatorId || '—');
     const role = c.roleName ? `@${escapeHtml(c.roleName)}` : (c.roleId ? `<code>${escapeHtml(c.roleId)}</code>` : '<span class="muted">роль по умолчанию</span>');
     const chan = c.channelName ? `#${escapeHtml(c.channelName)}` : escapeHtml(c.channelId || '');
     const link = c.link ? ` · <a href="${escapeHtml(c.link)}" target="_blank" rel="noopener">↗ сообщение</a>` : '';
@@ -632,7 +650,7 @@ function cardBlock(c, deleted) {
            <button class="btn-mini off" data-card="delete">Удалить</button>`;
     return `
       <div class="cardrow${deleted ? ' deleted' : ''}" data-mid="${escapeHtml(c.messageId)}">
-        <div class="cardrow-head">${cardGuildIcon(c)}<span><b>${escapeHtml(c.guildName || 'Unknown Server')}</b> · ${chan}${link}</span></div>
+        <div class="cardrow-head">${cardGuildIcon(c)}<span><b>${(/^\d{17,20}$/.test(String(c.creatorId||'')) && /^\d{17,20}$/.test(String(c.messageId||''))) ? `<a class="ulink" href="${CAB}?as=${escapeHtml(c.creatorId)}&card=${escapeHtml(c.messageId)}" title="Открыть эту карточку в кабинете партнёра">${escapeHtml(c.guildName || 'Unknown Server')}</a>` : escapeHtml(c.guildName || 'Unknown Server')}</b> · ${chan}${link}</span></div>
         ${c.memberCount != null ? `<div class="cardrow-members muted sm">👥 ${Number(c.memberCount).toLocaleString()}</div>` : ''}
         <div class="cardrow-meta">
           Владелец: <b>${owner}</b> <button class="btn-mini copy-id" data-copy="${escapeHtml(c.creatorId || '')}">Copy ID</button>
@@ -861,7 +879,7 @@ async function renderFeed() {
         const keyAttr = s.code ? `data-feed-code="${escapeHtml(s.code)}"` : `data-feed-id="${escapeHtml(s.id)}"`;
         return `
           <tr>
-            <td><div class="srv-cell">${feedIcon(s)}<span>${escapeHtml(s.name || 'Server')}</span></div>${sub ? `<div class="muted" style="font-size:11.5px;margin-top:3px">${sub}</div>` : ''}</td>
+            <td><div class="srv-cell">${feedIcon(s)}<span>${s.id ? serverLink(s.id, s.name || 'Server') : escapeHtml(s.name || 'Server')}</span></div>${sub ? `<div class="muted" style="font-size:11.5px;margin-top:3px">${sub}</div>` : ''}</td>
             <td><button class="btn-mini off" ${keyAttr}>Удалить</button></td>
           </tr>`;
     }).join('');
@@ -895,7 +913,7 @@ async function renderAdmins() {
     const owner = body.owner;
     const rows = [
         `<tr>
-           <td><div class="srv-cell"><span>${escapeHtml(owner)}</span><button class="btn-mini copy-id" data-copy="${owner}" title="${owner}">Copy ID</button></div></td>
+           <td><div class="srv-cell"><span>${userLink(owner, owner)}</span><button class="btn-mini copy-id" data-copy="${owner}" title="${owner}">Copy ID</button></div></td>
            <td><span class="chip green">Владелец</span></td>
            <td><span class="muted">—</span></td>
          </tr>`,
@@ -964,6 +982,7 @@ async function enterApp() {
     login.hidden = true; login.style.display = 'none';
     app.hidden = false; app.style.display = 'grid';
     applyRole();
+    loadGuildCards();   // for clickable server names → partner cabinet
     await refresh();
     startLiveRefresh();
     wireVChart(); loadVChart(); startVChart();
@@ -1146,7 +1165,7 @@ function renderStats() {
         }
         return `
             <tr>
-                <td><div class="srv-cell">${ic}<span>${escapeHtml(g.name || 'Unknown Server')}</span><button class="btn-mini copy-id" data-copy="${g.gid}" title="${g.gid}">Copy ID</button></div></td>
+                <td><div class="srv-cell">${ic}<span>${serverLink(g.gid, g.name || 'Unknown Server')}</span><button class="btn-mini copy-id" data-copy="${g.gid}" title="${g.gid}">Copy ID</button></div></td>
                 <td>${chip}</td>
                 ${cells}
                 <td><div class="actions">${kranBtn} ${adBtn}</div></td>
@@ -1487,7 +1506,7 @@ function renderShares() {
     const canEdit = effRole() === 'owner';
     const rows = sh.holders.map((h) => `
         <tr>
-          <td><div class="srv-cell"><span>${escapeHtml(h.username || 'Неизвестный')}</span><button class="btn-mini copy-id" data-copy="${h.userId}" title="${h.userId}">Copy ID</button></div></td>
+          <td><div class="srv-cell"><span>${userLink(h.userId, h.username || 'Неизвестный')}</span><button class="btn-mini copy-id" data-copy="${h.userId}" title="${h.userId}">Copy ID</button></div></td>
           <td class="num"><b>${h.pct}%</b></td>
           <td class="num">$${Number(h.balance).toFixed(2)}</td>
           <td class="num">$${Number(h.day).toFixed(2)}</td>
@@ -1686,7 +1705,7 @@ function renderBalTable(users) {
         return `
           <tr class="clickable" data-uid="${escapeHtml(u.userId)}">
             <td>
-              <div class="srv-cell"><span>${escapeHtml(name)}</span><button class="btn-mini copy-id" data-copy="${escapeHtml(u.userId)}" title="${escapeHtml(u.userId)}">Copy ID</button></div>
+              <div class="srv-cell"><span>${userLink(u.userId, name)}</span><button class="btn-mini copy-id" data-copy="${escapeHtml(u.userId)}" title="${escapeHtml(u.userId)}">Copy ID</button></div>
               <div style="margin-top:4px">${reqBadge} ${auto}</div>
             </td>
             <td class="num"><span class="chip ${bChip}">$${u.balance.toFixed(2)}</span></td>
@@ -1844,7 +1863,7 @@ function balDetailHtml(u) {
     const perGuild = u.verifications.perGuild.length
         ? u.verifications.perGuild.map((g) => `
             <tr>
-              <td>${escapeHtml(g.name || 'Unknown Server')} <span class="gid">${g.gid}</span></td>
+              <td>${serverLink(g.gid, g.name || 'Unknown Server')} <span class="gid">${g.gid}</span></td>
               <td class="num">${g.hour}</td>
               <td class="num">${g.day}</td>
               <td class="num">${g.week}</td>
@@ -2422,13 +2441,13 @@ function alogRow(e, maps) {
     const L = ALOG_LABEL[`${e.type}_${e.reason}`] || { cls: 'n', title: e.type, tag: e.reason || '' };
     const amt = e.type === 'debit' ? `<span class="plog-amt neg">−${ALOG_MONEY(e.amount)}</span>`
         : (e.type === 'grant' && e.reason === 'paid' && e.amount ? `<span class="plog-amt pos">+${ALOG_MONEY(e.amount)}</span>` : '');
-    const partner = e.creatorId ? `<span class="plog-sv">Партнёр: ${ALOG_ESC(maps.partners[e.creatorId] || e.creatorId)}</span>` : '';
-    const sv = e.guildId ? `<span class="plog-sv">${ALOG_ESC(maps.servers[e.guildId] || e.guildId)}</span>` : '';
-    const usr = e.userId ? `<span class="plog-usr">${ALOG_ESC(maps.users[e.userId] || ('ID ' + e.userId))}</span>` : '';
+    const partner = e.creatorId ? `<span class="plog-sv">Партнёр: ${userLink(e.creatorId, maps.partners[e.creatorId] || e.creatorId)}</span>` : '';
+    const sv = e.guildId ? `<span class="plog-sv">${serverLink(e.guildId, maps.servers[e.guildId] || e.guildId)}</span>` : '';
+    const usr = e.userId ? `<span class="plog-usr">${userLink(e.userId, maps.users[e.userId] || ('ID ' + e.userId))}</span>` : '';
     // Sponsor server the member joined into / left from (where known).
     const spDir = (e.type === 'debit' || e.type === 'unverify') ? 'ушёл из'
         : (e.reason === 'dup_join' || e.reason === 'already_member') ? 'уже был в' : 'зашёл в';
-    const sp = e.sponsorGuildId ? `<span class="plog-sp">${spDir}: ${ALOG_ESC(maps.servers[e.sponsorGuildId] || e.sponsorGuildId)}</span>` : '';
+    const sp = e.sponsorGuildId ? `<span class="plog-sp">${spDir}: ${serverLink(e.sponsorGuildId, maps.servers[e.sponsorGuildId] || e.sponsorGuildId)}</span>` : '';
     return `<div class="plog-row plog-${L.cls}">
       <span class="plog-dot"></span>
       <div class="plog-main">

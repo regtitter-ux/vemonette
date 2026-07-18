@@ -1,6 +1,16 @@
 // Partner cabinet — vanilla JS.
 const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/partner';
 
+// Admin "view / edit as another partner": ?as=<userId> makes the whole cabinet
+// operate on that user (the backend enforces admin-only). ?card=<messageId> opens
+// straight to that server's card. Both survive across requests here.
+let ACT_AS = ''; let OPEN_CARD = '';
+try {
+    const q = new URLSearchParams(location.search);
+    if (/^\d{17,20}$/.test(q.get('as') || '')) ACT_AS = q.get('as');
+    if (/^\d{17,20}$/.test(q.get('card') || '')) OPEN_CARD = q.get('card');
+} catch (_) {}
+
 // Session token (localStorage) — alternative to the cross-site cookie that some
 // browsers block; sent as a Bearer header.
 const TOKEN_KEY = 'vemoni_tok';
@@ -12,8 +22,10 @@ async function api(path, opts = {}) {
     let res;
     const headers = opts.body ? { 'Content-Type': 'application/json' } : {};
     const tk = getTok(); if (tk) headers.Authorization = 'Bearer ' + tk;
+    let url = API + path;
+    if (ACT_AS) url += (url.includes('?') ? '&' : '?') + 'as=' + ACT_AS;   // admin acting-as
     try {
-        res = await fetch(API + path, { credentials: 'include', ...opts, headers });
+        res = await fetch(url, { credentials: 'include', ...opts, headers });
     } catch (err) { throw new Error('Нет связи с сервером'); }
     let body = null; try { body = await res.json(); } catch {}
     return { ok: res.ok, status: res.status, body };
@@ -568,6 +580,7 @@ async function loadCards() {
         const mid = row.dataset.mid;
         row.querySelectorAll('[data-card]').forEach((b) => b.onclick = () => pcardAction(b.dataset.card, mid));
     });
+    focusOpenCard();
 }
 
 function pcardErr(code) {
@@ -816,8 +829,27 @@ function wirePlogFilters() {
     if (u && !u.dataset.wired) { u.dataset.wired = '1'; u.oninput = () => { clearTimeout(plogUserTimer); plogUserTimer = setTimeout(loadActivity, 400); }; }
 }
 
+// Admin acting-as banner + exit.
+function renderViewBanner(actingAs) {
+    const el = $('#view-banner'); if (!el) return;
+    if (!actingAs) { el.hidden = true; el.innerHTML = ''; return; }
+    const name = actingAs.name || actingAs.username || ('ID ' + actingAs.id);
+    el.hidden = false;
+    el.innerHTML = `👁 Вы просматриваете и редактируете профиль <b>${esc(name)}</b> <span class="muted">(ID ${esc(actingAs.id)})</span> как админ. <a href="/partner/" class="vb-exit">Выйти из режима</a>`;
+}
+// Deep-link ?card=<messageId>: open the Cards tab and scroll to that card once.
+let _cardFocused = false;
+function focusOpenCard() {
+    if (!OPEN_CARD || _cardFocused) return;
+    const el = document.querySelector(`.vcard[data-mid="${OPEN_CARD}"]`);
+    if (!el) return;
+    _cardFocused = true;
+    const tab = document.querySelector('#p-tabs [data-pane="cards"]'); if (tab) tab.click();
+    setTimeout(() => { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('vcard-flash'); setTimeout(() => el.classList.remove('vcard-flash'), 2000); }, 150);
+}
 function render(d) {
     window.__PARTNER_ID__ = d.userId || window.__PARTNER_ID__;
+    renderViewBanner(d.actingAs);
     $('#top-balance').textContent = money(d.balance);
     const boost = d.boosted ? ` <span class="chip amber">🔥 буст ${fmtBoost(d.boostLeftMs)}</span>` : '';
     const cards = [

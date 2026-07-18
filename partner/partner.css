@@ -255,3 +255,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .reflink-row{display:flex;gap:10px;flex-wrap:wrap}
 .reflink-row input{flex:1 1 260px;min-width:0;background:var(--bg);color:var(--blue-2);border:1px solid var(--stroke-2);border-radius:8px;padding:9px 12px;font-size:13px;font-family:inherit}
 .reflink-row input:focus{outline:none;border-color:var(--blue)}
+
+/* admin "view as" banner + deep-link card flash */
+.view-banner{background:rgba(245,179,0,.12);border-bottom:1px solid rgba(245,179,0,.4);color:var(--amber);padding:9px 16px;font-size:13.5px;text-align:center}
+.view-banner b{color:#fff}
+.view-banner .vb-exit{margin-left:10px;color:var(--blue-2);font-weight:700;text-decoration:none}
+.view-banner .vb-exit:hover{text-decoration:underline}
+.vcard-flash{outline:2px solid var(--amber);outline-offset:2px;transition:outline .3s;border-radius:12px}
