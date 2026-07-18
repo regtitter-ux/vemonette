@@ -84,7 +84,13 @@ const WHOLE = {
   'Рефералы':'Referrals','Рефералов':'Referrals','Активных':'Active','Заработано с рефералов':'Earned from referrals',
   'Ожидает вывода':'Pending withdrawal','выведено':'withdrawn','Сервер:':'Server:','Не удалось загрузить рефералов.':'Could not load referrals.',
   'Приглашайте пользователей — и получайте 10% от каждого их вывода. Ниже — кого вы пригласили и сколько это принесло. Статистика собрана по уже имеющимся данным.':'Invite users and earn 10% of every withdrawal they make. Below is who you invited and how much it brought in. Stats are reconstructed from existing data.',
-  'У вас пока нет рефералов. Приглашайте пользователей и получайте 10% с каждого их вывода.':'You have no referrals yet. Invite users and earn 10% of each withdrawal they make.'
+  'У вас пока нет рефералов. Приглашайте пользователей и получайте 10% с каждого их вывода.':'You have no referrals yet. Invite users and earn 10% of each withdrawal they make.',
+  // "your referrer" block
+  'Ваш реферр:':'Your referrer:',
+  'Вас кто-то пригласил? Впишите его Discord ID — он будет получать реф-бонус с ваших выводов. Указать можно только один раз.':'Were you invited? Enter their Discord ID — they will earn a referral bonus from your withdrawals. Can be set only once.',
+  'Discord ID реферра':'Referrer Discord ID','Реферр сохранён':'Referrer saved',
+  'Реферр уже указан — изменить нельзя.':'Referrer already set — cannot change.','Нельзя указать самого себя.':"You can't refer yourself.",
+  'Введите корректный Discord ID.':'Enter a valid Discord ID.','Не удалось сохранить.':'Could not save.'
 };
 function bannerFromAvatar(url) {
     const bn = document.getElementById('nmBanner'); if (!bn || !url) return;
@@ -324,11 +330,44 @@ async function load() {
 
 // ---- Referrals: who this partner invited and what they earned (10% of each
 // referred user's withdrawals), reconstructed server-side from existing data. ----
+// "Your referrer" — the person who invited THIS user. Set once from here (the web
+// equivalent of the /bal "Referrer" button); locked afterwards.
+function renderMyReferrer(ref, pct) {
+    const box = $('#my-referrer'); if (!box) return;
+    if (ref) {
+        const name = ref.name || ref.username || ('ID ' + ref.id);
+        box.innerHTML = `<div class="myref-set">${srvIcon(name, ref.avatar)}<span>Ваш реферр: <b>${esc(name)}</b>${ref.username ? ' <span class="muted">@' + esc(ref.username) + '</span>' : ''}</span></div>`;
+        return;
+    }
+    box.innerHTML = `
+      <div class="myref-form">
+        <div class="muted sm" style="margin-bottom:8px">Вас кто-то пригласил? Впишите его Discord ID — он будет получать реф-бонус с ваших выводов. Указать можно только один раз.</div>
+        <div class="myref-row">
+          <input id="myref-input" type="text" inputmode="numeric" placeholder="Discord ID реферра" maxlength="20" />
+          <button class="btn primary sm" id="myref-save">Сохранить</button>
+        </div>
+        <div id="myref-msg" class="muted sm" hidden></div>
+      </div>`;
+    const save = $('#myref-save'), inp = $('#myref-input'), msg = $('#myref-msg');
+    if (save) save.onclick = async () => {
+        const id = (inp.value || '').trim();
+        if (!/^\d{17,20}$/.test(id)) { msg.textContent = tr('Введите корректный Discord ID.'); msg.hidden = false; return; }
+        save.disabled = true;
+        const { ok, body } = await put('/referrer', { referrerId: id });
+        save.disabled = false;
+        if (ok) { toast('Реферр сохранён'); loadReferrals(); }
+        else { msg.textContent = referrerErr(body && body.error); msg.hidden = false; }
+    };
+}
+function referrerErr(code) {
+    return tr(({ 'already-set': 'Реферр уже указан — изменить нельзя.', 'bad-id': 'Введите корректный Discord ID.', 'self': 'Нельзя указать самого себя.' })[code] || 'Не удалось сохранить.');
+}
 async function loadReferrals() {
     const cards = $('#refs-cards'), list = $('#refs-list');
     const { ok, body } = await get('/referrals');
     if (!ok || !body) { if (list) list.innerHTML = '<div class="muted">Не удалось загрузить рефералов.</div>'; return; }
     const pct = Math.round((body.rate || 0.1) * 100);
+    renderMyReferrer(body.myReferrer, pct);
     if (cards) cards.innerHTML = [
         { k: 'Рефералов', v: body.count },
         { k: 'Активных', v: body.activeCount },

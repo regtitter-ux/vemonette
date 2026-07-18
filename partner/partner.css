@@ -238,3 +238,12 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .alt-msg{font-size:12.5px;line-height:1.45}
 .alt-msg.err{color:var(--red)}
 .alt-msg.ok{color:var(--green)}
+
+/* "Your referrer" block (referrals tab) */
+.my-referrer:empty{display:none}
+.myref-form,.myref-set{background:var(--panel);border:1px solid var(--stroke);border-radius:12px;padding:14px 16px}
+.myref-set{display:flex;align-items:center;gap:10px;font-size:14px}
+.myref-row{display:flex;gap:10px;flex-wrap:wrap}
+.myref-row input{flex:1 1 220px;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--stroke-2);border-radius:8px;padding:9px 12px;font-size:13.5px;font-family:inherit}
+.myref-row input:focus{outline:none;border-color:var(--blue)}
+#myref-msg{margin-top:8px}
