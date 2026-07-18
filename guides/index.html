@@ -79,6 +79,13 @@ section.uc{padding:46px 0}
 .demo{position:relative}
 .dwin{background:var(--d-bg);border-radius:16px;overflow:hidden;border:1px solid rgba(0,0,0,.5);box-shadow:var(--shadow);display:grid;grid-template-columns:190px 1fr;min-height:328px;font-size:14px}
 .dwin.solo{grid-template-columns:1fr}
+.dwin.msim{grid-template-columns:1fr 200px}   /* role sim: wide embed + member list */
+@media(max-width:560px){
+  .dwin{grid-template-columns:148px 1fr;font-size:13px}
+  .dwin.msim{grid-template-columns:1fr}
+  .dwin.msim .dmain{border-right:0!important;border-bottom:1px solid rgba(0,0,0,.35)}
+  .mlist{flex-direction:column}
+}
 .dside{background:var(--d-side);padding:12px 8px;display:flex;flex-direction:column;gap:2px}
 .dside .sv{color:#f2f3f5;font-weight:700;font-size:14px;padding:6px 8px 10px;border-bottom:1px solid rgba(0,0,0,.3);margin-bottom:6px;display:flex;align-items:center;gap:7px}
 .dside .sv svg{opacity:.5}
@@ -127,6 +134,37 @@ section.uc{padding:46px 0}
 .mrow .mn.on{color:#f2f3f5}
 .mrow .mn.g{color:#3fd18a}.mrow .mn.b{color:#5ac8fa}.mrow .mn.p{color:#c084fc}
 
+/* ===== richer Discord chrome: server header, sidebar rows, channel top bar ===== */
+.svhead{position:relative;height:50px;margin:-12px -8px 8px;padding:0 12px;display:flex;align-items:center;color:#fff;font-weight:700;font-size:15px;box-shadow:0 1px 0 rgba(0,0,0,.3);overflow:hidden}
+.svhead::before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,#1f8f8b,#33b0c9);z-index:0}
+.svhead::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent,rgba(0,0,0,.25));z-index:0}
+.svhead>*{position:relative;z-index:1}
+.svhead .cev{margin-left:5px;font-size:11px;opacity:.9}
+.svhead .badd{margin-left:auto;opacity:.9;display:flex}
+.side-special{display:flex;flex-direction:column;gap:1px;padding:0 0 8px;margin-bottom:6px;border-bottom:1px solid rgba(255,255,255,.045)}
+.srow{display:flex;align-items:center;gap:9px;color:var(--d-mut);font-size:14px;font-weight:500;padding:6px 8px;border-radius:5px}
+.srow svg{width:18px;height:18px;opacity:.85;flex:none}
+.cat{display:flex;align-items:center;gap:4px}
+.cat .carr{font-size:9px;opacity:.75;transform:translateY(-1px)}
+.ch{justify-content:flex-start}
+.ch .cg{margin-left:auto;opacity:.75;display:none}
+.ch.active .cg{display:inline}
+.ch .hash{font-size:17px;line-height:0;color:#7a7f87;font-weight:400}
+.ch.active .hash{color:#c3c7cd}
+.dmainwrap{display:flex;flex-direction:column;min-width:0}
+.dtop{display:flex;align-items:center;gap:9px;padding:12px 16px;border-bottom:1px solid rgba(0,0,0,.35);color:#f2f3f5;font-weight:700;font-size:15px;box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.dtop .hash{color:#80848e;font-size:22px;font-weight:400;line-height:.7}
+.dtop .dtop-r{margin-left:auto;display:flex;gap:15px;color:#b5bac1}
+.dtop .dtop-r svg{width:20px;height:20px}
+.dmainwrap .dmain{flex:1}
+.eph-h{color:#fff;font-weight:700;font-size:19px;line-height:1.25;margin-bottom:4px}
+.eph-h .link{color:var(--blue);word-break:break-all}
+.eph .bullet{color:var(--d-txt-2);font-size:14px;display:flex;gap:8px;margin:6px 0}
+.eph .bullet::before{content:"•";color:#80848e}
+.xbtn{margin-top:9px;display:inline-flex;align-items:center;gap:9px;background:rgba(74,76,84,.55);border:1px solid rgba(255,255,255,.06);color:#dfe3e8;font-weight:600;font-size:13px;padding:8px 14px;border-radius:8px}
+.btn-d.blurple{background:var(--d-blurple)}
+.embed .foot{font-size:11.5px;color:#949ba4;margin-top:8px}
+
 /* animation states — each demo runs a keyframe timeline via a class on .stage */
 .stage{--t:11s}
 /* channel-access timeline */
@@ -137,7 +175,7 @@ section.uc{padding:46px 0}
 .a-reveal{animation:reveal var(--t) infinite}
 .a-unlock{animation:unlock var(--t) infinite}
 .a-cur{animation:cur1 var(--t) infinite}
-@keyframes cur1{0%,8%{transform:translate(320px,232px);opacity:0}12%{opacity:1}20%{transform:translate(300px,214px)}24%,30%{transform:translate(300px,214px) scale(.82)}34%{transform:translate(300px,214px) scale(1)}55%{transform:translate(300px,214px);opacity:1}70%,100%{transform:translate(60px,120px);opacity:.0}}
+@keyframes cur1{0%,8%{transform:translate(330px,270px);opacity:0}12%{opacity:1}20%{transform:translate(300px,252px)}24%,30%{transform:translate(300px,252px) scale(.82)}34%{transform:translate(300px,252px) scale(1)}55%{transform:translate(300px,252px);opacity:1}70%,100%{transform:translate(70px,150px);opacity:0}}
 @keyframes clickBtn{0%,23%{filter:brightness(1)}26%{filter:brightness(1.35)}30%,100%{filter:brightness(1)}}
 @keyframes fadeStep{0%,30%{opacity:0;transform:translateY(6px)}36%,58%{opacity:1;transform:none}66%,100%{opacity:0}}
 @keyframes fadeStep2{0%,40%{opacity:0;transform:translateY(6px)}46%,60%{opacity:1;transform:none}68%,100%{opacity:0}}
@@ -200,7 +238,7 @@ footer{border-top:1px solid var(--line);padding:26px 0;margin-top:20px}
   <div class="wrap">
     <span class="eyebrow" data-i18n="hero_eye">Guides &amp; real use cases</span>
     <h1><span data-i18n="hero_h1a">Verification that</span> <span class="grad" data-i18n="hero_h1b">actually does something</span></h1>
-    <p data-i18n="hero_sub">The proven ways servers use Vemoni — gate channels, hand out roles without hiding anything, protect giveaways, and turn every real join into income. Each example below is a live, Discord-accurate animation.</p>
+    <p data-i18n="hero_sub">The proven ways servers use Vemoni — gate channels, hand out good-looking roles, and turn every real join into income. A few examples below:</p>
     <div class="cta">
       <a class="btn primary" href="#cases" data-i18n="hero_cta1">See the examples ↓</a>
       <a class="btn ghost" href="/partner/" data-i18n="hero_cta2">Set it up</a>
@@ -228,33 +266,51 @@ footer{border-top:1px solid var(--line);padding:26px 0;margin-top:20px}
         <div class="stage">
           <div class="dwin">
             <div class="dside">
-              <div class="sv"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2 4 6v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V6l-8-4Z"/></svg> Community</div>
-              <div class="cat" data-i18n="uc1_cat1">Start here</div>
-              <div class="ch active"><span class="hash">#</span> <span data-i18n="uc1_ch_welcome">welcome</span></div>
-              <div class="cat a-unlock" data-i18n="uc1_cat2">General</div>
-              <div class="ch lock a-unlock"><span class="hash">🔒</span> <span data-i18n="uc1_ch_chat">chat</span></div>
-              <div class="ch lock a-unlock"><span class="hash">🔒</span> <span data-i18n="uc1_ch_media">media</span></div>
+              <div class="svhead">Vemoni <span class="cev">▾</span> <span class="badd"><svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M15 8a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm-9 3V8H4v3H1v2h3v3h2v-3h3v-2H6Zm9-1c-2 0-6 1-6 3v2h12v-2c0-2-4-3-6-3Z"/></svg></span></div>
+              <div class="side-special">
+                <div class="srow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg> <span data-i18n="uc1_events">Events</span></div>
+                <div class="srow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h10M4 12h16M4 18h7"/></svg> <span data-i18n="uc1_browse">Browse Channels</span></div>
+                <div class="srow"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3 0-7 1.5-7 4.5V20h14v-2.5C16 14.5 12 13 9 13Zm8-2a3.5 3.5 0 1 0-3.4-4.4A5.9 5.9 0 0 1 15 11a6.5 6.5 0 0 1 .2 2H22v-1.5c0-2-3-3.5-5-3.5Z"/></svg> <span data-i18n="uc1_members">Members</span></div>
+              </div>
+              <div class="cat"><span class="carr">▾</span> <span data-i18n="uc1_cat1">Welcome</span></div>
+              <div class="ch active"><span class="hash">#</span> <span data-i18n="uc1_ch_welcome">verification</span> <span class="cg"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm8.4 4a6.5 6.5 0 0 0-.1-1.3l2-1.6-2-3.4-2.4 1a6.6 6.6 0 0 0-2.2-1.3L15.3 2H8.7l-.4 2.1A6.6 6.6 0 0 0 6.1 5.4l-2.4-1-2 3.4 2 1.6a6.5 6.5 0 0 0 0 2.6l-2 1.6 2 3.4 2.4-1a6.6 6.6 0 0 0 2.2 1.3l.4 2.1h6.6l.4-2.1a6.6 6.6 0 0 0 2.2-1.3l2.4 1 2-3.4-2-1.6a6.5 6.5 0 0 0 .1-1.3Z"/></svg></span></div>
+              <div class="cat a-unlock"><span class="carr">▾</span> <span data-i18n="uc1_cat2">Main</span></div>
+              <div class="ch lock a-unlock"><span class="hash">🔒</span> <span class="dot" style="background:#3fd18a"></span> <span data-i18n="uc1_ch_rules">rules</span></div>
+              <div class="ch lock a-unlock"><span class="hash">🔒</span> <span class="dot" style="background:#f5b454"></span> <span data-i18n="uc1_ch_news">news</span></div>
               <div class="ch reveal a-reveal"><span class="hash">#</span> <span data-i18n="uc1_ch_gw">giveaways</span></div>
-              <div class="ch reveal a-reveal"><span class="hash">#</span> <span data-i18n="uc1_ch_voice">🔊 lounge</span></div>
+              <div class="ch reveal a-reveal"><span class="hash">🔊</span> <span data-i18n="uc1_ch_voice">lounge</span></div>
             </div>
-            <div class="dmain">
-              <div class="msg">
-                <div class="av"><img src="/assets/logo.png" alt="" /></div>
-                <div class="mbody">
-                  <div class="rhead"><span class="uname">Verification</span><span class="bot">BOT</span><span class="time" data-i18n="t_now">Today</span></div>
-                  <div class="embed">
-                    <div class="ea"><img src="/assets/logo.png" alt="" /> Vemoni</div>
-                    <div class="et" data-i18n="uc1_title">Get verified</div>
-                    <div class="ed" data-i18n="uc1_desc">To unlock the server, verify below. Takes two clicks.</div>
-                    <button class="btn-d a-click">🔐 <span data-i18n="uc1_btn">Start verification</span></button>
+            <div class="dmainwrap">
+              <div class="dtop"><span class="hash">#</span> <span data-i18n="uc1_ch_welcome">verification</span>
+                <span class="dtop-r">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h3l3 3 3-3h7a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Z" opacity=".8"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6-2-2v-4a5 5 0 0 0-4-4.9V4a1 1 0 0 0-2 0v1.1A5 5 0 0 0 7 10v4l-2 2v1h14Z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 4l-2 2 2 2-3 3-3-1-3 3 4 4-4 4h2l3-3 4 4 3-3-1-3 3-3 2 2 2-2-9-9Z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3 0-7 1.5-7 4.5V20h14v-2.5C16 14.5 12 13 9 13Zm8-2a3.5 3.5 0 1 0-3.4-4.4A5.9 5.9 0 0 1 15 11a6.5 6.5 0 0 1 .2 2H22v-1.5c0-2-3-3.5-5-3.5Z"/></svg>
+                </span>
+              </div>
+              <div class="dmain">
+                <div class="msg">
+                  <div class="av"><img src="/assets/logo.png" alt="" /></div>
+                  <div class="mbody">
+                    <div class="rhead"><span class="uname">Verification</span><span class="bot">BOT</span><span class="time" data-i18n="t_now">Today at 9:47</span></div>
+                    <div class="embed">
+                      <div class="ea"><img src="/assets/logo.png" alt="" /> Vemoni</div>
+                      <div class="et" data-i18n="uc1_title">Get verified!</div>
+                      <div class="ed" data-i18n="uc1_desc">To gain full access to the server, complete verification.<br>Click the button below.</div>
+                      <div class="foot"><span data-i18n="uc1_created">Created by:</span> 833442190427684914</div>
+                      <button class="btn-d blurple a-click">🔐 <span data-i18n="uc1_btn">Start Verification</span></button>
+                    </div>
                   </div>
                 </div>
+                <div class="eph a-eph">
+                  <div class="eph-h"><span data-i18n="uc1_eph1">To complete verification, you must join the server:</span> <span class="link">https://discord.gg/pFe7fpsyA</span></div>
+                  <div class="bullet" data-i18n="uc1_after">After joining, click the button again</div>
+                  <div class="xbtn">EXTRA GWS 100$ NITRO / 10K ROBUX / 10X DECOR <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14V3ZM5 5h5v2H5v12h12v-5h2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></svg></div>
+                  <div class="note" data-i18n="uc1_ephnote">Only you can see this · Dismiss message</div>
+                </div>
+                <div class="toast a-toast"><span class="chk">✓</span> <span data-i18n="uc1_ok">Verified — welcome in! Channels unlocked.</span></div>
               </div>
-              <div class="eph a-eph">
-                <div class="lead"><span data-i18n="uc1_eph1">To verify, join</span> <span class="link">discord.gg/partner</span> <span data-i18n="uc1_eph2">— then click again.</span></div>
-                <div class="note" data-i18n="uc1_ephnote">Only you can see this · Dismiss</div>
-              </div>
-              <div class="toast a-toast"><span class="chk">✓</span> <span data-i18n="uc1_ok">Verified — welcome in! Channels unlocked.</span></div>
             </div>
           </div>
           <div class="cursor a-cur"><svg viewBox="0 0 24 24" fill="#fff" stroke="#000" stroke-width="1"><path d="M5 3l14 8-6 1.5L11 20 5 3Z"/></svg></div>
@@ -279,7 +335,7 @@ footer{border-top:1px solid var(--line);padding:26px 0;margin-top:20px}
       </div>
       <div class="demo">
         <div class="stage role">
-          <div class="dwin">
+          <div class="dwin msim">
             <div class="dmain" style="border-right:1px solid rgba(0,0,0,.3)">
               <div class="msg">
                 <div class="av"><img src="/assets/logo.png" alt="" /></div>
@@ -310,43 +366,8 @@ footer{border-top:1px solid var(--line);padding:26px 0;margin-top:20px}
     </div>
   </section>
 
-  <!-- USE CASE 3: giveaways -->
-  <section class="uc">
-    <div class="uc-grid">
-      <div class="uc-copy">
-        <span class="tag">🎁 <span data-i18n="uc3_tag">Giveaway shield</span></span>
-        <h2 data-i18n="uc3_h">Only verified members can enter giveaways</h2>
-        <p data-i18n="uc3_p">Alt-farming ruins giveaways. Require the Verified role to enter and every ticket is a real person — no throwaway accounts sweeping your prizes. Winners are legit, and sponsors trust your numbers.</p>
-        <ul class="uc-list">
-          <li><span class="ic">✓</span><span data-i18n="uc3_l1">One role requirement kills alt-account farming.</span></li>
-          <li><span class="ic">✓</span><span data-i18n="uc3_l2">Fair draws → happier community &amp; sponsors.</span></li>
-          <li><span class="ic">✓</span><span data-i18n="uc3_l3">Works with any giveaway bot that checks roles.</span></li>
-        </ul>
-        <div class="best"><b data-i18n="uc3_bestk">Best for:</b> <span data-i18n="uc3_bestv">giveaway servers, Nitro/Robux/gift drops, sponsor deals.</span></div>
-      </div>
-      <div class="demo">
-        <div class="dwin solo" style="min-height:auto">
-          <div class="dmain">
-            <div class="msg">
-              <div class="av" style="background:linear-gradient(150deg,#f59e0b,#ef4444)">🎉</div>
-              <div class="mbody" style="flex:1">
-                <div class="rhead"><span class="uname c4">GiveawayBot</span><span class="bot">BOT</span></div>
-                <div class="embed" style="border-left-color:var(--amber)">
-                  <div class="et">🎁 <span data-i18n="uc3_title">100$ Nitro — giveaway</span></div>
-                  <div class="ed"><span data-i18n="uc3_g1">React with 🎉 to enter.</span><br><span data-i18n="uc3_g2">Requirement:</span> <span class="pill role b">@Verified</span></div>
-                  <div class="link-btn">🎉 <b>247</b> <span data-i18n="uc3_entries">entries</span></div>
-                </div>
-                <div class="toast" style="margin-top:11px;background:rgba(255,107,116,.12);border-color:rgba(255,107,116,.4);color:#ff9aa0"><span class="chk" style="background:var(--red)">✕</span> <span data-i18n="uc3_block">Alt account blocked — needs @Verified.</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- USE CASE 4: monetize -->
-  <section class="uc rev">
+  <section class="uc">
     <div class="uc-grid">
       <div class="uc-copy">
         <span class="tag">💸 <span data-i18n="uc4_tag">Earn per join</span></span>
@@ -424,7 +445,7 @@ const RU = {
   nav_home:'Главная', nav_cases:'Примеры', nav_how:'Как работает', nav_buyers:'Покупателям', nav_start:'Добавить бота',
   hero_eye:'Гайды и реальные примеры',
   hero_h1a:'Верификация, которая', hero_h1b:'реально что-то даёт',
-  hero_sub:'Проверенные способы использовать Vemoni — закрывать каналы, выдавать роли даже ничего не скрывая, защищать розыгрыши и превращать каждый реальный заход в доход. Каждый пример ниже — живая анимация в точном стиле Discord.',
+  hero_sub:'Проверенные способы использовать Vemoni — закрывать каналы, выдавать красивые роли и превращать каждый реальный заход в доход. Несколько примеров ниже:',
   hero_cta1:'Смотреть примеры ↓', hero_cta2:'Настроить',
   t_now:'Сегодня',
   /* uc1 */
@@ -432,9 +453,10 @@ const RU = {
   uc1_p:'Классика: новичок видит один канал <b>#welcome</b> с карточкой верификации. Всё остальное закрыто, пока он не пройдёт. Боты, рейдеры и «залетевшие мимо» не проходят — а реальные участники заходят в два клика.',
   uc1_l1:'Закрытые категории открываются в момент выдачи роли.', uc1_l2:'Блокирует селфботов и волны рейда прямо на входе.', uc1_l3:'Ноль возни с настройкой — одна карточка, одна роль, готово.',
   uc1_bestk:'Лучше всего для:', uc1_bestv:'больших сообществ, giveaway-серверов, всего, что рейдят.',
-  uc1_cat1:'Начни здесь', uc1_cat2:'Общее', uc1_ch_welcome:'welcome', uc1_ch_chat:'чат', uc1_ch_media:'медиа', uc1_ch_gw:'розыгрыши', uc1_ch_voice:'🔊 лаунж',
-  uc1_title:'Пройдите верификацию', uc1_desc:'Чтобы открыть сервер, пройдите проверку ниже. Всего два клика.', uc1_btn:'Начать верификацию',
-  uc1_eph1:'Чтобы пройти, зайдите на', uc1_eph2:'— затем нажмите ещё раз.', uc1_ephnote:'Видно только вам · Скрыть',
+  uc1_events:'Мероприятия', uc1_browse:'Просмотр каналов', uc1_members:'Участники',
+  uc1_cat1:'Welcome', uc1_cat2:'Main', uc1_ch_welcome:'verification', uc1_ch_rules:'rules', uc1_ch_news:'news', uc1_ch_gw:'giveaways', uc1_ch_voice:'lounge',
+  uc1_title:'Пройдите верификацию!', uc1_desc:'Чтобы получить полный доступ к серверу, пройдите верификацию.<br>Нажмите кнопку ниже.', uc1_created:'Создано:', uc1_btn:'Начать верификацию',
+  uc1_eph1:'Чтобы завершить верификацию, зайдите на сервер:', uc1_after:'После входа нажмите кнопку ещё раз', uc1_ephnote:'Видно только вам · Нажмите, чтобы убрать',
   uc1_ok:'Проверено — добро пожаловать! Каналы открыты.',
   /* uc2 */
   uc2_tag:'Роль по проверке', uc2_h:'Выдавайте роль — не скрывая ни одного канала',
@@ -443,12 +465,6 @@ const RU = {
   uc2_bestk:'Лучше всего для:', uc2_bestv:'открытых сообществ, giveaway и social-серверов, площадок авторов.',
   uc2_title:'Заберите роль Verified', uc2_desc:'Ни один канал не скрыт — это просто даёт роль и доступ к розыгрышам.', uc2_btn:'Пройти проверку',
   uc2_ok:'Вы получили роль @Verified.', uc2_grp1:'✅ Verified — <span class="cnt">3</span>', uc2_grp2:'Участники',
-  /* uc3 */
-  uc3_tag:'Щит розыгрышей', uc3_h:'В розыгрыши заходят только проверенные',
-  uc3_p:'Фарм на альтах убивает розыгрыши. Требуйте роль Verified для входа — и каждый билет это реальный человек, а не одноразовый аккаунт, сметающий призы. Победители честные, а спонсоры доверяют вашим цифрам.',
-  uc3_l1:'Одно требование роли убивает фарм на альт-аккаунтах.', uc3_l2:'Честные розыгрыши → довольнее и сообщество, и спонсоры.', uc3_l3:'Работает с любым giveaway-ботом, что проверяет роли.',
-  uc3_bestk:'Лучше всего для:', uc3_bestv:'giveaway-серверов, дропов Nitro/Robux/подарков, спонсорских сделок.',
-  uc3_title:'100$ Nitro — розыгрыш', uc3_g1:'Нажмите 🎉, чтобы участвовать.', uc3_g2:'Требование:', uc3_entries:'участников', uc3_block:'Альт-аккаунт заблокирован — нужна @Verified.',
   /* uc4 */
   uc4_tag:'Доход за заход', uc4_h:'Превратите каждую верификацию в доход',
   uc4_p:'Внутри верификации участник видит один рекламируемый сервер и заходит на него в клик. Вы получаете оплату за каждый реальный, оставшийся заход — автоматически. Гейт, который вам и так нужен, становится источником дохода с выплатой в крипте.',
