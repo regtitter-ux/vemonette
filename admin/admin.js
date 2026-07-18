@@ -645,6 +645,27 @@ function cardBlock(c, deleted) {
         <div class="cardrow-actions">${actions}</div>
       </div>`;
 }
+// Stats for the "EXTRA GWS" bonus ad button (a second ad shown under the ad and
+// under the success message). Joins/stayed split by when the button was shown:
+// before verification (under the ad) vs after (under the success message).
+function extraStatCard(ex) {
+    if (!ex) return '';
+    const w = (o) => o || { hour: 0, day: 0, week: 0, total: 0 };
+    const row = (label, o) => `<tr><td>${label}</td><td class="num">${w(o).hour}</td><td class="num">${w(o).day}</td><td class="num">${w(o).week}</td><td class="num">${w(o).total}</td></tr>`;
+    const section = (title, b) => `
+        <div class="muted sm" style="margin:10px 0 4px">${escapeHtml(title)}</div>
+        <div class="table-wrap"><table class="card-stats">
+          <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th><th class="num">всего</th></tr></thead>
+          <tbody>${row('Заходы', b.joins)}${row('Остались', b.stayed)}</tbody>
+        </table></div>`;
+    const t = ex.total || {};
+    return `<div class="cardrow">
+        <div class="cardrow-head"><span><b>🎁 Extra-кнопка (доп. реклама)</b></span></div>
+        <div class="cardrow-meta">Всего заходов по кнопке: <b>${w(t.joins).total}</b> · осталось <b>${w(t.stayed).total}</b> · ушло <b>${t.left || 0}</b></div>
+        ${section('До подтверждения верификации (кнопка под рекламой)', ex.pre || {})}
+        ${section('После подтверждения (кнопка под сообщением об успехе)', ex.post || {})}
+      </div>`;
+}
 let lastCardsAll = [];
 async function renderCards() {
     const { ok, body } = await get('/cards');
@@ -658,8 +679,8 @@ async function renderCards() {
         else avgEl.hidden = true;
     }
     const box = $('#cards-list');
-    box.innerHTML = active.length ? active.map((c) => cardBlock(c, false)).join('')
-        : '<div class="muted">Карточек пока нет. Создайте через /verify или добавьте по ссылке выше.</div>';
+    box.innerHTML = extraStatCard(body.extra) + (active.length ? active.map((c) => cardBlock(c, false)).join('')
+        : '<div class="muted">Карточек пока нет. Создайте через /verify или добавьте по ссылке выше.</div>');
     const dbox = $('#cards-deleted-list');
     if (dbox) dbox.innerHTML = deleted.length ? deleted.map((c) => cardBlock(c, true)).join('')
         : '<div class="muted">Удалённых карточек нет.</div>';
