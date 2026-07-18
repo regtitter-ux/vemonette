@@ -9,24 +9,19 @@
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
 
   const modebar = $('#dm-modebar');
-  const app     = $('#app');
+  const wrap    = modebar ? modebar.closest('.wrap') : null;
   const dmall   = $('#dmall');
   const bell    = $('#dm-nbell');
   const notif   = $('#dm-notif');
-  if (!modebar || !dmall) return;
+  if (!modebar || !dmall || !wrap) return;
+  // Visibility of the whole mode bar is gated to admins by order.js.
 
-  /* The mode bar lives inside #app (revealed by admin.js after login). Un-hide it
-     so it appears for any admin once the panel is up. */
-  const revealBar = () => { if (!app.hasAttribute('hidden')) modebar.hidden = false; };
-  revealBar();
-  new MutationObserver(revealBar).observe(app, { attributes: true, attributeFilter: ['hidden'] });
-
-  /* ---- mode switch: Stays (classic admin) vs DMALL (broadcast console) ---- */
+  /* ---- ad-mode switch: Stays (orders) vs DMALL (broadcast console) ---- */
   $$('.dm-mode', modebar).forEach((btn) => {
     btn.addEventListener('click', () => {
       const dm = btn.dataset.mode === 'dmall';
       $$('.dm-mode', modebar).forEach((b) => b.classList.toggle('active', b === btn));
-      app.classList.toggle('dmall-on', dm);
+      wrap.classList.toggle('dmall-on', dm);
       dmall.hidden = !dm;
       if (bell) bell.hidden = !dm;
       if (!dm && notif) notif.classList.remove('on');

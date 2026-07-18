@@ -23,13 +23,8 @@
   --dm-purple:#b18cff;
 }
 
-/* ---- mode switch (Stays / DMALL), sits between the warning and the app ---- */
-.dm-modebar{
-  grid-column:1 / -1;
-  display:flex; gap:8px; align-items:center;
-  padding:12px 40px; border-bottom:1px solid var(--dm-line);
-  background:rgba(255,255,255,.015);
-}
+/* ---- ad-mode switch (Stays / DMALL) — shown to admins on the Orders page ---- */
+.dm-modebar{ display:flex; gap:8px; align-items:center; }
 .dm-mode{
   border:1px solid var(--dm-line-2); background:transparent; color:var(--dm-mut);
   font:inherit; font-weight:800; font-size:13px; letter-spacing:.02em;
@@ -38,12 +33,12 @@
 .dm-mode:hover{ color:var(--dm-txt); background:rgba(255,255,255,.05); }
 .dm-mode.active{ background:var(--dm-blurple); border-color:var(--dm-blurple); color:#fff; }
 
-/* When DMALL is on, hide the classic admin panes and show the console. */
-#app.dmall-on > .sidebar,
-#app.dmall-on > .content{ display:none; }
+/* When DMALL is on: hide the Stays order content and widen the page for the console. */
+.wrap.dmall-on{ max-width:1200px; }
+.wrap.dmall-on > *:not(.dm-modebar):not(#dmall):not(.dm-nbell):not(.dm-notif){ display:none; }
 
 /* ---- console shell ---- */
-#dmall{ grid-column:1 / -1; width:100%; max-width:1200px; margin:0 auto; padding:22px 32px 60px; color:var(--dm-txt); }
+#dmall{ width:100%; color:var(--dm-txt); }
 #dmall *{ box-sizing:border-box; }
 
 .dm-tabsbar{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; }
@@ -271,13 +266,10 @@
 
 /* =================== responsive =================== */
 @media (max-width:900px){
-  #dmall{ padding:18px 16px 60px; }
-  .dm-modebar{ padding:10px 16px; }
   .dm-cols{ grid-template-columns:1fr; }
   .dm-bigrow{ grid-template-columns:1fr; }
 }
 @media (max-width:520px){
-  #dmall{ padding:14px 12px 60px; }
   .dm-card{ padding:16px 14px; border-radius:14px; }
   .dm-tab{ padding:8px 12px; font-size:12.5px; }
   .dm-tab .dm-tab-txt{ display:inline; }
