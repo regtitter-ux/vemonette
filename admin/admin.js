@@ -41,11 +41,12 @@ const TR_RE = [
   [/на (\d+) серв(?:ере|ерах)/g,'on $1 server(s)'],
   [/…и ещё (\d+)/g,'…and $1 more'],
   [/(\d+) юзеров/g,'$1 users'],
-  [/(\d+) заходов\b/g,'$1 joins'],
+  [/(\d+) заходов(?![а-яё])/gi,'$1 joins'],
   [/(\d+) аккаунтов/g,'$1 accounts'],
   [/(\d+) дн\./g,'$1 d'],
-  [/(\d+) шт\b/g,'$1 pcs'],
-  [/серв(?:ере|ерах)\b/g,'server(s)']
+  [/(\d+) шт(?![а-яё])/gi,'$1 pcs'],
+  [/\/день(?![а-яё])/gi,'/day'],
+  [/серв(?:ере|ерах)(?![а-яё])/gi,'server(s)']
 ];
 const TR = {
   // login / chrome / banners
@@ -55,6 +56,8 @@ const TR = {
   '👁 Просмотр от лица админа — часть функций скрыта':'👁 Viewing as an admin — some features are hidden',
   '👁 Просмотр от лица админа':'👁 View as an admin','Выйти из режима':'Exit mode',
   // BI / overview
+  'должны сервису':'owe the service','лимит достигнут, реклама скрыта':'limit reached, ad hidden',
+  'Вперёд':'Next','Назад':'Back','Ставки':'Bids',
   'Обзор':'Overview','Ключевые показатели':'Key metrics','Инвентарь рекламы':'Ad inventory','Выручка по неделям':'Revenue by week',
   'Продажи рекламы 30д':'Ad sales 30d','Выручка с заходов 30д':'Join revenue 30d','признаётся по мере доставки':'recognized as delivered',
   'Заходы 7д / 30д':'Joins 7d / 30d','Активные партнёры 7д / 30д':'Active partners 7d / 30d',
@@ -434,9 +437,10 @@ async function renderBI() {
 function fmtDur(ms) {
     ms = Number(ms) || 0;
     const s = Math.floor(ms / 1000), d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
-    if (d) return `${d}д ${h}ч`;
-    if (h) return `${h}ч ${m}м`;
-    return `${m}м`;
+    const u = adminLang === 'en' ? { d: 'd', h: 'h', m: 'm' } : { d: 'д', h: 'ч', m: 'м' };
+    if (d) return `${d}${u.d} ${h}${u.h}`;
+    if (h) return `${h}${u.h} ${m}${u.m}`;
+    return `${m}${u.m}`;
 }
 async function renderSystem() {
     const [h, f] = await Promise.all([get('/health'), get('/finance')]);
@@ -583,7 +587,8 @@ function statRow(label, w) {
 function fmtSec(s) {
     if (s == null) return '—';
     s = Math.round(s);
-    return s >= 60 ? `${Math.floor(s / 60)}м ${s % 60}с` : `${s}с`;
+    const u = adminLang === 'en' ? { m: 'm', s: 's' } : { m: 'м', s: 'с' };
+    return s >= 60 ? `${Math.floor(s / 60)}${u.m} ${s % 60}${u.s}` : `${s}${u.s}`;
 }
 // ---------- Fallback ("Заглушка") text editor ----------
 function renderFallback() {
@@ -1710,8 +1715,9 @@ function renderBalTable(users) {
 // "165ч" / "2д 5ч" left of a referral boost.
 function fmtBoostLeft(ms) {
     const h = Math.max(0, Math.ceil((Number(ms) || 0) / 3600000));
-    if (h >= 24) { const d = Math.floor(h / 24); return `${d}д ${h % 24}ч`; }
-    return `${h}ч`;
+    const u = adminLang === 'en' ? { d: 'd', h: 'h' } : { d: 'д', h: 'ч' };
+    if (h >= 24) { const d = Math.floor(h / 24); return `${d}${u.d} ${h % 24}${u.h}`; }
+    return `${h}${u.h}`;
 }
 
 let currentDetailUserId = null;
