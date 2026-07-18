@@ -121,10 +121,13 @@ section.uc{padding:46px 0}
 .pill.role.b{background:rgba(124,198,255,.16);color:#9fd6ff;border-color:rgba(124,198,255,.3)}
 .toast{display:flex;align-items:center;gap:9px;background:rgba(35,165,90,.14);border:1px solid rgba(35,165,90,.4);border-radius:8px;padding:10px 13px;color:#7ee2a6;font-size:13.5px;font-weight:600}
 .toast .chk{width:20px;height:20px;border-radius:50%;background:var(--d-green);display:grid;place-items:center;color:#fff;flex:none}
-/* fake cursor */
-.cursor{position:absolute;width:20px;height:20px;pointer-events:none;z-index:5;filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
-@media(max-width:620px){.cursor{display:none}}  /* px-positioned cursor only fits the desktop mock width */
+/* fake cursor — JS-positioned against the .stage, so it always lands on the button at any width */
+.cursor{position:absolute;left:0;top:0;width:19px;height:19px;margin:-2px 0 0 -3px;pointer-events:none;z-index:9;opacity:0;transition:left .5s cubic-bezier(.45,0,.2,1),top .5s cubic-bezier(.45,0,.2,1),opacity .3s ease;filter:drop-shadow(0 2px 3px rgba(0,0,0,.55))}
+.stage.ready .cursor{opacity:1}
 .cursor svg{width:100%;height:100%}
+.cursor.click::after{content:"";position:absolute;left:-8px;top:-8px;width:33px;height:33px;border-radius:50%;border:2px solid rgba(88,101,242,.9);animation:cripple .5s ease-out}
+@keyframes cripple{from{transform:scale(.35);opacity:1}to{transform:scale(1.3);opacity:0}}
+@media(prefers-reduced-motion:reduce){.cursor{transition:opacity .3s ease}}
 /* member list demo */
 .mlist{padding:14px 12px;display:flex;flex-direction:column;gap:3px;background:var(--d-side-2)}
 .mrole{color:var(--d-mut);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;padding:10px 8px 4px}
@@ -165,33 +168,21 @@ section.uc{padding:46px 0}
 .btn-d.blurple{background:var(--d-blurple)}
 .embed .foot{font-size:11.5px;color:#949ba4;margin-top:8px}
 
-/* animation states — each demo runs a keyframe timeline via a class on .stage */
-.stage{--t:11s}
-/* channel-access timeline */
-.a-click{animation:clickBtn var(--t) infinite}
-.a-eph{opacity:0;animation:fadeStep var(--t) infinite}
-.a-eph2{opacity:0;animation:fadeStep2 var(--t) infinite}
-.a-toast{opacity:0;transform:translateY(6px);animation:toastIn var(--t) infinite}
-.a-reveal{animation:reveal var(--t) infinite}
-.a-unlock{animation:unlock var(--t) infinite}
-.a-cur{animation:cur1 var(--t) infinite}
-@keyframes cur1{0%,8%{transform:translate(330px,270px);opacity:0}12%{opacity:1}20%{transform:translate(300px,252px)}24%,30%{transform:translate(300px,252px) scale(.82)}34%{transform:translate(300px,252px) scale(1)}55%{transform:translate(300px,252px);opacity:1}70%,100%{transform:translate(70px,150px);opacity:0}}
-@keyframes clickBtn{0%,23%{filter:brightness(1)}26%{filter:brightness(1.35)}30%,100%{filter:brightness(1)}}
-@keyframes fadeStep{0%,30%{opacity:0;transform:translateY(6px)}36%,58%{opacity:1;transform:none}66%,100%{opacity:0}}
-@keyframes fadeStep2{0%,40%{opacity:0;transform:translateY(6px)}46%,60%{opacity:1;transform:none}68%,100%{opacity:0}}
-@keyframes toastIn{0%,60%{opacity:0;transform:translateY(6px)}66%,96%{opacity:1;transform:none}100%{opacity:0}}
-@keyframes reveal{0%,64%{opacity:0;max-height:0;transform:translateX(-6px);padding-top:0;padding-bottom:0}72%,96%{opacity:1;max-height:40px;transform:none;padding-top:5px;padding-bottom:5px}100%{opacity:0;max-height:0}}
-@keyframes unlock{0%,64%{color:#6d7178}72%,100%{color:#f2f3f5}}
-/* role-grant timeline */
-.stage.role{--t:9s}
-.a-rolein{opacity:0;transform:scale(.6);animation:rolePop var(--t) infinite}
-.a-namecolor{animation:nameColor var(--t) infinite}
-.a-move{animation:moveUp var(--t) infinite}
-.a-rtoast{opacity:0;animation:toastIn var(--t) infinite}
-.a-rcur{animation:cur2 var(--t) infinite}
-@keyframes rolePop{0%,44%{opacity:0;transform:scale(.5)}52%{opacity:1;transform:scale(1.12)}58%,100%{opacity:1;transform:scale(1)}}
-@keyframes nameColor{0%,44%{color:#c9ccd1}54%,100%{color:#3fd18a}}
-@keyframes cur2{0%,10%{opacity:0;transform:translate(300px,150px)}16%{opacity:1}30%,40%{transform:translate(288px,196px) scale(.82)}44%{transform:translate(288px,196px) scale(1)}64%{opacity:1}80%,100%{opacity:0}}
+/* ===== simulation states — driven by JS via .stage[data-step] (no fragile px keyframes) ===== */
+.stage{position:relative}
+.btn-d.press{filter:brightness(.82);transform:scale(.97);transition:filter .1s,transform .1s}
+/* uc1: channel-access flow */
+.stage .eph,.stage .toast{opacity:0;transform:translateY(6px);transition:opacity .35s ease,transform .35s ease}
+.stage[data-step="2"] .eph,.stage[data-step="3"] .eph{opacity:1;transform:none}
+.stage[data-step="4"] .toast{opacity:1;transform:none}
+.ch.reveal{opacity:0;max-height:0;padding-top:0;padding-bottom:0;transform:translateX(-6px);transition:max-height .45s ease,opacity .45s ease,transform .45s ease,padding .45s ease}
+.stage[data-step="4"] .ch.reveal{opacity:1;max-height:40px;transform:none;padding-top:5px;padding-bottom:5px}
+.lockable{color:#6d7178;transition:color .45s ease}
+.stage[data-step="4"] .lockable{color:#f2f3f5}
+/* uc2: role grant — the member physically rises into the Verified group (FLIP animated in JS) */
+.stage.role[data-step="2"] .toast{opacity:1;transform:none}
+.mlist .mn.grn{color:#3fd18a;transition:color .5s ease}
+.mlist .cnt{font-variant-numeric:tabular-nums}
 
 /* how it works */
 .how{padding:20px 0 6px}
@@ -274,11 +265,11 @@ footer{border-top:1px solid var(--line);padding:26px 0;margin-top:20px}
               </div>
               <div class="cat"><span class="carr">▾</span> <span data-i18n="uc1_cat1">Welcome</span></div>
               <div class="ch active"><span class="hash">#</span> <span data-i18n="uc1_ch_welcome">verification</span> <span class="cg"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm8.4 4a6.5 6.5 0 0 0-.1-1.3l2-1.6-2-3.4-2.4 1a6.6 6.6 0 0 0-2.2-1.3L15.3 2H8.7l-.4 2.1A6.6 6.6 0 0 0 6.1 5.4l-2.4-1-2 3.4 2 1.6a6.5 6.5 0 0 0 0 2.6l-2 1.6 2 3.4 2.4-1a6.6 6.6 0 0 0 2.2 1.3l.4 2.1h6.6l.4-2.1a6.6 6.6 0 0 0 2.2-1.3l2.4 1 2-3.4-2-1.6a6.5 6.5 0 0 0 .1-1.3Z"/></svg></span></div>
-              <div class="cat a-unlock"><span class="carr">▾</span> <span data-i18n="uc1_cat2">Main</span></div>
-              <div class="ch lock a-unlock"><span class="hash">🔒</span> <span class="dot" style="background:#3fd18a"></span> <span data-i18n="uc1_ch_rules">rules</span></div>
-              <div class="ch lock a-unlock"><span class="hash">🔒</span> <span class="dot" style="background:#f5b454"></span> <span data-i18n="uc1_ch_news">news</span></div>
-              <div class="ch reveal a-reveal"><span class="hash">#</span> <span data-i18n="uc1_ch_gw">giveaways</span></div>
-              <div class="ch reveal a-reveal"><span class="hash">🔊</span> <span data-i18n="uc1_ch_voice">lounge</span></div>
+              <div class="cat lockable"><span class="carr">▾</span> <span data-i18n="uc1_cat2">Main</span></div>
+              <div class="ch lock lockable"><span class="hash">🔒</span> <span class="dot" style="background:#3fd18a"></span> <span data-i18n="uc1_ch_rules">rules</span></div>
+              <div class="ch lock lockable"><span class="hash">🔒</span> <span class="dot" style="background:#f5b454"></span> <span data-i18n="uc1_ch_news">news</span></div>
+              <div class="ch reveal"><span class="hash">#</span> <span data-i18n="uc1_ch_gw">giveaways</span></div>
+              <div class="ch reveal"><span class="hash">🔊</span> <span data-i18n="uc1_ch_voice">lounge</span></div>
             </div>
             <div class="dmainwrap">
               <div class="dtop"><span class="hash">#</span> <span data-i18n="uc1_ch_welcome">verification</span>
@@ -299,21 +290,21 @@ footer{border-top:1px solid var(--line);padding:26px 0;margin-top:20px}
                       <div class="et" data-i18n="uc1_title">Get verified!</div>
                       <div class="ed" data-i18n="uc1_desc">To gain full access to the server, complete verification.<br>Click the button below.</div>
                       <div class="foot"><span data-i18n="uc1_created">Created by:</span> 833442190427684914</div>
-                      <button class="btn-d blurple a-click">🔐 <span data-i18n="uc1_btn">Start Verification</span></button>
+                      <button class="btn-d blurple">🔐 <span data-i18n="uc1_btn">Start Verification</span></button>
                     </div>
                   </div>
                 </div>
-                <div class="eph a-eph">
+                <div class="eph">
                   <div class="eph-h"><span data-i18n="uc1_eph1">To complete verification, you must join the server:</span> <span class="link">https://discord.gg/pFe7fpsyA</span></div>
                   <div class="bullet" data-i18n="uc1_after">After joining, click the button again</div>
                   <div class="xbtn">EXTRA GWS 100$ NITRO / 10K ROBUX / 10X DECOR <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14V3ZM5 5h5v2H5v12h12v-5h2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></svg></div>
                   <div class="note" data-i18n="uc1_ephnote">Only you can see this · Dismiss message</div>
                 </div>
-                <div class="toast a-toast"><span class="chk">✓</span> <span data-i18n="uc1_ok">Verified — welcome in! Channels unlocked.</span></div>
+                <div class="toast"><span class="chk">✓</span> <span data-i18n="uc1_ok">Verified — welcome in! Channels unlocked.</span></div>
               </div>
             </div>
           </div>
-          <div class="cursor a-cur"><svg viewBox="0 0 24 24" fill="#fff" stroke="#000" stroke-width="1"><path d="M5 3l14 8-6 1.5L11 20 5 3Z"/></svg></div>
+          <div class="cursor"><svg viewBox="0 0 24 24" fill="#fff" stroke="#000" stroke-width="1"><path d="M5 3l14 8-6 1.5L11 20 5 3Z"/></svg></div>
         </div>
       </div>
     </div>
@@ -348,19 +339,19 @@ footer{border-top:1px solid var(--line);padding:26px 0;margin-top:20px}
                   </div>
                 </div>
               </div>
-              <div class="toast a-rtoast"><span class="chk">✓</span> <span data-i18n="uc2_ok">You got the @Verified role.</span></div>
+              <div class="toast"><span class="chk">✓</span> <span data-i18n="uc2_ok">You got the @Verified role.</span></div>
             </div>
-            <div class="mlist">
-              <div class="mrole" data-i18n="uc2_grp1">✅ Verified — <span class="cnt">3</span></div>
+            <div class="mlist" id="mlist2">
+              <div class="mrole">✅ <span data-i18n="uc2_grp1">Verified</span> — <span class="cnt vcnt">2</span></div>
               <div class="mrow"><span class="mav" style="background:#3fd18a">M</span><span class="mn g on">mika</span></div>
               <div class="mrow"><span class="mav" style="background:#5ac8fa">S</span><span class="mn b on">sian</span></div>
-              <div class="mrow a-move"><span class="mav" style="background:#c084fc">P</span><span class="mn a-namecolor">Pino</span> <span class="pill role a-rolein">✅</span></div>
-              <div class="mrole" data-i18n="uc2_grp2">Members</div>
+              <div class="mrole" id="grpMembers"><span data-i18n="uc2_grp2">Members</span> — <span class="cnt mcnt">3</span></div>
+              <div class="mrow" id="pinoRow"><span class="mav" style="background:#c084fc">P</span><span class="mn">Pino</span></div>
               <div class="mrow"><span class="mav" style="background:#7a8390">z</span><span class="mn">zeii</span></div>
               <div class="mrow"><span class="mav" style="background:#7a8390">k</span><span class="mn">koda</span></div>
             </div>
           </div>
-          <div class="cursor a-rcur"><svg viewBox="0 0 24 24" fill="#fff" stroke="#000" stroke-width="1"><path d="M5 3l14 8-6 1.5L11 20 5 3Z"/></svg></div>
+          <div class="cursor"><svg viewBox="0 0 24 24" fill="#fff" stroke="#000" stroke-width="1"><path d="M5 3l14 8-6 1.5L11 20 5 3Z"/></svg></div>
         </div>
       </div>
     </div>
@@ -464,7 +455,7 @@ const RU = {
   uc2_l1:'Цветная роль, которая выделяет реальных участников.', uc2_l2:'Используйте для входа в розыгрыши, перков уровня, пингов.', uc2_l3:'Считает живых людей отдельно от ботов-лёркеров.',
   uc2_bestk:'Лучше всего для:', uc2_bestv:'открытых сообществ, giveaway и social-серверов, площадок авторов.',
   uc2_title:'Заберите роль Verified', uc2_desc:'Ни один канал не скрыт — это просто даёт роль и доступ к розыгрышам.', uc2_btn:'Пройти проверку',
-  uc2_ok:'Вы получили роль @Verified.', uc2_grp1:'✅ Verified — <span class="cnt">3</span>', uc2_grp2:'Участники',
+  uc2_ok:'Вы получили роль @Verified.', uc2_grp1:'Verified', uc2_grp2:'Участники',
   /* uc4 */
   uc4_tag:'Доход за заход', uc4_h:'Превратите каждую верификацию в доход',
   uc4_p:'Внутри верификации участник видит один рекламируемый сервер и заходит на него в клик. Вы получаете оплату за каждый реальный, оставшийся заход — автоматически. Гейт, который вам и так нужен, становится источником дохода с выплатой в крипте.',
@@ -496,6 +487,95 @@ document.querySelectorAll('#lang button').forEach((b) => b.addEventListener('cli
 let startLang = 'en';
 try { const s = localStorage.getItem('vemonette-lang'); if (s === 'ru' || s === 'en') startLang = s; } catch(_) {}
 setLang(startLang);
+
+/* ---------- Discord simulations (JS-driven so the cursor lands accurately at any width) ---------- */
+const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function cursorFor(stage){
+  const cur = stage.querySelector('.cursor');
+  const put = (x, y) => { cur.style.left = x + 'px'; cur.style.top = y + 'px'; };
+  const rect = () => stage.getBoundingClientRect();
+  return {
+    moveTo(el){ const s = rect(), r = el.getBoundingClientRect(); put(r.left - s.left + r.width * 0.62, r.top - s.top + r.height * 0.5); },
+    idle(){ const s = rect(); put(s.width * 0.5, s.height * 0.9); },
+    press(el){ cur.classList.add('click'); if (el) el.classList.add('press'); setTimeout(() => { cur.classList.remove('click'); if (el) el.classList.remove('press'); }, 430); }
+  };
+}
+
+function runTimeline(stage, tl){
+  let i = 0;
+  (function step(){
+    const t = tl[i];
+    if (t.step != null) stage.setAttribute('data-step', t.step);
+    if (t.act) t.act();
+    i = (i + 1) % tl.length;
+    setTimeout(step, t.wait);
+  })();
+}
+
+/* uc1: click → ad → click again → verified + channels unlock (mirrors the home-page sim) */
+(function uc1(){
+  const stage = document.querySelector('.stage:not(.role)');
+  if (!stage) return;
+  const c = cursorFor(stage);
+  const btn = stage.querySelector('.btn-d');
+  const tl = [
+    { step: 0, wait: 1200, act: c.idle },
+    { step: 1, wait: 820,  act: () => c.moveTo(btn) },
+    { step: 1, wait: 520,  act: () => c.press(btn) },
+    { step: 2, wait: 2600, act: c.idle },
+    { step: 3, wait: 820,  act: () => c.moveTo(btn) },
+    { step: 3, wait: 520,  act: () => c.press(btn) },
+    { step: 4, wait: 2900, act: c.idle }
+  ];
+  requestAnimationFrame(() => { c.idle(); stage.classList.add('ready'); setTimeout(() => runTimeline(stage, tl), 400); });
+  window.addEventListener('resize', c.idle);
+})();
+
+/* uc2: click Verify → Pino rises from the Members group up into the Verified group (FLIP) */
+(function uc2(){
+  const stage = document.querySelector('.stage.role');
+  if (!stage) return;
+  const c = cursorFor(stage);
+  const btn = stage.querySelector('.btn-d');
+  const list = stage.querySelector('#mlist2');
+  const pino = stage.querySelector('#pinoRow');
+  const members = stage.querySelector('#grpMembers');
+  const pinoName = pino.querySelector('.mn');
+  const vcnt = stage.querySelector('.vcnt'), mcnt = stage.querySelector('.mcnt');
+  const anchor = pino.nextElementSibling; // zeii — Pino's home slot in the Members group
+
+  const clearFx = () => { [...list.children].forEach(k => { k.style.transition = ''; k.style.transform = ''; }); };
+  const reset = () => {
+    clearFx();
+    list.insertBefore(pino, anchor);        // Pino back under "Members"
+    pinoName.classList.remove('grn');
+    vcnt.textContent = '2'; mcnt.textContent = '3';
+  };
+  const flip = (move) => {
+    if (reduce) { move(); return; }
+    const kids = [...list.children];
+    const tops = kids.map(k => k.getBoundingClientRect().top);
+    move();
+    kids.forEach((k, idx) => { const d = tops[idx] - k.getBoundingClientRect().top; if (!d) return; k.style.transition = 'none'; k.style.transform = 'translateY(' + d + 'px)'; });
+    void list.offsetHeight; // reflow so the inverse transforms take before we transition them away
+    kids.forEach(k => { k.style.transition = 'transform .55s cubic-bezier(.45,0,.2,1)'; k.style.transform = ''; });
+  };
+  const promote = () => {
+    flip(() => { list.insertBefore(pino, members); });   // move Pino above "Members" = last in Verified
+    pinoName.classList.add('grn');
+    vcnt.textContent = '3'; mcnt.textContent = '2';
+  };
+
+  const tl = [
+    { step: 0, wait: 1300, act: () => { reset(); c.idle(); } },
+    { step: 1, wait: 820,  act: () => c.moveTo(btn) },
+    { step: 1, wait: 520,  act: () => c.press(btn) },
+    { step: 2, wait: 3400, act: () => { promote(); c.idle(); } }
+  ];
+  requestAnimationFrame(() => { reset(); c.idle(); stage.classList.add('ready'); setTimeout(() => runTimeline(stage, tl), 400); });
+  window.addEventListener('resize', c.idle);
+})();
 </script>
 </body>
 </html>
