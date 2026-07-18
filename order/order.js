@@ -766,7 +766,10 @@ function srvRow(campId, s) {
     const btn = s.disabled
         ? `<button class="btn-mini off" data-toggle="${s.gid}" data-state="off">${esc(t('disabled'))}</button>`
         : `<button class="btn-mini" data-toggle="${s.gid}" data-state="on">${esc(t('disable'))}</button>`;
-    return `<div class="srv-row">${ic}<span class="srv-name">${esc(s.name || 'Server')} </span><span class="srv-count">${s.count}</span>${btn}</div>`;
+    // Admin only: `(N)` = how many were delivered here via the EXTRA bonus ad
+    // (partner not paid). Backend sends `extra` only to admins.
+    const extra = (s.extra != null && s.extra > 0) ? ` <span class="srv-extra" title="через экстра-рекламу">(${s.extra})</span>` : '';
+    return `<div class="srv-row">${ic}<span class="srv-name">${esc(s.name || 'Server')} </span><span class="srv-count">${s.count}${extra}</span>${btn}</div>`;
 }
 
 // ---------- Boot ----------
