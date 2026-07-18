@@ -1424,11 +1424,11 @@ function renderShares() {
     const mgr = sh.managerCost || { total: 0 };
     const money = (v) => '$' + Number(v || 0).toFixed(2);
     const acqPct = Math.round((sh.acquiringRate || 0.03) * 100);
-    // Crypto Pay app balance vs service debt (outstanding). When the app
-    // balance can't cover what's owed to partners, flag a top-up.
-    const cryptoBal = state.cryptoBalance;
+    // NOWPayments custody balance vs service debt (outstanding) — flag when it
+    // can't cover what's owed to partners (payouts come from NOWPayments now).
+    const npBal = state.nowpaymentsBalance;
     const debt = Number(state.stats?.outstanding) || 0;
-    const needTopUp = cryptoBal != null && cryptoBal < debt;
+    const lowBal = npBal != null && npBal < debt;
 
     const cards = [
         { k: 'Чистый доход (всего)', v: money(p.total) },
@@ -1441,11 +1441,10 @@ function renderShares() {
         { k: 'Скидка менеджерам', sub: 'маржа менеджеров (розница − их цена)', v: money(mgr.total) },
         { k: 'Капитализация', sub: 'сумма балансов пользователей', v: money(debt) },
         {
-            k: 'Баланс Crypto Pay',
-            v: cryptoBal == null ? '—' : money(cryptoBal),
-            warn: needTopUp,
-            btn: effRole() === 'owner' ? 'cryptofund' : null,  // top-up is owner-only
-            note: cryptoBal == null ? 'не настроен' : needTopUp ? `🔴 Пополни: меньше капитализации ${money(debt)}` : '🟢 Хватает на выплаты'
+            k: 'Баланс NOWPayments',
+            v: npBal == null ? '—' : money(npBal),
+            warn: lowBal,
+            note: npBal == null ? 'не настроен' : lowBal ? `🔴 Меньше капитализации ${money(debt)}` : '🟢 Хватает на выплаты'
         }
     ];
     $('#share-cards').innerHTML = cards.map((cd) => {
