@@ -94,9 +94,9 @@ section.uc{padding:46px 0}
 .ch.lock{color:#6d7178}
 .ch.active{background:rgba(255,255,255,.08);color:#f2f3f5}
 .ch.reveal{opacity:0;max-height:0;padding-top:0;padding-bottom:0;transform:translateX(-6px)}
-.dmain{padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.dmain{padding:13px 15px;display:flex;flex-direction:column;gap:9px;min-width:0}
 .msg{display:flex;gap:11px}
-.av{width:38px;height:38px;border-radius:50%;flex:none;background:linear-gradient(150deg,#5865f2,#8a5cf6);display:grid;place-items:center;color:#fff;font-weight:700;font-size:15px;overflow:hidden}
+.av{width:34px;height:34px;border-radius:50%;flex:none;background:linear-gradient(150deg,#5865f2,#8a5cf6);display:grid;place-items:center;color:#fff;font-weight:700;font-size:14px;overflow:hidden}
 .av img{width:100%;height:100%;object-fit:cover}
 .mbody{min-width:0}
 .rhead{display:flex;align-items:center;gap:8px;margin-bottom:2px}
@@ -105,16 +105,18 @@ section.uc{padding:46px 0}
 .bot{background:var(--d-blurple);color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:4px;letter-spacing:.02em}
 .time{color:#949ba4;font-size:11px}
 .mtxt{color:var(--d-txt-2);font-size:14px}
-.embed{border-left:4px solid var(--blue);background:var(--d-embed);border-radius:5px;padding:12px 14px;max-width:min(400px,100%)}
-.embed .ea{display:flex;align-items:center;gap:8px;font-size:13px;color:#f2f3f5;font-weight:600;margin-bottom:6px}
+.embed{border-left:4px solid var(--blue);background:var(--d-embed);border-radius:5px;padding:10px 13px 11px;max-width:min(400px,100%)}
+.embed .ea{display:flex;align-items:center;gap:8px;font-size:13px;color:#f2f3f5;font-weight:600;margin-bottom:5px}
 .embed .ea img{width:20px;height:20px;border-radius:50%}
-.embed .et{font-weight:700;color:#fff;font-size:16px;margin-bottom:5px}
-.embed .ed{font-size:13.5px;color:#dbdee1;line-height:1.45}
-.btn-d{margin-top:11px;display:inline-flex;align-items:center;gap:7px;background:var(--d-green);color:#fff;border:0;font:inherit;font-weight:600;font-size:14px;padding:9px 16px;border-radius:8px}
-.eph{background:rgba(0,0,0,.16);border-radius:8px;padding:11px 13px;border:1px solid rgba(255,255,255,.05);max-width:100%;overflow:hidden}
-.eph .lead{color:var(--d-txt-2);font-size:13.5px}
+.embed .et{font-weight:700;color:#fff;font-size:15px;margin-bottom:4px}
+.embed .ed{font-size:13px;color:#dbdee1;line-height:1.42}
+.btn-d{margin-top:9px;display:inline-flex;align-items:center;gap:7px;background:var(--d-green);color:#fff;border:0;font:inherit;font-weight:600;font-size:13.5px;padding:8px 14px;border-radius:8px}
+.eph{background:rgba(88,101,242,.06);border-left:3px solid #5865f2;border-radius:3px;padding:7px 12px 8px;max-width:100%;overflow:hidden}
+.eph .lead,.ephtxt{color:var(--d-txt-2);font-size:13.5px;line-height:1.5}
 .eph .link{color:var(--blue-2)}
-.eph .note{color:#949ba4;font-size:11px;margin-top:6px}
+.eph .note{color:#949ba4;font-size:11px;margin-top:5px}
+.av.bot{background:transparent}
+.av.bot img{object-fit:contain}
 .link-btn{margin-top:9px;display:inline-flex;align-items:center;gap:7px;background:rgba(78,80,88,.5);border:1px solid rgba(255,255,255,.08);color:#dfe3e8;font-weight:600;font-size:13px;padding:8px 13px;border-radius:8px}
 .pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px}
 .pill.role{background:rgba(63,209,138,.16);color:#4fe3a0;border:1px solid rgba(63,209,138,.3)}
@@ -175,10 +177,9 @@ section.uc{padding:46px 0}
 .stage .eph,.stage .toast{opacity:0;transform:translateY(6px);transition:opacity .35s ease,transform .35s ease}
 .stage[data-step="2"] .eph,.stage[data-step="3"] .eph{opacity:1;transform:none}
 .stage[data-step="4"] .toast{opacity:1;transform:none}
-.ch.reveal{opacity:0;max-height:0;padding-top:0;padding-bottom:0;transform:translateX(-6px);transition:max-height .45s ease,opacity .45s ease,transform .45s ease,padding .45s ease}
+.ch.reveal,.cat.reveal{opacity:0;max-height:0;padding-top:0;padding-bottom:0;transform:translateX(-6px);overflow:hidden;transition:max-height .45s ease,opacity .45s ease,transform .45s ease,padding .45s ease}
 .stage[data-step="4"] .ch.reveal{opacity:1;max-height:40px;transform:none;padding-top:5px;padding-bottom:5px}
-.lockable{color:#6d7178;transition:color .45s ease}
-.stage[data-step="4"] .lockable{color:#f2f3f5}
+.stage[data-step="4"] .cat.reveal{opacity:1;max-height:40px;transform:none;padding-top:8px;padding-bottom:4px}
 /* uc2: role grant — the member physically rises into the Verified group (FLIP animated in JS) */
 .stage.role[data-step="2"] .toast{opacity:1;transform:none}
 .mlist .mn.grn{color:#3fd18a;transition:color .5s ease}
@@ -265,9 +266,7 @@ footer{border-top:1px solid var(--line);padding:26px 0;margin-top:20px}
               </div>
               <div class="cat"><span class="carr">▾</span> <span data-i18n="uc1_cat1">Welcome</span></div>
               <div class="ch active"><span class="hash">#</span> <span data-i18n="uc1_ch_welcome">verification</span> <span class="cg"><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm8.4 4a6.5 6.5 0 0 0-.1-1.3l2-1.6-2-3.4-2.4 1a6.6 6.6 0 0 0-2.2-1.3L15.3 2H8.7l-.4 2.1A6.6 6.6 0 0 0 6.1 5.4l-2.4-1-2 3.4 2 1.6a6.5 6.5 0 0 0 0 2.6l-2 1.6 2 3.4 2.4-1a6.6 6.6 0 0 0 2.2 1.3l.4 2.1h6.6l.4-2.1a6.6 6.6 0 0 0 2.2-1.3l2.4 1 2-3.4-2-1.6a6.5 6.5 0 0 0 .1-1.3Z"/></svg></span></div>
-              <div class="cat lockable"><span class="carr">▾</span> <span data-i18n="uc1_cat2">Main</span></div>
-              <div class="ch lock lockable"><span class="hash">🔒</span> <span class="dot" style="background:#3fd18a"></span> <span data-i18n="uc1_ch_rules">rules</span></div>
-              <div class="ch lock lockable"><span class="hash">🔒</span> <span class="dot" style="background:#f5b454"></span> <span data-i18n="uc1_ch_news">news</span></div>
+              <div class="cat reveal"><span class="carr">▾</span> <span data-i18n="uc1_cat2">Main</span></div>
               <div class="ch reveal"><span class="hash">#</span> <span data-i18n="uc1_ch_gw">giveaways</span></div>
               <div class="ch reveal"><span class="hash">🔊</span> <span data-i18n="uc1_ch_voice">lounge</span></div>
             </div>
@@ -282,23 +281,26 @@ footer{border-top:1px solid var(--line);padding:26px 0;margin-top:20px}
               </div>
               <div class="dmain">
                 <div class="msg">
-                  <div class="av"><img src="/assets/logo.png" alt="" /></div>
+                  <div class="av bot"><img src="/assets/logo.png" alt="" /></div>
                   <div class="mbody">
-                    <div class="rhead"><span class="uname">Verification</span><span class="bot">BOT</span><span class="time" data-i18n="t_now">Today at 9:47</span></div>
+                    <div class="rhead"><span class="uname">Verification</span><span class="bot">BOT</span><span class="time" data-i18n="t_now">Today at 17:29</span></div>
                     <div class="embed">
                       <div class="ea"><img src="/assets/logo.png" alt="" /> Vemoni</div>
                       <div class="et" data-i18n="uc1_title">Get verified!</div>
-                      <div class="ed" data-i18n="uc1_desc">To gain full access to the server, complete verification.<br>Click the button below.</div>
-                      <div class="foot"><span data-i18n="uc1_created">Created by:</span> 833442190427684914</div>
+                      <div class="ed" data-i18n="uc1_desc">To gain full access to the server, you must complete verification. Click the button below.</div>
                       <button class="btn-d blurple">🔐 <span data-i18n="uc1_btn">Start Verification</span></button>
                     </div>
                   </div>
                 </div>
                 <div class="eph">
-                  <div class="eph-h"><span data-i18n="uc1_eph1">To complete verification, you must join the server:</span> <span class="link">https://discord.gg/pFe7fpsyA</span></div>
-                  <div class="bullet" data-i18n="uc1_after">After joining, click the button again</div>
-                  <div class="xbtn">EXTRA GWS 100$ NITRO / 10K ROBUX / 10X DECOR <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M14 3h7v7h-2V6.4l-9.3 9.3-1.4-1.4L17.6 5H14V3ZM5 5h5v2H5v12h12v-5h2v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"/></svg></div>
-                  <div class="note" data-i18n="uc1_ephnote">Only you can see this · Dismiss message</div>
+                  <div class="msg">
+                    <div class="av bot"><img src="/assets/logo.png" alt="" /></div>
+                    <div class="mbody">
+                      <div class="rhead"><span class="uname">Verification</span><span class="bot">BOT</span></div>
+                      <div class="ephtxt"><span data-i18n="uc1_eph1">To verify, join the server</span> <span class="link">discord.gg/vemoni</span> <span data-i18n="uc1_eph1b">— then click the button again.</span></div>
+                      <div class="note" data-i18n="uc1_ephnote">Only you can see this · Dismiss message</div>
+                    </div>
+                  </div>
                 </div>
                 <div class="toast"><span class="chk">✓</span> <span data-i18n="uc1_ok">Verified — welcome in! Channels unlocked.</span></div>
               </div>
@@ -446,8 +448,8 @@ const RU = {
   uc1_bestk:'Лучше всего для:', uc1_bestv:'больших сообществ, giveaway-серверов, всего, что рейдят.',
   uc1_events:'Мероприятия', uc1_browse:'Просмотр каналов', uc1_members:'Участники',
   uc1_cat1:'Welcome', uc1_cat2:'Main', uc1_ch_welcome:'verification', uc1_ch_rules:'rules', uc1_ch_news:'news', uc1_ch_gw:'giveaways', uc1_ch_voice:'lounge',
-  uc1_title:'Пройдите верификацию!', uc1_desc:'Чтобы получить полный доступ к серверу, пройдите верификацию.<br>Нажмите кнопку ниже.', uc1_created:'Создано:', uc1_btn:'Начать верификацию',
-  uc1_eph1:'Чтобы завершить верификацию, зайдите на сервер:', uc1_after:'После входа нажмите кнопку ещё раз', uc1_ephnote:'Видно только вам · Нажмите, чтобы убрать',
+  uc1_title:'Пройдите верификацию!', uc1_desc:'Чтобы получить полный доступ к серверу, пройдите верификацию. Нажмите кнопку ниже.', uc1_btn:'Начать верификацию',
+  uc1_eph1:'Чтобы пройти проверку, зайдите на сервер', uc1_eph1b:'— затем нажмите кнопку ещё раз.', uc1_ephnote:'Видно только вам · Нажмите, чтобы убрать',
   uc1_ok:'Проверено — добро пожаловать! Каналы открыты.',
   /* uc2 */
   uc2_tag:'Роль по проверке', uc2_h:'Выдавайте роль — не скрывая ни одного канала',
