@@ -86,10 +86,20 @@
     });
   });
 
-  /* ---- quick amount buttons ---- */
+  /* ---- message count → price ($1 per 1000 messages, billed to the orders balance) ---- */
+  const PRICE_PER_1000 = 1;
+  function updateLaunchPrice() {
+    const inp = $('#dm-l-count'), out = $('#dm-l-price');
+    if (!out) return;
+    const n = Math.max(0, parseInt((inp && inp.value) || '0', 10) || 0);
+    const price = (n / 1000) * PRICE_PER_1000;
+    out.textContent = ' — ' + (price % 1 === 0 ? '$' + price : '$' + price.toFixed(2));
+  }
   $$('.dm-quick button', dmall).forEach((b) => {
-    b.addEventListener('click', () => { const inp = $('#dm-l-count'); if (inp) inp.value = b.dataset.amt; });
+    b.addEventListener('click', () => { const inp = $('#dm-l-count'); if (inp) inp.value = b.dataset.amt; updateLaunchPrice(); });
   });
+  { const lc = $('#dm-l-count'); if (lc) lc.addEventListener('input', updateLaunchPrice); }
+  updateLaunchPrice();
 
   /* ---- repeatable embed fields (Discohook-style) ---- */
   const FIELD_ROW = '<div class="dm-field-row">' +
