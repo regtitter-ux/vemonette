@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/order/order.css?v=28" />
-  <link rel="stylesheet" href="/order/dmall.css?v=4" />
+  <link rel="stylesheet" href="/order/dmall.css?v=5" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';
   </script>
@@ -133,36 +133,9 @@
         <div class="dm-card">
           <div class="dm-card-h"><h2 id="dm-form-title" data-dm="new_tpl">New template</h2><button class="dm-btn ghost sm" id="dm-example" data-dm="example">Nitro example</button></div>
 
-          <div class="dm-field"><label class="dm-label" data-dm="f_name">Name</label><input class="dm-input" id="dm-t-name" placeholder="Nitro / Robux giveaway" /></div>
           <div class="dm-field"><label class="dm-label">content <span class="dm-counter" id="dm-content-count">0/2000</span></label><textarea class="dm-textarea" id="dm-t-content" data-preview maxlength="2000" placeholder="Congratulations <@USER_ID> 🎉"></textarea></div>
           <div class="dm-chips"><span class="dm-chips-lbl" data-dm="recipient">Recipient:</span><button class="dm-chip" data-insert="&lt;@USER_ID&gt;" data-target="dm-t-content">&lt;@USER_ID&gt;</button><button class="dm-chip" data-insert="&lt;@USERNAME&gt;" data-target="dm-t-content">&lt;@USERNAME&gt;</button><button class="dm-chip" data-insert="&lt;@DISPLAY_NAME&gt;" data-target="dm-t-content">&lt;@DISPLAY_NAME&gt;</button></div>
           <div class="dm-chips"><span class="dm-chips-lbl" data-dm="link_lbl">Link:</span><span class="dm-chip link">{{LINK}}</span></div>
-
-          <div class="dm-divide"><h3 data-dm="embed_h">Embed</h3></div>
-          <div class="dm-field"><label class="dm-label">color</label>
-            <div class="dm-color-row"><input class="dm-input" id="dm-t-color" data-preview value="#5865f2" /><input type="color" class="dm-swatch" id="dm-t-colorpick" value="#5865f2" /></div>
-          </div>
-          <div class="dm-field"><label class="dm-label">author.name</label><input class="dm-input" id="dm-t-author" data-preview placeholder="" /></div>
-          <div class="dm-field"><label class="dm-label">author.url</label><input class="dm-input" id="dm-t-authorurl" placeholder="{{LINK}}" /></div>
-          <div class="dm-field"><label class="dm-label">author.icon_url</label><input class="dm-input" id="dm-t-authoricon" data-preview placeholder="https://…" /></div>
-          <div class="dm-field"><label class="dm-label">title</label><input class="dm-input" id="dm-t-title" data-preview placeholder="" /></div>
-          <div class="dm-field"><label class="dm-label">title.url</label><input class="dm-input" id="dm-t-titleurl" placeholder="{{LINK}}" /></div>
-          <div class="dm-chips"><span class="dm-chips-lbl" data-dm="link_lbl">Link:</span><span class="dm-chip link">{{LINK}}</span></div>
-          <div class="dm-field"><label class="dm-label">description</label><textarea class="dm-textarea" id="dm-t-desc" data-preview placeholder=""></textarea></div>
-          <div class="dm-chips"><span class="dm-chips-lbl" data-dm="recipient">Recipient:</span><button class="dm-chip" data-insert="&lt;@USER_ID&gt;" data-target="dm-t-desc">&lt;@USER_ID&gt;</button><button class="dm-chip" data-insert="&lt;@USERNAME&gt;" data-target="dm-t-desc">&lt;@USERNAME&gt;</button><button class="dm-chip" data-insert="&lt;@DISPLAY_NAME&gt;" data-target="dm-t-desc">&lt;@DISPLAY_NAME&gt;</button></div>
-          <div class="dm-field"><label class="dm-label" data-dm="fields">Fields</label>
-            <div id="dm-fields"></div>
-            <button class="dm-btn ghost sm" id="dm-add-field" type="button" data-dm="add_field" style="margin-top:8px">＋ Add field</button>
-          </div>
-          <div class="dm-field"><label class="dm-label">image.url</label><input class="dm-input" id="dm-t-image" data-preview data-dm-ph="ph_upload" placeholder="https://… or upload a file below" />
-            <div class="dm-upload"><div class="dm-upload-th" id="dm-image-prev">?</div><div class="dm-upload-main"><button class="dm-file-btn" data-dm="choose_file">Choose file</button><div class="dm-upload-hint" data-dm="upload_hint">PNG, JPEG, WEBP or GIF up to 8 MB · external URL or server upload</div></div></div>
-          </div>
-          <div class="dm-field"><label class="dm-label">thumbnail.url</label><input class="dm-input" id="dm-t-thumb" data-preview data-dm-ph="ph_upload" placeholder="https://… or upload a file below" />
-            <div class="dm-upload"><div class="dm-upload-th" id="dm-thumb-prev">?</div><div class="dm-upload-main"><button class="dm-file-btn" data-dm="choose_file">Choose file</button><div class="dm-upload-hint" data-dm="upload_hint">PNG, JPEG, WEBP or GIF up to 8 MB · external URL or server upload</div></div></div>
-          </div>
-          <div class="dm-field"><label class="dm-label">footer.text</label><input class="dm-input" id="dm-t-footer" data-preview placeholder="" /></div>
-          <div class="dm-field"><label class="dm-label">footer.icon_url</label><input class="dm-input" id="dm-t-footericon" data-preview placeholder="https://…" /></div>
-          <div class="dm-field"><label class="dm-label">timestamp</label><input class="dm-input" type="datetime-local" id="dm-t-timestamp" data-preview /></div>
 
           <div class="dm-divide"><h3 data-dm="bot_profile">Bot profile</h3><p data-dm="bot_profile_p">Name, avatar and custom status are applied on the bot's first connection to a broadcast (once per run). Discord — no more than ~1 name change per hour.</p></div>
           <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-name" /> <span data-dm="set_name">Set bot name</span></label>
@@ -180,6 +153,10 @@
           <div class="dm-field"><label class="dm-label">url</label><input class="dm-input" id="dm-t-btnurl" placeholder="{{LINK}}" /></div>
           <div class="dm-chips"><span class="dm-chips-lbl" data-dm="link_lbl">Link:</span><span class="dm-chip link">{{LINK}}</span></div>
           <div class="dm-field"><label class="dm-label">emoji</label><input class="dm-input" id="dm-t-btnemoji" data-preview placeholder="🎁" /></div>
+
+          <div class="dm-divide"><h3 data-dm="embeds_h">Embeds</h3></div>
+          <div id="dm-embeds"></div>
+          <button class="dm-btn primary" id="dm-add-embed" type="button" data-dm="add_embed" style="margin-top:4px">＋ Add Embed</button>
 
           <div class="dm-form-actions"><button class="dm-btn primary" id="dm-save" data-dm="create_tpl">Create template</button><button class="dm-btn ghost" id="dm-cancel" data-dm="cancel" hidden>Cancel</button></div>
         </div>
@@ -323,6 +300,6 @@
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=37"></script>
-<script src="/order/dmall.js?v=5"></script>
+<script src="/order/dmall.js?v=6"></script>
 </body>
 </html>

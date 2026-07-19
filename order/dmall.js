@@ -107,6 +107,60 @@
   counter('#dm-t-username', '#dm-username-count', 80);
   counter('#dm-t-content', '#dm-content-count', 2000);
 
+  /* ---- collapsible embeds (Discohook-style) ---- */
+  const embedsBox = $('#dm-embeds'), addEmbedBtn = $('#dm-add-embed');
+  const EMBED_BLOCK =
+    '<div class="dm-embed-block">' +
+      '<div class="dm-eb-head">' +
+        '<button type="button" class="dm-eb-toggle"><span class="dm-eb-caret">▾</span> <span data-dm="embed_n">Embed</span> <span class="dm-eb-num">1</span></button>' +
+        '<div class="dm-eb-actions"><button type="button" class="dm-eb-dup" title="Duplicate">⧉</button><button type="button" class="dm-eb-del" title="Remove">✕</button></div>' +
+      '</div>' +
+      '<div class="dm-eb-body">' +
+        '<div class="dm-eb-sec"><button type="button" class="dm-eb-sec-h"><span class="dm-eb-caret">▸</span> <span data-dm="sec_author">Author</span></button><div class="dm-eb-sec-body" hidden>' +
+          '<div class="dm-field"><label class="dm-label">author.name <span class="eb-count" data-max="256">0/256</span></label><input class="dm-input eb-author" maxlength="256" /></div>' +
+          '<div class="dm-two"><div class="dm-field"><label class="dm-label">author.url</label><input class="dm-input eb-authorurl" placeholder="{{LINK}}" /></div><div class="dm-field"><label class="dm-label">author.icon_url</label><input class="dm-input eb-authoricon" placeholder="https://…" /></div></div>' +
+        '</div></div>' +
+        '<div class="dm-eb-sec"><button type="button" class="dm-eb-sec-h"><span class="dm-eb-caret">▸</span> <span data-dm="sec_body">Body</span></button><div class="dm-eb-sec-body" hidden>' +
+          '<div class="dm-field"><label class="dm-label">title <span class="eb-count" data-max="256">0/256</span></label><input class="dm-input eb-title" maxlength="256" /></div>' +
+          '<div class="dm-field"><label class="dm-label">description <span class="eb-count" data-max="4096">0/4096</span></label><textarea class="dm-textarea eb-desc" maxlength="4096"></textarea></div>' +
+          '<div class="dm-two"><div class="dm-field"><label class="dm-label">url</label><input class="dm-input eb-url" placeholder="{{LINK}}" /></div><div class="dm-field"><label class="dm-label">color</label><div class="dm-color-row"><input class="dm-input eb-color" placeholder="#rrggbb" value="#5865f2" /><input type="color" class="dm-swatch eb-colorpick" value="#5865f2" /></div></div></div>' +
+        '</div></div>' +
+        '<div class="dm-eb-sec"><button type="button" class="dm-eb-sec-h"><span class="dm-eb-caret">▸</span> <span data-dm="sec_images">Images</span></button><div class="dm-eb-sec-body" hidden>' +
+          '<div class="dm-field"><label class="dm-label">image.url</label><input class="dm-input eb-image" placeholder="https://…" /></div>' +
+          '<div class="dm-field"><label class="dm-label">thumbnail.url</label><input class="dm-input eb-thumb" placeholder="https://…" /></div>' +
+        '</div></div>' +
+        '<div class="dm-eb-sec"><button type="button" class="dm-eb-sec-h"><span class="dm-eb-caret">▸</span> <span data-dm="sec_footer">Footer</span></button><div class="dm-eb-sec-body" hidden>' +
+          '<div class="dm-field"><label class="dm-label">footer.text <span class="eb-count" data-max="2048">0/2048</span></label><input class="dm-input eb-footer" maxlength="2048" /></div>' +
+          '<div class="dm-two"><div class="dm-field"><label class="dm-label">timestamp</label><input class="dm-input eb-timestamp" placeholder="YYYY-MM-DD hh:mm" /></div><div class="dm-field"><label class="dm-label">footer.icon_url</label><input class="dm-input eb-footericon" placeholder="https://…" /></div></div>' +
+        '</div></div>' +
+      '</div>' +
+    '</div>';
+  const renumberEmbeds = () => $$('#dm-embeds .dm-eb-num').forEach((el, i) => { el.textContent = i + 1; });
+  function addEmbed() { embedsBox.insertAdjacentHTML('beforeend', EMBED_BLOCK); renumberEmbeds(); dmApplyLang(); updatePreview(); return embedsBox.lastElementChild; }
+  if (addEmbedBtn && embedsBox) addEmbedBtn.addEventListener('click', addEmbed);
+  if (embedsBox) {
+    embedsBox.addEventListener('click', (e) => {
+      const del = e.target.closest('.dm-eb-del'), dup = e.target.closest('.dm-eb-dup'),
+            eh = e.target.closest('.dm-eb-toggle'), sh = e.target.closest('.dm-eb-sec-h');
+      if (del) { del.closest('.dm-embed-block').remove(); renumberEmbeds(); updatePreview(); return; }
+      if (dup) {
+        const b = dup.closest('.dm-embed-block'), clone = b.cloneNode(true);
+        const os = b.querySelectorAll('input,textarea'), ns = clone.querySelectorAll('input,textarea');
+        os.forEach((o, i) => { if (ns[i]) { if (o.type === 'checkbox') ns[i].checked = o.checked; else ns[i].value = o.value; } });
+        b.after(clone); renumberEmbeds(); dmApplyLang(); updatePreview(); return;
+      }
+      if (eh) { const body = eh.closest('.dm-eb-head').nextElementSibling, was = body.hidden; body.hidden = !was; eh.querySelector('.dm-eb-caret').textContent = was ? '▾' : '▸'; return; }
+      if (sh) { const body = sh.nextElementSibling, was = body.hidden; body.hidden = !was; sh.querySelector('.dm-eb-caret').textContent = was ? '▾' : '▸'; }
+    });
+    embedsBox.addEventListener('input', (e) => {
+      const inp = e.target, field = inp.closest('.dm-field');
+      if (field) { const c = field.querySelector('.eb-count'); if (c && c.dataset.max) c.textContent = inp.value.length + '/' + c.dataset.max; }
+      if (inp.classList.contains('eb-colorpick')) { const tx = inp.closest('.dm-embed-block').querySelector('.eb-color'); if (tx) tx.value = inp.value; }
+      else if (inp.classList.contains('eb-color') && /^#[0-9a-f]{6}$/i.test(inp.value)) { const pk = inp.closest('.dm-embed-block').querySelector('.eb-colorpick'); if (pk) pk.value = inp.value; }
+      updatePreview();
+    });
+  }
+
   /* ---- notifications panel ---- */
   if (bell && notif) {
     bell.addEventListener('click', () => notif.classList.toggle('on'));
@@ -117,13 +171,15 @@
   const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
   const ex = $('#dm-example');
   if (ex) ex.addEventListener('click', () => {
-    setVal('dm-t-name', 'Nitro / Robux giveaway');
     setVal('dm-t-content', 'Congratulations <@USER_ID> 🎉\nYou can take part in a big gws on the server {{LINK}}');
-    setVal('dm-t-author', '100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR');
-    setVal('dm-t-desc', 'Click 🎉 button to enter!\nWinners: 1');
-    setVal('dm-t-color', '#5865f2'); syncSwatch('#5865f2');
     setVal('dm-t-btnlabel', 'Participate');
     setVal('dm-t-btnemoji', '🎉');
+    const block = $('#dm-embeds .dm-embed-block') || addEmbed();
+    const set = (sel, v) => { const el = block.querySelector(sel); if (el) el.value = v; };
+    set('.eb-author', '100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR');
+    set('.eb-desc', 'Click 🎉 button to enter!\nWinners: 1');
+    set('.eb-color', '#5865f2');
+    const cc = $('#dm-content-count'); if (cc) cc.textContent = ($('#dm-t-content').value.length) + '/2000';
     updatePreview();
   });
 
@@ -140,56 +196,47 @@
   const url = (id) => { const el = document.getElementById(id); return el ? (el.dataset.url || '') : ''; };
   const checked = (sel) => { const el = $(sel); return !!(el && el.checked); };
 
-  const fmtTs = (v) => { if (!v) return ''; try { const d = new Date(v); if (isNaN(d)) return v; return d.toLocaleString(); } catch (_) { return v; } };
-  const collectFields = () => $$('#dm-fields .dm-field-row').map((r) => ({
-    name: (r.querySelector('.ff-name') || {}).value || '',
-    value: (r.querySelector('.ff-value') || {}).value || '',
-    inline: !!(r.querySelector('.ff-inline') || {}).checked
-  })).filter((f) => f.name.trim() || f.value.trim());
+  const fmtTs = (v) => { if (!v) return ''; try { const d = new Date(String(v).replace(' ', 'T')); if (isNaN(d)) return v; return d.toLocaleString(); } catch (_) { return v; } };
+
+  function buildEmbed(block) {
+    const g = (sel) => { const el = block.querySelector(sel); return el ? el.value.trim() : ''; };
+    const author = g('.eb-author'), authorIcon = g('.eb-authoricon');
+    const title = g('.eb-title'), titleUrl = g('.eb-url');
+    const desc = g('.eb-desc'), footer = g('.eb-footer'), footerIcon = g('.eb-footericon');
+    const ts = g('.eb-timestamp'), image = g('.eb-image'), thumb = g('.eb-thumb');
+    const color = /^#[0-9a-f]{6}$/i.test(g('.eb-color')) ? g('.eb-color') : '#5865f2';
+    if (!(author || title || desc || footer || image || thumb)) return '';
+    const footLine = (footer || ts) ? '<div class="dm-embed-foot">' + (footerIcon ? '<img class="dm-ef-ic" alt="" src="' + esc(footerIcon) + '">' : '') + esc(footer) + (footer && ts ? ' • ' : '') + (ts ? esc(fmtTs(ts)) : '') + '</div>' : '';
+    return '<div class="dm-embed" style="border-left-color:' + color + '"><div class="dm-embed-main">' +
+      (author ? '<div class="dm-embed-author">' + (authorIcon ? '<img class="dm-ea-ic" alt="" src="' + esc(authorIcon) + '">' : '') + esc(author) + '</div>' : '') +
+      (title ? '<div class="dm-embed-title">' + (titleUrl ? '<span class="dm-mlink">' + esc(title) + '</span>' : esc(title)) + '</div>' : '') +
+      (desc ? '<div class="dm-embed-desc">' + fmt(desc) + '</div>' : '') +
+      (image ? '<img class="dm-embed-img" alt="" src="' + esc(image) + '">' : '') +
+      footLine +
+      '</div>' + (thumb ? '<div class="dm-embed-th"><img alt="" src="' + esc(thumb) + '"></div>' : '') + '</div>';
+  }
 
   const preview = $('#dm-preview');
   function updatePreview() {
     if (!preview) return;
-    const content   = val('dm-t-content');
-    const author    = val('dm-t-author'), authorIcon = val('dm-t-authoricon');
-    const title     = val('dm-t-title'), titleUrl = val('dm-t-titleurl');
-    const desc      = val('dm-t-desc'), footer = val('dm-t-footer'), footerIcon = val('dm-t-footericon');
-    const ts        = val('dm-t-timestamp');
-    const thumb     = val('dm-t-thumb') || url('dm-thumb-prev');
-    const image     = val('dm-t-image') || url('dm-image-prev');
-    const color     = /^#[0-9a-f]{6}$/i.test(val('dm-t-color')) ? val('dm-t-color') : '#5865f2';
-    const btnLbl    = val('dm-t-btnlabel'), btnEmoji = val('dm-t-btnemoji');
-    const fields    = collectFields();
-    const name      = (checked('[data-reveal="dm-rv-name"]') && val('dm-t-username')) || 'Newspaper';
-    const avUrl     = checked('[data-reveal="dm-rv-av"]') ? (val('dm-t-avatarurl') || url('dm-av-prev')) : '';
-
-    const hasEmbed = author || title || desc || footer || thumb || image || fields.length;
-    if (!content && !hasEmbed && !btnLbl) {
+    const content = val('dm-t-content');
+    const btnLbl = val('dm-t-btnlabel'), btnEmoji = val('dm-t-btnemoji');
+    const name = (checked('[data-reveal="dm-rv-name"]') && val('dm-t-username')) || 'Newspaper';
+    const avUrl = checked('[data-reveal="dm-rv-av"]') ? (val('dm-t-avatarurl') || url('dm-av-prev')) : '';
+    const embeds = $$('#dm-embeds .dm-embed-block').map(buildEmbed).filter(Boolean).join('');
+    if (!content && !embeds && !btnLbl) {
       preview.className = 'dm-preview empty';
       preview.innerHTML = '<span data-dm="preview_empty">' + dmT('preview_empty') + '</span>';
       return;
     }
     preview.className = 'dm-preview';
-    let embed = '';
-    if (hasEmbed) {
-      const footLine = (footer || ts) ? '<div class="dm-embed-foot">' + (footerIcon ? '<img class="dm-ef-ic" alt="" src="' + esc(footerIcon) + '">' : '') + esc(footer) + (footer && ts ? ' • ' : '') + (ts ? esc(fmtTs(ts)) : '') + '</div>' : '';
-      const fieldsHtml = fields.length ? '<div class="dm-embed-fields">' + fields.map((f) => '<div class="dm-embed-field' + (f.inline ? ' inline' : '') + '"><div class="fn">' + esc(f.name) + '</div><div class="fv">' + fmt(f.value) + '</div></div>').join('') + '</div>' : '';
-      embed = '<div class="dm-embed" style="border-left-color:' + color + '"><div class="dm-embed-main">' +
-        (author ? '<div class="dm-embed-author">' + (authorIcon ? '<img class="dm-ea-ic" alt="" src="' + esc(authorIcon) + '">' : '') + esc(author) + '</div>' : '') +
-        (title ? '<div class="dm-embed-title">' + (titleUrl ? '<span class="dm-mlink">' + esc(title) + '</span>' : esc(title)) + '</div>' : '') +
-        (desc ? '<div class="dm-embed-desc">' + fmt(desc) + '</div>' : '') +
-        fieldsHtml +
-        (image ? '<img class="dm-embed-img" alt="" src="' + esc(image) + '">' : '') +
-        footLine +
-        '</div>' + (thumb ? '<div class="dm-embed-th"><img alt="" src="' + esc(thumb) + '"></div>' : '') + '</div>';
-    }
     const btn = btnLbl ? '<button class="dm-btn-discord">' + (btnEmoji ? esc(btnEmoji) + ' ' : '') + esc(btnLbl) + ' ↗</button>' : '';
     const av = avUrl ? '<img alt="" src="' + esc(avUrl) + '">' : '';
     preview.innerHTML =
       '<div class="dm-msg"><div class="dm-av">' + av + '</div><div class="dm-mbody">' +
         '<div class="dm-mhead"><span class="dm-mname">' + esc(name) + '</span><span class="dm-app">APP</span><span class="dm-mtime">Today at 8:48 PM</span></div>' +
         (content ? '<div class="dm-mtext">' + fmt(content) + '</div>' : '') +
-        embed + btn +
+        embeds + btn +
       '</div></div>';
   }
 
@@ -197,8 +244,9 @@
   const DM_TXT = {
     en: {
       tab_templates:"Templates", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats",
-      new_tpl:"New template", example:"Nitro example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
+      new_tpl:"Configure message", example:"Nitro example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
       fields:"Fields", add_field:"＋ Add field", inline:"Inline", field_name:"Field name", field_value:"Field value",
+      embeds_h:"Embeds", add_embed:"＋ Add Embed", embed_n:"Embed", sec_author:"Author", sec_body:"Body", sec_images:"Images", sec_footer:"Footer",
       choose_file:"Choose file", upload_hint:"PNG, JPEG, WEBP or GIF up to 8 MB · external URL or server upload",
       bot_profile:"Bot profile", bot_profile_p:"Name, avatar and custom status are applied on the bot's first connection to a broadcast (once per run). Discord — no more than ~1 name change per hour.",
       set_name:"Set bot name", saved_as:"Saved as “Newspaper”", set_avatar:"Set avatar", set_status:"Set custom status", status_hint:"16/128 · empty = keep presence",
@@ -244,8 +292,9 @@
     },
     ru: {
       tab_templates:"Шаблоны", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика",
-      new_tpl:"Новый шаблон", example:"Пример Nitro", f_name:"Название", recipient:"Получатель:", link_lbl:"Ссылка:", embed_h:"Эмбед",
+      new_tpl:"Настроить сообщение", example:"Пример Nitro", f_name:"Название", recipient:"Получатель:", link_lbl:"Ссылка:", embed_h:"Эмбед",
       fields:"Поля", add_field:"＋ Добавить поле", inline:"В строку", field_name:"Название поля", field_value:"Значение поля",
+      embeds_h:"Эмбеды", add_embed:"＋ Добавить эмбед", embed_n:"Эмбед", sec_author:"Автор", sec_body:"Основное", sec_images:"Изображения", sec_footer:"Подвал",
       choose_file:"Выбрать файл", upload_hint:"PNG, JPEG, WEBP или GIF до 8 МБ · внешний URL или загрузка на сервер",
       bot_profile:"Профиль бота", bot_profile_p:"Имя, аватар и custom status выставляются при первом подключении бота к рассылке (один раз за run). Discord — не чаще ~1 смены имени в час.",
       set_name:"Установить имя бота", saved_as:"Сохранится как «Newspaper»", set_avatar:"Установить аватар", set_status:"Установить кастомный статус", status_hint:"16/128 · пусто = не менять presence",
