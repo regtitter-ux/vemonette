@@ -161,11 +161,9 @@
 <div class="dm-divide"><h3 data-dm="repeats">Repeats &amp; cooldowns</h3><p data-dm="repeats_p">The destination link is needed for templates with [[LINK]] and for per-server filters. Cooldowns can be combined: days and hours add up (max 365 days).</p></div>
         <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="cool_g">Global cooldown</div><div class="dm-tr-sub" data-dm="cool_g_sub">Don't send if the member received any ad within the period below</div><div class="dm-cool-row"><span data-dm="within_last">within the last</span> <input class="dm-input dm-num" /> <span data-dm="days">d</span> <input class="dm-input dm-num" /> <span data-dm="hours">h</span></div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
 
-        <div class="dm-divide"><h3 data-dm="server_h">Server</h3><p data-dm="server_p">Choose an assigned server or enter a new guild — a new one needs an OAuth channel; the selfbot must be on the server.</p></div>
+        <div class="dm-divide"><h3 data-dm="server_h">Server for the DMALL broadcast</h3></div>
         <div class="dm-field"><label class="dm-label" data-dm="guild_id">Server ID (guild)</label><input class="dm-input" placeholder="1369076925389078609" /><div class="dm-hint" data-dm="guild_id_hint">Enter the server ID</div></div>
 
-        <div class="dm-divide"><h3 data-dm="whom_h">Who to send to</h3><p data-dm="whom_p">All members, only roles, or specific IDs. Role/member exclusions apply after the audience filter. Link dedup is separate, in the block above.</p></div>
-        <div class="dm-field"><label class="dm-label" data-dm="audience">Audience</label><select class="dm-select"><option data-dm="aud_all">All members</option><option data-dm="aud_roles">Only roles</option><option data-dm="aud_ids">Specific IDs</option></select></div>
         <div class="dm-field"><label class="dm-label" data-dm="exclude_members">Exclude members (IDs)</label><textarea class="dm-textarea" data-dm-ph="ph_ids" placeholder="IDs comma-separated or one per line"></textarea></div>
         <div class="dm-field"><label class="dm-label" data-dm="online_prio">Priority by online status</label><select class="dm-select"><option data-dm="no_prio">No priority</option><option data-dm="online_first">Online first, then offline</option><option data-dm="offline_first">Offline first, then online</option><option data-dm="online_only">Online only</option><option data-dm="offline_only">Offline only</option></select></div>
 
@@ -265,6 +263,6 @@
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=38"></script>
-<script src="/order/dmall.js?v=13"></script>
+<script src="/order/dmall.js?v=14"></script>
 </body>
 </html>
