@@ -26,6 +26,7 @@
       dmall.hidden = !dm;
       if (dm && !dmServer) dmall.classList.add('picking');   // choose a server first
       if (bell) bell.hidden = !dm || dmall.classList.contains('picking');
+      { const sb = $('#dm-selbar'); if (sb) sb.hidden = !dm || !dmServer || dmall.classList.contains('picking'); }
       if (!dm && notif) notif.classList.remove('on');
       window.scrollTo(0, 0);
     });

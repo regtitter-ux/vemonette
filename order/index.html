@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/order/order.css?v=31" />
-  <link rel="stylesheet" href="/order/dmall.css?v=19" />
+  <link rel="stylesheet" href="/order/dmall.css?v=20" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';
   </script>
@@ -79,6 +79,7 @@
     <div class="dm-modebar" id="dm-modebar" hidden>
       <button class="dm-mode active" data-mode="stays">Stays</button>
       <button class="dm-mode" data-mode="dmall">DMALL</button>
+      <div id="dm-selbar" hidden><button class="dm-btn ghost sm" id="dm-changeserver">← <span data-dm="change_server">Change server</span></button><span class="dm-selname" id="dm-selname"></span></div>
     </div>
     <div class="load-banner" id="load-banner" hidden></div>
     <section class="card order-card">
@@ -126,7 +127,6 @@
       <div class="dm-sp-grid" id="dm-sp-grid">
       </div>
     </div>
-    <div id="dm-selbar" hidden><button class="dm-btn ghost sm" id="dm-changeserver">← <span data-dm="change_server">Change server</span></button><span class="dm-selname" id="dm-selname"></span></div>
 
     <!-- ============ Templates ============ -->
     <section class="dm-panel active" data-dpanel="templates">
@@ -253,6 +253,6 @@
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=39"></script>
-<script src="/order/dmall.js?v=34"></script>
+<script src="/order/dmall.js?v=35"></script>
 </body>
 </html>
