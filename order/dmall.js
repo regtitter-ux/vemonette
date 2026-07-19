@@ -445,7 +445,7 @@
       exclude_h:"Exclude the server's members", exclude_p:"Optional: if you specify a server, its guild_members won't enter the broadcast queue. Without an ID, no exclusion is applied.",
       exclude_server:"Server to exclude", opt_choose_server:"— Choose a server —",
       whom_h:"Who to send to", whom_p:"All members, only roles, or specific IDs. Role/member exclusions apply after the audience filter. Link dedup is separate, in the block above.",
-      audience:"Audience", aud_all:"All members", aud_roles:"Only roles", aud_ids:"Specific IDs", exclude_members:"Exclude members (IDs)",
+      audience:"Audience", aud_all:"All members", aud_roles:"Only roles", aud_ids:"Specific IDs", exclude_members:"Exclude members or roles from the broadcast (IDs)",
       online_prio:"Priority by online status", no_prio:"No priority", online_first:"Online first, then offline", offline_first:"Offline first, then online", online_only:"Online only", offline_only:"Offline only",
       bot_pool:"Bot pool", leave_after:"Leave the server after the broadcast", leave_after_sub:"All bots that took part in this broadcast will leave the server when it ends",
       poolbox:"<b>115</b> free of 3 755 in the pool<div class=\"dm-poolsub\">7 busy · 3 633 invalid · 3 294 in quarantine</div>",
@@ -461,7 +461,7 @@
       notif1:"Broadcast: bot <b>Bot #3704</b> was kicked from «matching · chat · decor · art · guilds · games · giveaways · tags · emojis». It wasn't us — the broadcast continues, connecting a replacement.",
       notif2:"Broadcast: bot <b>Bot #3537</b> was kicked from «/admiring ♡ giveaways , social & guilds». It wasn't us — the broadcast continues, connecting a replacement.",
       notif3:"Broadcast: bot <b>Bot #3539</b> was kicked from «/admiring ♡ giveaways , social & guilds». It wasn't us — the broadcast continues, connecting a replacement.",
-      ph_upload:"https://… or upload a file below", ph_ids:"IDs comma-separated or one per line"
+      ph_upload:"https://… or upload a file below", ph_ids:"Member or role IDs — comma-separated or one per line"
     },
     ru: {
       tab_templates:"Setup", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика", for_word:"за",
@@ -494,7 +494,7 @@
       exclude_h:"Исключение участников сервера", exclude_p:"Необязательно: если указать сервер, его участники из guild_members не попадут в очередь рассылки. Без ID исключения не применяется.",
       exclude_server:"Сервер для исключения", opt_choose_server:"— Выберите сервер —",
       whom_h:"Кому отправлять", whom_p:"Все участники, только роли или конкретные ID. Исключение по ролям и участникам применяется после фильтра аудитории. Дедуп по ссылке — отдельно, в блоке выше.",
-      audience:"Аудитория", aud_all:"Все участники", aud_roles:"Только роли", aud_ids:"Конкретные ID", exclude_members:"Исключить участников (ID)",
+      audience:"Аудитория", aud_all:"Все участники", aud_roles:"Только роли", aud_ids:"Конкретные ID", exclude_members:"Исключить из рассылки участников или роли (ID)",
       online_prio:"Приоритет по онлайн-статусу", no_prio:"Без приоритета", online_first:"Сначала в сети, потом офлайн", offline_first:"Сначала офлайн, потом в сети", online_only:"Только в сети", offline_only:"Только офлайн",
       bot_pool:"Пул ботов", leave_after:"Выйти с сервера после рассылки", leave_after_sub:"Все боты, которые участвовали в этой рассылке, покинут сервер по её окончании",
       poolbox:"<b>115</b> свободных из 3 755 в пуле<div class=\"dm-poolsub\">7 занято · 3 633 инвалидных · 3 294 в карантине</div>",
@@ -510,7 +510,7 @@
       notif1:"Рассылка: бота <b>Bot #3704</b> кикнули с сервера «matching · chat · decor · art · guilds · games · giveaways · tags · emojis». Это сделали не мы — рассылка продолжается, подключаем замену.",
       notif2:"Рассылка: бота <b>Bot #3537</b> кикнули с сервера «/admiring ♡ giveaways , social & guilds». Это сделали не мы — рассылка продолжается, подключаем замену.",
       notif3:"Рассылка: бота <b>Bot #3539</b> кикнули с сервера «/admiring ♡ giveaways , social & guilds». Это сделали не мы — рассылка продолжается, подключаем замену.",
-      ph_upload:"https://… или загрузите файл ниже", ph_ids:"ID через запятую или с новой строки"
+      ph_upload:"https://… или загрузите файл ниже", ph_ids:"ID участников или ролей — через запятую или с новой строки"
     }
   };
   const dmLang = () => { try { const l = localStorage.getItem('vemoni_lang'); if (l === 'en' || l === 'ru') return l; } catch (_) {} return (navigator.language || '').startsWith('en') ? 'en' : 'ru'; };
