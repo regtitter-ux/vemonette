@@ -47,12 +47,13 @@
   const BOT_INVITE = 'https://discord.com/oauth2/authorize?client_id=1525863543310651442&permissions=8&integration_type=0&scope=bot';
   function serverCard(sv) {
     let banner, bannerInner = '';
-    if (sv.banner) {
-      banner = "background-image:url('" + esc(sv.banner) + "');background-size:cover;background-position:center";
-    } else if (sv.avatar) {
-      // No banner: use an enlarged, blurred copy of the avatar as the backdrop.
+    if (sv.avatar) {
+      // Always use an enlarged, blurred copy of the avatar as the backdrop
+      // (even when the server has its own banner).
       banner = 'background:' + (sv.avBg || '#20242e');
       bannerInner = "<div class=\"dm-sp-banner-blur\" style=\"background-image:url('" + esc(sv.avatar) + "')\"></div>";
+    } else if (sv.banner) {
+      banner = "background-image:url('" + esc(sv.banner) + "');background-size:cover;background-position:center";
     } else {
       banner = 'background:' + (sv.bannerBg || 'linear-gradient(120deg,#3a3f4b,#20242e)');
     }
