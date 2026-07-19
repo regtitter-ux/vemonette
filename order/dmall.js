@@ -123,7 +123,7 @@
     '<div class="dm-embed-block">' +
       '<div class="dm-eb-head">' +
         '<div class="dm-eb-title2"><span data-dm="embed_n">Embed</span> <span class="dm-eb-num">1</span></div>' +
-        '<div class="dm-eb-actions"><button type="button" class="dm-eb-dup" title="Duplicate">⧉</button><button type="button" class="dm-eb-del" title="Remove">✕</button></div>' +
+        '<div class="dm-eb-actions"><button type="button" class="dm-eb-del" title="Remove">✕</button></div>' +
       '</div>' +
       '<div class="dm-eb-body">' +
         '<div class="dm-eb-sec"><button type="button" class="dm-eb-sec-h"><span class="dm-eb-caret">▸</span> <span data-dm="sec_author">Author</span></button><div class="dm-eb-sec-body" hidden>' +
@@ -157,15 +157,8 @@
   if (addEmbedBtn && embedsBox) addEmbedBtn.addEventListener('click', () => { addEmbed(); saveState(); });
   if (embedsBox) {
     embedsBox.addEventListener('click', (e) => {
-      const del = e.target.closest('.dm-eb-del'), dup = e.target.closest('.dm-eb-dup'),
-            sh = e.target.closest('.dm-eb-sec-h');
+      const del = e.target.closest('.dm-eb-del'), sh = e.target.closest('.dm-eb-sec-h');
       if (del) { del.closest('.dm-embed-block').remove(); renumberEmbeds(); toggleAddEmbed(); updatePreview(); saveState(); return; }
-      if (dup) {
-        const b = dup.closest('.dm-embed-block'), clone = b.cloneNode(true);
-        const os = b.querySelectorAll('input,textarea'), ns = clone.querySelectorAll('input,textarea');
-        os.forEach((o, i) => { if (ns[i]) { if (o.type === 'checkbox') ns[i].checked = o.checked; else ns[i].value = o.value; } });
-        b.after(clone); renumberEmbeds(); toggleAddEmbed(); dmApplyLang(); updatePreview(); saveState(); return;
-      }
       if (sh) { const body = sh.nextElementSibling, was = body.hidden; body.hidden = !was; sh.querySelector('.dm-eb-caret').textContent = was ? '▾' : '▸'; }
     });
     embedsBox.addEventListener('input', (e) => {
@@ -203,22 +196,6 @@
     pager.querySelectorAll('[data-pg]').forEach((b) => b.onclick = () => { const p = +b.dataset.pg; if (p >= 1 && p <= pages) { taskPage = p; renderTaskPage(); } });
   }
   renderTaskPage();
-
-  /* ---- "Пример Nitro" — fill sample content ---- */
-  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
-  const ex = $('#dm-example');
-  if (ex) ex.addEventListener('click', () => {
-    setVal('dm-t-content', 'Congratulations <@USER_ID> 🎉\nYou can take part in a big gws on the server {{LINK}}');
-    const block = $('#dm-embeds .dm-embed-block') || addEmbed();
-    const set = (sel, v) => { const el = block.querySelector(sel); if (el) el.value = v; };
-    set('.eb-author', '100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR');
-    set('.eb-desc', 'Click 🎉 button to enter!\nWinners: 1');
-    set('.eb-color', '#5865f2');
-    set('.eb-btnlabel', 'Participate');
-    set('.eb-btnemoji', '🎉');
-    const cc = $('#dm-content-count'); if (cc) cc.textContent = ($('#dm-t-content').value.length) + '/2000';
-    updatePreview(); saveState();
-  });
 
   /* ---- live Discord preview ---- */
   const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -296,7 +273,12 @@
     };
   }
   let saveT;
-  function saveState() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(STORE_KEY, JSON.stringify(collectState())); } catch (_) {} }, 250); }
+  function flushSave() { clearTimeout(saveT); try { localStorage.setItem(STORE_KEY, JSON.stringify(collectState())); } catch (_) {} }
+  function saveState() { clearTimeout(saveT); saveT = setTimeout(flushSave, 250); }
+  // Persist immediately when leaving the page, so nothing is lost inside the debounce window.
+  window.addEventListener('pagehide', flushSave);
+  window.addEventListener('beforeunload', flushSave);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
   function refreshCounters() {
     const set = (id, cid, max) => { const i = $(id), c = $(cid); if (i && c) c.textContent = i.value.length + '/' + max; };
     set('#dm-t-content', '#dm-content-count', 2000); set('#dm-t-username', '#dm-username-count', 80);
