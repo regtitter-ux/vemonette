@@ -46,13 +46,22 @@
   ];
   const BOT_INVITE = 'https://discord.com/oauth2/authorize?client_id=1525863543310651442&permissions=8&integration_type=0&scope=bot';
   function serverCard(sv) {
-    const banner = sv.banner ? "background-image:url('" + esc(sv.banner) + "');background-size:cover;background-position:center" : 'background:' + (sv.bannerBg || 'linear-gradient(120deg,#3a3f4b,#20242e)');
+    let banner, bannerInner = '';
+    if (sv.banner) {
+      banner = "background-image:url('" + esc(sv.banner) + "');background-size:cover;background-position:center";
+    } else if (sv.avatar) {
+      // No banner: use an enlarged, blurred copy of the avatar as the backdrop.
+      banner = 'background:' + (sv.avBg || '#20242e');
+      bannerInner = "<div class=\"dm-sp-banner-blur\" style=\"background-image:url('" + esc(sv.avatar) + "')\"></div>";
+    } else {
+      banner = 'background:' + (sv.bannerBg || 'linear-gradient(120deg,#3a3f4b,#20242e)');
+    }
     const av = sv.avatar ? '<img alt="" src="' + esc(sv.avatar) + '">' : esc(sv.icon || (sv.name.trim()[0] || '?'));
     const foot = sv.bot
       ? '<span class="dm-sp-online"><i class="dm-sp-dot"></i> ' + (sv.online != null ? sv.online : '') + ' <span data-dm="members_word">members</span></span>'
       : '<span class="dm-sp-invite" data-dm="invite_caps">INVITE</span>';
     return '<button class="dm-sp-card" data-bot="' + (sv.bot ? 1 : 0) + '" data-id="' + esc(sv.id || '') + '" data-name="' + esc(sv.name) + '">' +
-      '<div class="dm-sp-banner" style="' + banner + '"></div>' +
+      '<div class="dm-sp-banner" style="' + banner + '">' + bannerInner + '</div>' +
       '<div class="dm-sp-body"><div class="dm-sp-av" style="background:' + (sv.avBg || '#3a4256') + '">' + av + '</div>' +
       '<div class="dm-sp-main"><div class="dm-sp-name">' + esc(sv.name) + '</div><div class="dm-sp-foot">' + foot + '</div></div></div></button>';
   }

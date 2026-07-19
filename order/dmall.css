@@ -55,7 +55,8 @@
 .dm-sp-card{ text-align:left; background:var(--dm-card); border:1px solid var(--dm-line); border-radius:14px; overflow:hidden; cursor:pointer; padding:0; display:flex; flex-direction:column; transition:border-color .15s,transform .08s; font:inherit; }
 .dm-sp-card:hover{ border-color:var(--dm-line-2); }
 .dm-sp-card:active{ transform:translateY(1px); }
-.dm-sp-banner{ height:86px; }
+.dm-sp-banner{ height:86px; position:relative; overflow:hidden; }
+.dm-sp-banner-blur{ position:absolute; inset:-25%; background-size:cover; background-position:center; filter:blur(16px); transform:scale(1.25); }
 .dm-sp-body{ display:flex; gap:12px; padding:0 14px 14px; }
 .dm-sp-av{ width:54px; height:54px; border-radius:16px; flex:none; display:grid; place-items:center; font-size:22px; color:#fff; margin-top:-22px; border:4px solid var(--dm-card); box-sizing:border-box; overflow:hidden; }
 .dm-sp-av img{ width:100%; height:100%; object-fit:cover; display:block; }
