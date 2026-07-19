@@ -203,3 +203,15 @@ h2{font-size:18px;margin-bottom:14px}
 .camp-pager .cp-nav:hover:not(:disabled){ background:rgba(255,255,255,.08); border-color:var(--blue); color:var(--blue); }
 .camp-pager .cp-nav:disabled{ opacity:.4; cursor:default; }
 .camp-pager .cp-info{ color:var(--muted); font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; }
+
+/* custom top-up amount modal (replaces the browser prompt) */
+.tp-overlay{ position:fixed; inset:0; z-index:100; display:grid; place-items:center; padding:20px; background:rgba(4,7,12,.66); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+.tp-overlay[hidden]{ display:none; }
+.tp-modal{ width:100%; max-width:400px; background:var(--panel); border:1px solid var(--stroke-2); border-radius:16px; padding:22px; box-shadow:0 30px 80px -30px rgba(0,0,0,.85); animation:tpIn .16s ease-out; }
+@keyframes tpIn{ from{ opacity:0; transform:translateY(8px) scale(.98); } to{ opacity:1; transform:none; } }
+.tp-modal h3{ margin:0 0 2px; font-size:18px; }
+.tp-modal label{ display:block; color:var(--muted); font-size:13px; margin:10px 0 8px; }
+.tp-modal input{ width:100%; background:var(--bg); border:1px solid var(--stroke-2); color:var(--text); font:inherit; font-size:16px; padding:12px 14px; border-radius:10px; }
+.tp-modal input:focus{ outline:none; border-color:var(--blue); }
+.tp-err{ color:#ff8a8d; font-size:13px; margin-top:8px; }
+.tp-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }

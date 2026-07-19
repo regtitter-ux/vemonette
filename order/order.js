@@ -28,7 +28,8 @@ const DICT = {
     buy_btn: 'Запустить кампанию',
     nav_home: 'Главная', nav_orders: 'Покупателям', nav_myorders: 'Мои заказы', nav_partner: 'Партнёрам', nav_investor: 'Инвесторам', nav_admin: 'Администраторам',
     wallet_label: 'Баланс',
-    topup_prompt: (min) => `Сумма пополнения в $ (минимум ${min}):`,
+    topup_prompt: (min) => `Сумма пополнения в $ (минимум ${min})`,
+    topup_title: 'Пополнение баланса', topup_ok: 'Пополнить',
     topup_min: (min) => `Минимум $${min}`,
     topup_created: (a) => `Счёт на $${a} создан. Оплатите через CryptoBot — баланс пополнится в течение минуты:`,
     topup_created_web: (a) => `Счёт на $${a} создан. Оплатите с любого криптокошелька — баланс пополнится после подтверждения сети:`,
@@ -117,7 +118,8 @@ const DICT = {
     buy_btn: 'Launch campaign',
     nav_home: 'Home', nav_orders: 'For buyers', nav_myorders: 'My orders', nav_partner: 'For partners', nav_investor: 'For investors', nav_admin: 'For admins',
     wallet_label: 'Balance',
-    topup_prompt: (min) => `Top-up amount in $ (min ${min}):`,
+    topup_prompt: (min) => `Top-up amount in $ (min ${min})`,
+    topup_title: 'Top up balance', topup_ok: 'Top up',
     topup_min: (min) => `Minimum $${min}`,
     topup_created: (a) => `Invoice for $${a} created. Pay via CryptoBot — your balance updates within a minute:`,
     topup_created_web: (a) => `Invoice for $${a} created. Pay from any crypto wallet — your balance updates after network confirmation:`,
@@ -389,39 +391,66 @@ let topupState = null;
 function renderTopup() {
     const box = $('#ord-result');
     if (!box || !topupState) return;
-    if (topupState.mode === 'choose') {
-        box.innerHTML = `
-      <div class="pay-box">
-        <div style="margin-bottom:10px">${esc(t('topup_choose', topupState.amount.toFixed(2)))}</div>
-        <div class="actions-row"><button class="btn primary" id="pm-web">${esc(t('pay_web'))}</button> <button class="btn ghost" id="pm-tg">${esc(t('pay_tg'))}</button></div>
-      </div>`;
-        $('#pm-web').onclick = () => startTopup('/wallet/topup/web', topupState.amount);
-        $('#pm-tg').onclick = () => startTopup('/wallet/topup', topupState.amount);
-    } else if (topupState.mode === 'created') {
-        const bothMethods = WALLET && WALLET.cryptoWebEnabled && WALLET.cryptoEnabled;
+    if (topupState.mode === 'created') {
         box.innerHTML = `
       <div class="pay-box">
         <div style="margin-bottom:8px">${esc(t(topupState.web ? 'topup_created_web' : 'topup_created', topupState.amount.toFixed(2)))}</div>
         <a class="btn primary" href="${esc(topupState.invoiceUrl)}" target="_blank" rel="noopener">${esc(t('pay_open'))}</a>
         <div class="muted sm" style="margin-top:8px;word-break:break-all">${esc(topupState.invoiceUrl)}</div>
-        ${bothMethods ? `<div style="margin-top:10px"><button class="btn ghost sm" id="pm-back">${esc(t('pay_other'))}</button></div>` : ''}
       </div>`;
-        const back = $('#pm-back');
-        if (back) back.onclick = () => { topupState = { mode: 'choose', amount: topupState.amount }; renderTopup(); };
     }
 }
+
+// Custom amount modal (replaces the browser prompt). Resolves to a number or null.
+function askAmount(min) {
+    return new Promise((resolve) => {
+        let overlay = $('#tp-modal');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'tp-modal';
+            overlay.className = 'tp-overlay';
+            overlay.hidden = true;
+            overlay.innerHTML =
+                '<div class="tp-modal" role="dialog" aria-modal="true">' +
+                    '<h3 id="tp-title"></h3>' +
+                    '<label id="tp-label" for="tp-input"></label>' +
+                    '<input id="tp-input" type="number" step="1" inputmode="numeric" autocomplete="off" />' +
+                    '<div class="tp-err" id="tp-err" hidden></div>' +
+                    '<div class="tp-actions"><button type="button" class="btn ghost" id="tp-cancel"></button><button type="button" class="btn primary" id="tp-ok"></button></div>' +
+                '</div>';
+            document.body.appendChild(overlay);
+        }
+        const input = $('#tp-input'), err = $('#tp-err');
+        $('#tp-title').textContent = t('topup_title');
+        $('#tp-label').textContent = t('topup_prompt', min);
+        $('#tp-cancel').textContent = t('cancel');
+        $('#tp-ok').textContent = t('topup_ok');
+        input.min = min; input.value = ''; err.hidden = true;
+        overlay.hidden = false;
+        setTimeout(() => input.focus(), 30);
+
+        function cleanup() { document.removeEventListener('keydown', onKey); overlay.removeEventListener('mousedown', onOverlay); }
+        const close = (val) => { overlay.hidden = true; cleanup(); resolve(val); };
+        const submit = () => {
+            const amount = Math.floor(Number(String(input.value).replace(',', '.')));
+            if (!Number.isFinite(amount) || amount < min) { err.textContent = t('topup_min', min); err.hidden = false; input.focus(); return; }
+            close(amount);
+        };
+        const onKey = (e) => { if (e.key === 'Escape') close(null); else if (e.key === 'Enter') { e.preventDefault(); submit(); } };
+        const onOverlay = (e) => { if (e.target === overlay) close(null); };
+        $('#tp-ok').onclick = submit;
+        $('#tp-cancel').onclick = () => close(null);
+        document.addEventListener('keydown', onKey);
+        overlay.addEventListener('mousedown', onOverlay);
+    });
+}
 $('#wallet-topup').addEventListener('click', async () => {
-    const raw = prompt(t('topup_prompt', WALLET.minTopup || 5));
-    if (raw === null) return;
-    const amount = Math.floor(Number(String(raw).replace(',', '.')));
-    if (!Number.isFinite(amount) || amount < (WALLET.minTopup || 5)) { toast(t('topup_min', WALLET.minTopup || 5), 'err'); return; }
     const web = WALLET.cryptoWebEnabled, tg = WALLET.cryptoEnabled;
     if (!web && !tg) { toast(t('pay_unavail'), 'err'); return; }
-    if (web && !tg) return startTopup('/wallet/topup/web', amount);
-    if (tg && !web) return startTopup('/wallet/topup', amount);
-    // both available → let the buyer pick
-    topupState = { mode: 'choose', amount };
-    renderTopup();
+    const amount = await askAmount(WALLET.minTopup || 5);
+    if (amount == null) return;
+    // Straight to the LTC (any-wallet crypto) invoice; fall back to CryptoBot only if web is off.
+    return startTopup(web ? '/wallet/topup/web' : '/wallet/topup', amount);
 });
 async function startTopup(path, amount) {
     const { ok, body } = await post(path, { amount });
