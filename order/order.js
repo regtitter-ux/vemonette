@@ -564,6 +564,12 @@ function reloadCurrentTab() {
 }
 
 let campTab = 'active';
+let campPage = 1;
+const CAMP_PAGE_SIZE = 10;
+function campPagerHtml(pages, cur) {
+    if (pages <= 1) return '';
+    return `<div class="camp-pager"><button class="cp-nav" data-camppage="${cur - 1}" ${cur <= 1 ? 'disabled' : ''}>‹</button><span class="cp-info">${cur} / ${pages}</span><button class="cp-nav" data-camppage="${cur + 1}" ${cur >= pages ? 'disabled' : ''}>›</button></div>`;
+}
 function renderCampaigns() {
     const tabs = $('#camp-tabs');
     const box = $('#camp-list');
@@ -584,6 +590,7 @@ function renderCampaigns() {
         tabs.innerHTML = html;
         tabs.querySelectorAll('[data-camptab]').forEach((b) => b.onclick = () => {
             campTab = b.dataset.camptab;
+            campPage = 1;
             if (campTab === 'all') loadAdminCampaigns('active');
             else if (campTab === 'all-done') loadAdminCampaigns('done');
             else renderCampaigns();
@@ -599,8 +606,15 @@ function renderCampaigns() {
         box.innerHTML = `<div class="muted">${esc(empty)}</div>`;
         return;
     }
-    box.innerHTML = shown.map(campCard).join('');
-    wireCampaigns(shown);
+    const pages = Math.max(1, Math.ceil(shown.length / CAMP_PAGE_SIZE));
+    if (campPage > pages) campPage = pages;
+    const pageItems = shown.slice((campPage - 1) * CAMP_PAGE_SIZE, campPage * CAMP_PAGE_SIZE);
+    box.innerHTML = pageItems.map(campCard).join('') + campPagerHtml(pages, campPage);
+    wireCampaigns(pageItems);
+    box.querySelectorAll('[data-camppage]').forEach((b) => b.onclick = () => {
+        const p = +b.dataset.camppage;
+        if (p >= 1 && p <= pages && p !== campPage) { campPage = p; renderCampaigns(); window.scrollTo({ top: box.getBoundingClientRect().top + window.scrollY - 80, behavior: 'smooth' }); }
+    });
 }
 
 

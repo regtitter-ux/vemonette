@@ -306,6 +306,13 @@
 .dm-embed-field .fn{ font-weight:700; color:#f2f3f5; font-size:13.5px; margin-bottom:2px; }
 .dm-embed-field .fv{ color:#dbdee1; font-size:13.5px; line-height:1.4; white-space:pre-wrap; word-break:break-word; }
 
+/* task cards pager */
+.dm-pager{ display:flex; align-items:center; justify-content:center; gap:10px; margin-top:12px; }
+.dm-pager .cp-nav{ width:34px; height:34px; border-radius:9px; border:1px solid var(--dm-line-2); background:transparent; color:var(--dm-txt); font-size:15px; cursor:pointer; display:grid; place-items:center; }
+.dm-pager .cp-nav:hover:not(:disabled){ background:rgba(255,255,255,.06); border-color:var(--dm-blurple); color:#cfe4ff; }
+.dm-pager .cp-nav:disabled{ opacity:.4; cursor:default; }
+.dm-pager .cp-info{ color:var(--dm-mut); font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; }
+
 /* simplified route (Откуда / Куда: avatar + name + link) */
 .dm-route2{ display:flex; flex-direction:column; gap:6px; background:var(--dm-card-2); border:1px solid var(--dm-line); border-radius:10px; padding:9px 12px; margin:8px 0; font-size:12.5px; }
 .dm-r2-row{ display:flex; align-items:center; gap:7px; min-width:0; flex-wrap:wrap; }

@@ -187,6 +187,23 @@
   const lToggle = $('#dm-launch-toggle'), lBody = $('#dm-launch-body');
   if (lToggle && lBody) lToggle.addEventListener('click', () => { const open = lBody.hidden; lBody.hidden = !open; lToggle.classList.toggle('open', open); });
 
+  /* ---- broadcast task cards: 10 per page + pager ---- */
+  const TASK_PAGE_SIZE = 10;
+  let taskPage = 1;
+  function renderTaskPage() {
+    const box = $('.dm-setup-tasks'); if (!box) return;
+    const cards = $$('.dm-task', box);
+    const pages = Math.max(1, Math.ceil(cards.length / TASK_PAGE_SIZE));
+    if (taskPage > pages) taskPage = pages;
+    cards.forEach((c, i) => { c.hidden = (Math.floor(i / TASK_PAGE_SIZE) + 1) !== taskPage; });
+    let pager = box.querySelector('#dm-tasks-pager');
+    if (pages <= 1) { if (pager) pager.remove(); return; }
+    if (!pager) { pager = document.createElement('div'); pager.id = 'dm-tasks-pager'; pager.className = 'dm-pager'; box.appendChild(pager); }
+    pager.innerHTML = '<button class="cp-nav" data-pg="' + (taskPage - 1) + '"' + (taskPage <= 1 ? ' disabled' : '') + '>‹</button><span class="cp-info">' + taskPage + ' / ' + pages + '</span><button class="cp-nav" data-pg="' + (taskPage + 1) + '"' + (taskPage >= pages ? ' disabled' : '') + '>›</button>';
+    pager.querySelectorAll('[data-pg]').forEach((b) => b.onclick = () => { const p = +b.dataset.pg; if (p >= 1 && p <= pages) { taskPage = p; renderTaskPage(); } });
+  }
+  renderTaskPage();
+
   /* ---- "Пример Nitro" — fill sample content ---- */
   const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
   const ex = $('#dm-example');
@@ -334,7 +351,7 @@
       exclude_server:"Server to exclude", opt_choose_server:"— Choose a server —",
       whom_h:"Who to send to", whom_p:"All members, only roles, or specific IDs. Role/member exclusions apply after the audience filter. Link dedup is separate, in the block above.",
       audience:"Audience", aud_all:"All members", aud_roles:"Only roles", aud_ids:"Specific IDs", exclude_members:"Exclude members (IDs)",
-      online_prio:"Priority by online status", no_prio:"No priority", online_first:"Online first, then offline",
+      online_prio:"Priority by online status", no_prio:"No priority", online_first:"Online first, then offline", offline_first:"Offline first, then online", online_only:"Online only", offline_only:"Offline only",
       bot_pool:"Bot pool", leave_after:"Leave the server after the broadcast", leave_after_sub:"All bots that took part in this broadcast will leave the server when it ends",
       poolbox:"<b>115</b> free of 3 755 in the pool<div class=\"dm-poolsub\">7 busy · 3 633 invalid · 3 294 in quarantine</div>",
       msg_count:"Message count", how_many:"How many messages to send", bots_needed:"Bots needed: <b>2</b>",
@@ -382,7 +399,7 @@
       exclude_server:"Сервер для исключения", opt_choose_server:"— Выберите сервер —",
       whom_h:"Кому отправлять", whom_p:"Все участники, только роли или конкретные ID. Исключение по ролям и участникам применяется после фильтра аудитории. Дедуп по ссылке — отдельно, в блоке выше.",
       audience:"Аудитория", aud_all:"Все участники", aud_roles:"Только роли", aud_ids:"Конкретные ID", exclude_members:"Исключить участников (ID)",
-      online_prio:"Приоритет по онлайн-статусу", no_prio:"Без приоритета", online_first:"Сначала в сети, потом офлайн",
+      online_prio:"Приоритет по онлайн-статусу", no_prio:"Без приоритета", online_first:"Сначала в сети, потом офлайн", offline_first:"Сначала офлайн, потом в сети", online_only:"Только в сети", offline_only:"Только офлайн",
       bot_pool:"Пул ботов", leave_after:"Выйти с сервера после рассылки", leave_after_sub:"Все боты, которые участвовали в этой рассылке, покинут сервер по её окончании",
       poolbox:"<b>115</b> свободных из 3 755 в пуле<div class=\"dm-poolsub\">7 занято · 3 633 инвалидных · 3 294 в карантине</div>",
       msg_count:"Количество сообщений", how_many:"Сколько сообщений отправить", bots_needed:"Ботов нужно: <b>2</b>",

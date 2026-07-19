@@ -196,3 +196,10 @@ h2{font-size:18px;margin-bottom:14px}
 .alt-msg{font-size:12.5px;line-height:1.45}
 .alt-msg.err{color:var(--red)}
 .alt-msg.ok{color:var(--green)}
+
+/* campaigns pagination */
+.camp-pager{ display:flex; align-items:center; justify-content:center; gap:10px; margin-top:18px; }
+.camp-pager .cp-nav{ width:36px; height:36px; border-radius:9px; border:1px solid var(--stroke-2); background:rgba(255,255,255,.03); color:var(--text); font-size:16px; cursor:pointer; display:grid; place-items:center; }
+.camp-pager .cp-nav:hover:not(:disabled){ background:rgba(255,255,255,.08); border-color:var(--blue); color:var(--blue); }
+.camp-pager .cp-nav:disabled{ opacity:.4; cursor:default; }
+.camp-pager .cp-info{ color:var(--muted); font-size:14px; font-weight:600; font-variant-numeric:tabular-nums; }
