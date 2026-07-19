@@ -55,7 +55,13 @@
       '<div class="dm-sp-body"><div class="dm-sp-av" style="background:' + (sv.avBg || '#3a4256') + '">' + av + '</div>' +
       '<div class="dm-sp-main"><div class="dm-sp-name">' + esc(sv.name) + '</div><div class="dm-sp-foot">' + foot + '</div></div></div></button>';
   }
-  function renderServers(list) { const g = $('#dm-sp-grid'); if (g) { g.innerHTML = (list || DM_SERVERS).map(serverCard).join(''); dmApplyLang(); } }
+  function renderServers(list) {
+    const g = $('#dm-sp-grid'); if (!g) return;
+    // Servers that already have the bot come first.
+    const arr = (list || DM_SERVERS).slice().sort((a, b) => (b.bot ? 1 : 0) - (a.bot ? 1 : 0) || ((b.online || 0) - (a.online || 0)));
+    g.innerHTML = arr.map(serverCard).join('');
+    dmApplyLang();
+  }
 
   // Load the user's real admin servers from the API; fall back to the sample set.
   async function loadServers() {
