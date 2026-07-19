@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/order/order.css?v=31" />
-  <link rel="stylesheet" href="/order/dmall.css?v=12" />
+  <link rel="stylesheet" href="/order/dmall.css?v=13" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';
   </script>
@@ -131,19 +131,19 @@
         <div class="dm-card">
           <div class="dm-card-h"><h2 id="dm-form-title" data-dm="new_tpl">New template</h2><button class="dm-btn ghost sm" id="dm-example" data-dm="example">Example</button></div>
 
-          <div class="dm-field"><label class="dm-label">content <span class="dm-counter" id="dm-content-count">0/2000</span></label><textarea class="dm-textarea" id="dm-t-content" data-preview maxlength="2000" placeholder="Congratulations <@USER_ID> 🎉"></textarea></div>
+          <div class="dm-field"><label class="dm-label">content <span class="dm-counter" id="dm-content-count">0/2000</span></label><textarea class="dm-textarea" id="dm-t-content" data-save="content" data-preview maxlength="2000" placeholder="Congratulations <@USER_ID> 🎉"></textarea></div>
           <div class="dm-chips"><span class="dm-chips-lbl" data-dm="recipient">Recipient:</span><button class="dm-chip" data-insert="&lt;@USER_ID&gt;" data-target="dm-t-content">&lt;@USER_ID&gt;</button></div>
 
           <div class="dm-divide"><h3 data-dm="bot_profile">Bot profile</h3><p data-dm="bot_profile_p">Name, avatar and custom status are applied on the bot's first connection to a broadcast (once per run). Discord — no more than ~1 name change per hour.</p></div>
-          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-name" /> <span data-dm="set_name">Set bot name</span></label>
-          <div class="dm-reveal" id="dm-rv-name"><div class="dm-field"><label class="dm-label">username <span class="dm-counter" id="dm-username-count">0/80</span></label><input class="dm-input" id="dm-t-username" data-preview maxlength="80" value="Newspaper" /><div class="dm-hint" data-dm="saved_as">Saved as “Newspaper”</div></div></div>
-          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-av" /> <span data-dm="set_avatar">Set avatar</span></label>
+          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-name" data-save="setName" /> <span data-dm="set_name">Set bot name</span></label>
+          <div class="dm-reveal" id="dm-rv-name"><div class="dm-field"><label class="dm-label">username <span class="dm-counter" id="dm-username-count">0/80</span></label><input class="dm-input" id="dm-t-username" data-save="username" data-preview maxlength="80" value="Newspaper" /><div class="dm-hint" data-dm="saved_as">Saved as “Newspaper”</div></div></div>
+          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-av" data-save="setAvatar" /> <span data-dm="set_avatar">Set avatar</span></label>
           <div class="dm-reveal" id="dm-rv-av">
-            <div class="dm-field"><label class="dm-label">avatar.url</label><input class="dm-input" id="dm-t-avatarurl" data-preview data-dm-ph="ph_upload" placeholder="https://… or upload a file below" /></div>
+            <div class="dm-field"><label class="dm-label">avatar.url</label><input class="dm-input" id="dm-t-avatarurl" data-save="avatarUrl" data-preview data-dm-ph="ph_upload" placeholder="https://… or upload a file below" /></div>
             <div class="dm-upload"><div class="dm-upload-th" id="dm-av-prev">?</div><div class="dm-upload-main"><button class="dm-file-btn" data-dm="choose_file">Choose file</button><div class="dm-upload-hint" data-dm="upload_hint">PNG, JPEG, WEBP or GIF up to 8 MB · external URL or server upload</div></div></div>
           </div>
-          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-status" /> <span data-dm="set_status">Set custom status</span></label>
-          <div class="dm-reveal" id="dm-rv-status"><div class="dm-field"><label class="dm-label">customStatus</label><input class="dm-input" id="dm-t-status" value="Important Notice" /><div class="dm-hint" data-dm="status_hint">16/128 · empty = keep presence</div></div></div>
+          <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-status" data-save="setStatus" /> <span data-dm="set_status">Set custom status</span></label>
+          <div class="dm-reveal" id="dm-rv-status"><div class="dm-field"><label class="dm-label">customStatus</label><input class="dm-input" id="dm-t-status" data-save="customStatus" value="Important Notice" /><div class="dm-hint" data-dm="status_hint">16/128 · empty = keep presence</div></div></div>
 
           <div class="dm-divide"><h3 data-dm="embeds_h">Embeds</h3></div>
           <div id="dm-embeds"></div>
@@ -159,16 +159,16 @@
               <button type="button" class="dm-launch-toggle" id="dm-launch-toggle"><span data-dm="launch_h">Start a broadcast</span><span class="dm-lt-caret">▸</span></button>
               <div class="dm-launch-body" id="dm-launch-body" hidden>
 <div class="dm-divide"><h3 data-dm="repeats">Repeats &amp; cooldowns</h3><p data-dm="repeats_p">The destination link is needed for templates with [[LINK]] and for per-server filters. Cooldowns can be combined: days and hours add up (max 365 days).</p></div>
-        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="cool_g">Global cooldown</div><div class="dm-tr-sub" data-dm="cool_g_sub">Don't send if the member received any ad within the period below</div><div class="dm-cool-row"><span data-dm="within_last">within the last</span> <input class="dm-input dm-num" /> <span data-dm="days">d</span> <input class="dm-input dm-num" /> <span data-dm="hours">h</span></div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
+        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="cool_g">Global cooldown</div><div class="dm-tr-sub" data-dm="cool_g_sub">Don't send if the member received any ad within the period below</div><div class="dm-cool-row"><span data-dm="within_last">within the last</span> <input class="dm-input dm-num" data-save="coolGd" /> <span data-dm="days">d</span> <input class="dm-input dm-num" data-save="coolGh" /> <span data-dm="hours">h</span></div></div><label class="dm-sw"><input type="checkbox" data-save="coolG" /><span class="dm-sw-t"></span></label></div>
 
         <div class="dm-divide"><h3 data-dm="server_h">Server for the DMALL broadcast</h3></div>
-        <div class="dm-field"><label class="dm-label" data-dm="guild_id">Server ID (guild)</label><input class="dm-input" placeholder="1369076925389078609" /><div class="dm-hint" data-dm="guild_id_hint">Enter the server ID</div></div>
+        <div class="dm-field"><label class="dm-label" data-dm="guild_id">Server ID (guild)</label><input class="dm-input" data-save="guildId" placeholder="1369076925389078609" /><div class="dm-hint" data-dm="guild_id_hint">Enter the server ID</div></div>
 
-        <div class="dm-field"><label class="dm-label" data-dm="exclude_members">Exclude members (IDs)</label><textarea class="dm-textarea" data-dm-ph="ph_ids" placeholder="IDs comma-separated or one per line"></textarea></div>
-        <div class="dm-field"><label class="dm-label" data-dm="online_prio">Priority by online status</label><select class="dm-select"><option data-dm="no_prio">No priority</option><option data-dm="online_first">Online first, then offline</option><option data-dm="offline_first">Offline first, then online</option><option data-dm="online_only">Online only</option><option data-dm="offline_only">Offline only</option></select></div>
+        <div class="dm-field"><label class="dm-label" data-dm="exclude_members">Exclude members (IDs)</label><textarea class="dm-textarea" data-save="excludeIds" data-dm-ph="ph_ids" placeholder="IDs comma-separated or one per line"></textarea></div>
+        <div class="dm-field"><label class="dm-label" data-dm="online_prio">Priority by online status</label><select class="dm-select" data-save="priority"><option data-dm="no_prio">No priority</option><option data-dm="online_first">Online first, then offline</option><option data-dm="offline_first">Offline first, then online</option><option data-dm="online_only">Online only</option><option data-dm="offline_only">Offline only</option></select></div>
 
         <div class="dm-divide"><h3 data-dm="msg_count">Message count</h3></div>
-        <div class="dm-field"><label class="dm-label" data-dm="how_many">How many messages to send</label><input class="dm-input" id="dm-l-count" value="1000" />
+        <div class="dm-field"><label class="dm-label" data-dm="how_many">How many messages to send</label><input class="dm-input" id="dm-l-count" data-save="count" value="1000" />
           <div class="dm-quick"><button data-amt="100">100</button><button data-amt="500">500</button><button data-amt="1000">1 000</button><button data-amt="5000">5 000</button><button data-amt="10000">10 000</button></div>
         </div>
         <div class="dm-hint" data-dm-html="bots_needed" style="margin-top:10px">Bots needed: <b>2</b></div>
@@ -188,14 +188,13 @@
           </div>
           <div class="dm-setup-tasks">
       <div class="dm-task on">
-        <div class="dm-task-h"><div><div class="dm-task-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-task-date">19.07.26, 00:01</div></div><span class="dm-status dm" data-dm="st_dm">DM BROADCAST</span></div>
+        <div class="dm-task-h"><div><div class="dm-task-title">matching</div><div class="dm-task-date">19.07.26, 00:01</div></div><span class="dm-status dm" data-dm="st_dm">DM BROADCAST</span></div>
         <div class="dm-bigrow">
           <div class="dm-bigbox g"><div class="dm-bb-ic">⟳</div><div><div class="dm-bb-k" data-dm="bots_on_server">Bots on server</div><div class="dm-bb-v">7/28</div></div></div>
           <div class="dm-bigbox b"><div class="dm-bb-ic">✉</div><div><div class="dm-bb-k" data-dm="dm_broadcast">DM broadcast</div><div class="dm-bb-v" data-dm="running">Running</div></div></div>
         </div>
         <div class="dm-prog-lbl"><span data-dm="sending">Sending messages</span><span><b>60%</b> · 8 345 / 14 000</span></div>
         <div class="dm-prog"><span style="width:60%"></span></div>
-        <div class="dm-task-note" data-dm="note1">From the server: 90 119 · queued 87 420</div>
         <div class="dm-route2">
           <div class="dm-r2-row"><span class="dm-r2-lbl" data-dm="route_from">From:</span> <span class="dm-r2-av">🍒</span> <span class="dm-r2-name">matching</span></div>
           <div class="dm-r2-row"><span class="dm-r2-lbl" data-dm="route_to">To:</span> <span class="dm-r2-av">❤️</span> <span class="dm-r2-name">valentines</span> <span class="dm-r2-link">discord.gg/valentines</span></div>
@@ -205,7 +204,7 @@
       </div>
 
       <div class="dm-task">
-        <div class="dm-task-h"><div><div class="dm-task-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-task-date">18.07.26, 23:57</div></div><span class="dm-status err" data-dm="st_err">ERROR</span></div>
+        <div class="dm-task-h"><div><div class="dm-task-title">/admiring ♡ giveaways, social &amp; guilds</div><div class="dm-task-date">18.07.26, 23:57</div></div><span class="dm-status err" data-dm="st_err">ERROR</span></div>
         <div class="dm-bigrow">
           <div class="dm-bigbox g"><div class="dm-bb-ic">✓</div><div><div class="dm-bb-k" data-dm="bots_k">Bots</div><div class="dm-bb-v" data-dm="done">Done</div></div></div>
           <div class="dm-bigbox"><div class="dm-bb-ic">✉</div><div><div class="dm-bb-k" data-dm="dm_broadcast">DM broadcast</div><div class="dm-bb-v">—</div></div></div>
@@ -220,12 +219,11 @@
       </div>
 
       <div class="dm-task">
-        <div class="dm-task-h"><div><div class="dm-task-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-task-date">18.07.26, 23:57</div></div><span class="dm-status stop" data-dm="st_stop">STOPPED</span></div>
+        <div class="dm-task-h"><div><div class="dm-task-title">matching</div><div class="dm-task-date">18.07.26, 23:57</div></div><span class="dm-status stop" data-dm="st_stop">STOPPED</span></div>
         <div class="dm-bigrow">
           <div class="dm-bigbox g"><div class="dm-bb-ic">✓</div><div><div class="dm-bb-k" data-dm="bots_k">Bots</div><div class="dm-bb-v" data-dm="done">Done</div></div></div>
           <div class="dm-bigbox g"><div class="dm-bb-ic">✓</div><div><div class="dm-bb-k" data-dm="dm_broadcast">DM broadcast</div><div class="dm-bb-v" data-dm="done">Done</div></div></div>
         </div>
-        <div class="dm-task-note" data-dm="note3">From the server: 90 115 · queued 87 416</div>
         <div class="dm-prog-lbl"><span data-dm="msg_short">Msg.</span><span><b>13</b> / 86 999</span></div>
         <div class="dm-prog"><span style="width:2%"></span></div>
         <div class="dm-route2">
@@ -263,6 +261,6 @@
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=39"></script>
-<script src="/order/dmall.js?v=17"></script>
+<script src="/order/dmall.js?v=18"></script>
 </body>
 </html>

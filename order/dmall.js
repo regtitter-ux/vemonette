@@ -209,15 +209,45 @@
 
   /* ---- live Discord preview ---- */
   const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // Inline Discord markdown (operates on already-escaped text): bold/italic/
+  // underline/strikethrough/spoiler, incl. combinations.
+  const inline = (t) => t
+    .replace(/\*\*\*([\s\S]+?)\*\*\*/g, '<b><i>$1</i></b>')
+    .replace(/\*\*([\s\S]+?)\*\*/g, '<b>$1</b>')
+    .replace(/__([\s\S]+?)__/g, '<u>$1</u>')
+    .replace(/~~([\s\S]+?)~~/g, '<s>$1</s>')
+    .replace(/\|\|([\s\S]+?)\|\|/g, '<span class="dm-spoiler">$1</span>')
+    .replace(/(^|[^*])\*(?!\s)([^*\n]+?)\*(?!\*)/g, '$1<i>$2</i>')
+    .replace(/(^|[^_\w])_(?!\s)([^_\n]+?)_(?![_\w])/g, '$1<i>$2</i>');
+
+  // Full message renderer — an exact-ish copy of how Discord shows the message.
   const fmt = (s) => {
     let t = esc(s);
-    t = t.replace(/&lt;@(?:USER_ID|USERNAME|DISPLAY_NAME)&gt;/g, '<span class="dm-mention">@user</span>');
-    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');                                   // **bold**
-    t = t.replace(/\[([^\]]+)\]\(\s*(?:https?:\/\/[^\s)]+|discord\.gg\/[^\s)]+|\{\{LINK\}\})\s*\)/g, '<span class="dm-mlink">$1</span>'); // [text](url)
-    t = t.replace(/\{\{LINK\}\}/g, '<span class="dm-mlink">https://discord.gg/example</span>');
-    t = t.replace(/(https?:\/\/[^\s<]+|discord\.gg\/[^\s<]+)/g, '<span class="dm-mlink">$1</span>');
-    t = t.replace(/^(#{1,3})\s+(.+)$/gm, (m, h, txt) => '<span class="dm-h dm-h' + h.length + '">' + txt + '</span>'); // # headings
-    return t.replace(/\n/g, '<br>');
+    const stash = [];
+    const put = (h) => { stash.push(h); return '\u0000' + (stash.length - 1) + '\u0000'; };
+    // code first (protected from other formatting)
+    t = t.replace(/```(?:[a-zA-Z0-9+#.\-]*\n)?([\s\S]*?)```/g, (m, c) => put('<pre class="dm-code">' + c.replace(/\n$/, '') + '</pre>'));
+    t = t.replace(/`([^`\n]+?)`/g, (m, c) => put('<code class="dm-inline-code">' + c + '</code>'));
+    // links & mentions (stashed so inner text isn't re-parsed)
+    t = t.replace(/\[([^\]\n]+?)\]\(\s*(?:https?:\/\/[^\s)]+|discord\.gg\/[^\s)]+|\{\{LINK\}\})\s*\)/g, (m, txt) => put('<span class="dm-mlink">' + inline(txt) + '</span>'));
+    t = t.replace(/\{\{LINK\}\}/g, () => put('<span class="dm-mlink">https://discord.gg/example</span>'));
+    t = t.replace(/(https?:\/\/[^\s<]+|discord\.gg\/[^\s<]+)/g, (m) => put('<span class="dm-mlink">' + m + '</span>'));
+    t = t.replace(/&lt;a?:(\w+):\d+&gt;/g, ':$1:');
+    t = t.replace(/&lt;@&amp;\d+&gt;/g, () => put('<span class="dm-mention">@role</span>'));
+    t = t.replace(/&lt;@!?(?:USER_ID|USERNAME|DISPLAY_NAME|\d+)&gt;/g, () => put('<span class="dm-mention">@user</span>'));
+    t = t.replace(/&lt;#\d+&gt;/g, () => put('<span class="dm-mention">#channel</span>'));
+    // block-level
+    t = t.replace(/^(#{1,3})\s+(.+)$/gm, (m, h, x) => '<div class="dm-h dm-h' + h.length + '">' + x + '</div>');
+    t = t.replace(/^-#\s+(.+)$/gm, '<div class="dm-subtext">$1</div>');
+    t = t.replace(/(?:^&gt;\s?.*(?:\n|$))+/gm, (blk) => '<blockquote class="dm-quote">' + blk.replace(/^&gt;\s?/gm, '').replace(/\n+$/, '') + '</blockquote>\n');
+    t = t.replace(/^[-*]\s+(.+)$/gm, '<div class="dm-li">• $1</div>');
+    t = t.replace(/^(\d+)\.\s+(.+)$/gm, '<div class="dm-li">$1. $2</div>');
+    // inline formatting across the rest
+    t = inline(t);
+    // newlines (blocks manage their own spacing)
+    t = t.replace(/(<\/(?:div|blockquote|pre)>)\n/g, '$1');
+    t = t.replace(/\n/g, '<br>');
+    return t.replace(/\u0000(\d+)\u0000/g, (m, i) => stash[+i]);
   };
   const val = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
   const url = (id) => { const el = document.getElementById(id); return el ? (el.dataset.url || '') : ''; };
@@ -275,11 +305,10 @@
   const raw = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
   const EMBED_KEYS = ['author', 'authorurl', 'authoricon', 'title', 'url', 'desc', 'color', 'image', 'thumb', 'footer', 'timestamp', 'footericon', 'btnlabel', 'btnurl', 'btnemoji'];
   function collectState() {
+    const fields = {};
+    $$('#dmall [data-save]').forEach((el) => { fields[el.dataset.save] = el.type === 'checkbox' ? el.checked : el.value; });
     return {
-      content: raw('dm-t-content'),
-      setName: checked('[data-reveal="dm-rv-name"]'), username: raw('dm-t-username'),
-      setAvatar: checked('[data-reveal="dm-rv-av"]'), avatarUrl: raw('dm-t-avatarurl'),
-      setStatus: checked('[data-reveal="dm-rv-status"]'), customStatus: raw('dm-t-status'),
+      fields,
       embeds: $$('#dm-embeds .dm-embed-block').map((b) => {
         const o = {}; EMBED_KEYS.forEach((k) => { const el = b.querySelector('.eb-' + k); o[k] = el ? el.value : ''; }); return o;
       })
@@ -300,17 +329,22 @@
   function restoreState() {
     let st; try { st = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (_) {}
     if (!st) return;
-    const sv = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
-    sv('dm-t-content', st.content);
-    sv('dm-t-username', st.username); sv('dm-t-avatarurl', st.avatarUrl); sv('dm-t-status', st.customStatus);
-    const setChk = (sel, on) => { const c = $(sel); if (c) { c.checked = !!on; const box = document.getElementById(c.dataset.reveal); if (box) box.classList.toggle('on', !!on); } };
-    setChk('[data-reveal="dm-rv-name"]', st.setName); setChk('[data-reveal="dm-rv-av"]', st.setAvatar); setChk('[data-reveal="dm-rv-status"]', st.setStatus);
+    const fields = st.fields || {};
+    $$('#dmall [data-save]').forEach((el) => {
+      const k = el.dataset.save; if (!(k in fields)) return;
+      const v = fields[k];
+      if (el.type === 'checkbox') {
+        el.checked = !!v;
+        if (el.dataset.reveal) { const box = document.getElementById(el.dataset.reveal); if (box) box.classList.toggle('on', !!v); }
+      } else { el.value = v == null ? '' : v; }
+    });
     (st.embeds || []).forEach((em) => {
       const b = addEmbed();
       EMBED_KEYS.forEach((k) => { const el = b.querySelector('.eb-' + k); if (el && em[k] != null) el.value = em[k]; });
       const pk = b.querySelector('.eb-colorpick'); if (pk && /^#[0-9a-f]{6}$/i.test(em.color || '')) pk.value = em.color;
     });
     refreshCounters();
+    updateLaunchPrice();
   }
 
   /* ---- i18n for the DMALL subtree (RU/EN), applied on load + on language switch ---- */
