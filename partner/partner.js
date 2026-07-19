@@ -180,7 +180,10 @@ const TR = {
   // cards section
   'Мои карточки верификации':'My verification cards','роль по умолчанию':'default role','сообщение':'message','Роль:':'Role:',
   '1. Клик (начали)':'1. Click (started)','2. Заход проверен':'2. Join checked','3. Остались':'3. Stayed',
-  'Встряхнуть':'Shake','Владелец…':'Owner…','Роль…':'Role…','Описание…':'Description…','Перепубликовать':'Republish','Сбросить роль':'Reset role','Удалить':'Delete',
+  'Встряхнуть':'Shake','Владелец…':'Owner…','Роль…':'Role…','Описание…':'Description…','Перепубликовать':'Republish','Авто-сброс роли':'Auto-reset role','Сбросить роль':'Reset role','Удалить':'Delete',
+  'Авто-сброс включён':'Auto-reset enabled','Авто-сброс отключён':'Auto-reset disabled',
+  'Роль будет автоматически сбрасываться каждый раз через указанный срок. Отсчёт начинается с момента сохранения. Пусто — авто-сброс отключён.':'The role will be automatically reset every time after the set interval. The countdown starts when you save. Empty — auto-reset is off.',
+  'Дней':'Days','Часов':'Hours',
   '⏱ Среднее время от клика до проверенного захода: ~':'⏱ Average time from click to checked join: ~',
   // card actions / errors
   'Карточка пересобрана':'Card rebuilt','Карточка перепубликована':'Card republished','Карточка удалена':'Card deleted','Роль сброшена':'Role reset',
@@ -541,22 +544,25 @@ function pcardBlock(c) {
         <div class="vcard-head">${srvIcon(c.guildName, c.guildIcon)}<span><b>${esc(c.guildName || 'Сервер')}</b> · ${chan}${link}</span></div>
         ${members}
         <div class="vcard-meta">Роль: ${role}${avg}</div>
-        <div class="table-wrap" style="margin-top:12px"><table>
-          <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
-          <tbody>
-            ${cardStatRow('1. Клик (начали)', st.clicks)}
-            ${cardStatRow('2. Заход проверен', st.checked)}
-            ${cardStatRow('3. Остались', st.stayed)}
-          </tbody>
-        </table></div>
-        <div class="vcard-actions">
-          <button class="btn-mini" data-card="fix">Встряхнуть</button>
-          <button class="btn-mini" data-card="owner">Владелец…</button>
-          <button class="btn-mini" data-card="role">Роль…</button>
-          <button class="btn-mini" data-card="desc">Описание…</button>
-          <button class="btn-mini" data-card="republish">Перепубликовать</button>
-          <button class="btn-mini off" data-card="reset-role">Сбросить роль</button>
-          <button class="btn-mini off" data-card="delete">Удалить</button>
+        <div class="vcard-body">
+          <div class="table-wrap"><table>
+            <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
+            <tbody>
+              ${cardStatRow('1. Клик (начали)', st.clicks)}
+              ${cardStatRow('2. Заход проверен', st.checked)}
+              ${cardStatRow('3. Остались', st.stayed)}
+            </tbody>
+          </table></div>
+          <div class="vcard-actions">
+            <button class="btn-mini" data-card="fix">Встряхнуть</button>
+            <button class="btn-mini" data-card="owner">Владелец…</button>
+            <button class="btn-mini" data-card="role">Роль…</button>
+            <button class="btn-mini" data-card="desc">Описание…</button>
+            <button class="btn-mini" data-card="republish">Перепубликовать</button>
+            <button class="btn-mini${c.autoResetMs > 0 ? ' on' : ''}" data-card="autoreset">Авто-сброс роли</button>
+            <button class="btn-mini off" data-card="reset-role">Сбросить роль</button>
+            <button class="btn-mini off" data-card="delete">Удалить</button>
+          </div>
         </div>
       </div>`;
 }
@@ -635,6 +641,9 @@ async function pcardAction(action, messageId) {
     } else if (action === 'desc') {
         const card = lastPCards.find((c) => c.messageId === messageId);
         openPcardDescModal(messageId, card ? (card.customDescription ? card.description : '') : '');
+    } else if (action === 'autoreset') {
+        const card = lastPCards.find((c) => c.messageId === messageId);
+        openAutoResetModal(messageId, card ? (card.autoResetMs || 0) : 0);
     }
 }
 
@@ -657,6 +666,34 @@ function openPcardDescModal(messageId, desc) {
         const description = $('#pcard-desc-input').value;
         const { ok, body } = await post('/cards/edit', { messageId: mid, description });
         if (ok) { close(); toast('Описание обновлено'); loadCards(); }
+        else toast(pcardErr(body?.error), 'err');
+    });
+})();
+
+function openAutoResetModal(messageId, curMs) {
+    const modal = $('#pcard-ar-modal');
+    if (!modal) return;
+    const d = Math.floor(curMs / 86400000);
+    const h = Math.floor((curMs % 86400000) / 3600000);
+    $('#pcard-ar-days').value = curMs > 0 ? d : '';
+    $('#pcard-ar-hours').value = curMs > 0 ? h : '';
+    modal.dataset.mid = messageId;
+    modal.hidden = false;
+    $('#pcard-ar-days').focus();
+}
+(() => {
+    const modal = document.getElementById('pcard-ar-modal');
+    if (!modal) return;
+    const close = () => { modal.hidden = true; };
+    document.getElementById('pcard-ar-close')?.addEventListener('click', close);
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+    document.getElementById('pcard-ar-save')?.addEventListener('click', async () => {
+        const mid = modal.dataset.mid;
+        let days = Math.max(0, parseInt($('#pcard-ar-days').value || '0', 10) || 0);
+        let hours = Math.max(0, parseInt($('#pcard-ar-hours').value || '0', 10) || 0);
+        if (days * 24 + hours > 365 * 24) { days = 365; hours = 0; }
+        const { ok, body } = await post('/cards/autoreset', { messageId: mid, days, hours });
+        if (ok) { close(); toast((days || hours) ? 'Авто-сброс включён' : 'Авто-сброс отключён'); loadCards(); }
         else toast(pcardErr(body?.error), 'err');
     });
 })();

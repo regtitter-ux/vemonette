@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Кабинет партнёра</title>
-  <link rel="stylesheet" href="/partner/partner.css?v=34" />
+  <link rel="stylesheet" href="/partner/partner.css?v=35" />
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
   <script>try{if(localStorage.getItem('vemoni_authed'))document.documentElement.classList.add('pre-auth')}catch(e){}</script>
 </head>
@@ -216,7 +216,22 @@
   </div>
 </div>
 
+<div id="pcard-ar-modal" class="pmodal" hidden>
+  <div class="pmodal-card">
+    <h3>Авто-сброс роли</h3>
+    <p class="muted sm" style="margin-bottom:10px">Роль будет автоматически сбрасываться каждый раз через указанный срок. Отсчёт начинается с момента сохранения. Пусто — авто-сброс отключён.</p>
+    <div class="ar-inputs">
+      <label class="ar-field">Дней<input type="number" min="0" id="pcard-ar-days" placeholder="0"></label>
+      <label class="ar-field">Часов<input type="number" min="0" id="pcard-ar-hours" placeholder="0"></label>
+    </div>
+    <div class="actions-row">
+      <button class="btn ghost sm" id="pcard-ar-close">Отмена</button>
+      <button class="btn primary sm" id="pcard-ar-save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast" hidden></div>
-<script src="/partner/partner.js?v=38"></script>
+<script src="/partner/partner.js?v=39"></script>
 </body>
 </html>

@@ -145,6 +145,21 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .btn-mini:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.24)}
 .btn-mini.off{background:rgba(237,66,69,.14);border-color:rgba(237,66,69,.35);color:#ff9a9c}
 .btn-mini.off:hover{background:rgba(237,66,69,.22)}
+.btn-mini.on{background:rgba(59,165,93,.16);border-color:rgba(59,165,93,.4);color:#7fe0a0}
+.btn-mini.on:hover{background:rgba(59,165,93,.24)}
+/* Card body: stacked on mobile; on PC the buttons sit to the right of the stats, 4 per row. */
+.vcard-body{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+.vcard-body .table-wrap{margin:0}
+.vcard-body .vcard-actions{margin-top:0}
+@media(min-width:720px){
+  .vcard-body{flex-direction:row;align-items:flex-start}
+  .vcard-body .table-wrap{flex:none}
+  .vcard-body .vcard-actions{flex:1;display:grid;grid-template-columns:repeat(4,max-content);gap:8px;align-content:flex-start;justify-content:start}
+}
+.ar-inputs{display:flex;gap:12px;margin:4px 0 14px}
+.ar-field{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);flex:1}
+.ar-field input{width:100%;box-sizing:border-box;padding:9px 11px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--stroke-2);color:var(--text);font-size:15px;-moz-appearance:textfield;appearance:textfield}
+.ar-field input::-webkit-inner-spin-button,.ar-field input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 
 .pmodal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;z-index:60;padding:20px}
 .pmodal[hidden]{display:none}
