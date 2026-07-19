@@ -173,6 +173,10 @@
     const close = $('#dm-notif-close'); if (close) close.addEventListener('click', () => notif.classList.remove('on'));
   }
 
+  /* ---- broadcast settings drawer inside the preview card (click to slide) ---- */
+  const lToggle = $('#dm-launch-toggle'), lBody = $('#dm-launch-body');
+  if (lToggle && lBody) lToggle.addEventListener('click', () => { const open = lBody.hidden; lBody.hidden = !open; lToggle.classList.toggle('open', open); });
+
   /* ---- "Пример Nitro" — fill sample content ---- */
   const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
   const ex = $('#dm-example');

@@ -306,6 +306,16 @@
 .dm-embed-field .fn{ font-weight:700; color:#f2f3f5; font-size:13.5px; margin-bottom:2px; }
 .dm-embed-field .fv{ color:#dbdee1; font-size:13.5px; line-height:1.4; white-space:pre-wrap; word-break:break-word; }
 
+/* broadcast settings tucked inside the preview card, below the message — slide-open */
+.dm-launch-wrap{ margin-top:14px; }
+.dm-launch-toggle{ width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--dm-card-2); border:1px solid var(--dm-line); border-radius:10px; color:var(--dm-txt); font:inherit; font-weight:700; font-size:14px; padding:12px 14px; cursor:pointer; transition:border-color .15s; }
+.dm-launch-toggle:hover{ border-color:rgba(255,255,255,.2); }
+.dm-lt-caret{ font-size:11px; opacity:.7; transition:transform .18s ease; }
+.dm-launch-toggle.open .dm-lt-caret{ transform:rotate(90deg); }
+.dm-launch-body{ padding:10px 2px 2px; }
+.dm-launch-body[hidden]{ display:none; }
+.dm-launch-body .dm-divide:first-child{ margin-top:6px; padding-top:0; border-top:0; }
+
 /* task cards relocated under the Setup preview — compact variant */
 .dm-setup-tasks{ margin-top:16px; display:flex; flex-direction:column; gap:10px; }
 .dm-setup-tasks .dm-task{ padding:12px 14px; margin-bottom:0; border-radius:12px; }
