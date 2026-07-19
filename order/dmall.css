@@ -58,7 +58,7 @@
 .dm-sp-banner{ height:86px; position:relative; overflow:hidden; }
 .dm-sp-banner-blur{ position:absolute; inset:-25%; background-size:cover; background-position:center; filter:blur(16px); transform:scale(1.25); }
 .dm-sp-body{ display:flex; gap:12px; padding:0 14px 14px; }
-.dm-sp-av{ width:54px; height:54px; border-radius:16px; flex:none; display:grid; place-items:center; font-size:22px; color:#fff; margin-top:-22px; border:4px solid var(--dm-card); box-sizing:border-box; overflow:hidden; }
+.dm-sp-av{ position:relative; z-index:1; width:54px; height:54px; border-radius:16px; flex:none; display:grid; place-items:center; font-size:22px; color:#fff; margin-top:-22px; border:4px solid var(--dm-card); box-sizing:border-box; overflow:hidden; }
 .dm-sp-av img{ width:100%; height:100%; object-fit:cover; display:block; }
 .dm-sp-main{ min-width:0; flex:1; padding-top:10px; }
 .dm-sp-name{ font-weight:700; font-size:15px; color:#f2f3f5; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
