@@ -167,6 +167,20 @@
   { const lc = $('#dm-l-count'); if (lc) lc.addEventListener('input', updateLaunchPrice); }
   updateLaunchPrice();
 
+  /* ---- cooldown cap: total (days×24 + hours) ≤ 365 days; auto-reset if exceeded ---- */
+  const MAX_COOLDOWN_H = 365 * 24;
+  $$('.dm-cool-row').forEach((row) => {
+    const inps = row.querySelectorAll('input');
+    if (inps.length < 2) return;
+    inps.forEach((i) => { i.setAttribute('inputmode', 'numeric'); i.setAttribute('min', '0'); });
+    const clamp = () => {
+      const d = Math.max(0, parseInt(inps[0].value || '0', 10) || 0);
+      const h = Math.max(0, parseInt(inps[1].value || '0', 10) || 0);
+      if (d * 24 + h > MAX_COOLDOWN_H) { inps[0].value = '365'; inps[1].value = '0'; }
+    };
+    inps.forEach((i) => i.addEventListener('input', clamp));
+  });
+
   /* ---- repeatable embed fields (Discohook-style) ---- */
   const FIELD_ROW = '<div class="dm-field-row">' +
     '<input class="dm-input ff-name" data-dm-ph="field_name" placeholder="Field name" />' +
