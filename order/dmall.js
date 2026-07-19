@@ -62,9 +62,14 @@
       ? '<span class="dm-sp-online"><i class="dm-sp-dot"></i> ' + (sv.online != null ? sv.online : '') + ' <span data-dm="members_word">members</span></span>'
       : '<span class="dm-sp-invite" data-dm="invite_caps">INVITE</span>';
     return '<button class="dm-sp-card" data-bot="' + (sv.bot ? 1 : 0) + '" data-id="' + esc(sv.id || '') + '" data-name="' + esc(sv.name) + '">' +
-      '<div class="dm-sp-banner" style="' + banner + '">' + bannerInner + '</div>' +
-      '<div class="dm-sp-body"><div class="dm-sp-av" style="background:' + (sv.avBg || '#3a4256') + '">' + av + '</div>' +
-      '<div class="dm-sp-main"><div class="dm-sp-name">' + esc(sv.name) + '</div><div class="dm-sp-foot">' + foot + '</div></div></div></button>';
+      '<div class="dm-sp-banner" style="' + banner + '">' + bannerInner +
+        '<div class="dm-sp-scrim"></div>' +
+        '<div class="dm-sp-title">' + esc(sv.name) + '</div>' +
+      '</div>' +
+      '<div class="dm-sp-body">' +
+        '<div class="dm-sp-av" style="background:' + (sv.avBg || '#3a4256') + '">' + av + '</div>' +
+        '<div class="dm-sp-foot">' + foot + '</div>' +
+      '</div></button>';
   }
   function renderServers(list) {
     const g = $('#dm-sp-grid'); if (!g) return;
