@@ -211,7 +211,9 @@ h2{font-size:18px;margin-bottom:14px}
 @keyframes tpIn{ from{ opacity:0; transform:translateY(8px) scale(.98); } to{ opacity:1; transform:none; } }
 .tp-modal h3{ margin:0 0 2px; font-size:18px; }
 .tp-modal label{ display:block; color:var(--muted); font-size:13px; margin:10px 0 8px; }
-.tp-modal input{ width:100%; background:var(--bg); border:1px solid var(--stroke-2); color:var(--text); font:inherit; font-size:16px; padding:12px 14px; border-radius:10px; }
+.tp-modal input{ width:100%; background:var(--bg); border:1px solid var(--stroke-2); color:var(--text); font:inherit; font-size:16px; padding:12px 14px; border-radius:10px; -moz-appearance:textfield; appearance:textfield; }
 .tp-modal input:focus{ outline:none; border-color:var(--blue); }
+.tp-modal input::-webkit-outer-spin-button,
+.tp-modal input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 .tp-err{ color:#ff8a8d; font-size:13px; margin-top:8px; }
 .tp-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
