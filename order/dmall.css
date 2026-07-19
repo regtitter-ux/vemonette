@@ -264,6 +264,27 @@
 
 .dm-empty{ text-align:center; color:var(--dm-mut); padding:50px 20px; font-size:14px; }
 
+/* embed fields (repeatable, Discohook-style) */
+.dm-field-row{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:8px; }
+.dm-field-row .dm-input{ flex:1 1 140px; }
+.dm-inline-lbl{ display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--dm-mut); white-space:nowrap; cursor:pointer; }
+.dm-inline-lbl input{ width:16px; height:16px; accent-color:var(--dm-blurple); cursor:pointer; }
+.dm-field-del{ background:transparent; border:0; color:var(--dm-dim); cursor:pointer; font-size:15px; padding:4px 8px; line-height:1; }
+.dm-field-del:hover{ color:var(--dm-red); }
+
+/* preview: title, author/footer icons, fields */
+.dm-embed-author{ display:flex; align-items:center; gap:6px; }
+.dm-ea-ic{ width:20px; height:20px; border-radius:50%; object-fit:cover; flex:none; }
+.dm-embed-title{ font-weight:700; color:#fff; font-size:15px; margin-bottom:5px; }
+.dm-embed-title .dm-mlink{ color:#00a8fc; }
+.dm-embed-foot{ display:flex; align-items:center; gap:6px; }
+.dm-ef-ic{ width:18px; height:18px; border-radius:50%; object-fit:cover; flex:none; }
+.dm-embed-fields{ display:flex; flex-wrap:wrap; gap:8px 16px; margin-top:9px; }
+.dm-embed-field{ flex:1 1 100%; min-width:0; }
+.dm-embed-field.inline{ flex:1 1 30%; }
+.dm-embed-field .fn{ font-weight:700; color:#f2f3f5; font-size:13.5px; margin-bottom:2px; }
+.dm-embed-field .fv{ color:#dbdee1; font-size:13.5px; line-height:1.4; white-space:pre-wrap; word-break:break-word; }
+
 /* =================== responsive =================== */
 @media (max-width:900px){
   .dm-cols{ grid-template-columns:1fr; }

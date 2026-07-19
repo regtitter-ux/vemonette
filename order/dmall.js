@@ -91,6 +91,17 @@
     b.addEventListener('click', () => { const inp = $('#dm-l-count'); if (inp) inp.value = b.dataset.amt; });
   });
 
+  /* ---- repeatable embed fields (Discohook-style) ---- */
+  const FIELD_ROW = '<div class="dm-field-row">' +
+    '<input class="dm-input ff-name" data-dm-ph="field_name" placeholder="Field name" />' +
+    '<input class="dm-input ff-value" data-dm-ph="field_value" placeholder="Field value" />' +
+    '<label class="dm-inline-lbl"><input type="checkbox" class="ff-inline" /> <span data-dm="inline">Inline</span></label>' +
+    '<button type="button" class="dm-field-del" title="Remove">✕</button>' +
+    '</div>';
+  const fieldsBox = $('#dm-fields'), addFieldBtn = $('#dm-add-field');
+  if (addFieldBtn && fieldsBox) addFieldBtn.addEventListener('click', () => { fieldsBox.insertAdjacentHTML('beforeend', FIELD_ROW); dmApplyLang(); });
+  if (fieldsBox) fieldsBox.addEventListener('click', (e) => { const d = e.target.closest('.dm-field-del'); if (d) { d.closest('.dm-field-row').remove(); updatePreview(); } });
+
   /* ---- notifications panel ---- */
   if (bell && notif) {
     bell.addEventListener('click', () => notif.classList.toggle('on'));
@@ -124,19 +135,30 @@
   const url = (id) => { const el = document.getElementById(id); return el ? (el.dataset.url || '') : ''; };
   const checked = (sel) => { const el = $(sel); return !!(el && el.checked); };
 
+  const fmtTs = (v) => { if (!v) return ''; try { const d = new Date(v); if (isNaN(d)) return v; return d.toLocaleString(); } catch (_) { return v; } };
+  const collectFields = () => $$('#dm-fields .dm-field-row').map((r) => ({
+    name: (r.querySelector('.ff-name') || {}).value || '',
+    value: (r.querySelector('.ff-value') || {}).value || '',
+    inline: !!(r.querySelector('.ff-inline') || {}).checked
+  })).filter((f) => f.name.trim() || f.value.trim());
+
   const preview = $('#dm-preview');
   function updatePreview() {
     if (!preview) return;
-    const content = val('dm-t-content');
-    const author  = val('dm-t-author'), desc = val('dm-t-desc'), footer = val('dm-t-footer');
-    const thumb   = val('dm-t-thumb')  || url('dm-thumb-prev');
-    const image   = val('dm-t-image')  || url('dm-image-prev');
-    const color   = /^#[0-9a-f]{6}$/i.test(val('dm-t-color')) ? val('dm-t-color') : '#5865f2';
-    const btnLbl  = val('dm-t-btnlabel'), btnEmoji = val('dm-t-btnemoji');
-    const name    = (checked('#dm-rv-name input') && val('dm-t-username')) || 'Newspaper';
-    const avUrl   = checked('#dm-rv-av input') ? url('dm-av-prev') : '';
+    const content   = val('dm-t-content');
+    const author    = val('dm-t-author'), authorIcon = val('dm-t-authoricon');
+    const title     = val('dm-t-title'), titleUrl = val('dm-t-titleurl');
+    const desc      = val('dm-t-desc'), footer = val('dm-t-footer'), footerIcon = val('dm-t-footericon');
+    const ts        = val('dm-t-timestamp');
+    const thumb     = val('dm-t-thumb') || url('dm-thumb-prev');
+    const image     = val('dm-t-image') || url('dm-image-prev');
+    const color     = /^#[0-9a-f]{6}$/i.test(val('dm-t-color')) ? val('dm-t-color') : '#5865f2';
+    const btnLbl    = val('dm-t-btnlabel'), btnEmoji = val('dm-t-btnemoji');
+    const fields    = collectFields();
+    const name      = (checked('#dm-rv-name input') && val('dm-t-username')) || 'Newspaper';
+    const avUrl     = checked('#dm-rv-av input') ? url('dm-av-prev') : '';
 
-    const hasEmbed = author || desc || footer || thumb || image;
+    const hasEmbed = author || title || desc || footer || thumb || image || fields.length;
     if (!content && !hasEmbed && !btnLbl) {
       preview.className = 'dm-preview empty';
       preview.innerHTML = '<span data-dm="preview_empty">' + dmT('preview_empty') + '</span>';
@@ -145,11 +167,15 @@
     preview.className = 'dm-preview';
     let embed = '';
     if (hasEmbed) {
+      const footLine = (footer || ts) ? '<div class="dm-embed-foot">' + (footerIcon ? '<img class="dm-ef-ic" alt="" src="' + esc(footerIcon) + '">' : '') + esc(footer) + (footer && ts ? ' • ' : '') + (ts ? esc(fmtTs(ts)) : '') + '</div>' : '';
+      const fieldsHtml = fields.length ? '<div class="dm-embed-fields">' + fields.map((f) => '<div class="dm-embed-field' + (f.inline ? ' inline' : '') + '"><div class="fn">' + esc(f.name) + '</div><div class="fv">' + fmt(f.value) + '</div></div>').join('') + '</div>' : '';
       embed = '<div class="dm-embed" style="border-left-color:' + color + '"><div class="dm-embed-main">' +
-        (author ? '<div class="dm-embed-author">' + esc(author) + '</div>' : '') +
+        (author ? '<div class="dm-embed-author">' + (authorIcon ? '<img class="dm-ea-ic" alt="" src="' + esc(authorIcon) + '">' : '') + esc(author) + '</div>' : '') +
+        (title ? '<div class="dm-embed-title">' + (titleUrl ? '<span class="dm-mlink">' + esc(title) + '</span>' : esc(title)) + '</div>' : '') +
         (desc ? '<div class="dm-embed-desc">' + fmt(desc) + '</div>' : '') +
-        (footer ? '<div class="dm-embed-foot">' + esc(footer) + '</div>' : '') +
+        fieldsHtml +
         (image ? '<img class="dm-embed-img" alt="" src="' + esc(image) + '">' : '') +
+        footLine +
         '</div>' + (thumb ? '<div class="dm-embed-th"><img alt="" src="' + esc(thumb) + '"></div>' : '') + '</div>';
     }
     const btn = btnLbl ? '<button class="dm-btn-discord">' + (btnEmoji ? esc(btnEmoji) + ' ' : '') + esc(btnLbl) + ' ↗</button>' : '';
@@ -167,6 +193,7 @@
     en: {
       tab_templates:"Templates", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats",
       new_tpl:"New template", example:"Nitro example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
+      fields:"Fields", add_field:"＋ Add field", inline:"Inline", field_name:"Field name", field_value:"Field value",
       choose_file:"Choose file", upload_hint:"PNG, JPEG, WEBP or GIF up to 8 MB · external URL or server upload",
       bot_profile:"Bot profile", bot_profile_p:"Name, avatar and custom status are applied on the bot's first connection to a broadcast (once per run). Discord — no more than ~1 name change per hour.",
       set_name:"Set bot name", saved_as:"Saved as “Newspaper”", set_avatar:"Set avatar", set_status:"Set custom status", status_hint:"16/128 · empty = keep presence",
@@ -213,6 +240,7 @@
     ru: {
       tab_templates:"Шаблоны", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика",
       new_tpl:"Новый шаблон", example:"Пример Nitro", f_name:"Название", recipient:"Получатель:", link_lbl:"Ссылка:", embed_h:"Эмбед",
+      fields:"Поля", add_field:"＋ Добавить поле", inline:"В строку", field_name:"Название поля", field_value:"Значение поля",
       choose_file:"Выбрать файл", upload_hint:"PNG, JPEG, WEBP или GIF до 8 МБ · внешний URL или загрузка на сервер",
       bot_profile:"Профиль бота", bot_profile_p:"Имя, аватар и custom status выставляются при первом подключении бота к рассылке (один раз за run). Discord — не чаще ~1 смены имени в час.",
       set_name:"Установить имя бота", saved_as:"Сохранится как «Newspaper»", set_avatar:"Установить аватар", set_status:"Установить кастомный статус", status_hint:"16/128 · пусто = не менять presence",
@@ -268,6 +296,8 @@
   $$('.lang-switch button').forEach((b) => b.addEventListener('click', () => setTimeout(dmApplyLang, 0)));
   dmApplyLang();
 
-  $$('#dmall [data-preview]').forEach((el) => el.addEventListener('input', updatePreview));
+  // Delegated so dynamically-added embed field rows also drive the live preview.
+  document.addEventListener('input', (e) => { if (e.target.matches('[data-preview]') || e.target.closest('.dm-field-row')) updatePreview(); });
+  document.addEventListener('change', (e) => { if (e.target.matches('.ff-inline')) updatePreview(); });
   updatePreview();
 })();
