@@ -17,7 +17,7 @@
   // Visibility of the whole mode bar is gated to admins by order.js.
 
   /* ---- ad-mode switch: Stays (orders) vs DMALL (broadcast console) ---- */
-  let dmServer = null;
+  let dmServer = null, dmServerId = null;   // the server the broadcast is configured for (from the picker)
   $$('.dm-mode', modebar).forEach((btn) => {
     btn.addEventListener('click', () => {
       const dm = btn.dataset.mode === 'dmall';
@@ -77,7 +77,9 @@
       return;
     }
     dmServer = card.dataset.name || '';
+    dmServerId = card.dataset.id || '';   // used automatically as the broadcast's target guild
     if (dmSelName) dmSelName.textContent = dmServer;
+    { const ss = $('#dm-sum-server'); if (ss) ss.textContent = dmServer; }
     if (dmSelBar) dmSelBar.hidden = false;
     dmall.classList.remove('picking');
     if (bell) bell.hidden = false;

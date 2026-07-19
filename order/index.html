@@ -169,8 +169,6 @@
 <div class="dm-divide"><h3 data-dm="repeats">Repeats &amp; cooldowns</h3><p data-dm="repeats_p">The destination link is needed for templates with [[LINK]] and for per-server filters. Cooldowns can be combined: days and hours add up (max 365 days).</p></div>
         <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="cool_g">Global cooldown</div><div class="dm-tr-sub" data-dm="cool_g_sub">Don't send if the member received any ad within the period below</div><div class="dm-cool-row"><span data-dm="within_last">within the last</span> <input class="dm-input dm-num" data-save="coolGd" /> <span data-dm="days">d</span> <input class="dm-input dm-num" data-save="coolGh" /> <span data-dm="hours">h</span></div></div><label class="dm-sw"><input type="checkbox" data-save="coolG" /><span class="dm-sw-t"></span></label></div>
 
-        <div class="dm-divide"><h3 data-dm="server_h">Server for the DMALL broadcast</h3></div>
-        <div class="dm-field"><label class="dm-label" data-dm="guild_id">Server ID (guild)</label><input class="dm-input" data-save="guildId" placeholder="1369076925389078609" /><div class="dm-hint" data-dm="guild_id_hint">Enter the server ID</div></div>
 
         <div class="dm-field"><label class="dm-label" data-dm="exclude_members">Exclude members (IDs)</label><textarea class="dm-textarea" data-save="excludeIds" data-dm-ph="ph_ids" placeholder="IDs comma-separated or one per line"></textarea></div>
         <div class="dm-field"><label class="dm-label" data-dm="online_prio">Priority by online status</label><select class="dm-select" data-save="priority"><option data-dm="no_prio">No priority</option><option data-dm="online_first">Online first, then offline</option><option data-dm="offline_first">Offline first, then online</option><option data-dm="online_only">Online only</option><option data-dm="offline_only">Offline only</option></select></div>
@@ -183,7 +181,7 @@
         <div class="dm-summary">
           <div class="dm-sum-top" data-dm="sum_total">Total messages: 1 000</div>
           <div class="dm-sum-hint" data-dm="sum_hint">Bots are counted by the backend automatically</div>
-          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_server">Server:</span> <b>—</b></div>
+          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_server">Server:</span> <b id="dm-sum-server">—</b></div>
           <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_exclude">Member exclusion:</span> <b data-dm="not_set">not set</b></div>
           <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_bots">Bots (estimate):</span> <b>2</b></div>
           <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_aud">Audience:</span> <b data-dm="aud_all">All members</b></div>
@@ -269,6 +267,6 @@
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=39"></script>
-<script src="/order/dmall.js?v=20"></script>
+<script src="/order/dmall.js?v=21"></script>
 </body>
 </html>
