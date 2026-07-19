@@ -197,13 +197,26 @@
   }
   renderTaskPage();
 
+  /* ---- "Пример" — fill the content with a sample message (no embed) ---- */
+  const EXAMPLE_MSG = '# 🎉 <@USER_ID> YOU WON 10x Yearly Nitro / 100k Robux / 100x Decors 🎉\n\n[**Join and Be Active In Chat to Claim!**]( https://discord.gg/your-link )\nNot Active = No Reward \nIt is mandatory to stay in the server';
+  const exBtn = $('#dm-example');
+  if (exBtn) exBtn.addEventListener('click', () => {
+    const c = $('#dm-t-content'); if (!c) return;
+    c.value = EXAMPLE_MSG;
+    const cc = $('#dm-content-count'); if (cc) cc.textContent = c.value.length + '/2000';
+    updatePreview(); saveState();
+  });
+
   /* ---- live Discord preview ---- */
   const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const fmt = (s) => {
     let t = esc(s);
     t = t.replace(/&lt;@(?:USER_ID|USERNAME|DISPLAY_NAME)&gt;/g, '<span class="dm-mention">@user</span>');
+    t = t.replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');                                   // **bold**
+    t = t.replace(/\[([^\]]+)\]\(\s*(?:https?:\/\/[^\s)]+|discord\.gg\/[^\s)]+|\{\{LINK\}\})\s*\)/g, '<span class="dm-mlink">$1</span>'); // [text](url)
     t = t.replace(/\{\{LINK\}\}/g, '<span class="dm-mlink">https://discord.gg/example</span>');
     t = t.replace(/(https?:\/\/[^\s<]+|discord\.gg\/[^\s<]+)/g, '<span class="dm-mlink">$1</span>');
+    t = t.replace(/^(#{1,3})\s+(.+)$/gm, (m, h, txt) => '<span class="dm-h dm-h' + h.length + '">' + txt + '</span>'); // # headings
     return t.replace(/\n/g, '<br>');
   };
   const val = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
@@ -304,7 +317,7 @@
   const DM_TXT = {
     en: {
       tab_templates:"Setup", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats", for_word:"for",
-      new_tpl:"Configure message", example:"Nitro example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
+      new_tpl:"Configure message", example:"Example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
       fields:"Fields", add_field:"＋ Add field", inline:"Inline", field_name:"Field name", field_value:"Field value",
       embeds_h:"Embeds", add_embed:"＋ Add Embed", embed_n:"Embed", sec_author:"Author", sec_body:"Body", sec_images:"Images", sec_footer:"Footer",
       choose_file:"Choose file", upload_hint:"PNG, JPEG, WEBP or GIF up to 8 MB · external URL or server upload",
@@ -352,7 +365,7 @@
     },
     ru: {
       tab_templates:"Setup", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика", for_word:"за",
-      new_tpl:"Настроить сообщение", example:"Пример Nitro", f_name:"Название", recipient:"Получатель:", link_lbl:"Ссылка:", embed_h:"Эмбед",
+      new_tpl:"Настроить сообщение", example:"Пример", f_name:"Название", recipient:"Получатель:", link_lbl:"Ссылка:", embed_h:"Эмбед",
       fields:"Поля", add_field:"＋ Добавить поле", inline:"В строку", field_name:"Название поля", field_value:"Значение поля",
       embeds_h:"Эмбеды", add_embed:"＋ Добавить эмбед", embed_n:"Эмбед", sec_author:"Автор", sec_body:"Основное", sec_images:"Изображения", sec_footer:"Подвал",
       choose_file:"Выбрать файл", upload_hint:"PNG, JPEG, WEBP или GIF до 8 МБ · внешний URL или загрузка на сервер",
