@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/order/order.css?v=28" />
-  <link rel="stylesheet" href="/order/dmall.css?v=7" />
+  <link rel="stylesheet" href="/order/dmall.css?v=8" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';
   </script>
@@ -120,9 +120,8 @@
 <!-- ============================ DMALL console (shell) ============================ -->
   <div id="dmall" hidden>
     <nav class="dm-tabsbar">
-      <button class="dm-tab active" data-dtab="templates"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="dm-tab-txt" data-dm="tab_templates">Templates</span></button>
+      <button class="dm-tab active" data-dtab="templates"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg><span class="dm-tab-txt" data-dm="tab_templates">Setup</span></button>
       <button class="dm-tab" data-dtab="launch"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13c-1.5.5-3 2-3 6 4 0 5.5-1.5 6-3M12 15l-3-3 1-4c1.5-4 5-6 9-6 0 4-2 7.5-6 9l-4 1M9 12l3 3"/></svg><span class="dm-tab-txt" data-dm="tab_launch">Launch</span></button>
-      <button class="dm-tab" data-dtab="tasks"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg><span class="dm-tab-txt" data-dm="tab_tasks">Tasks</span><span class="dm-badge">1</span></button>
       <button class="dm-tab" data-dtab="stats"><svg class="dm-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="dm-tab-txt" data-dm="tab_stats">Stats</span></button>
     </nav>
 
@@ -158,77 +157,7 @@
             <div class="dm-card-h"><h2 data-dm="preview">Preview</h2></div>
             <div class="dm-preview empty" id="dm-preview"><span data-dm="preview_empty">Preview will appear here</span></div>
           </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ Launch ============ -->
-    <section class="dm-panel" data-dpanel="launch">
-      <div class="dm-card">
-        <div class="dm-card-h"><h2 data-dm="launch_h">Start a broadcast</h2></div>
-
-        <div class="dm-field"><label class="dm-label" data-dm="msg_tpl">Message template</label>
-          <select class="dm-select"><option>100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</option><option>Nitro / Robux giveaway</option></select>
-        </div>
-
-        <div class="dm-field"><label class="dm-label" data-dm="preview">Preview</label>
-          <div class="dm-preview">
-            <div class="dm-msg">
-              <div class="dm-av"></div>
-              <div class="dm-mbody">
-                <div class="dm-mhead"><span class="dm-mname">Newspaper</span><span class="dm-app">APP</span><span class="dm-mtime">Today at 8:48 PM</span></div>
-                <div class="dm-mtext">Congratulations <span class="dm-mention">@user</span> 🎉<br>You can take part in a big gws on the server <span class="dm-mlink">https://discord.gg/PGQEs6CvHZ</span></div>
-                <div class="dm-embed"><div class="dm-embed-main"><div class="dm-embed-author">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR</div><div class="dm-embed-desc">Click 🎉 button to enter!<br>Winners: 1</div></div><div class="dm-embed-th"></div></div>
-                <button class="dm-btn-discord">🎉 Participate ↗</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="dm-divide"><h3 data-dm="repeats">Repeats &amp; cooldowns</h3><p data-dm="repeats_p">The destination link is needed for templates with [[LINK]] and for per-server filters. Cooldowns can be combined: days and hours add up (max 365 days).</p></div>
-        <div class="dm-field"><label class="dm-label" data-dm="dest_link">Destination link</label><input class="dm-input" placeholder="https://discord.gg/abc123" /><div class="dm-hint" data-dm="dest_hint">The template has [[LINK]] — enter an invite or external URL</div></div>
-        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="dedup_t">Dedup by target</div><div class="dm-tr-sub" data-dm-html="dedup_t_sub">Don't send to those who already joined this server or link<br>Enter the destination link above.</div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
-        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="cool_g">Global cooldown</div><div class="dm-tr-sub" data-dm="cool_g_sub">Don't send if the member received any ad within the period below</div><div class="dm-cool-row"><span data-dm="within_last">within the last</span> <input class="dm-input dm-num" /> <span data-dm="days">d</span> <input class="dm-input dm-num" /> <span data-dm="hours">h</span></div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
-        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="cool_t">Cooldown by target</div><div class="dm-tr-sub" data-dm="cool_t_sub">Don't send if they already got a broadcast for this server/link within the period below</div><div class="dm-cool-row"><span data-dm="within_last">within the last</span> <input class="dm-input dm-num" /> <span data-dm="days">d</span> <input class="dm-input dm-num" /> <span data-dm="hours">h</span></div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
-
-        <div class="dm-divide"><h3 data-dm="server_h">Server</h3><p data-dm="server_p">Choose an assigned server or enter a new guild — a new one needs an OAuth channel; the selfbot must be on the server.</p></div>
-        <div class="dm-field"><label class="dm-label" data-dm="assigned_server">Assigned server</label><select class="dm-select"><option data-dm="opt_choose_id">— Choose or enter an ID below —</option></select></div>
-        <div class="dm-field"><label class="dm-label" data-dm="guild_id">Server ID (guild)</label><input class="dm-input" placeholder="1369076925389078609" /><div class="dm-hint" data-dm="guild_id_hint">Enter the server ID</div></div>
-
-        <div class="dm-divide"><h3 data-dm="exclude_h">Exclude the server's members</h3><p data-dm="exclude_p">Optional: if you specify a server, its guild_members won't enter the broadcast queue. Without an ID, no exclusion is applied.</p></div>
-        <div class="dm-field"><label class="dm-label" data-dm="exclude_server">Server to exclude</label><select class="dm-select"><option data-dm="opt_choose_server">— Choose a server —</option></select></div>
-
-        <div class="dm-divide"><h3 data-dm="whom_h">Who to send to</h3><p data-dm="whom_p">All members, only roles, or specific IDs. Role/member exclusions apply after the audience filter. Link dedup is separate, in the block above.</p></div>
-        <div class="dm-field"><label class="dm-label" data-dm="audience">Audience</label><select class="dm-select"><option data-dm="aud_all">All members</option><option data-dm="aud_roles">Only roles</option><option data-dm="aud_ids">Specific IDs</option></select></div>
-        <div class="dm-field"><label class="dm-label" data-dm="exclude_members">Exclude members (IDs)</label><textarea class="dm-textarea" data-dm-ph="ph_ids" placeholder="IDs comma-separated or one per line"></textarea></div>
-        <div class="dm-field"><label class="dm-label" data-dm="online_prio">Priority by online status</label><select class="dm-select"><option data-dm="no_prio">No priority</option><option data-dm="online_first">Online first, then offline</option></select></div>
-
-        <div class="dm-divide"><h3 data-dm="bot_pool">Bot pool</h3></div>
-        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="leave_after">Leave the server after the broadcast</div><div class="dm-tr-sub" data-dm="leave_after_sub">All bots that took part in this broadcast will leave the server when it ends</div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
-        <div class="dm-poolbox" data-dm-html="poolbox"><b>115</b> free of 3 755 in the pool<div class="dm-poolsub">7 busy · 3 633 invalid · 3 294 in quarantine</div></div>
-
-        <div class="dm-divide"><h3 data-dm="msg_count">Message count</h3></div>
-        <div class="dm-field"><label class="dm-label" data-dm="how_many">How many messages to send</label><input class="dm-input" id="dm-l-count" value="1000" />
-          <div class="dm-quick"><button data-amt="100">100</button><button data-amt="500">500</button><button data-amt="1000">1 000</button><button data-amt="5000">5 000</button><button data-amt="10000">10 000</button></div>
-        </div>
-        <div class="dm-hint" data-dm-html="bots_needed" style="margin-top:10px">Bots needed: <b>2</b></div>
-        <div class="dm-summary">
-          <div class="dm-sum-top" data-dm="sum_total">Total messages: 1 000</div>
-          <div class="dm-sum-hint" data-dm="sum_hint">Bots are counted by the backend automatically</div>
-          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_server">Server:</span> <b>—</b></div>
-          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_exclude">Member exclusion:</span> <b data-dm="not_set">not set</b></div>
-          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_bots">Bots (estimate):</span> <b>2</b></div>
-          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_aud">Audience:</span> <b data-dm="aud_all">All members</b></div>
-          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_online">Online:</span> <b data-dm="no_prio">No priority</b></div>
-        </div>
-        <button class="dm-btn primary full" style="margin-top:16px" data-dm="start_broadcast" disabled>Start broadcast</button>
-        <div class="dm-hint" data-dm="active_hint" style="text-align:center;margin-top:8px">Active broadcasts: 1 — you can start another on a different server</div>
-      </div>
-    </section>
-
-    <!-- ============ Tasks ============ -->
-    <section class="dm-panel" data-dpanel="tasks">
+          <div class="dm-setup-tasks">
       <div class="dm-task on">
         <div class="dm-task-h"><div><div class="dm-task-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-task-date">19.07.26, 00:01</div></div><span class="dm-status dm" data-dm="st_dm">DM BROADCAST</span></div>
         <div class="dm-bigrow">
@@ -268,6 +197,47 @@
         <div class="dm-aud" data-dm-html="task_aud"><b>Audience</b> All members · Online first, then offline</div>
         <div class="dm-task-acts"><button class="dm-btn ghost sm" data-dm="retry">Retry</button></div>
       </div>
+    
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ Launch ============ -->
+    <section class="dm-panel" data-dpanel="launch">
+      <div class="dm-card">
+        <div class="dm-card-h"><h2 data-dm="launch_h">Start a broadcast</h2></div>
+
+        <div class="dm-divide"><h3 data-dm="repeats">Repeats &amp; cooldowns</h3><p data-dm="repeats_p">The destination link is needed for templates with [[LINK]] and for per-server filters. Cooldowns can be combined: days and hours add up (max 365 days).</p></div>
+        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="dedup_t">Dedup by target</div><div class="dm-tr-sub" data-dm-html="dedup_t_sub">Don't send to those who already joined this server or link<br>Enter the destination link above.</div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
+        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="cool_g">Global cooldown</div><div class="dm-tr-sub" data-dm="cool_g_sub">Don't send if the member received any ad within the period below</div><div class="dm-cool-row"><span data-dm="within_last">within the last</span> <input class="dm-input dm-num" /> <span data-dm="days">d</span> <input class="dm-input dm-num" /> <span data-dm="hours">h</span></div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
+        <div class="dm-toggle-row"><div class="dm-tr-main"><div class="dm-tr-title" data-dm="cool_t">Cooldown by target</div><div class="dm-tr-sub" data-dm="cool_t_sub">Don't send if they already got a broadcast for this server/link within the period below</div><div class="dm-cool-row"><span data-dm="within_last">within the last</span> <input class="dm-input dm-num" /> <span data-dm="days">d</span> <input class="dm-input dm-num" /> <span data-dm="hours">h</span></div></div><label class="dm-sw"><input type="checkbox" /><span class="dm-sw-t"></span></label></div>
+
+        <div class="dm-divide"><h3 data-dm="server_h">Server</h3><p data-dm="server_p">Choose an assigned server or enter a new guild — a new one needs an OAuth channel; the selfbot must be on the server.</p></div>
+        <div class="dm-field"><label class="dm-label" data-dm="guild_id">Server ID (guild)</label><input class="dm-input" placeholder="1369076925389078609" /><div class="dm-hint" data-dm="guild_id_hint">Enter the server ID</div></div>
+
+        <div class="dm-divide"><h3 data-dm="whom_h">Who to send to</h3><p data-dm="whom_p">All members, only roles, or specific IDs. Role/member exclusions apply after the audience filter. Link dedup is separate, in the block above.</p></div>
+        <div class="dm-field"><label class="dm-label" data-dm="audience">Audience</label><select class="dm-select"><option data-dm="aud_all">All members</option><option data-dm="aud_roles">Only roles</option><option data-dm="aud_ids">Specific IDs</option></select></div>
+        <div class="dm-field"><label class="dm-label" data-dm="exclude_members">Exclude members (IDs)</label><textarea class="dm-textarea" data-dm-ph="ph_ids" placeholder="IDs comma-separated or one per line"></textarea></div>
+        <div class="dm-field"><label class="dm-label" data-dm="online_prio">Priority by online status</label><select class="dm-select"><option data-dm="no_prio">No priority</option><option data-dm="online_first">Online first, then offline</option></select></div>
+
+        <div class="dm-divide"><h3 data-dm="msg_count">Message count</h3></div>
+        <div class="dm-field"><label class="dm-label" data-dm="how_many">How many messages to send</label><input class="dm-input" id="dm-l-count" value="1000" />
+          <div class="dm-quick"><button data-amt="100">100</button><button data-amt="500">500</button><button data-amt="1000">1 000</button><button data-amt="5000">5 000</button><button data-amt="10000">10 000</button></div>
+        </div>
+        <div class="dm-hint" data-dm-html="bots_needed" style="margin-top:10px">Bots needed: <b>2</b></div>
+        <div class="dm-summary">
+          <div class="dm-sum-top" data-dm="sum_total">Total messages: 1 000</div>
+          <div class="dm-sum-hint" data-dm="sum_hint">Bots are counted by the backend automatically</div>
+          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_server">Server:</span> <b>—</b></div>
+          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_exclude">Member exclusion:</span> <b data-dm="not_set">not set</b></div>
+          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_bots">Bots (estimate):</span> <b>2</b></div>
+          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_aud">Audience:</span> <b data-dm="aud_all">All members</b></div>
+          <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_online">Online:</span> <b data-dm="no_prio">No priority</b></div>
+        </div>
+        <button class="dm-btn primary full" style="margin-top:16px" data-dm="start_broadcast" disabled>Start broadcast</button>
+        <div class="dm-hint" data-dm="active_hint" style="text-align:center;margin-top:8px">Active broadcasts: 1 — you can start another on a different server</div>
+      </div>
     </section>
 
     <!-- ============ Stats (placeholder — awaiting screenshots) ============ -->
@@ -291,6 +261,6 @@
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=37"></script>
-<script src="/order/dmall.js?v=8"></script>
+<script src="/order/dmall.js?v=9"></script>
 </body>
 </html>

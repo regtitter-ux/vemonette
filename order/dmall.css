@@ -306,6 +306,26 @@
 .dm-embed-field .fn{ font-weight:700; color:#f2f3f5; font-size:13.5px; margin-bottom:2px; }
 .dm-embed-field .fv{ color:#dbdee1; font-size:13.5px; line-height:1.4; white-space:pre-wrap; word-break:break-word; }
 
+/* task cards relocated under the Setup preview — compact variant */
+.dm-setup-tasks{ margin-top:16px; display:flex; flex-direction:column; gap:10px; }
+.dm-setup-tasks .dm-task{ padding:12px 14px; margin-bottom:0; border-radius:12px; }
+.dm-setup-tasks .dm-task-title{ font-size:13px; }
+.dm-setup-tasks .dm-task-date{ font-size:11px; }
+.dm-setup-tasks .dm-status{ font-size:10px; padding:3px 8px; }
+.dm-setup-tasks .dm-bigrow{ grid-template-columns:1fr 1fr; gap:8px; margin:10px 0; }
+.dm-setup-tasks .dm-bigbox{ padding:9px 11px; border-radius:10px; }
+.dm-setup-tasks .dm-bigbox .dm-bb-ic{ width:20px; height:20px; }
+.dm-setup-tasks .dm-bigbox .dm-bb-v{ font-size:13px; }
+.dm-setup-tasks .dm-prog-lbl{ font-size:11.5px; margin:9px 0 5px; }
+.dm-setup-tasks .dm-prog{ height:8px; margin:0 0 6px; }
+.dm-setup-tasks .dm-task-note,
+.dm-setup-tasks .dm-route,
+.dm-setup-tasks .dm-aud,
+.dm-setup-tasks .dm-task-err{ font-size:11.5px; }
+.dm-setup-tasks .dm-route{ padding:8px 10px; }
+.dm-setup-tasks .dm-task-acts{ margin-top:10px; }
+@media (max-width:560px){ .dm-setup-tasks .dm-bigrow{ grid-template-columns:1fr; } }
+
 /* =================== responsive =================== */
 @media (max-width:900px){
   .dm-cols{ grid-template-columns:1fr; }

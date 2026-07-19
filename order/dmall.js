@@ -290,7 +290,7 @@
   /* ---- i18n for the DMALL subtree (RU/EN), applied on load + on language switch ---- */
   const DM_TXT = {
     en: {
-      tab_templates:"Templates", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats",
+      tab_templates:"Setup", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats",
       new_tpl:"Configure message", example:"Nitro example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
       fields:"Fields", add_field:"＋ Add field", inline:"Inline", field_name:"Field name", field_value:"Field value",
       embeds_h:"Embeds", add_embed:"＋ Add Embed", embed_n:"Embed", sec_author:"Author", sec_body:"Body", sec_images:"Images", sec_footer:"Footer",
@@ -338,7 +338,7 @@
       ph_upload:"https://… or upload a file below", ph_ids:"IDs comma-separated or one per line"
     },
     ru: {
-      tab_templates:"Шаблоны", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика",
+      tab_templates:"Setup", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика",
       new_tpl:"Настроить сообщение", example:"Пример Nitro", f_name:"Название", recipient:"Получатель:", link_lbl:"Ссылка:", embed_h:"Эмбед",
       fields:"Поля", add_field:"＋ Добавить поле", inline:"В строку", field_name:"Название поля", field_value:"Значение поля",
       embeds_h:"Эмбеды", add_embed:"＋ Добавить эмбед", embed_n:"Эмбед", sec_author:"Автор", sec_body:"Основное", sec_images:"Изображения", sec_footer:"Подвал",
