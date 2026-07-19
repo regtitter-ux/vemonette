@@ -377,8 +377,13 @@
 .dm-launch-body[hidden]{ display:none; }
 .dm-launch-body .dm-divide:first-child{ margin-top:6px; padding-top:0; border-top:0; }
 
-/* task cards relocated under the Setup preview — compact variant */
-.dm-setup-tasks{ margin-top:16px; display:flex; flex-direction:column; gap:10px; }
+/* task cards relocated under the Setup preview — Stays-style .camp cards */
+.dm-setup-tasks{ margin-top:16px; }
+.dm-setup-tasks .camp{ margin-bottom:14px; }
+.camp-aud{ margin-top:8px; color:var(--dm-mut); font-size:12.5px; line-height:1.45; }
+.camp-aud b{ color:#dfe7f4; }
+/* (legacy compact .dm-task rules below are unused now) */
+.dm-setup-tasks-legacy{ display:flex; flex-direction:column; gap:10px; }
 .dm-setup-tasks .dm-task{ padding:12px 14px; margin-bottom:0; border-radius:12px; }
 .dm-setup-tasks .dm-task-title{ font-size:13px; }
 .dm-setup-tasks .dm-task-date{ font-size:11px; }

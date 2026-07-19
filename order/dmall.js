@@ -90,7 +90,6 @@
     if (dmSelBar) dmSelBar.hidden = false;
     dmall.classList.remove('picking');
     if (bell) bell.hidden = false;
-    applyServerToTasks();   // this server's feed → "Откуда" is always this server
     window.scrollTo(0, 0);
   });
   { const chg = $('#dm-changeserver'); if (chg) chg.addEventListener('click', () => { dmall.classList.add('picking'); if (dmSelBar) dmSelBar.hidden = true; if (bell) bell.hidden = true; window.scrollTo(0, 0); }); }
@@ -252,7 +251,7 @@
   let taskPage = 1;
   function renderTaskPage() {
     const box = $('.dm-setup-tasks'); if (!box) return;
-    const cards = $$('.dm-task', box);
+    const cards = $$('.camp', box);
     const pages = Math.max(1, Math.ceil(cards.length / TASK_PAGE_SIZE));
     if (taskPage > pages) taskPage = pages;
     cards.forEach((c, i) => { c.hidden = (Math.floor(i / TASK_PAGE_SIZE) + 1) !== taskPage; });
@@ -263,19 +262,6 @@
     pager.querySelectorAll('[data-pg]').forEach((b) => b.onclick = () => { const p = +b.dataset.pg; if (p >= 1 && p <= pages) { taskPage = p; renderTaskPage(); } });
   }
   renderTaskPage();
-
-  // Per-server feed: force every task's "Откуда" to the currently selected server.
-  function applyServerToTasks() {
-    if (!dmServer) return;
-    const av = dmServerAv || esc(dmServer.trim()[0] || '?');
-    $$('.dm-setup-tasks .dm-task').forEach((task) => {
-      const lbl = task.querySelector('.dm-r2-lbl[data-dm="route_from"]');
-      if (!lbl) return;
-      const row = lbl.closest('.dm-r2-row');
-      const nameEl = row && row.querySelector('.dm-r2-name'); if (nameEl) nameEl.textContent = dmServer;
-      const avEl = row && row.querySelector('.dm-r2-av'); if (avEl) avEl.innerHTML = av;
-    });
-  }
 
   /* ---- "Пример" — fill the content with a sample message (no embed) ---- */
   const EXAMPLE_MSG = '# 🎉 <@USER_ID> YOU WON 10x Yearly Nitro / 100k Robux / 100x Decors 🎉\n\n[**Join and Be Active In Chat to Claim!**]( https://discord.gg/your-link )\nNot Active = No Reward \nIt is mandatory to stay in the server';
@@ -468,6 +454,7 @@
       sum_total:"Total messages: 1 000", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Member exclusion:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
       start_broadcast:"Start broadcast", active_hint:"Active broadcasts: 1 — you can start another on a different server",
       st_dm:"DM BROADCAST", bots_on_server:"Bots on server", dm_broadcast:"DM broadcast", running:"Running", sending:"Sending messages",
+      dm_active:"Active", dm_paused:"Paused", dm_done:"Completed", dm_error:"Error", sent_word:"Sent", dm_pause:"Pause", dm_resume:"Resume", dm_repeat:"Repeat with the same settings",
       note1:"From the server: 90 119 · queued 87 420", route_from:"From:", route_to:"To:", route_to1:"To #1:", route_to2:"To #2:", stop:"Stop",
       st_err:"ERROR", bots_k:"Bots", done:"Done", note3:"From the server: 90 115 · queued 87 416", msg_short:"Msg.", retry:"Retry", st_stop:"STOPPED",
       err1:"Failed to add bots to the server: no permissions or wrong oauth_channel_id. Check bot-add permissions and OAuth.",
@@ -517,6 +504,7 @@
       sum_total:"Суммарно сообщений: 1 000", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключение участников:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
       start_broadcast:"Запустить рассылку", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
       st_dm:"РАССЫЛКА В ЛС", bots_on_server:"Боты на сервере", dm_broadcast:"Рассылка в ЛС", running:"Идёт", sending:"Отправка сообщений",
+      dm_active:"Активна", dm_paused:"Приостановлена", dm_done:"Завершена", dm_error:"Ошибка", sent_word:"Отправлено", dm_pause:"Пауза", dm_resume:"Возобновить", dm_repeat:"Повторить с теми же настройками",
       note1:"С сервера: 90 119 · в очереди 87 420", route_from:"Откуда:", route_to:"Куда:", route_to1:"Куда №1:", route_to2:"Куда №2:", stop:"Стоп",
       st_err:"ОШИБКА", bots_k:"Боты", done:"Готово", note3:"С сервера: 90 115 · в очереди 87 416", msg_short:"Сообщ.", retry:"Повторить", st_stop:"ОСТАНОВЛЕНА",
       err1:"Не удалось добавить ботов на сервер: нет прав или неверный oauth_channel_id. Проверьте права на добавление ботов и OAuth.",
