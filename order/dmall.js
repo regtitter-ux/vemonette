@@ -295,9 +295,10 @@
     t = t.replace(/```(?:[a-zA-Z0-9+#.\-]*\n)?([\s\S]*?)```/g, (m, c) => put('<pre class="dm-code">' + c.replace(/\n$/, '') + '</pre>'));
     t = t.replace(/`([^`\n]+?)`/g, (m, c) => put('<code class="dm-inline-code">' + c + '</code>'));
     // links & mentions (stashed so inner text isn't re-parsed)
-    t = t.replace(/\[([^\]\n]+?)\]\(\s*(?:https?:\/\/[^\s)]+|discord\.gg\/[^\s)]+|\{\{LINK\}\})\s*\)/g, (m, txt) => put('<span class="dm-mlink">' + inline(txt) + '</span>'));
-    t = t.replace(/\{\{LINK\}\}/g, () => put('<span class="dm-mlink">https://discord.gg/example</span>'));
-    t = t.replace(/(https?:\/\/[^\s<]+|discord\.gg\/[^\s<]+)/g, (m) => put('<span class="dm-mlink">' + m + '</span>'));
+    const href = (u) => (/^https?:/i.test(u) ? u : 'https://' + u);
+    t = t.replace(/\[([^\]\n]+?)\]\(\s*(https?:\/\/[^\s)]+|discord\.gg\/[^\s)]+|\{\{LINK\}\})\s*\)/g, (m, txt, u) => put('<a class="dm-mlink" href="' + (u === '{{LINK}}' ? 'https://discord.gg/example' : href(u)) + '" target="_blank" rel="noopener">' + inline(txt) + '</a>'));
+    t = t.replace(/\{\{LINK\}\}/g, () => put('<a class="dm-mlink" href="https://discord.gg/example" target="_blank" rel="noopener">https://discord.gg/example</a>'));
+    t = t.replace(/(https?:\/\/[^\s<]+|discord\.gg\/[^\s<]+)/g, (m) => put('<a class="dm-mlink" href="' + href(m) + '" target="_blank" rel="noopener">' + m + '</a>'));
     t = t.replace(/&lt;a?:(\w+):\d+&gt;/g, ':$1:');
     t = t.replace(/&lt;@&amp;\d+&gt;/g, () => put('<span class="dm-mention">@role</span>'));
     t = t.replace(/&lt;@!?(?:USER_ID|USERNAME|DISPLAY_NAME|\d+)&gt;/g, () => put('<span class="dm-mention">@user</span>'));

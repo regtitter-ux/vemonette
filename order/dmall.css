@@ -206,7 +206,11 @@
 .dm-subtext{ font-size:.8em; color:#949ba4; margin:1px 0; }
 .dm-li{ margin:1px 0; padding-left:2px; }
 .dm-mention{ color:#c9cdfb; background:rgba(88,101,242,.28); padding:0 3px; border-radius:4px; }
-.dm-mlink{ color:#00a8fc; }
+.dm-mlink,
+a.dm-mlink,
+.dm-mlink b, .dm-mlink i, .dm-mlink u, .dm-mlink s{ color:#00a8fc; }
+a.dm-mlink{ text-decoration:none; cursor:pointer; }
+a.dm-mlink:hover{ text-decoration:underline; }
 .dm-embed{ position:relative; margin-top:8px; border-left:4px solid var(--dm-blurple); background:#2b2d31; border-radius:4px; padding:12px 14px; max-width:432px; display:flex; gap:12px; }
 .dm-embed-main{ min-width:0; flex:1; }
 .dm-embed-author{ color:#f2f3f5; font-weight:700; font-size:13.5px; margin-bottom:5px; }
