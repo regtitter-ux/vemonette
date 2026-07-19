@@ -260,21 +260,34 @@
   const lToggle = $('#dm-launch-toggle'), lBody = $('#dm-launch-body');
   if (lToggle && lBody) lToggle.addEventListener('click', () => { const open = lBody.hidden; lBody.hidden = !open; lToggle.classList.toggle('open', open); });
 
-  /* ---- broadcast task cards: 10 per page + pager ---- */
+  /* ---- broadcast task cards: Active/Completed tabs + 10 per page + pager ---- */
   const TASK_PAGE_SIZE = 10;
-  let taskPage = 1;
+  let taskPage = 1, taskFilter = 'active';
+  // Card status → group: completed/errored count as "done", the rest as "active".
+  const cardGroup = (card) => { const chip = card.querySelector('.chip'); const k = chip && chip.dataset.dm; return (k === 'dm_done' || k === 'dm_error') ? 'done' : 'active'; };
   function renderTaskPage() {
     const box = $('.dm-setup-tasks'); if (!box) return;
-    const cards = $$('.camp', box);
-    const pages = Math.max(1, Math.ceil(cards.length / TASK_PAGE_SIZE));
+    const all = $$('.camp', box);
+    const active = all.filter((c) => cardGroup(c) === 'active');
+    const done = all.filter((c) => cardGroup(c) === 'done');
+    const ca = $('#dm-tc-active'); if (ca) ca.textContent = active.length;
+    const cd = $('#dm-tc-done'); if (cd) cd.textContent = done.length;
+    const shown = taskFilter === 'done' ? done : active;
+    const pages = Math.max(1, Math.ceil(shown.length / TASK_PAGE_SIZE));
     if (taskPage > pages) taskPage = pages;
-    cards.forEach((c, i) => { c.hidden = (Math.floor(i / TASK_PAGE_SIZE) + 1) !== taskPage; });
+    all.forEach((c) => { c.hidden = true; });
+    shown.forEach((c, i) => { c.hidden = (Math.floor(i / TASK_PAGE_SIZE) + 1) !== taskPage; });
     let pager = box.querySelector('#dm-tasks-pager');
     if (pages <= 1) { if (pager) pager.remove(); return; }
     if (!pager) { pager = document.createElement('div'); pager.id = 'dm-tasks-pager'; pager.className = 'dm-pager'; box.appendChild(pager); }
     pager.innerHTML = '<button class="cp-nav" data-pg="' + (taskPage - 1) + '"' + (taskPage <= 1 ? ' disabled' : '') + '>‹</button><span class="cp-info">' + taskPage + ' / ' + pages + '</span><button class="cp-nav" data-pg="' + (taskPage + 1) + '"' + (taskPage >= pages ? ' disabled' : '') + '>›</button>';
     pager.querySelectorAll('[data-pg]').forEach((b) => b.onclick = () => { const p = +b.dataset.pg; if (p >= 1 && p <= pages) { taskPage = p; renderTaskPage(); } });
   }
+  $$('#dm-task-tabs button').forEach((b) => b.addEventListener('click', () => {
+    taskFilter = b.dataset.dtaskt; taskPage = 1;
+    $$('#dm-task-tabs button').forEach((x) => x.classList.toggle('active', x === b));
+    renderTaskPage();
+  }));
   renderTaskPage();
 
   /* ---- "Пример" — fill the content with a sample message (no embed) ---- */
@@ -469,7 +482,7 @@
       sum_total:"Total messages: 1 000", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Exclusions:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
       start_broadcast:"Start broadcast", active_hint:"Active broadcasts: 1 — you can start another on a different server",
       st_dm:"DM BROADCAST", bots_on_server:"Bots on server", dm_broadcast:"DM broadcast", running:"Running", sending:"Sending messages",
-      dm_active:"Active", dm_paused:"Paused", dm_done:"Completed", dm_error:"Error", sent_word:"Sent", dm_pause:"Pause", dm_resume:"Resume", dm_repeat:"Repeat with the same settings",
+      dm_active:"Active", dm_paused:"Paused", dm_done:"Completed", dm_error:"Error", dm_tab_active:"Active", dm_tab_done:"Completed", sent_word:"Sent", dm_pause:"Pause", dm_resume:"Resume", dm_repeat:"Repeat with the same settings",
       note1:"From the server: 90 119 · queued 87 420", route_from:"From:", route_to:"To:", route_to1:"To #1:", route_to2:"To #2:", stop:"Stop",
       st_err:"ERROR", bots_k:"Bots", done:"Done", note3:"From the server: 90 115 · queued 87 416", msg_short:"Msg.", retry:"Retry", st_stop:"STOPPED",
       err1:"Failed to add bots to the server: no permissions or wrong oauth_channel_id. Check bot-add permissions and OAuth.",
@@ -519,7 +532,7 @@
       sum_total:"Суммарно сообщений: 1 000", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключения:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
       start_broadcast:"Запустить рассылку", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
       st_dm:"РАССЫЛКА В ЛС", bots_on_server:"Боты на сервере", dm_broadcast:"Рассылка в ЛС", running:"Идёт", sending:"Отправка сообщений",
-      dm_active:"Активна", dm_paused:"Приостановлена", dm_done:"Завершена", dm_error:"Ошибка", sent_word:"Отправлено", dm_pause:"Пауза", dm_resume:"Возобновить", dm_repeat:"Повторить с теми же настройками",
+      dm_active:"Активна", dm_paused:"Приостановлена", dm_done:"Завершена", dm_error:"Ошибка", dm_tab_active:"Активные", dm_tab_done:"Завершённые", sent_word:"Отправлено", dm_pause:"Пауза", dm_resume:"Возобновить", dm_repeat:"Повторить с теми же настройками",
       note1:"С сервера: 90 119 · в очереди 87 420", route_from:"Откуда:", route_to:"Куда:", route_to1:"Куда №1:", route_to2:"Куда №2:", stop:"Стоп",
       st_err:"ОШИБКА", bots_k:"Боты", done:"Готово", note3:"С сервера: 90 115 · в очереди 87 416", msg_short:"Сообщ.", retry:"Повторить", st_stop:"ОСТАНОВЛЕНА",
       err1:"Не удалось добавить ботов на сервер: нет прав или неверный oauth_channel_id. Проверьте права на добавление ботов и OAuth.",
