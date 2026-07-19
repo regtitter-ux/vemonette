@@ -31,17 +31,58 @@
     });
   });
 
-  /* ---- server picker (pick a server where you're admin before configuring) ---- */
+  /* ---- server picker (pick a server where you're admin before configuring) ----
+     Real avatar/banner URLs render when present (from the API later); otherwise
+     a colour/gradient + letter placeholder is used. */
   const dmSelName = $('#dm-selname'), dmSelBar = $('#dm-selbar');
-  $$('#dm-sp-grid .dm-sp-card').forEach((card) => card.addEventListener('click', () => {
-    if (card.dataset.bot === '0') return;   // no bot yet → the "Invite" button (wired to backend later)
+  const DM_SERVERS = [
+    { name: 'Zombix Online Official', bot: true, online: 14, avatar: '', banner: '', avBg: '#3a2a24', bannerBg: 'linear-gradient(120deg,#c25b1e,#2a211c)' },
+    { name: 'Memory', bot: true, online: 9, avatar: '', banner: '', avBg: '#6b5560', bannerBg: 'linear-gradient(120deg,#7a5b6b,#2b2430)' },
+    { name: 'inoue', bot: false, avatar: '', banner: '', avBg: '#4a4640', bannerBg: 'linear-gradient(120deg,#b9b2ac,#3a3733)' },
+    { name: '💗 🦋 kissing her ♡ ask2dm', bot: true, online: 27, avatar: '', banner: '', icon: '💗', avBg: '#7a3f55', bannerBg: 'linear-gradient(120deg,#8a4a63,#2a1e26)' },
+    { name: 'inoue collabs', bot: false, avatar: '', banner: '', avBg: '#3a4256', bannerBg: 'linear-gradient(120deg,#3f4a63,#20242e)' },
+    { name: 'matching 🍒 chat · decor · art · g…', bot: true, online: 41, avatar: '', banner: '', icon: '🍒', avBg: '#4a4a4a', bannerBg: 'linear-gradient(120deg,#6b6b6b,#232323)' }
+  ];
+  const BOT_INVITE = 'https://discord.com/oauth2/authorize?client_id=1525863543310651442&permissions=8&integration_type=0&scope=bot';
+  function serverCard(sv) {
+    const banner = sv.banner ? "background-image:url('" + esc(sv.banner) + "');background-size:cover;background-position:center" : 'background:' + (sv.bannerBg || 'linear-gradient(120deg,#3a3f4b,#20242e)');
+    const av = sv.avatar ? '<img alt="" src="' + esc(sv.avatar) + '">' : esc(sv.icon || (sv.name.trim()[0] || '?'));
+    const foot = sv.bot
+      ? '<span class="dm-sp-online"><i class="dm-sp-dot"></i> ' + (sv.online != null ? sv.online : '') + ' <span data-dm="members_word">members</span></span>'
+      : '<span class="dm-sp-invite" data-dm="invite_caps">INVITE</span>';
+    return '<button class="dm-sp-card" data-bot="' + (sv.bot ? 1 : 0) + '" data-id="' + esc(sv.id || '') + '" data-name="' + esc(sv.name) + '">' +
+      '<div class="dm-sp-banner" style="' + banner + '"></div>' +
+      '<div class="dm-sp-body"><div class="dm-sp-av" style="background:' + (sv.avBg || '#3a4256') + '">' + av + '</div>' +
+      '<div class="dm-sp-main"><div class="dm-sp-name">' + esc(sv.name) + '</div><div class="dm-sp-foot">' + foot + '</div></div></div></button>';
+  }
+  function renderServers(list) { const g = $('#dm-sp-grid'); if (g) { g.innerHTML = (list || DM_SERVERS).map(serverCard).join(''); dmApplyLang(); } }
+
+  // Load the user's real admin servers from the API; fall back to the sample set.
+  async function loadServers() {
+    try {
+      const base = window.__VEMONI_API_BASE__ || '';
+      let tok = ''; try { tok = localStorage.getItem('vemoni_tok') || ''; } catch (_) {}
+      const r = await fetch(base + '/order/servers', { credentials: 'include', headers: tok ? { Authorization: 'Bearer ' + tok } : {} });
+      if (r.ok) { const b = await r.json(); if (b && Array.isArray(b.servers) && b.servers.length) { renderServers(b.servers); return; } }
+    } catch (_) {}
+    renderServers(DM_SERVERS);
+  }
+
+  const dmGrid = $('#dm-sp-grid');
+  if (dmGrid) dmGrid.addEventListener('click', (e) => {
+    const card = e.target.closest('.dm-sp-card'); if (!card) return;
+    if (card.dataset.bot === '0') {   // bot not on the server yet → invite it
+      const id = card.dataset.id;
+      window.open(BOT_INVITE + (id ? '&guild_id=' + encodeURIComponent(id) + '&disable_guild_select=true' : ''), '_blank', 'noopener');
+      return;
+    }
     dmServer = card.dataset.name || '';
     if (dmSelName) dmSelName.textContent = dmServer;
     if (dmSelBar) dmSelBar.hidden = false;
     dmall.classList.remove('picking');
     if (bell) bell.hidden = false;
     window.scrollTo(0, 0);
-  }));
+  });
   { const chg = $('#dm-changeserver'); if (chg) chg.addEventListener('click', () => { dmall.classList.add('picking'); if (dmSelBar) dmSelBar.hidden = true; if (bell) bell.hidden = true; window.scrollTo(0, 0); }); }
   { const q = $('#dm-sp-q'); if (q) q.addEventListener('input', () => { const v = q.value.trim().toLowerCase(); $$('#dm-sp-grid .dm-sp-card').forEach((c) => { c.hidden = !!v && !(c.dataset.name || '').toLowerCase().includes(v); }); }); }
 
@@ -367,7 +408,7 @@
   const DM_TXT = {
     en: {
       tab_templates:"Setup", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats", for_word:"for",
-      pick_a:"Choose a", pick_b:"server", search_ph:"Search…", online_members:"Members online:", invite_caps:"INVITE", change_server:"Change server",
+      pick_a:"Choose a", pick_b:"server", search_ph:"Search…", online_members:"Members online:", members_word:"members", invite_caps:"INVITE", change_server:"Change server",
       new_tpl:"Configure message", example:"Example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
       fields:"Fields", add_field:"＋ Add field", inline:"Inline", field_name:"Field name", field_value:"Field value",
       embeds_h:"Embeds", add_embed:"＋ Add Embed", embed_n:"Embed", sec_author:"Author", sec_body:"Body", sec_images:"Images", sec_footer:"Footer",
@@ -416,7 +457,7 @@
     },
     ru: {
       tab_templates:"Setup", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика", for_word:"за",
-      pick_a:"Выберите", pick_b:"сервер", search_ph:"Поиск…", online_members:"Участников в сети:", invite_caps:"ПРИГЛАСИТЬ", change_server:"Сменить сервер",
+      pick_a:"Выберите", pick_b:"сервер", search_ph:"Поиск…", online_members:"Участников в сети:", members_word:"участников", invite_caps:"ПРИГЛАСИТЬ", change_server:"Сменить сервер",
       new_tpl:"Настроить сообщение", example:"Пример", f_name:"Название", recipient:"Получатель:", link_lbl:"Ссылка:", embed_h:"Эмбед",
       fields:"Поля", add_field:"＋ Добавить поле", inline:"В строку", field_name:"Название поля", field_value:"Значение поля",
       embeds_h:"Эмбеды", add_embed:"＋ Добавить эмбед", embed_n:"Эмбед", sec_author:"Автор", sec_body:"Основное", sec_images:"Изображения", sec_footer:"Подвал",
@@ -486,4 +527,5 @@
   restoreState();
   toggleAddEmbed();
   updatePreview();
+  loadServers();
 })();
