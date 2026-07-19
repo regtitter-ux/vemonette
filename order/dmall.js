@@ -50,7 +50,7 @@
       const pos = s + token.length;
       el.focus();
       try { el.setSelectionRange(pos, pos); } catch (_) {}
-      updatePreview();
+      updatePreview(); saveState();
     });
   });
 
@@ -112,7 +112,7 @@
   const EMBED_BLOCK =
     '<div class="dm-embed-block">' +
       '<div class="dm-eb-head">' +
-        '<button type="button" class="dm-eb-toggle"><span class="dm-eb-caret">▾</span> <span data-dm="embed_n">Embed</span> <span class="dm-eb-num">1</span></button>' +
+        '<div class="dm-eb-title2"><span data-dm="embed_n">Embed</span> <span class="dm-eb-num">1</span></div>' +
         '<div class="dm-eb-actions"><button type="button" class="dm-eb-dup" title="Duplicate">⧉</button><button type="button" class="dm-eb-del" title="Remove">✕</button></div>' +
       '</div>' +
       '<div class="dm-eb-body">' +
@@ -136,20 +136,21 @@
       '</div>' +
     '</div>';
   const renumberEmbeds = () => $$('#dm-embeds .dm-eb-num').forEach((el, i) => { el.textContent = i + 1; });
-  function addEmbed() { embedsBox.insertAdjacentHTML('beforeend', EMBED_BLOCK); renumberEmbeds(); dmApplyLang(); updatePreview(); return embedsBox.lastElementChild; }
-  if (addEmbedBtn && embedsBox) addEmbedBtn.addEventListener('click', addEmbed);
+  // Only one embed is added via the button — hide it while an embed exists.
+  const toggleAddEmbed = () => { if (addEmbedBtn) addEmbedBtn.hidden = $$('#dm-embeds .dm-embed-block').length > 0; };
+  function addEmbed() { embedsBox.insertAdjacentHTML('beforeend', EMBED_BLOCK); renumberEmbeds(); toggleAddEmbed(); dmApplyLang(); updatePreview(); return embedsBox.lastElementChild; }
+  if (addEmbedBtn && embedsBox) addEmbedBtn.addEventListener('click', () => { addEmbed(); saveState(); });
   if (embedsBox) {
     embedsBox.addEventListener('click', (e) => {
       const del = e.target.closest('.dm-eb-del'), dup = e.target.closest('.dm-eb-dup'),
-            eh = e.target.closest('.dm-eb-toggle'), sh = e.target.closest('.dm-eb-sec-h');
-      if (del) { del.closest('.dm-embed-block').remove(); renumberEmbeds(); updatePreview(); return; }
+            sh = e.target.closest('.dm-eb-sec-h');
+      if (del) { del.closest('.dm-embed-block').remove(); renumberEmbeds(); toggleAddEmbed(); updatePreview(); saveState(); return; }
       if (dup) {
         const b = dup.closest('.dm-embed-block'), clone = b.cloneNode(true);
         const os = b.querySelectorAll('input,textarea'), ns = clone.querySelectorAll('input,textarea');
         os.forEach((o, i) => { if (ns[i]) { if (o.type === 'checkbox') ns[i].checked = o.checked; else ns[i].value = o.value; } });
-        b.after(clone); renumberEmbeds(); dmApplyLang(); updatePreview(); return;
+        b.after(clone); renumberEmbeds(); toggleAddEmbed(); dmApplyLang(); updatePreview(); saveState(); return;
       }
-      if (eh) { const body = eh.closest('.dm-eb-head').nextElementSibling, was = body.hidden; body.hidden = !was; eh.querySelector('.dm-eb-caret').textContent = was ? '▾' : '▸'; return; }
       if (sh) { const body = sh.nextElementSibling, was = body.hidden; body.hidden = !was; sh.querySelector('.dm-eb-caret').textContent = was ? '▾' : '▸'; }
     });
     embedsBox.addEventListener('input', (e) => {
@@ -180,7 +181,7 @@
     set('.eb-desc', 'Click 🎉 button to enter!\nWinners: 1');
     set('.eb-color', '#5865f2');
     const cc = $('#dm-content-count'); if (cc) cc.textContent = ($('#dm-t-content').value.length) + '/2000';
-    updatePreview();
+    updatePreview(); saveState();
   });
 
   /* ---- live Discord preview ---- */
@@ -238,6 +239,45 @@
         (content ? '<div class="dm-mtext">' + fmt(content) + '</div>' : '') +
         embeds + btn +
       '</div></div>';
+  }
+
+  /* ---- auto-save: persist the whole template on every change (localStorage;
+         the backend hook goes here later). No explicit save/confirm needed. ---- */
+  const STORE_KEY = 'dmall_tpl';
+  const raw = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
+  const EMBED_KEYS = ['author', 'authorurl', 'authoricon', 'title', 'url', 'desc', 'color', 'image', 'thumb', 'footer', 'timestamp', 'footericon'];
+  function collectState() {
+    return {
+      content: raw('dm-t-content'), btnLabel: raw('dm-t-btnlabel'), btnUrl: raw('dm-t-btnurl'), btnEmoji: raw('dm-t-btnemoji'),
+      setName: checked('[data-reveal="dm-rv-name"]'), username: raw('dm-t-username'),
+      setAvatar: checked('[data-reveal="dm-rv-av"]'), avatarUrl: raw('dm-t-avatarurl'),
+      setStatus: checked('[data-reveal="dm-rv-status"]'), customStatus: raw('dm-t-status'),
+      embeds: $$('#dm-embeds .dm-embed-block').map((b) => {
+        const o = {}; EMBED_KEYS.forEach((k) => { const el = b.querySelector('.eb-' + k); o[k] = el ? el.value : ''; }); return o;
+      })
+    };
+  }
+  let saveT;
+  function saveState() { clearTimeout(saveT); saveT = setTimeout(() => { try { localStorage.setItem(STORE_KEY, JSON.stringify(collectState())); } catch (_) {} }, 250); }
+  function refreshCounters() {
+    const set = (id, cid, max) => { const i = $(id), c = $(cid); if (i && c) c.textContent = i.value.length + '/' + max; };
+    set('#dm-t-content', '#dm-content-count', 2000); set('#dm-t-username', '#dm-username-count', 80);
+    $$('#dm-embeds .eb-count').forEach((c) => { const f = c.closest('.dm-field'), inp = f && f.querySelector('input,textarea'); if (inp && c.dataset.max) c.textContent = inp.value.length + '/' + c.dataset.max; });
+  }
+  function restoreState() {
+    let st; try { st = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (_) {}
+    if (!st) return;
+    const sv = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
+    sv('dm-t-content', st.content); sv('dm-t-btnlabel', st.btnLabel); sv('dm-t-btnurl', st.btnUrl); sv('dm-t-btnemoji', st.btnEmoji);
+    sv('dm-t-username', st.username); sv('dm-t-avatarurl', st.avatarUrl); sv('dm-t-status', st.customStatus);
+    const setChk = (sel, on) => { const c = $(sel); if (c) { c.checked = !!on; const box = document.getElementById(c.dataset.reveal); if (box) box.classList.toggle('on', !!on); } };
+    setChk('[data-reveal="dm-rv-name"]', st.setName); setChk('[data-reveal="dm-rv-av"]', st.setAvatar); setChk('[data-reveal="dm-rv-status"]', st.setStatus);
+    (st.embeds || []).forEach((em) => {
+      const b = addEmbed();
+      EMBED_KEYS.forEach((k) => { const el = b.querySelector('.eb-' + k); if (el && em[k] != null) el.value = em[k]; });
+      const pk = b.querySelector('.eb-colorpick'); if (pk && /^#[0-9a-f]{6}$/i.test(em.color || '')) pk.value = em.color;
+    });
+    refreshCounters();
   }
 
   /* ---- i18n for the DMALL subtree (RU/EN), applied on load + on language switch ---- */
@@ -353,5 +393,12 @@
   // Delegated so dynamically-added embed field rows also drive the live preview.
   document.addEventListener('input', (e) => { if (e.target.matches('[data-preview]') || e.target.closest('.dm-field-row')) updatePreview(); });
   document.addEventListener('change', (e) => { if (e.target.matches('.ff-inline')) updatePreview(); });
+
+  // Auto-save: any edit anywhere in the Templates panel persists immediately.
+  const tplPanel = $('.dm-panel[data-dpanel="templates"]');
+  if (tplPanel) { tplPanel.addEventListener('input', () => saveState()); tplPanel.addEventListener('change', () => saveState()); }
+
+  restoreState();
+  toggleAddEmbed();
   updatePreview();
 })();

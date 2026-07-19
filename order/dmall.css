@@ -271,6 +271,7 @@
 .dm-embed-block{ border:1px solid var(--dm-line-2); border-radius:12px; margin-bottom:12px; overflow:hidden; background:var(--dm-card-2); }
 .dm-eb-head{ display:flex; align-items:center; gap:6px; padding:11px 12px; }
 .dm-eb-toggle{ flex:1; min-width:0; text-align:left; background:0; border:0; color:var(--dm-txt); font:inherit; font-weight:700; font-size:14px; cursor:pointer; display:flex; align-items:center; gap:8px; }
+.dm-eb-title2{ flex:1; min-width:0; color:var(--dm-txt); font-weight:700; font-size:14px; }
 .dm-eb-caret{ font-size:10px; opacity:.7; width:10px; flex:none; }
 .dm-eb-actions{ display:flex; gap:2px; flex:none; }
 .dm-eb-actions button{ background:0; border:0; color:var(--dm-mut); cursor:pointer; padding:5px 7px; font-size:14px; border-radius:6px; line-height:1; }
