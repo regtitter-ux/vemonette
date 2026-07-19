@@ -17,17 +17,33 @@
   // Visibility of the whole mode bar is gated to admins by order.js.
 
   /* ---- ad-mode switch: Stays (orders) vs DMALL (broadcast console) ---- */
+  let dmServer = null;
   $$('.dm-mode', modebar).forEach((btn) => {
     btn.addEventListener('click', () => {
       const dm = btn.dataset.mode === 'dmall';
       $$('.dm-mode', modebar).forEach((b) => b.classList.toggle('active', b === btn));
       wrap.classList.toggle('dmall-on', dm);
       dmall.hidden = !dm;
-      if (bell) bell.hidden = !dm;
+      if (dm && !dmServer) dmall.classList.add('picking');   // choose a server first
+      if (bell) bell.hidden = !dm || dmall.classList.contains('picking');
       if (!dm && notif) notif.classList.remove('on');
       window.scrollTo(0, 0);
     });
   });
+
+  /* ---- server picker (pick a server where you're admin before configuring) ---- */
+  const dmSelName = $('#dm-selname'), dmSelBar = $('#dm-selbar');
+  $$('#dm-sp-grid .dm-sp-card').forEach((card) => card.addEventListener('click', () => {
+    if (card.dataset.bot === '0') return;   // no bot yet → the "Invite" button (wired to backend later)
+    dmServer = card.dataset.name || '';
+    if (dmSelName) dmSelName.textContent = dmServer;
+    if (dmSelBar) dmSelBar.hidden = false;
+    dmall.classList.remove('picking');
+    if (bell) bell.hidden = false;
+    window.scrollTo(0, 0);
+  }));
+  { const chg = $('#dm-changeserver'); if (chg) chg.addEventListener('click', () => { dmall.classList.add('picking'); if (dmSelBar) dmSelBar.hidden = true; if (bell) bell.hidden = true; window.scrollTo(0, 0); }); }
+  { const q = $('#dm-sp-q'); if (q) q.addEventListener('input', () => { const v = q.value.trim().toLowerCase(); $$('#dm-sp-grid .dm-sp-card').forEach((c) => { c.hidden = !!v && !(c.dataset.name || '').toLowerCase().includes(v); }); }); }
 
   /* ---- DMALL tab switch ---- */
   $$('.dm-tab', dmall).forEach((tab) => {
@@ -351,6 +367,7 @@
   const DM_TXT = {
     en: {
       tab_templates:"Setup", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats", for_word:"for",
+      pick_a:"Choose a", pick_b:"server", search_ph:"Search…", online_members:"Members online:", invite_caps:"INVITE", change_server:"Change server",
       new_tpl:"Configure message", example:"Example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
       fields:"Fields", add_field:"＋ Add field", inline:"Inline", field_name:"Field name", field_value:"Field value",
       embeds_h:"Embeds", add_embed:"＋ Add Embed", embed_n:"Embed", sec_author:"Author", sec_body:"Body", sec_images:"Images", sec_footer:"Footer",
@@ -399,6 +416,7 @@
     },
     ru: {
       tab_templates:"Setup", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика", for_word:"за",
+      pick_a:"Выберите", pick_b:"сервер", search_ph:"Поиск…", online_members:"Участников в сети:", invite_caps:"ПРИГЛАСИТЬ", change_server:"Сменить сервер",
       new_tpl:"Настроить сообщение", example:"Пример", f_name:"Название", recipient:"Получатель:", link_lbl:"Ссылка:", embed_h:"Эмбед",
       fields:"Поля", add_field:"＋ Добавить поле", inline:"В строку", field_name:"Название поля", field_value:"Значение поля",
       embeds_h:"Эмбеды", add_embed:"＋ Добавить эмбед", embed_n:"Эмбед", sec_author:"Автор", sec_body:"Основное", sec_images:"Изображения", sec_footer:"Подвал",
