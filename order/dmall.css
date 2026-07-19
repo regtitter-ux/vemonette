@@ -66,6 +66,7 @@
 .dm-sp-online{ display:inline-flex; align-items:center; gap:7px; color:var(--dm-mut); font-size:13px; font-weight:500; }
 .dm-sp-dot{ width:10px; height:10px; border-radius:50%; background:var(--dm-green); flex:none; }
 .dm-sp-mico{ flex:none; display:block; }
+.dm-sp-mico .p{ fill:var(--dm-card); }
 .dm-sp-invite{ display:inline-block; color:var(--dm-mut); font-size:12px; font-weight:700; letter-spacing:.05em; padding:6px 11px; border-radius:8px; margin-left:-11px; transition:background .12s,color .12s; }
 .dm-sp-card[data-bot="0"]:hover .dm-sp-invite{ background:rgba(255,255,255,.09); color:var(--dm-txt); }
 #dm-selbar{ display:flex; align-items:center; gap:10px; margin-left:6px; }

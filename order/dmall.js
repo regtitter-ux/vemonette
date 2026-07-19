@@ -58,7 +58,7 @@
       banner = 'background:' + (sv.bannerBg || 'linear-gradient(120deg,#3a3f4b,#20242e)');
     }
     const av = sv.avatar ? '<img alt="" src="' + esc(sv.avatar) + '">' : esc(sv.icon || (sv.name.trim()[0] || '?'));
-    const memIco = '<svg class="dm-sp-mico" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><rect width="24" height="24" rx="7" fill="#23a55a"/><path fill="#fff" d="M12 6.1a2.95 2.95 0 1 0 0 5.9 2.95 2.95 0 0 0 0-5.9Zm0 7.05c-2.72 0-5.45 1.32-5.45 3.42V18.1h10.9v-1.53c0-2.1-2.73-3.42-5.45-3.42Z"/></svg>';
+    const memIco = '<svg class="dm-sp-mico" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#23a55a"/><path class="p" d="M12 6.1a2.95 2.95 0 1 0 0 5.9 2.95 2.95 0 0 0 0-5.9Zm0 7.05c-2.72 0-5.45 1.32-5.45 3.42V18.1h10.9v-1.53c0-2.1-2.73-3.42-5.45-3.42Z"/></svg>';
     const foot = sv.bot
       ? '<span class="dm-sp-online">' + memIco + ' ' + (sv.online != null ? sv.online : '') + ' <span data-dm="members_word">members</span></span>'
       : '<span class="dm-sp-invite" data-dm="invite_caps">INVITE</span>';
