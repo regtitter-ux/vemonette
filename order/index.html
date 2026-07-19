@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/order/order.css?v=28" />
-  <link rel="stylesheet" href="/order/dmall.css?v=6" />
+  <link rel="stylesheet" href="/order/dmall.css?v=7" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';
   </script>
@@ -134,8 +134,7 @@
           <div class="dm-card-h"><h2 id="dm-form-title" data-dm="new_tpl">New template</h2><button class="dm-btn ghost sm" id="dm-example" data-dm="example">Nitro example</button></div>
 
           <div class="dm-field"><label class="dm-label">content <span class="dm-counter" id="dm-content-count">0/2000</span></label><textarea class="dm-textarea" id="dm-t-content" data-preview maxlength="2000" placeholder="Congratulations <@USER_ID> 🎉"></textarea></div>
-          <div class="dm-chips"><span class="dm-chips-lbl" data-dm="recipient">Recipient:</span><button class="dm-chip" data-insert="&lt;@USER_ID&gt;" data-target="dm-t-content">&lt;@USER_ID&gt;</button><button class="dm-chip" data-insert="&lt;@USERNAME&gt;" data-target="dm-t-content">&lt;@USERNAME&gt;</button><button class="dm-chip" data-insert="&lt;@DISPLAY_NAME&gt;" data-target="dm-t-content">&lt;@DISPLAY_NAME&gt;</button></div>
-          <div class="dm-chips"><span class="dm-chips-lbl" data-dm="link_lbl">Link:</span><span class="dm-chip link">{{LINK}}</span></div>
+          <div class="dm-chips"><span class="dm-chips-lbl" data-dm="recipient">Recipient:</span><button class="dm-chip" data-insert="&lt;@USER_ID&gt;" data-target="dm-t-content">&lt;@USER_ID&gt;</button></div>
 
           <div class="dm-divide"><h3 data-dm="bot_profile">Bot profile</h3><p data-dm="bot_profile_p">Name, avatar and custom status are applied on the bot's first connection to a broadcast (once per run). Discord — no more than ~1 name change per hour.</p></div>
           <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-name" /> <span data-dm="set_name">Set bot name</span></label>
@@ -147,12 +146,6 @@
           </div>
           <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-status" /> <span data-dm="set_status">Set custom status</span></label>
           <div class="dm-reveal" id="dm-rv-status"><div class="dm-field"><label class="dm-label">customStatus</label><input class="dm-input" id="dm-t-status" value="Important Notice" /><div class="dm-hint" data-dm="status_hint">16/128 · empty = keep presence</div></div></div>
-
-          <div class="dm-divide"><h3 data-dm="button_link">Button (link)</h3></div>
-          <div class="dm-field"><label class="dm-label">label</label><input class="dm-input" id="dm-t-btnlabel" data-preview placeholder="Check" /></div>
-          <div class="dm-field"><label class="dm-label">url</label><input class="dm-input" id="dm-t-btnurl" placeholder="{{LINK}}" /></div>
-          <div class="dm-chips"><span class="dm-chips-lbl" data-dm="link_lbl">Link:</span><span class="dm-chip link">{{LINK}}</span></div>
-          <div class="dm-field"><label class="dm-label">emoji</label><input class="dm-input" id="dm-t-btnemoji" data-preview placeholder="🎁" /></div>
 
           <div class="dm-divide"><h3 data-dm="embeds_h">Embeds</h3></div>
           <div id="dm-embeds"></div>
@@ -298,6 +291,6 @@
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=37"></script>
-<script src="/order/dmall.js?v=7"></script>
+<script src="/order/dmall.js?v=8"></script>
 </body>
 </html>

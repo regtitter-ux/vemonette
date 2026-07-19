@@ -133,6 +133,11 @@
           '<div class="dm-field"><label class="dm-label">footer.text <span class="eb-count" data-max="2048">0/2048</span></label><input class="dm-input eb-footer" maxlength="2048" /></div>' +
           '<div class="dm-two"><div class="dm-field"><label class="dm-label">timestamp</label><input class="dm-input eb-timestamp" placeholder="YYYY-MM-DD hh:mm" /></div><div class="dm-field"><label class="dm-label">footer.icon_url</label><input class="dm-input eb-footericon" placeholder="https://…" /></div></div>' +
         '</div></div>' +
+        '<div class="dm-eb-sec"><button type="button" class="dm-eb-sec-h"><span class="dm-eb-caret">▸</span> <span data-dm="button_link">Button (link)</span></button><div class="dm-eb-sec-body" hidden>' +
+          '<div class="dm-field"><label class="dm-label">label</label><input class="dm-input eb-btnlabel" placeholder="Check" /></div>' +
+          '<div class="dm-field"><label class="dm-label">url</label><input class="dm-input eb-btnurl" placeholder="{{LINK}}" /></div>' +
+          '<div class="dm-field"><label class="dm-label">emoji</label><input class="dm-input eb-btnemoji" placeholder="🎁" /></div>' +
+        '</div></div>' +
       '</div>' +
     '</div>';
   const renumberEmbeds = () => $$('#dm-embeds .dm-eb-num').forEach((el, i) => { el.textContent = i + 1; });
@@ -173,13 +178,13 @@
   const ex = $('#dm-example');
   if (ex) ex.addEventListener('click', () => {
     setVal('dm-t-content', 'Congratulations <@USER_ID> 🎉\nYou can take part in a big gws on the server {{LINK}}');
-    setVal('dm-t-btnlabel', 'Participate');
-    setVal('dm-t-btnemoji', '🎉');
     const block = $('#dm-embeds .dm-embed-block') || addEmbed();
     const set = (sel, v) => { const el = block.querySelector(sel); if (el) el.value = v; };
     set('.eb-author', '100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR');
     set('.eb-desc', 'Click 🎉 button to enter!\nWinners: 1');
     set('.eb-color', '#5865f2');
+    set('.eb-btnlabel', 'Participate');
+    set('.eb-btnemoji', '🎉');
     const cc = $('#dm-content-count'); if (cc) cc.textContent = ($('#dm-t-content').value.length) + '/2000';
     updatePreview(); saveState();
   });
@@ -206,38 +211,40 @@
     const desc = g('.eb-desc'), footer = g('.eb-footer'), footerIcon = g('.eb-footericon');
     const ts = g('.eb-timestamp'), image = g('.eb-image'), thumb = g('.eb-thumb');
     const color = /^#[0-9a-f]{6}$/i.test(g('.eb-color')) ? g('.eb-color') : '#5865f2';
-    if (!(author || title || desc || footer || image || thumb)) return '';
+    const btnLbl = g('.eb-btnlabel'), btnEmoji = g('.eb-btnemoji');
+    const hasEmbed = author || title || desc || footer || image || thumb;
+    if (!hasEmbed && !btnLbl) return '';
     const footLine = (footer || ts) ? '<div class="dm-embed-foot">' + (footerIcon ? '<img class="dm-ef-ic" alt="" src="' + esc(footerIcon) + '">' : '') + esc(footer) + (footer && ts ? ' • ' : '') + (ts ? esc(fmtTs(ts)) : '') + '</div>' : '';
-    return '<div class="dm-embed" style="border-left-color:' + color + '"><div class="dm-embed-main">' +
+    const embedHtml = hasEmbed ? ('<div class="dm-embed" style="border-left-color:' + color + '"><div class="dm-embed-main">' +
       (author ? '<div class="dm-embed-author">' + (authorIcon ? '<img class="dm-ea-ic" alt="" src="' + esc(authorIcon) + '">' : '') + esc(author) + '</div>' : '') +
       (title ? '<div class="dm-embed-title">' + (titleUrl ? '<span class="dm-mlink">' + esc(title) + '</span>' : esc(title)) + '</div>' : '') +
       (desc ? '<div class="dm-embed-desc">' + fmt(desc) + '</div>' : '') +
       (image ? '<img class="dm-embed-img" alt="" src="' + esc(image) + '">' : '') +
       footLine +
-      '</div>' + (thumb ? '<div class="dm-embed-th"><img alt="" src="' + esc(thumb) + '"></div>' : '') + '</div>';
+      '</div>' + (thumb ? '<div class="dm-embed-th"><img alt="" src="' + esc(thumb) + '"></div>' : '') + '</div>') : '';
+    const btn = btnLbl ? '<button class="dm-btn-discord">' + (btnEmoji ? esc(btnEmoji) + ' ' : '') + esc(btnLbl) + ' ↗</button>' : '';
+    return embedHtml + btn;
   }
 
   const preview = $('#dm-preview');
   function updatePreview() {
     if (!preview) return;
     const content = val('dm-t-content');
-    const btnLbl = val('dm-t-btnlabel'), btnEmoji = val('dm-t-btnemoji');
     const name = (checked('[data-reveal="dm-rv-name"]') && val('dm-t-username')) || 'Newspaper';
     const avUrl = checked('[data-reveal="dm-rv-av"]') ? (val('dm-t-avatarurl') || url('dm-av-prev')) : '';
     const embeds = $$('#dm-embeds .dm-embed-block').map(buildEmbed).filter(Boolean).join('');
-    if (!content && !embeds && !btnLbl) {
+    if (!content && !embeds) {
       preview.className = 'dm-preview empty';
       preview.innerHTML = '<span data-dm="preview_empty">' + dmT('preview_empty') + '</span>';
       return;
     }
     preview.className = 'dm-preview';
-    const btn = btnLbl ? '<button class="dm-btn-discord">' + (btnEmoji ? esc(btnEmoji) + ' ' : '') + esc(btnLbl) + ' ↗</button>' : '';
     const av = avUrl ? '<img alt="" src="' + esc(avUrl) + '">' : '';
     preview.innerHTML =
       '<div class="dm-msg"><div class="dm-av">' + av + '</div><div class="dm-mbody">' +
         '<div class="dm-mhead"><span class="dm-mname">' + esc(name) + '</span><span class="dm-app">APP</span><span class="dm-mtime">Today at 8:48 PM</span></div>' +
         (content ? '<div class="dm-mtext">' + fmt(content) + '</div>' : '') +
-        embeds + btn +
+        embeds +
       '</div></div>';
   }
 
@@ -245,10 +252,10 @@
          the backend hook goes here later). No explicit save/confirm needed. ---- */
   const STORE_KEY = 'dmall_tpl';
   const raw = (id) => { const el = document.getElementById(id); return el ? el.value : ''; };
-  const EMBED_KEYS = ['author', 'authorurl', 'authoricon', 'title', 'url', 'desc', 'color', 'image', 'thumb', 'footer', 'timestamp', 'footericon'];
+  const EMBED_KEYS = ['author', 'authorurl', 'authoricon', 'title', 'url', 'desc', 'color', 'image', 'thumb', 'footer', 'timestamp', 'footericon', 'btnlabel', 'btnurl', 'btnemoji'];
   function collectState() {
     return {
-      content: raw('dm-t-content'), btnLabel: raw('dm-t-btnlabel'), btnUrl: raw('dm-t-btnurl'), btnEmoji: raw('dm-t-btnemoji'),
+      content: raw('dm-t-content'),
       setName: checked('[data-reveal="dm-rv-name"]'), username: raw('dm-t-username'),
       setAvatar: checked('[data-reveal="dm-rv-av"]'), avatarUrl: raw('dm-t-avatarurl'),
       setStatus: checked('[data-reveal="dm-rv-status"]'), customStatus: raw('dm-t-status'),
@@ -268,7 +275,7 @@
     let st; try { st = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (_) {}
     if (!st) return;
     const sv = (id, v) => { const el = document.getElementById(id); if (el && v != null) el.value = v; };
-    sv('dm-t-content', st.content); sv('dm-t-btnlabel', st.btnLabel); sv('dm-t-btnurl', st.btnUrl); sv('dm-t-btnemoji', st.btnEmoji);
+    sv('dm-t-content', st.content);
     sv('dm-t-username', st.username); sv('dm-t-avatarurl', st.avatarUrl); sv('dm-t-status', st.customStatus);
     const setChk = (sel, on) => { const c = $(sel); if (c) { c.checked = !!on; const box = document.getElementById(c.dataset.reveal); if (box) box.classList.toggle('on', !!on); } };
     setChk('[data-reveal="dm-rv-name"]', st.setName); setChk('[data-reveal="dm-rv-av"]', st.setAvatar); setChk('[data-reveal="dm-rv-status"]', st.setStatus);
