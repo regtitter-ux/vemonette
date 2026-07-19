@@ -56,7 +56,7 @@
 .dm-sp-card:hover{ border-color:var(--dm-line-2); }
 .dm-sp-card:active{ transform:translateY(1px); }
 .dm-sp-banner{ height:118px; position:relative; overflow:hidden; }
-.dm-sp-banner-blur{ position:absolute; inset:-15%; background-size:cover; background-position:center; filter:blur(13px); transform:scale(1.04); }
+.dm-sp-banner-blur{ position:absolute; inset:-20%; background-size:cover; background-position:center; filter:blur(9px); transform:scale(0.9); }
 .dm-sp-scrim{ position:absolute; inset:0; z-index:0; background:linear-gradient(180deg,rgba(0,0,0,.5),rgba(0,0,0,0) 58%); pointer-events:none; }
 .dm-sp-title{ position:absolute; z-index:1; top:12px; left:15px; right:15px; font-weight:700; font-size:16px; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.55); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .dm-sp-body{ display:block; padding:0 15px 13px; }
