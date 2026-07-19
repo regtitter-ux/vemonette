@@ -93,7 +93,7 @@
     if (!out) return;
     const n = Math.max(0, parseInt((inp && inp.value) || '0', 10) || 0);
     const price = (n / 1000) * PRICE_PER_1000;
-    out.textContent = ' — ' + (price % 1 === 0 ? '$' + price : '$' + price.toFixed(2));
+    out.textContent = price % 1 === 0 ? '$' + price : '$' + price.toFixed(2);
   }
   $$('.dm-quick button', dmall).forEach((b) => {
     b.addEventListener('click', () => { const inp = $('#dm-l-count'); if (inp) inp.value = b.dataset.amt; updateLaunchPrice(); });
@@ -304,7 +304,7 @@
   /* ---- i18n for the DMALL subtree (RU/EN), applied on load + on language switch ---- */
   const DM_TXT = {
     en: {
-      tab_templates:"Setup", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats",
+      tab_templates:"Setup", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats", for_word:"for",
       new_tpl:"Configure message", example:"Nitro example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
       fields:"Fields", add_field:"＋ Add field", inline:"Inline", field_name:"Field name", field_value:"Field value",
       embeds_h:"Embeds", add_embed:"＋ Add Embed", embed_n:"Embed", sec_author:"Author", sec_body:"Body", sec_images:"Images", sec_footer:"Footer",
@@ -341,7 +341,7 @@
       sum_total:"Total messages: 1 000", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Member exclusion:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
       start_broadcast:"Start broadcast", active_hint:"Active broadcasts: 1 — you can start another on a different server",
       st_dm:"DM BROADCAST", bots_on_server:"Bots on server", dm_broadcast:"DM broadcast", running:"Running", sending:"Sending messages",
-      note1:"From the server: 90 119 · queued 87 420", route_from:"From", route_to:"→ TO", stop:"Stop",
+      note1:"From the server: 90 119 · queued 87 420", route_from:"From:", route_to:"To:", route_to1:"To #1:", route_to2:"To #2:", stop:"Stop",
       st_err:"ERROR", bots_k:"Bots", done:"Done", note3:"From the server: 90 115 · queued 87 416", msg_short:"Msg.", retry:"Retry", st_stop:"STOPPED",
       err1:"Failed to add bots to the server: no permissions or wrong oauth_channel_id. Check bot-add permissions and OAuth.",
       task_aud:"<b>Audience</b> All members · Online first, then offline", stats_soon:"Stats — coming soon.",
@@ -352,7 +352,7 @@
       ph_upload:"https://… or upload a file below", ph_ids:"IDs comma-separated or one per line"
     },
     ru: {
-      tab_templates:"Setup", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика",
+      tab_templates:"Setup", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика", for_word:"за",
       new_tpl:"Настроить сообщение", example:"Пример Nitro", f_name:"Название", recipient:"Получатель:", link_lbl:"Ссылка:", embed_h:"Эмбед",
       fields:"Поля", add_field:"＋ Добавить поле", inline:"В строку", field_name:"Название поля", field_value:"Значение поля",
       embeds_h:"Эмбеды", add_embed:"＋ Добавить эмбед", embed_n:"Эмбед", sec_author:"Автор", sec_body:"Основное", sec_images:"Изображения", sec_footer:"Подвал",
@@ -389,7 +389,7 @@
       sum_total:"Суммарно сообщений: 1 000", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключение участников:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
       start_broadcast:"Запустить рассылку", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
       st_dm:"РАССЫЛКА В ЛС", bots_on_server:"Боты на сервере", dm_broadcast:"Рассылка в ЛС", running:"Идёт", sending:"Отправка сообщений",
-      note1:"С сервера: 90 119 · в очереди 87 420", route_from:"С", route_to:"→ КУДА", stop:"Стоп",
+      note1:"С сервера: 90 119 · в очереди 87 420", route_from:"Откуда:", route_to:"Куда:", route_to1:"Куда №1:", route_to2:"Куда №2:", stop:"Стоп",
       st_err:"ОШИБКА", bots_k:"Боты", done:"Готово", note3:"С сервера: 90 115 · в очереди 87 416", msg_short:"Сообщ.", retry:"Повторить", st_stop:"ОСТАНОВЛЕНА",
       err1:"Не удалось добавить ботов на сервер: нет прав или неверный oauth_channel_id. Проверьте права на добавление ботов и OAuth.",
       task_aud:"<b>Аудитория</b> Все участники · Сначала в сети, потом офлайн", stats_soon:"Статистика — скоро.",

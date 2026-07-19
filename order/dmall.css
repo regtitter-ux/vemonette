@@ -306,6 +306,14 @@
 .dm-embed-field .fn{ font-weight:700; color:#f2f3f5; font-size:13.5px; margin-bottom:2px; }
 .dm-embed-field .fv{ color:#dbdee1; font-size:13.5px; line-height:1.4; white-space:pre-wrap; word-break:break-word; }
 
+/* simplified route (Откуда / Куда: avatar + name + link) */
+.dm-route2{ display:flex; flex-direction:column; gap:6px; background:var(--dm-card-2); border:1px solid var(--dm-line); border-radius:10px; padding:9px 12px; margin:8px 0; font-size:12.5px; }
+.dm-r2-row{ display:flex; align-items:center; gap:7px; min-width:0; flex-wrap:wrap; }
+.dm-r2-lbl{ color:var(--dm-mut); font-weight:700; flex:none; }
+.dm-r2-av{ width:20px; height:20px; border-radius:50%; flex:none; display:grid; place-items:center; font-size:11px; background:#3b4166; color:#fff; overflow:hidden; }
+.dm-r2-name{ color:var(--dm-txt); font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dm-r2-link{ color:#00a8fc; }
+
 /* broadcast settings tucked inside the preview card, below the message — slide-open */
 .dm-launch-wrap{ margin-top:14px; }
 .dm-launch-toggle{ width:100%; display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--dm-card-2); border:1px solid var(--dm-line); border-radius:10px; color:var(--dm-txt); font:inherit; font-weight:700; font-size:14px; padding:12px 14px; cursor:pointer; transition:border-color .15s; }
