@@ -332,15 +332,58 @@ function serverAction(s, name, minInv) {
     return `<button class="btn ghost sm" data-buy="${esc(s.serverId)}" data-name="${name}" data-min="${minInv}" data-max="${maxBuy}">Выкуп инвайтов</button>`;
 }
 
+// Custom number-input modal (replaces the browser prompt). Resolves to a number,
+// or null on cancel. `parse(raw)` returns { value } or { error } for inline errors.
+function askNum({ title, info, placeholder, parse }) {
+    return new Promise((resolve) => {
+        let ov = document.getElementById('iv-modal');
+        if (!ov) {
+            ov = document.createElement('div');
+            ov.id = 'iv-modal'; ov.className = 'iv-overlay'; ov.hidden = true;
+            ov.innerHTML =
+                '<div class="iv-modal" role="dialog" aria-modal="true">' +
+                    '<h3 id="iv-m-title"></h3>' +
+                    '<div class="iv-m-info" id="iv-m-info"></div>' +
+                    '<input id="iv-m-input" type="number" step="1" inputmode="numeric" autocomplete="off" />' +
+                    '<div class="iv-m-err" id="iv-m-err" hidden></div>' +
+                    '<div class="iv-m-actions"><button type="button" class="btn ghost sm" id="iv-m-cancel">Отмена</button><button type="button" class="btn primary sm" id="iv-m-ok">OK</button></div>' +
+                '</div>';
+            document.body.appendChild(ov);
+        }
+        const input = ov.querySelector('#iv-m-input'), err = ov.querySelector('#iv-m-err'), infoEl = ov.querySelector('#iv-m-info');
+        ov.querySelector('#iv-m-title').textContent = title || '';
+        infoEl.textContent = info || ''; infoEl.hidden = !info;
+        input.value = ''; input.placeholder = placeholder || ''; err.hidden = true;
+        ov.hidden = false;
+        setTimeout(() => input.focus(), 30);
+        function cleanup() { document.removeEventListener('keydown', onKey); ov.removeEventListener('mousedown', onOverlay); }
+        const close = (v) => { ov.hidden = true; cleanup(); resolve(v); };
+        const submit = () => { const r = parse(input.value); if (r && r.error) { err.textContent = r.error; err.hidden = false; input.focus(); return; } close(r ? r.value : null); };
+        const onKey = (e) => { if (e.key === 'Escape') close(null); else if (e.key === 'Enter') { e.preventDefault(); submit(); } };
+        const onOverlay = (e) => { if (e.target === ov) close(null); };
+        ov.querySelector('#iv-m-ok').onclick = submit;
+        ov.querySelector('#iv-m-cancel').onclick = () => close(null);
+        document.addEventListener('keydown', onKey);
+        ov.addEventListener('mousedown', onOverlay);
+    });
+}
+
 async function buy(serverId, name, min, max) {
     min = Number(min) || PRICING.minInvites;
     max = Number(max) || 0;
     const maxNote = max ? `\nМаксимум: ${nf(max)} инвайтов (≈ 6 мес продаж)` : '';
-    const raw = prompt(`Сколько инвайтов выкупить?\nСервер: ${name}\nМинимум: ${nf(min)} инвайтов (≈ ${PRICING.minDays} дней продаж)${maxNote}\nЦена: $${PRICING.buyPer100} за 100`);
-    if (raw === null) return;
-    const qty = Math.floor(Number(String(raw).replace(/\s/g, '')));
-    if (!Number.isFinite(qty) || qty < min) { toast(`Минимум ${nf(min)} инвайтов для этого сервера`, 'err'); return; }
-    if (max && qty > max) { toast(`Максимум ${nf(max)} инвайтов для этого сервера (≈ 6 мес продаж)`, 'err'); return; }
+    const qty = await askNum({
+        title: 'Сколько инвайтов выкупить?',
+        info: `Сервер: ${name}\nМинимум: ${nf(min)} инвайтов (≈ ${PRICING.minDays} дней продаж)${maxNote}\nЦена: $${PRICING.buyPer100} за 100`,
+        placeholder: nf(min),
+        parse: (raw) => {
+            const q = Math.floor(Number(String(raw).replace(/\s/g, '')));
+            if (!Number.isFinite(q) || q < min) return { error: `Минимум ${nf(min)} инвайтов для этого сервера` };
+            if (max && q > max) return { error: `Максимум ${nf(max)} инвайтов для этого сервера (≈ 6 мес продаж)` };
+            return { value: q };
+        }
+    });
+    if (qty == null) return;
     const { ok, body } = await post('/buy', { serverId, qty });
     if (ok) { toast(`Выкуплено инвайтов: ${nf(qty)} за ${money(body?.cost)}`); load(); }
     else if (body?.error === 'insufficient') toast('Недостаточно средств на инвест-счёте. Пополните счёт.', 'err');
@@ -353,10 +396,18 @@ async function buy(serverId, name, min, max) {
 }
 
 $('#inv-topup').onclick = async () => {
-    const raw = prompt(`Сумма пополнения в $ (минимум ${MIN_TOPUP}):`);
-    if (raw === null) return;
-    const amount = Math.floor(Number(String(raw).replace(',', '.')) * 100) / 100;
-    if (!Number.isFinite(amount) || amount <= 0) { toast('Неверное число', 'err'); return; }
+    const amount = await askNum({
+        title: 'Пополнение инвест-счёта',
+        info: `Сумма пополнения в $ (минимум ${MIN_TOPUP})`,
+        placeholder: String(MIN_TOPUP),
+        parse: (raw) => {
+            const a = Math.floor(Number(String(raw).replace(',', '.')) * 100) / 100;
+            if (!Number.isFinite(a) || a <= 0) return { error: 'Неверное число' };
+            if (a < MIN_TOPUP) return { error: `Минимум $${MIN_TOPUP}` };
+            return { value: a };
+        }
+    });
+    if (amount == null) return;
     const { ok, body } = await post('/topup', { amount });
     if (ok && body?.invoiceUrl) { toast('Счёт создан. Оплатите через CryptoBot — средства зачислятся в течение минуты.'); window.open(body.invoiceUrl, '_blank', 'noopener'); }
     else toast(body?.error === 'min-topup' ? `Минимум $${MIN_TOPUP}` : body?.error === 'Оплата временно недоступна' ? 'Оплата временно недоступна' : 'Не удалось создать счёт', 'err');
