@@ -17,7 +17,7 @@
   // Visibility of the whole mode bar is gated to admins by order.js.
 
   /* ---- ad-mode switch: Stays (orders) vs DMALL (broadcast console) ---- */
-  let dmServer = null, dmServerId = null;   // the server the broadcast is configured for (from the picker)
+  let dmServer = null, dmServerId = null, dmServerAv = '';   // the server the broadcast is configured for (from the picker)
   $$('.dm-mode', modebar).forEach((btn) => {
     btn.addEventListener('click', () => {
       const dm = btn.dataset.mode === 'dmall';
@@ -84,11 +84,13 @@
     }
     dmServer = card.dataset.name || '';
     dmServerId = card.dataset.id || '';   // used automatically as the broadcast's target guild
+    const avSrc = card.querySelector('.dm-sp-av'); dmServerAv = avSrc ? avSrc.innerHTML : '';
     if (dmSelName) dmSelName.textContent = dmServer;
     { const ss = $('#dm-sum-server'); if (ss) ss.textContent = dmServer; }
     if (dmSelBar) dmSelBar.hidden = false;
     dmall.classList.remove('picking');
     if (bell) bell.hidden = false;
+    applyServerToTasks();   // this server's feed → "Откуда" is always this server
     window.scrollTo(0, 0);
   });
   { const chg = $('#dm-changeserver'); if (chg) chg.addEventListener('click', () => { dmall.classList.add('picking'); if (dmSelBar) dmSelBar.hidden = true; if (bell) bell.hidden = true; window.scrollTo(0, 0); }); }
@@ -261,6 +263,19 @@
     pager.querySelectorAll('[data-pg]').forEach((b) => b.onclick = () => { const p = +b.dataset.pg; if (p >= 1 && p <= pages) { taskPage = p; renderTaskPage(); } });
   }
   renderTaskPage();
+
+  // Per-server feed: force every task's "Откуда" to the currently selected server.
+  function applyServerToTasks() {
+    if (!dmServer) return;
+    const av = dmServerAv || esc(dmServer.trim()[0] || '?');
+    $$('.dm-setup-tasks .dm-task').forEach((task) => {
+      const lbl = task.querySelector('.dm-r2-lbl[data-dm="route_from"]');
+      if (!lbl) return;
+      const row = lbl.closest('.dm-r2-row');
+      const nameEl = row && row.querySelector('.dm-r2-name'); if (nameEl) nameEl.textContent = dmServer;
+      const avEl = row && row.querySelector('.dm-r2-av'); if (avEl) avEl.innerHTML = av;
+    });
+  }
 
   /* ---- "Пример" — fill the content with a sample message (no embed) ---- */
   const EXAMPLE_MSG = '# 🎉 <@USER_ID> YOU WON 10x Yearly Nitro / 100k Robux / 100x Decors 🎉\n\n[**Join and Be Active In Chat to Claim!**]( https://discord.gg/your-link )\nNot Active = No Reward \nIt is mandatory to stay in the server';
