@@ -39,7 +39,7 @@ const DICT = {
     launched: 'Кампания запущена! 🎉',
     insufficient: (need) => `Недостаточно средств. Пополните ещё на $${need} и повторите.`,
     my_camps: 'Мои кампании',
-    tab_active: 'Активные', tab_finished: 'Завершено',
+    tab_active: 'Активные', tab_paused: 'На паузе', tab_finished: 'Завершено',
     tab_all: 'Все заказы', tab_all_done: 'Все завершённые',
     no_all_camps: 'Активных заказов в сети нет.', no_all_done: 'Завершённых заказов нет.',
     q_showing: 'Показывается', q_waiting: (p, tot) => `Место в очереди №${p} из ${tot}`, q_nobot: 'Ждёт бота',
@@ -47,7 +47,7 @@ const DICT = {
     st_verifier_off: 'Проверка недоступна',
     autopause_warn: 'Кампания на паузе: на вашем сервере больше некому проверять заходы (наш чекер выгнан/забанен или потерял доступ). Верните бота — показ возобновится автоматически. Пока на паузе списаний нет.',
     by_buyer: 'Заказчик:',
-    no_active_camps: 'Активных кампаний нет.', no_done_camps: 'Завершённых кампаний пока нет.',
+    no_active_camps: 'Активных кампаний нет.', no_paused_camps: 'Кампаний на паузе нет.', no_done_camps: 'Завершённых кампаний пока нет.',
     loading: 'Загрузка…', load_error: 'Не удалось загрузить заказы.', retry: 'Повторить',
     rate: (p) => `· $${p} за 100 заходов`,
     invite_bad: 'Вставьте корректную ссылку на Discord-сервер, например https://discord.gg/xxxx',
@@ -129,7 +129,7 @@ const DICT = {
     launched: 'Campaign launched! 🎉',
     insufficient: (need) => `Not enough balance. Top up $${need} more and try again.`,
     my_camps: 'My campaigns',
-    tab_active: 'Active', tab_finished: 'Completed',
+    tab_active: 'Active', tab_paused: 'Paused', tab_finished: 'Completed',
     tab_all: 'All orders', tab_all_done: 'All completed',
     no_all_camps: 'No active orders on the network.', no_all_done: 'No completed orders.',
     q_showing: 'Showing', q_waiting: (p, tot) => `Queue position #${p} of ${tot}`, q_nobot: 'Waiting for bot',
@@ -137,7 +137,7 @@ const DICT = {
     st_verifier_off: 'Checker offline',
     autopause_warn: 'Campaign paused: joins can no longer be verified on your server (our checker was kicked/banned or lost access). Add our bot back — delivery resumes automatically. No charges while paused.',
     by_buyer: 'Buyer:',
-    no_active_camps: 'No active campaigns.', no_done_camps: 'No completed campaigns yet.',
+    no_active_camps: 'No active campaigns.', no_paused_camps: 'No paused campaigns.', no_done_camps: 'No completed campaigns yet.',
     loading: 'Loading…', load_error: 'Could not load your orders.', retry: 'Retry',
     rate: (p) => `· $${p} per 100 stays`,
     invite_bad: 'Paste a valid Discord server invite, e.g. https://discord.gg/xxxx',
@@ -603,7 +603,8 @@ function renderCampaigns() {
     const tabs = $('#camp-tabs');
     const box = $('#camp-list');
     const admin = isAdminView();
-    const active = lastCampaigns.filter((c) => c.status === 'active');
+    const running = lastCampaigns.filter((c) => c.status === 'active' && !c.paused);
+    const paused = lastCampaigns.filter((c) => c.status === 'active' && c.paused);
     const finished = lastCampaigns.filter((c) => c.status !== 'active');
 
     // A non-admin with no orders at all: the simple empty state, no tabs.
@@ -614,7 +615,7 @@ function renderCampaigns() {
     if (tabs) {
         tabs.hidden = false;
         const btn = (key, id, n) => `<button data-camptab="${id}" class="${campTab === id ? 'active' : ''}">${esc(t(key))} <span class="cnt">${n}</span></button>`;
-        let html = btn('tab_active', 'active', active.length) + btn('tab_finished', 'finished', finished.length);
+        let html = btn('tab_active', 'active', running.length) + btn('tab_paused', 'paused', paused.length) + btn('tab_finished', 'finished', finished.length);
         if (admin) html += btn('tab_all', 'all', adminActive.length) + btn('tab_all_done', 'all-done', adminDone.length);
         tabs.innerHTML = html;
         tabs.querySelectorAll('[data-camptab]').forEach((b) => b.onclick = () => {
@@ -628,10 +629,11 @@ function renderCampaigns() {
 
     const shown = campTab === 'all' ? adminActive
         : campTab === 'all-done' ? adminDone
-        : campTab === 'finished' ? finished : active;
+        : campTab === 'finished' ? finished
+        : campTab === 'paused' ? paused : running;
     if (!shown.length) {
         const empty = campTab === 'all' ? t('no_all_camps') : campTab === 'all-done' ? t('no_all_done')
-            : campTab === 'finished' ? t('no_done_camps') : t('no_active_camps');
+            : campTab === 'finished' ? t('no_done_camps') : campTab === 'paused' ? t('no_paused_camps') : t('no_active_camps');
         box.innerHTML = `<div class="muted">${esc(empty)}</div>`;
         return;
     }

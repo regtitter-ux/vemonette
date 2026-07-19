@@ -382,7 +382,8 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .dm-launch-body .dm-divide:first-child{ margin-top:6px; padding-top:0; border-top:0; }
 
 /* task cards relocated under the Setup preview — Stays-style .camp cards */
-.dm-setup-tasks{ margin-top:16px; }
+#dm-task-tabs{ margin:18px 0 6px; }
+.dm-setup-tasks{ margin-top:0; }
 .dm-setup-tasks .camp{ margin-bottom:14px; }
 .camp-aud{ margin-top:8px; color:var(--dm-mut); font-size:12.5px; line-height:1.45; }
 .camp-aud b{ color:#dfe7f4; }
