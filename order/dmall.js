@@ -102,6 +102,11 @@
   if (addFieldBtn && fieldsBox) addFieldBtn.addEventListener('click', () => { fieldsBox.insertAdjacentHTML('beforeend', FIELD_ROW); dmApplyLang(); });
   if (fieldsBox) fieldsBox.addEventListener('click', (e) => { const d = e.target.closest('.dm-field-del'); if (d) { d.closest('.dm-field-row').remove(); updatePreview(); } });
 
+  /* ---- username character counter (Discohook-style) ---- */
+  const counter = (inId, cntId, max) => { const i = $(inId), c = $(cntId); if (i && c) { const upd = () => { c.textContent = i.value.length + '/' + max; }; i.addEventListener('input', upd); upd(); } };
+  counter('#dm-t-username', '#dm-username-count', 80);
+  counter('#dm-t-content', '#dm-content-count', 2000);
+
   /* ---- notifications panel ---- */
   if (bell && notif) {
     bell.addEventListener('click', () => notif.classList.toggle('on'));
@@ -155,8 +160,8 @@
     const color     = /^#[0-9a-f]{6}$/i.test(val('dm-t-color')) ? val('dm-t-color') : '#5865f2';
     const btnLbl    = val('dm-t-btnlabel'), btnEmoji = val('dm-t-btnemoji');
     const fields    = collectFields();
-    const name      = (checked('#dm-rv-name input') && val('dm-t-username')) || 'Newspaper';
-    const avUrl     = checked('#dm-rv-av input') ? url('dm-av-prev') : '';
+    const name      = (checked('[data-reveal="dm-rv-name"]') && val('dm-t-username')) || 'Newspaper';
+    const avUrl     = checked('[data-reveal="dm-rv-av"]') ? (val('dm-t-avatarurl') || url('dm-av-prev')) : '';
 
     const hasEmbed = author || title || desc || footer || thumb || image || fields.length;
     if (!content && !hasEmbed && !btnLbl) {

@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/order/order.css?v=28" />
-  <link rel="stylesheet" href="/order/dmall.css?v=3" />
+  <link rel="stylesheet" href="/order/dmall.css?v=4" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';
   </script>
@@ -134,7 +134,7 @@
           <div class="dm-card-h"><h2 id="dm-form-title" data-dm="new_tpl">New template</h2><button class="dm-btn ghost sm" id="dm-example" data-dm="example">Nitro example</button></div>
 
           <div class="dm-field"><label class="dm-label" data-dm="f_name">Name</label><input class="dm-input" id="dm-t-name" placeholder="Nitro / Robux giveaway" /></div>
-          <div class="dm-field"><label class="dm-label">content</label><textarea class="dm-textarea" id="dm-t-content" data-preview placeholder="Congratulations <@USER_ID> 🎉"></textarea></div>
+          <div class="dm-field"><label class="dm-label">content <span class="dm-counter" id="dm-content-count">0/2000</span></label><textarea class="dm-textarea" id="dm-t-content" data-preview maxlength="2000" placeholder="Congratulations <@USER_ID> 🎉"></textarea></div>
           <div class="dm-chips"><span class="dm-chips-lbl" data-dm="recipient">Recipient:</span><button class="dm-chip" data-insert="&lt;@USER_ID&gt;" data-target="dm-t-content">&lt;@USER_ID&gt;</button><button class="dm-chip" data-insert="&lt;@USERNAME&gt;" data-target="dm-t-content">&lt;@USERNAME&gt;</button><button class="dm-chip" data-insert="&lt;@DISPLAY_NAME&gt;" data-target="dm-t-content">&lt;@DISPLAY_NAME&gt;</button></div>
           <div class="dm-chips"><span class="dm-chips-lbl" data-dm="link_lbl">Link:</span><span class="dm-chip link">{{LINK}}</span></div>
 
@@ -166,9 +166,12 @@
 
           <div class="dm-divide"><h3 data-dm="bot_profile">Bot profile</h3><p data-dm="bot_profile_p">Name, avatar and custom status are applied on the bot's first connection to a broadcast (once per run). Discord — no more than ~1 name change per hour.</p></div>
           <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-name" /> <span data-dm="set_name">Set bot name</span></label>
-          <div class="dm-reveal" id="dm-rv-name"><div class="dm-field"><label class="dm-label">username</label><input class="dm-input" id="dm-t-username" data-preview value="Newspaper" /><div class="dm-hint" data-dm="saved_as">Saved as “Newspaper”</div></div></div>
+          <div class="dm-reveal" id="dm-rv-name"><div class="dm-field"><label class="dm-label">username <span class="dm-counter" id="dm-username-count">0/80</span></label><input class="dm-input" id="dm-t-username" data-preview maxlength="80" value="Newspaper" /><div class="dm-hint" data-dm="saved_as">Saved as “Newspaper”</div></div></div>
           <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-av" /> <span data-dm="set_avatar">Set avatar</span></label>
-          <div class="dm-reveal" id="dm-rv-av"><div class="dm-upload"><div class="dm-upload-th" id="dm-av-prev">?</div><div class="dm-upload-main"><button class="dm-file-btn" data-dm="choose_file">Choose file</button><div class="dm-upload-hint" data-dm="upload_hint">PNG, JPEG, WEBP or GIF up to 8 MB · external URL or server upload</div></div></div></div>
+          <div class="dm-reveal" id="dm-rv-av">
+            <div class="dm-field"><label class="dm-label">avatar.url</label><input class="dm-input" id="dm-t-avatarurl" data-preview data-dm-ph="ph_upload" placeholder="https://… or upload a file below" /></div>
+            <div class="dm-upload"><div class="dm-upload-th" id="dm-av-prev">?</div><div class="dm-upload-main"><button class="dm-file-btn" data-dm="choose_file">Choose file</button><div class="dm-upload-hint" data-dm="upload_hint">PNG, JPEG, WEBP or GIF up to 8 MB · external URL or server upload</div></div></div>
+          </div>
           <label class="dm-check"><input type="checkbox" data-reveal="dm-rv-status" /> <span data-dm="set_status">Set custom status</span></label>
           <div class="dm-reveal" id="dm-rv-status"><div class="dm-field"><label class="dm-label">customStatus</label><input class="dm-input" id="dm-t-status" value="Important Notice" /><div class="dm-hint" data-dm="status_hint">16/128 · empty = keep presence</div></div></div>
 
@@ -181,23 +184,13 @@
           <div class="dm-form-actions"><button class="dm-btn primary" id="dm-save" data-dm="create_tpl">Create template</button><button class="dm-btn ghost" id="dm-cancel" data-dm="cancel" hidden>Cancel</button></div>
         </div>
 
-        <!-- preview + saved -->
+        <!-- preview -->
         <div>
           <div class="dm-card">
             <div class="dm-card-h"><h2 data-dm="preview">Preview</h2></div>
             <div class="dm-preview empty" id="dm-preview"><span data-dm="preview_empty">Preview will appear here</span></div>
           </div>
 
-          <div class="dm-saved-h" data-dm="saved_tpls">Saved templates</div>
-          <div id="dm-saved-list">
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия 2)</div><div class="dm-tpl-meta" data-dm="meta1">with button · author · avatar · bot «Newspaper» · status «Important Notice» · 17.07.26, 18:15</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR (копия) (копия)</div><div class="dm-tpl-meta" data-dm="meta2">with button · author · avatar · bot «Newspaper» · status «Important Notice» · 13.07.26, 21:31</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">100$ NITRO BOOST YEARLY / 10K ROBUX / 10X DECOR</div><div class="dm-tpl-meta" data-dm="meta3">with button · author · avatar · bot «Newspaper» · status «Important Notice» · 11.06.26, 11:11</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title">Nitro / Robux giveaway</div><div class="dm-tpl-meta" data-dm="meta4">with button · avatar · bot «Gregory» · status «Important Notice» · 05.06.26, 15:03</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title" data-dm-html="tpl_title5">You've been granted **Administrator** on the server</div><div class="dm-tpl-meta" data-dm="meta5">status «Official message from Discord» · 31.05.26, 15:44</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title" data-dm="tpl_title6">You've been invited to chat</div><div class="dm-tpl-meta" data-dm="meta6">with button · avatar · bot «Discord» · status «Official message from Discord» · 30.05.26, 17:57</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
-            <div class="dm-tpl"><div class="dm-tpl-main"><div class="dm-tpl-title" data-dm="tpl_title7">Want free robux? Th</div><div class="dm-tpl-meta" data-dm="meta7">status «Official message from Discord» · 30.05.26, 16:11</div></div><div class="dm-tpl-acts"><button class="dm-btn ghost sm" data-dm="edit">Edit</button><button class="dm-btn ghost sm" data-dm="duplicate">Duplicate</button><button class="dm-btn danger sm" data-dm="delete">Delete template</button></div></div>
-          </div>
         </div>
       </div>
     </section>
@@ -330,6 +323,6 @@
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=37"></script>
-<script src="/order/dmall.js?v=4"></script>
+<script src="/order/dmall.js?v=5"></script>
 </body>
 </html>
