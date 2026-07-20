@@ -456,6 +456,9 @@ function askAmount(min) {
     });
 }
 $('#wallet-topup').addEventListener('click', async () => {
+    // If the wallet hasn't loaded yet (right after a page refresh), fetch it first
+    // instead of falsely reporting "payments unavailable" from empty state.
+    if (WALLET.cryptoWebEnabled === undefined && WALLET.cryptoEnabled === undefined) await loadWallet();
     const web = WALLET.cryptoWebEnabled, tg = WALLET.cryptoEnabled;
     if (!web && !tg) { toast(t('pay_unavail'), 'err'); return; }
     const amount = await askAmount(WALLET.minTopup || 5);
