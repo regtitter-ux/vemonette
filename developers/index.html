@@ -13,21 +13,45 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" /></noscript>
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
   <style>
-    :root{ --bg:#080b12; --panel:#0f1626; --panel-2:#0c1220; --stroke:rgba(255,255,255,.08); --stroke-2:rgba(255,255,255,.14); --text:#eaf0fa; --muted:#8fa0bb; --dim:#6b7a93; --blue:#5cc8ff; --blurple:#5865f2; --green:#57f287; --amber:#f5a524; --red:#ed4245; }
+    :root{ --bg:#080b12; --panel:#0f1626; --panel-2:#0c1220; --stroke:rgba(255,255,255,.08); --stroke-2:rgba(255,255,255,.14); --text:#eaf0fa; --muted:#8fa0bb; --dim:#6b7a93; --blue:#5cc8ff; --blue-2:#22a8f0; --blurple:#5865f2; --green:#57f287; --amber:#f5a524; --red:#ed4245; }
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:var(--bg);color:var(--text);font-family:'Roboto',system-ui,-apple-system,sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased}
     body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(900px 460px at 82% -6%,rgba(34,168,240,.14),transparent 60%),radial-gradient(700px 460px at 6% 4%,rgba(87,242,135,.06),transparent 60%)}
     .wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:0 22px}
-    header{border-bottom:1px solid var(--stroke)}
-    .bar{max-width:880px;margin:0 auto;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
-    .brand{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:19px;letter-spacing:-.02em;flex:none;text-decoration:none}
-    .brand img{width:28px;height:28px;border-radius:50%}
-    .bar-right{display:flex;align-items:center;gap:14px}
-    .lang{display:inline-flex;background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:8px;overflow:hidden}
-    .lang button{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;font-weight:700;padding:6px 10px;cursor:pointer;transition:.15s}
-    .lang button.active{background:rgba(92,200,255,.16);color:#fff}
-    .back{color:var(--muted);font-size:14px;font-weight:600;text-decoration:none;transition:color .15s;white-space:nowrap}
-    .back:hover{color:#fff}
+    /* topbar (same as the partner cabinet) */
+    .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:14px 22px;max-width:880px;margin:0 auto;border-bottom:1px solid var(--stroke);background:rgba(11,15,23,.8);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+    .brand-sm{display:flex;align-items:center;gap:8px;font-weight:700;font-size:22px;color:var(--text);text-decoration:none}
+    .brand-sm img{width:30px;height:30px;border-radius:50%;display:block;flex:none}
+    .top-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+    .bal-pill{display:inline-flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--stroke-2);border-radius:999px;padding:6px 14px;font-weight:800}
+    .bal-pill .muted{font-weight:600}
+    .bal-pill[hidden]{display:none}
+    .lang-switch{display:inline-flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--stroke-2);border-radius:999px;padding:2px}
+    .lang-switch button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;cursor:pointer}
+    .lang-switch button.active{background:var(--blue);color:#06121c}
+    .cab-menu{position:relative;display:flex;align-items:center}
+    .cab-av{width:42px;height:42px;border-radius:50%;padding:0;border:1px solid var(--stroke-2);background-size:cover;background-position:center;background-color:var(--panel-2);color:var(--text);font-weight:700;font-size:16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
+    .cab-av:hover{border-color:var(--blue)}
+    .nav-menu{position:absolute;top:calc(100% + 12px);right:0;width:262px;background:var(--panel);border:1px solid var(--stroke-2);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px -24px rgba(0,0,0,.85);z-index:60}
+    .nav-menu[hidden]{display:none}
+    .nm-head{position:relative;height:96px;overflow:hidden}
+    .nm-banner{position:absolute;inset:0;background:linear-gradient(135deg,var(--blue),var(--blue-2));background-size:cover;background-position:center}
+    .nm-banner::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.2) 0%,rgba(0,0,0,.72) 100%)}
+    .nm-id{position:absolute;left:14px;right:14px;bottom:11px;z-index:1;display:flex;align-items:center;gap:11px}
+    .nm-av{width:46px;height:46px;border-radius:50%;flex:none;border:2px solid rgba(255,255,255,.9);box-shadow:0 2px 8px rgba(0,0,0,.45);background-size:cover;background-position:center;background-color:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:17px}
+    .nm-txt{min-width:0}
+    .nm-txt b{display:block;color:#fff;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 3px rgba(0,0,0,.55)}
+    .nm-txt span{display:block;color:rgba(255,255,255,.85);font-size:12.5px;text-shadow:0 1px 3px rgba(0,0,0,.55)}
+    .nm-items{padding:6px}
+    .nm-items a,.nm-items .nav-logout{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:8px;color:var(--text);font-size:14px;font-weight:600;background:transparent;border:0;width:100%;text-align:left;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap}
+    .nm-items a:hover,.nm-items .nav-logout:hover{background:rgba(255,255,255,.06);text-decoration:none}
+    .nm-items a svg,.nm-items .nav-logout svg{width:18px;height:18px;flex:none;color:var(--muted)}
+    .nm-items a:hover svg{color:var(--text)}
+    .nm-items a.active{color:var(--blue-2);background:rgba(34,168,240,.14)}
+    .nm-items a.active svg{color:var(--blue-2)}
+    .nm-sep{height:1px;background:var(--stroke);margin:6px 8px}
+    .nm-items .nav-logout,.nm-items .nav-logout svg{color:#ff9a9c}
+    .nm-items .nav-logout:hover{background:rgba(237,66,69,.14)}
     main{padding:44px 0 80px}
     h1{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
     .lead{color:var(--muted);margin-top:14px;font-size:16.5px;max-width:640px}
@@ -100,12 +124,30 @@
   </style>
 </head>
 <body>
-  <header>
-    <div class="bar">
-      <a class="brand" href="/"><img src="/assets/logo.png" alt="Vemoni" />Vemoni</a>
-      <div class="bar-right">
-        <div class="lang" id="lang"><button data-lang="en">EN</button><button data-lang="ru">RU</button></div>
-        <a class="back" href="/" data-i18n="back">← Back to site</a>
+  <header class="topbar">
+    <a class="brand-sm" href="/"><img src="/assets/logo.png" alt="Vemoni" /><span>Vemoni</span></a>
+    <div class="top-right">
+      <span class="bal-pill" id="balPill" hidden><span class="muted sm" data-i18n="t_balance">Balance</span> <b id="topBal">$0.00</b></span>
+      <div class="lang-switch" id="lang"><button data-lang="en">EN</button><button data-lang="ru">RU</button></div>
+      <div class="cab-menu">
+        <button class="cab-av" id="cabAv" aria-label="Account"></button>
+        <div class="nav-menu" id="navMenu" hidden>
+          <div class="nm-head">
+            <div class="nm-banner" id="nmBanner"></div>
+            <div class="nm-id"><div class="nm-av" id="nmAv"></div><div class="nm-txt"><b id="nmName">User</b><span id="nmUser"></span></div></div>
+          </div>
+          <div class="nm-items">
+            <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg> <span data-i18n="m_home">Home</span></a>
+            <a href="/partner/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.7-5 5.5-5s5.5 2 5.5 5"/><path d="M16.5 15.2c2 .4 3.5 2 3.5 4.3"/><circle cx="17.5" cy="8.5" r="2.3"/></svg> <span data-i18n="m_partner">For partners</span></a>
+            <a href="/buyers/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg> <span data-i18n="m_buyers">For buyers</span></a>
+            <a href="/order/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M9 12h6M9 16h4"/></svg> <span data-i18n="m_myorders">My orders</span></a>
+            <a href="/investor/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l5-5 3.5 3.5L20 8"/><path d="M16 8h4v4"/></svg> <span data-i18n="m_invest">For investors</span></a>
+            <a href="/developers/" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/><path d="M13 5l-2 14"/></svg> <span data-i18n="m_dev">For developers</span></a>
+            <a href="/admin/" id="mAdmin" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.2-3 7.4-7 9-4-1.6-7-4.8-7-9V6l7-3Z"/></svg> <span data-i18n="m_admin">For admins</span></a>
+            <div class="nm-sep"></div>
+            <button class="nav-logout" id="logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/></svg> <span data-i18n="m_logout">Log out</span></button>
+          </div>
+        </div>
       </div>
     </div>
   </header>
@@ -116,18 +158,7 @@
 
     <!-- ===== Cabinet (logged in) ===== -->
     <section id="devCab" hidden>
-      <div class="cabhead">
-        <div class="cabav" id="cabAv">D</div>
-        <div><div class="nm" id="cabName">—</div><div class="id" id="cabId"></div></div>
-      </div>
-
-      <div class="tiles">
-        <div class="tile acc"><div class="k" data-i18n="t_balance">Balance</div><div class="v" id="tBal">$0.00</div></div>
-        <div class="tile"><div class="k" data-i18n="t_joins">Confirmed joins</div><div class="v" id="tJoins">0</div></div>
-        <div class="tile"><div class="k" data-i18n="t_earned">Standing earnings</div><div class="v" id="tEarned">$0.00</div></div>
-        <div class="tile"><div class="k" data-i18n="t_withdrawn">Withdrawn</div><div class="v" id="tWd">$0.00</div></div>
-      </div>
-      <div class="apibox">
+      <div class="apibox" style="margin-top:26px">
         <div><div class="k" data-i18n="api_earned">Earned via API</div><div class="v" id="apiPaid">$0.00</div></div>
         <div><div class="k" data-i18n="api_joins">API joins</div><div class="v" id="apiJoins">0</div></div>
         <p class="muted sm apinote" data-i18n="api_note">This is the slice of your balance earned through your bot via the API. Anything on top of it comes from a verification bot you run on a Discord server.</p>
@@ -237,10 +268,10 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
 
   <script>
   var I18N = { ru: {
-    back:'← На сайт',
     h1:'Монетизируйте Discord-бота с Vemoni',
     lead:'Vemoni — рекламная сеть в Discord. Добавьте в бота пару вызовов, предложите пользователю награду за переход на сервер спонсора — и получайте $5 за каждые 100 переходов.',
-    t_balance:'Баланс', t_joins:'Подтверждённые заходы', t_earned:'Заработано (в силе)', t_withdrawn:'Выведено',
+    t_balance:'Баланс',
+    m_home:'Главная', m_partner:'Партнёрам', m_buyers:'Покупателям', m_myorders:'Мои заказы', m_invest:'Инвесторам', m_dev:'Разработчикам', m_admin:'Администраторам', m_logout:'Выйти',
     api_earned:'Заработано через API', api_joins:'Заходы через API',
     api_note:'Это часть баланса, заработанная через вашего бота по API. Всё сверх неё — от бота-верификатора, который вы держите на Discord-сервере.',
     key_yours:'Ваш API-ключ',
@@ -307,10 +338,8 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     function fmtDate(ts){ if(!ts) return ''; try{ return new Date(ts).toLocaleDateString(LANG==='ru'?'ru-RU':'en-US',{day:'2-digit',month:'short',year:'numeric'}); }catch(e){ return ''; } }
     function renderCab(){
       if(!ME) return;
-      $('tBal').textContent=f$(ME.balance);
-      $('tJoins').textContent=(ME.verifications&&ME.verifications.all!=null?ME.verifications.all:0).toLocaleString();
-      $('tEarned').textContent=f$(ME.standingPaid);
-      $('tWd').textContent=f$(ME.withdrawnDone);
+      $('topBal').textContent=f$(ME.balance);
+      var bp=$('balPill'); if(bp) bp.hidden=false;
       $('apiPaid').textContent=f$(ME.apiPaid);
       $('apiJoins').textContent=(ME.apiJoins!=null?ME.apiJoins:0).toLocaleString();
       renderLtc(ME.autoLtc && ME.ltcAddress);
@@ -320,10 +349,27 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     function renderKey(){ var el=$('keyVal'); if(!el) return; el.textContent = KEY ? (revealed?KEY:mask(KEY)) : T().nokey; var rv=$('keyReveal'); if(rv) rv.textContent = revealed?T().hide:T().reveal; }
     function renderKeyHint(){ var el=$('keyHint'); if(!el) return; if(!KEY){ el.textContent=T().hintNo; } else { el.innerHTML=(LANG==='ru'?'Готово. Используйте его в заголовке ':'Ready. Use it in the ')+'<code>Authorization: Bearer …</code>'+(LANG==='ru'?'':' header')+'.'; } }
 
+    function wireHeader(who){
+      var name = who.name || who.username || 'Developer';
+      var letter = (String(name).trim()[0] || 'D').toUpperCase();
+      var av=$('cabAv'); if(who.avatar){ av.style.backgroundImage='url("'+who.avatar+'")'; } else { av.textContent=letter; }
+      var nmAv=$('nmAv'); if(who.avatar){ nmAv.style.backgroundImage='url("'+who.avatar+'")'; } else { nmAv.textContent=letter; }
+      $('nmName').textContent=name;
+      $('nmUser').textContent=who.username ? ('@'+who.username) : ('ID '+(who.userId||''));
+      if(who.banner){ var b=$('nmBanner'); b.style.backgroundImage='url("'+who.banner+'")'; }
+      if(who.isAdmin){ var ma=$('mAdmin'); if(ma) ma.hidden=false; }
+      // burger menu toggle
+      var menu=$('navMenu');
+      if(av && !av._wired){ av._wired=1;
+        av.addEventListener('click', function(e){ e.stopPropagation(); menu.hidden=!menu.hidden; });
+        menu.addEventListener('click', function(e){ e.stopPropagation(); });
+        document.addEventListener('click', function(){ menu.hidden=true; });
+      }
+      var lo=$('logout');
+      if(lo && !lo._wired){ lo._wired=1; lo.addEventListener('click', async function(){ try{ await req('/partner/logout',{method:'POST'}); }catch(e){} try{ localStorage.removeItem('vemoni_tok'); localStorage.removeItem('vemoni_authed'); }catch(e){} location.reload(); }); }
+    }
     async function loadCab(who){
-      $('cabName').textContent = who.name || who.username || 'Developer';
-      $('cabId').textContent = who.username ? ('@'+who.username) : ('ID '+(who.userId||''));
-      var av=$('cabAv'); if(who.avatar){ av.style.backgroundImage='url("'+who.avatar+'")'; av.textContent=''; } else { av.textContent=(String(who.name||who.username||'D').trim()[0]||'D').toUpperCase(); }
+      wireHeader(who);
       try{
         var results=await Promise.all([ req('/partner/me').then(function(r){return r.json();}), req('/order/api-key').then(function(r){return r.json();}) ]);
         ME=results[0]||{}; KEY=(results[1]&&results[1].key)||null; revealed=false;
