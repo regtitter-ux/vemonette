@@ -69,6 +69,56 @@ async function loadManagedFeed() {
   } catch (_) { /* offline / API down → keep the fallback list */ }
 }
 
+/* Owner-only: click a feed card to change its avatar. Saved to the feed, so it
+   updates the marquee AND the hero globe (and every page that reads /feed). */
+function findFeedItem(key) { return FEED.find((s) => String(s.code) === key || String(s.id) === key); }
+async function ownerSetFeedAvatar(key, img) {
+  const base = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '');
+  let tok = ''; try { tok = localStorage.getItem('vemoni_tok') || ''; } catch (_) {}
+  const headers = { 'Content-Type': 'application/json' }; if (tok) headers.Authorization = 'Bearer ' + tok;
+  try {
+    const r = await fetch(base + '/admin/feed/avatar', { method: 'POST', credentials: 'include', headers, body: JSON.stringify({ code: key, img }) });
+    const d = await r.json().catch(() => null);
+    if (r.ok && d && Array.isArray(d.servers)) { FEED = d.servers; renderFeedRows(); try { window.dispatchEvent(new Event('vemoni:feed')); } catch (_) {} return true; }
+  } catch (_) {}
+  return false;
+}
+function openFeedAvatarEditor(key) {
+  const item = findFeedItem(key); if (!item) return;
+  if (document.getElementById('feedAvOverlay')) return;
+  const ov = document.createElement('div'); ov.id = 'feedAvOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:20px';
+  const cur = (item.img || '').replace(/"/g, '&quot;');
+  ov.innerHTML =
+    '<div style="background:#141a26;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:20px;max-width:420px;width:100%;box-shadow:0 30px 70px -30px rgba(0,0,0,.8);color:#e8ecf3;font:inherit">'
+    + '<div style="font-weight:800;font-size:16px;margin-bottom:4px">Аватар сервера</div>'
+    + '<div style="font-size:13px;color:#9aa6b8;margin-bottom:12px">' + (item.name || '') + '</div>'
+    + '<input id="feedAvUrl" type="text" placeholder="https://…/avatar.png" value="' + cur + '" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:#e8ecf3;font:inherit;font-size:14px" />'
+    + '<div style="font-size:12px;color:#7c869a;margin-top:8px">Ссылка на картинку. Пусто → вернётся аватар из Discord.</div>'
+    + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">'
+    +   '<button id="feedAvCancel" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#e8ecf3;cursor:pointer;font:inherit">Отмена</button>'
+    +   '<button id="feedAvClear" style="padding:8px 14px;border-radius:9px;border:1px solid rgba(237,66,69,.4);background:transparent;color:#ff9a9c;cursor:pointer;font:inherit">Убрать</button>'
+    +   '<button id="feedAvSave" style="padding:8px 14px;border-radius:9px;border:1px solid #5865f2;background:#5865f2;color:#fff;cursor:pointer;font:inherit;font-weight:700">Сохранить</button>'
+    + '</div></div>';
+  document.body.appendChild(ov);
+  const close = () => ov.remove();
+  ov.addEventListener('click', (e) => { if (e.target === ov) close(); });
+  document.getElementById('feedAvCancel').onclick = close;
+  const inp = document.getElementById('feedAvUrl'); inp.focus();
+  document.getElementById('feedAvSave').onclick = async () => { const ok = await ownerSetFeedAvatar(key, inp.value.trim()); if (ok) close(); else inp.style.borderColor = '#e63b7a'; };
+  document.getElementById('feedAvClear').onclick = async () => { const ok = await ownerSetFeedAvatar(key, ''); if (ok) close(); };
+}
+let OWNER_FEED_ON = false;
+function enableOwnerFeedEditing() {
+  if (OWNER_FEED_ON) return; OWNER_FEED_ON = true;
+  const st = document.createElement('style');
+  st.textContent = '#marquee.owner-edit .scard{cursor:pointer} #marquee.owner-edit:hover .marquee-track{animation-play-state:paused} #marquee.owner-edit .scard:hover{outline:2px solid #5865f2;outline-offset:-2px;border-radius:12px}';
+  document.head.appendChild(st);
+  const m = document.getElementById('marquee'); if (!m) return;
+  m.classList.add('owner-edit');
+  m.addEventListener('click', (e) => { const card = e.target.closest('.scard'); if (!card) return; const key = card.dataset.code; if (key) openFeedAvatarEditor(String(key)); });
+}
+
 /* Try to refresh counts live from the visitor's browser (Discord invite API allows CORS). */
 async function refreshLive() {
   await Promise.all(FEED.map(async (s) => {
@@ -612,6 +662,7 @@ setLang(startLang);
         if (loginBtn) loginBtn.style.display = ''; box.hidden = true; return;
       }
       setAuthed(true);
+      if (d.isOwner) { try { enableOwnerFeedEditing(); } catch (_) {} } // owner can click feed cards to change avatars
       if (loginBtn) loginBtn.style.display = 'none';
       const name = d.name || d.username || 'User';
       const letter = (name.trim()[0] || 'U').toUpperCase();
