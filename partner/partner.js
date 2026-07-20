@@ -182,7 +182,7 @@ const TR = {
   '1. Клик (начали)':'1. Click (started)','2. Заход проверен':'2. Join checked','3. Остались':'3. Stayed',
   'Встряхнуть':'Shake','Владелец…':'Owner…','Роль…':'Role…','Редактировать':'Edit','Перепубликовать':'Republish','Авто-сброс роли':'Auto-reset role','Сбросить роль':'Reset role','Удалить':'Delete',
   // card editor
-  'Редактировать карточку':'Edit card','Заголовок эмбеда':'Embed title','Текст кнопки':'Button text','Цвет стенки':'Accent colour','Эмодзи кнопки':'Button emoji','Без эмодзи':'No emoji','Выбрать эмодзи':'Pick emoji','Стандартный':'Default','нет':'none','На сервере нет своих эмодзи':'This server has no custom emojis','Карточка обновлена':'Card updated',
+  'Редактировать карточку':'Edit card','Заголовок эмбеда':'Embed title','Текст кнопки':'Button text','Цвет стенки':'Accent colour','Эмодзи кнопки':'Button emoji','Без эмодзи':'No emoji','Выбрать эмодзи':'Pick emoji','Стандартный':'Default','нет':'none','На сервере нет своих эмодзи':'This server has no custom emojis','Карточка обновлена':'Card updated','Использовать шаблон при создании новых карточек':'Use as a template for new cards',
   'Авто-сброс включён':'Auto-reset enabled','Авто-сброс отключён':'Auto-reset disabled',
   'Всегда снизу: вкл':'Always at bottom: on','Всегда снизу: выкл':'Always at bottom: off',
   'Всегда снизу: включено':'Always at bottom: enabled','Всегда снизу: выключено':'Always at bottom: disabled',
@@ -685,6 +685,7 @@ async function openCardEditor(card) {
     $('#pe-btn').value = (card.buttonLabel && card.buttonLabel !== 'Start Verification') ? card.buttonLabel : '';
     const color = /^#[0-9a-fA-F]{6}$/.test(card.color || '') ? card.color : '#5865F2';
     $('#pe-color').value = color; $('#pe-color-hex').textContent = color;
+    $('#pe-template').checked = !!card.isTemplate;
     peEmoji = card.buttonEmoji != null ? card.buttonEmoji : '🔐';
     renderPeEmoji();
     peEmojis = []; renderPeEmojiGrid();
@@ -712,7 +713,8 @@ async function openCardEditor(card) {
             description: document.getElementById('pe-desc').value,
             buttonLabel: document.getElementById('pe-btn').value,
             buttonEmoji: peEmoji,
-            color: document.getElementById('pe-color').value
+            color: document.getElementById('pe-color').value,
+            isTemplate: document.getElementById('pe-template').checked
         });
         if (ok) { close(); toast('Карточка обновлена'); loadCards(); }
         else toast(pcardErr(body?.error), 'err');
