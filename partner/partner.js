@@ -180,7 +180,9 @@ const TR = {
   // cards section
   'Мои карточки верификации':'My verification cards','роль по умолчанию':'default role','сообщение':'message','Роль:':'Role:',
   '1. Клик (начали)':'1. Click (started)','2. Заход проверен':'2. Join checked','3. Остались':'3. Stayed',
-  'Встряхнуть':'Shake','Владелец…':'Owner…','Роль…':'Role…','Описание…':'Description…','Перепубликовать':'Republish','Авто-сброс роли':'Auto-reset role','Сбросить роль':'Reset role','Удалить':'Delete',
+  'Встряхнуть':'Shake','Владелец…':'Owner…','Роль…':'Role…','Редактировать':'Edit','Перепубликовать':'Republish','Авто-сброс роли':'Auto-reset role','Сбросить роль':'Reset role','Удалить':'Delete',
+  // card editor
+  'Редактировать карточку':'Edit card','Заголовок эмбеда':'Embed title','Текст кнопки':'Button text','Цвет стенки':'Accent colour','Эмодзи кнопки':'Button emoji','Без эмодзи':'No emoji','Выбрать эмодзи':'Pick emoji','Стандартный':'Default','нет':'none','На сервере нет своих эмодзи':'This server has no custom emojis','Карточка обновлена':'Card updated',
   'Авто-сброс включён':'Auto-reset enabled','Авто-сброс отключён':'Auto-reset disabled',
   'Всегда снизу: вкл':'Always at bottom: on','Всегда снизу: выкл':'Always at bottom: off',
   'Всегда снизу: включено':'Always at bottom: enabled','Всегда снизу: выключено':'Always at bottom: disabled',
@@ -559,7 +561,7 @@ function pcardBlock(c) {
             <button class="btn-mini" data-card="fix">Встряхнуть</button>
             <button class="btn-mini" data-card="owner">Владелец…</button>
             <button class="btn-mini" data-card="role">Роль…</button>
-            <button class="btn-mini" data-card="desc">Описание…</button>
+            <button class="btn-mini" data-card="edit">Редактировать</button>
             <button class="btn-mini" data-card="republish">Перепубликовать</button>
             <button class="btn-mini${c.autoResetMs > 0 ? ' on' : ''}" data-card="autoreset">Авто-сброс роли</button>
             ${c.alwaysBottomSupported ? `<button class="btn-mini${c.alwaysBottom ? ' on' : ''}" data-card="always-bottom">Всегда снизу: ${c.alwaysBottom ? 'вкл' : 'выкл'}</button>` : ''}
@@ -641,9 +643,9 @@ async function pcardAction(action, messageId) {
         if (roleId && !/^\d{17,20}$/.test(roleId)) { toast('Неверный ID роли', 'err'); return; }
         const { ok, body } = await post('/cards/edit', { messageId, roleId });
         toast(ok ? 'Роль изменена' : pcardErr(body?.error), ok ? 'ok' : 'err'); if (ok) loadCards();
-    } else if (action === 'desc') {
+    } else if (action === 'edit') {
         const card = lastPCards.find((c) => c.messageId === messageId);
-        openPcardDescModal(messageId, card ? (card.customDescription ? card.description : '') : '');
+        if (card) openCardEditor(card);
     } else if (action === 'autoreset') {
         const card = lastPCards.find((c) => c.messageId === messageId);
         openAutoResetModal(messageId, card ? (card.autoResetMs || 0) : 0);
@@ -656,25 +658,63 @@ async function pcardAction(action, messageId) {
     }
 }
 
-function openPcardDescModal(messageId, desc) {
-    const modal = $('#pcard-desc-modal');
-    if (!modal) return;
-    $('#pcard-desc-input').value = desc || '';
-    modal.dataset.mid = messageId;
+// ---- Full card editor: title, description, button text, emoji, embed colour ----
+let peEmoji = '🔐';   // current button-emoji selection ('' = no emoji)
+let peEmojis = [];    // the card server's custom emojis
+function peEmojiPreview(v) {
+    if (!v) return '<span class="pe-emoji-none-lbl">нет</span>';
+    const m = String(v).match(/^<(a?):(\w+):(\d+)>$/);
+    if (m) return `<img src="https://cdn.discordapp.com/emojis/${m[3]}.${m[1] === 'a' ? 'gif' : 'png'}?size=48" alt="">`;
+    return `<span class="pe-emoji-uni">${esc(v)}</span>`;
+}
+function renderPeEmoji() { const el = $('#pe-emoji-btn'); if (el) el.innerHTML = peEmojiPreview(peEmoji); }
+function renderPeEmojiGrid() {
+    const grid = $('#pe-emoji-pick'); if (!grid) return;
+    let html = '<button type="button" class="pe-emoji-opt" data-emoji="🔐" title="Стандартный">🔐</button>';
+    html += peEmojis.map((e) => `<button type="button" class="pe-emoji-opt" data-emoji="${esc(e.markup)}" title="${esc(e.name)}"><img src="${esc(e.url)}" alt="" loading="lazy"></button>`).join('');
+    if (!peEmojis.length) html += '<span class="pe-emoji-empty muted sm">На сервере нет своих эмодзи</span>';
+    grid.innerHTML = html;
+    grid.querySelectorAll('[data-emoji]').forEach((b) => b.onclick = () => { peEmoji = b.dataset.emoji; renderPeEmoji(); grid.hidden = true; });
+}
+async function openCardEditor(card) {
+    const modal = $('#pcard-edit-modal');
+    if (!modal || !card) return;
+    modal.dataset.mid = card.messageId;
+    $('#pe-title').value = card.customTitle ? card.title : '';
+    $('#pe-desc').value = card.customDescription ? card.description : '';
+    $('#pe-btn').value = (card.buttonLabel && card.buttonLabel !== 'Start Verification') ? card.buttonLabel : '';
+    const color = /^#[0-9a-fA-F]{6}$/.test(card.color || '') ? card.color : '#5865F2';
+    $('#pe-color').value = color; $('#pe-color-hex').textContent = color;
+    peEmoji = card.buttonEmoji != null ? card.buttonEmoji : '🔐';
+    renderPeEmoji();
+    peEmojis = []; renderPeEmojiGrid();
+    $('#pe-emoji-pick').hidden = true;
     modal.hidden = false;
-    $('#pcard-desc-input').focus();
+    $('#pe-title').focus();
+    const { ok, body } = await post('/cards/emojis', { messageId: card.messageId });
+    if (ok) { peEmojis = body.emojis || []; renderPeEmojiGrid(); }
 }
 (() => {
-    const modal = document.getElementById('pcard-desc-modal');
+    const modal = document.getElementById('pcard-edit-modal');
     if (!modal) return;
     const close = () => { modal.hidden = true; };
-    document.getElementById('pcard-desc-close')?.addEventListener('click', close);
+    document.getElementById('pcard-edit-close')?.addEventListener('click', close);
     modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-    document.getElementById('pcard-desc-save')?.addEventListener('click', async () => {
+    const colorInp = document.getElementById('pe-color');
+    colorInp?.addEventListener('input', () => { document.getElementById('pe-color-hex').textContent = colorInp.value; });
+    document.getElementById('pe-emoji-btn')?.addEventListener('click', () => { const g = document.getElementById('pe-emoji-pick'); g.hidden = !g.hidden; });
+    document.getElementById('pe-emoji-none')?.addEventListener('click', () => { peEmoji = ''; renderPeEmoji(); document.getElementById('pe-emoji-pick').hidden = true; });
+    document.getElementById('pcard-edit-save')?.addEventListener('click', async () => {
         const mid = modal.dataset.mid;
-        const description = $('#pcard-desc-input').value;
-        const { ok, body } = await post('/cards/edit', { messageId: mid, description });
-        if (ok) { close(); toast('Описание обновлено'); loadCards(); }
+        const { ok, body } = await post('/cards/edit', {
+            messageId: mid,
+            title: document.getElementById('pe-title').value,
+            description: document.getElementById('pe-desc').value,
+            buttonLabel: document.getElementById('pe-btn').value,
+            buttonEmoji: peEmoji,
+            color: document.getElementById('pe-color').value
+        });
+        if (ok) { close(); toast('Карточка обновлена'); loadCards(); }
         else toast(pcardErr(body?.error), 'err');
     });
 })();
