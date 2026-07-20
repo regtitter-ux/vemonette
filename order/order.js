@@ -91,7 +91,12 @@ const DICT = {
     mgr_bad_id: 'Введите корректный Discord ID (17–20 цифр)',
     mgr_added: 'Менеджер добавлен', mgr_removed: 'Менеджер удалён',
     mgr_remove: 'Убрать', mgr_empty: 'Менеджеров пока нет',
-    mgr_you: (p) => `Вы менеджер — ваша цена $${p} за 100 заходов.`
+    mgr_you: (p) => `Вы менеджер — ваша цена $${p} за 100 заходов.`,
+    dma_h: 'Доступ к DMALL',
+    dma_desc: 'Пользователи с этими Discord ID получают доступ к разделу DMALL.',
+    dma_add: 'Добавить',
+    dma_added: 'Доступ выдан', dma_removed: 'Доступ отозван',
+    dma_remove: 'Убрать', dma_empty: 'Пока никому не выдан'
   },
   en: {
     brand: 'Vemoni · Ads',
@@ -181,7 +186,12 @@ const DICT = {
     mgr_bad_id: 'Enter a valid Discord ID (17–20 digits)',
     mgr_added: 'Manager added', mgr_removed: 'Manager removed',
     mgr_remove: 'Remove', mgr_empty: 'No managers yet',
-    mgr_you: (p) => `You're a manager — your price is $${p} per 100 stays.`
+    mgr_you: (p) => `You're a manager — your price is $${p} per 100 stays.`,
+    dma_h: 'DMALL access',
+    dma_desc: 'Users with these Discord IDs get access to the DMALL section.',
+    dma_add: 'Add',
+    dma_added: 'Access granted', dma_removed: 'Access revoked',
+    dma_remove: 'Remove', dma_empty: 'No one yet'
   }
 };
 let lang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
@@ -332,7 +342,7 @@ function setupCabNav(who) {
     const path = location.pathname;
     document.querySelectorAll('.nav-menu [data-cn]').forEach((a) => { if (path.indexOf('/' + a.dataset.cn) === 0) a.classList.add('active'); });
     if (who && who.isAdmin) document.querySelectorAll('.nav-menu [data-cn="admin"]').forEach((a) => (a.hidden = false));
-    if (who && (who.isAdmin || who.isOwner)) { const mb = document.getElementById('dm-modebar'); if (mb) mb.hidden = false; }
+    if (who && (who.isAdmin || who.isOwner || who.dmall)) { const mb = document.getElementById('dm-modebar'); if (mb) mb.hidden = false; }
     if (who) {
         const name = who.name || who.username || 'User', letter = (String(name).trim()[0] || 'U').toUpperCase();
         const nmAv = document.getElementById('nmAv'), nmName = document.getElementById('nmName'), nmUser = document.getElementById('nmUser');
@@ -362,6 +372,7 @@ async function enterApp() {
     applyLang();
     updatePrice();
     setupManagers();
+    setupDmallAccess();
     loadWallet();
     loadCampaigns();
     // Admins/owners: prime the "all orders" counts so the extra tabs show numbers
@@ -501,6 +512,44 @@ function renderManagers(list, meta) {
     box.querySelectorAll('[data-mgr-del]').forEach((b) => b.onclick = async () => {
         const { ok, body } = await put('/managers', { userId: b.dataset.mgrDel, remove: true });
         if (ok) { toast(t('mgr_removed')); renderManagers(body.managers, meta); }
+        else toast(body?.error || 'error', 'err');
+    });
+}
+
+// ---------- DMALL access (owner grants users access to the DMALL console) ----------
+function setupDmallAccess() {
+    const card = $('#dm-access-card');
+    if (!card) return;
+    if (!CFG.isOwner) { card.hidden = true; return; }
+    card.hidden = false;
+    loadDmallAccess();
+    const addBtn = $('#dm-access-add');
+    if (addBtn && !addBtn._wired) {
+        addBtn._wired = true;
+        addBtn.onclick = async () => {
+            const id = $('#dm-access-id').value.trim();
+            if (!/^\d{17,20}$/.test(id)) { toast(t('mgr_bad_id'), 'err'); return; }
+            const { ok, body } = await put('/dmall-access', { userId: id });
+            if (ok) { $('#dm-access-id').value = ''; toast(t('dma_added')); renderDmallAccess(body.users); }
+            else toast(body?.error || 'error', 'err');
+        };
+    }
+}
+async function loadDmallAccess() {
+    const { ok, body } = await get('/dmall-access');
+    if (!ok) return;
+    renderDmallAccess(body.users || []);
+}
+function renderDmallAccess(list) {
+    const box = $('#dm-access-list');
+    if (!box) return;
+    if (!list.length) { box.innerHTML = `<div class="dma-empty">${esc(t('dma_empty'))}</div>`; return; }
+    box.innerHTML = list.map((id) =>
+        `<div class="dma-row"><span class="dma-uid">${esc(id)}</span><button class="dm-btn danger sm" data-dma-del="${esc(id)}">${esc(t('dma_remove'))}</button></div>`
+    ).join('');
+    box.querySelectorAll('[data-dma-del]').forEach((b) => b.onclick = async () => {
+        const { ok, body } = await put('/dmall-access', { userId: b.dataset.dmaDel, remove: true });
+        if (ok) { toast(t('dma_removed')); renderDmallAccess(body.users); }
         else toast(body?.error || 'error', 'err');
     });
 }
