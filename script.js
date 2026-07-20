@@ -367,17 +367,19 @@ setLang(startLang);
   const PARTNERS = [], CENTERS = [], BUYERS = [];
   const dist2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
   const nearest = (p, arr) => { let bi = 0, bd = Infinity; arr.forEach((n, i) => { const d = dist2(p, n.p); if (d < bd) { bd = d; bi = i; } }); return arr[bi]; };
+  // Evenly distribute n points over the sphere (Fibonacci lattice) → one partner
+  // planet per feed server, however many there are.
+  function fibSphere(n) { const pts = [], g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < n; i++) { const y = 1 - 2 * (i + 0.5) / n; const rr = Math.sqrt(Math.max(0, 1 - y * y)); const th = g * i; pts.push([Math.cos(th) * rr, y, Math.sin(th) * rr]); } return pts; }
   function buildNodes() {
     PARTNERS.length = CENTERS.length = BUYERS.length = 0;
-    // partner avatars come from the server feed — prefer entries that actually
-    // have an icon so every partner shows a real avatar
+    // Every server in the managed feed becomes its own partner planet (1:1), so the
+    // globe mirrors the feed exactly — add/remove a server in the feed and it
+    // appears/disappears here. buildNodes re-runs on the 'vemoni:feed' event.
     const all = (typeof FEED !== 'undefined' && Array.isArray(FEED) ? FEED : []).filter((s) => s && s.name);
-    const withIcon = all.filter((s) => s.img || (s.id && s.icon));
-    const feed = withIcon.length ? withIcon : all;
-    const pPos = [ll(34, -40), ll(-16, 46), ll(52, 96), ll(2, 156), ll(-42, -104), ll(24, -150), ll(-30, 8), ll(62, -20), ll(10, 118), ll(-58, 130)];
+    const pPos = fibSphere(Math.max(1, all.length));
     const cPos = [ll(90, 0), ll(-90, 0), ll(0, 0), ll(0, 180)]; // two poles + two opposite equator points
     const bPos = [ll(8, 26), ll(48, -66), ll(-28, 116), ll(64, 6), ll(-56, 44), ll(20, -174), ll(40, 168), ll(-6, -54), ll(30, -118), ll(-46, -20), ll(56, 128), ll(-18, 74)];
-    pPos.forEach((p, i) => { const s = feed[i % Math.max(1, feed.length)] || {}; const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
+    pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
     cPos.forEach((p) => CENTERS.push({ p }));
     bPos.forEach((p) => BUYERS.push({ p, center: null }));
     BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
