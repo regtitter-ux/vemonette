@@ -182,6 +182,8 @@ const TR = {
   '1. Клик (начали)':'1. Click (started)','2. Заход проверен':'2. Join checked','3. Остались':'3. Stayed',
   'Встряхнуть':'Shake','Владелец…':'Owner…','Роль…':'Role…','Описание…':'Description…','Перепубликовать':'Republish','Авто-сброс роли':'Auto-reset role','Сбросить роль':'Reset role','Удалить':'Delete',
   'Авто-сброс включён':'Auto-reset enabled','Авто-сброс отключён':'Auto-reset disabled',
+  'Всегда снизу: вкл':'Always at bottom: on','Всегда снизу: выкл':'Always at bottom: off',
+  'Всегда снизу: включено':'Always at bottom: enabled','Всегда снизу: выключено':'Always at bottom: disabled',
   'Роль будет автоматически сбрасываться каждый раз через указанный срок. Отсчёт начинается с момента сохранения. Пусто — авто-сброс отключён.':'The role will be automatically reset every time after the set interval. The countdown starts when you save. Empty — auto-reset is off.',
   'Дней':'Days','Часов':'Hours',
   '⏱ Среднее время от клика до проверенного захода: ~':'⏱ Average time from click to checked join: ~',
@@ -560,6 +562,7 @@ function pcardBlock(c) {
             <button class="btn-mini" data-card="desc">Описание…</button>
             <button class="btn-mini" data-card="republish">Перепубликовать</button>
             <button class="btn-mini${c.autoResetMs > 0 ? ' on' : ''}" data-card="autoreset">Авто-сброс роли</button>
+            <button class="btn-mini${c.alwaysBottom ? ' on' : ''}" data-card="always-bottom">Всегда снизу: ${c.alwaysBottom ? 'вкл' : 'выкл'}</button>
             <button class="btn-mini off" data-card="reset-role">Сбросить роль</button>
             <button class="btn-mini off" data-card="delete">Удалить</button>
           </div>
@@ -644,6 +647,12 @@ async function pcardAction(action, messageId) {
     } else if (action === 'autoreset') {
         const card = lastPCards.find((c) => c.messageId === messageId);
         openAutoResetModal(messageId, card ? (card.autoResetMs || 0) : 0);
+    } else if (action === 'always-bottom') {
+        const card = lastPCards.find((c) => c.messageId === messageId);
+        const on = !(card && card.alwaysBottom);
+        const { ok, body } = await post('/cards/always-bottom', { messageId, on });
+        toast(ok ? (on ? 'Всегда снизу: включено' : 'Всегда снизу: выключено') : pcardErr(body?.error), ok ? 'ok' : 'err');
+        if (ok) loadCards();
     }
 }
 
