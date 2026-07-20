@@ -186,7 +186,7 @@ const RU = {
   hero_sub: 'Краткий обзор: что делает Vemoni, как это работает и какие за этим цифры.',
   hero_cta: 'Читать ↓',
   invite_bot: 'Добавить бота', nav_login: 'Войти через Discord',
-  menu_home: 'Главная', menu_partner: 'Партнёрам', menu_order: 'Покупателям', menu_myorders: 'Мои заказы', menu_invest: 'Инвесторам', menu_admin: 'Администраторам', menu_logout: 'Выйти',
+  menu_home: 'Главная', menu_partner: 'Партнёрам', menu_order: 'Покупателям', menu_myorders: 'Мои заказы', menu_invest: 'Инвесторам', menu_dev: 'Разработчикам', menu_admin: 'Администраторам', menu_logout: 'Выйти',
   viz_buyers: 'Покупатели', viz_partners: 'Партнёры',
   stat1_label: 'Уже выплачено партнёрам',
   stat2_label: 'довольных покупателей',

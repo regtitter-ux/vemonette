@@ -34,7 +34,7 @@ if (invLang !== 'en' && invLang !== 'ru') invLang = 'ru';
 const WHOLE = {
   'Выйти':'Log out','Вывести':'Withdraw','Инвест-счёт':'Investment account','Отмена':'Cancel',
   'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin',
-  'Партнёрам':'For partners','Покупателям':'For buyers','Инвесторам':'For investors','Администраторам':'For admins'
+  'Партнёрам':'For partners','Покупателям':'For buyers','Инвесторам':'For investors','Разработчикам':'For developers','Администраторам':'For admins'
 };
 function bannerFromAvatar(url) {
     const bn = document.getElementById('nmBanner'); if (!bn || !url) return;

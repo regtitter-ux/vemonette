@@ -64,7 +64,7 @@ const WHOLE = {
   'Обзор':'Overview','Рекламы':'Ads','Карточки':'Cards','Журнал':'Activity','Выплаты':'Payouts',
   'Пока нет активных реклам и истории показов.':'No active ads or shown-ad history yet.','У вас пока нет карточек верификации.':'You have no verification cards yet.',
   'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin',
-  'Партнёрам':'For partners','Покупателям':'For buyers','Инвесторам':'For investors','Администраторам':'For admins',
+  'Партнёрам':'For partners','Покупателям':'For buyers','Инвесторам':'For investors','Разработчикам':'For developers','Администраторам':'For admins',
   // Activity log
   'Журнал активности':'Activity log','Все типы':'All types','Выдача верификации':'Verification granted',
   'Списания':'Debits','Снятие верификации':'Verification removed','Все причины':'All reasons','Оплачено':'Paid',
