@@ -127,8 +127,6 @@
         <div class="tile"><div class="k" data-i18n="t_earned">Standing earnings</div><div class="v" id="tEarned">$0.00</div></div>
         <div class="tile"><div class="k" data-i18n="t_withdrawn">Withdrawn</div><div class="v" id="tWd">$0.00</div></div>
       </div>
-      <div class="ratebar" id="rateBar"></div>
-
       <div class="apibox">
         <div><div class="k" data-i18n="api_earned">Earned via API</div><div class="v" id="apiPaid">$0.00</div></div>
         <div><div class="k" data-i18n="api_joins">API joins</div><div class="v" id="apiJoins">0</div></div>
@@ -333,7 +331,6 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
       $('tWd').textContent=f$(ME.withdrawnDone);
       $('apiPaid').textContent=f$(ME.apiPaid);
       $('apiJoins').textContent=(ME.apiJoins!=null?ME.apiJoins:0).toLocaleString();
-      $('rateBar').innerHTML=T().rate(ME.joinRate!=null?ME.joinRate:5);
       var wds=Array.isArray(ME.withdrawals)?ME.withdrawals:[];
       var el=$('wdList');
       if(!wds.length){ el.className='muted sm'; el.textContent=T().noWd; }
