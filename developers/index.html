@@ -145,13 +145,9 @@
         <p class="muted sm" style="margin-top:12px" id="keyHint"></p>
       </div>
 
-      <h2 data-i18n="cab_payout_h">Payout details</h2>
-      <p class="muted sm" style="margin-top:-6px" data-i18n="cab_payout_p">Where your earnings go — a crypto wallet, a Telegram ID for automatic USDT, whatever you use. A payout request is filed for you automatically once your balance reaches $10.</p>
-      <div class="field"><textarea id="reqInput" placeholder="USDT (TON): UQ… · or Telegram ID: 123456789"></textarea></div>
-      <div style="margin-top:10px"><button class="btn primary" id="reqSave" data-i18n="cab_payout_save">Save</button></div>
-
-      <h2 data-i18n="cab_wd_h">Withdrawals</h2>
-      <div class="card" id="wdCard"><div id="wdList" class="muted sm"></div></div>
+      <h2 data-i18n="cab_payout_h">Payout details (LTC address)</h2>
+      <div class="field"><input id="reqInput" class="inp" type="text" spellcheck="false" autocomplete="off" /></div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn primary" id="reqSave" data-i18n="cab_payout_save">Save</button><span id="ltcState" class="sm"></span></div>
     </section>
 
     <!-- ===== Guest (not logged in) ===== -->
@@ -225,14 +221,6 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
       <p data-i18n="ep_wd">Your withdrawal history, plus a way to nudge the payout check. Once your balance reaches $10, a request is filed for you automatically.</p>
     </div>
 
-    <h2 data-i18n="h_safe">Safe for you, safe for us</h2>
-    <div class="grid2">
-      <div class="card"><h3 data-i18n="safe1h">Only real joins pay</h3><p data-i18n="safe1p">A join earns only after we confirm the membership with Discord itself. Each member counts once per sponsor, and leaving reverses the credit — so there is nothing worth faking.</p></div>
-      <div class="card"><h3 data-i18n="safe2h">You decide the reward</h3><p data-i18n="safe2p">The network picks the sponsor and the payout rate; the reward your users get is entirely yours to choose — coins, roles, XP, anything that fits your bot.</p></div>
-      <div class="card"><h3 data-i18n="safe3h">Your key, your money</h3><p data-i18n="safe3p">Keys are secret and can be regenerated any time. Earnings sit on your Discord account, and you set the payout details and withdraw from here.</p></div>
-      <div class="card"><h3 data-i18n="safe4h">No private data changes hands</h3><p data-i18n="safe4p">You only ever send a Discord user ID and a guild ID. We never ask for message content, tokens, or anything private about your users.</p></div>
-    </div>
-
     <h2 data-i18n="h_help">Questions? We are around</h2>
     <p data-i18n="p_help">Drop into our <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">support server</a> and we will help you wire it up.</p>
   </main>
@@ -258,10 +246,8 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     key_yours:'Ваш API-ключ',
     key_secret:'Относитесь к нему как к паролю: у кого он есть — тот действует от вашего имени и зарабатывает на ваш баланс. Храните его в переменной окружения на сервере, а не в коде, который получают пользователи.',
     key_copy:'Копировать', key_reveal:'Показать', key_gen:'Создать',
-    cab_payout_h:'Реквизиты для выплат',
-    cab_payout_p:'Куда идёт ваш заработок — крипто-кошелёк, Telegram ID для авто-USDT, что используете. Запрос на вывод подаётся автоматически, как только баланс достигает $10.',
+    cab_payout_h:'Реквизиты для выплат (LTC адрес)',
     cab_payout_save:'Сохранить',
-    cab_wd_h:'Выводы',
     key_login_h:'Войдите, чтобы открыть кабинет',
     key_login_p:'Используйте тот Discord-аккаунт, на который должны идти деньги. Ключ, баланс, реквизиты и выводы — всё здесь.',
     key_login_btn:'Войти через Discord',
@@ -281,11 +267,6 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     ep_stats:'Ваши подтверждённые заходы — по серверам и по временным окнам.',
     ep_req:'Посмотреть или изменить, куда идут деньги. PUT <code>{ requisites }</code> — крипто-кошелёк, Telegram ID для авто-USDT и так далее.',
     ep_wd:'История выводов и способ «подтолкнуть» проверку выплаты. Как только баланс достигает $10, запрос подаётся за вас автоматически.',
-    h_safe:'Безопасно и вам, и нам',
-    safe1h:'Платят только реальные заходы', safe1p:'Заход приносит деньги только после того, как мы подтвердим членство через сам Discord. Каждый участник считается один раз на спонсора, а уход отменяет начисление — подделывать нечего.',
-    safe2h:'Награду выбираете вы', safe2p:'Спонсора и ставку выплаты выбирает сеть; какую награду получат ваши пользователи — целиком на ваше усмотрение: монеты, роли, опыт — что угодно, что подходит вашему боту.',
-    safe3h:'Ваш ключ — ваши деньги', safe3p:'Ключи секретны и в любой момент пересоздаются. Заработок — на вашем Discord-аккаунте, реквизиты и вывод — прямо здесь.',
-    safe4h:'Ничего личного не передаётся', safe4p:'Вы отправляете только Discord ID пользователя и ID сервера. Мы не просим содержимое сообщений, токены и ничего личного о ваших пользователях.',
     h_help:'Вопросы? Мы на связи',
     p_help:'Загляните на наш <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">сервер поддержки</a> — поможем всё подключить.',
     f_privacy:'Политика конфиденциальности', f_terms:'Условия использования', f_support:'Поддержка'
@@ -294,8 +275,8 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     var EN = {}; document.querySelectorAll('[data-i18n]').forEach(function(el){ EN[el.dataset.i18n] = el.innerHTML; });
     var LANG='en';
     var TXT={
-      en:{ rate:function(r){return 'Your rate: <b>$'+r+' per 100 joins</b> · payout is filed automatically at $10.';}, noWd:'No withdrawals yet.', saved:'Payout details saved', saveErr:'Could not save', pend:'pending', done:'done', gen:'Generate', regen:'Regenerate', reveal:'Reveal', hide:'Hide', copy:'Copy', copied:'Copied', nokey:'no key yet', hintNo:'Press “Generate” to create your key.' },
-      ru:{ rate:function(r){return 'Ваша ставка: <b>$'+r+' за 100 переходов</b> · вывод подаётся автоматически от $10.';}, noWd:'Выводов пока нет.', saved:'Реквизиты сохранены', saveErr:'Не удалось сохранить', pend:'в обработке', done:'выполнен', gen:'Создать', regen:'Пересоздать', reveal:'Показать', hide:'Скрыть', copy:'Копировать', copied:'Скопировано', nokey:'ключа ещё нет', hintNo:'Нажмите «Создать», чтобы получить ключ.' }
+      en:{ ltcPh:'Enter your LTC address', ltcOn:'✓ LTC auto-payout is on', saved:'Payout details saved', saveErr:'Could not save', gen:'Generate', regen:'Regenerate', reveal:'Reveal', hide:'Hide', copy:'Copy', copied:'Copied', nokey:'no key yet', hintNo:'Press “Generate” to create your key.' },
+      ru:{ ltcPh:'Введите ваш LTC адрес', ltcOn:'✓ Авто-вывод в LTC включён', saved:'Реквизиты сохранены', saveErr:'Не удалось сохранить', gen:'Создать', regen:'Пересоздать', reveal:'Показать', hide:'Скрыть', copy:'Копировать', copied:'Скопировано', nokey:'ключа ещё нет', hintNo:'Нажмите «Создать», чтобы получить ключ.' }
     };
     function T(){ return TXT[LANG]; }
     function setLang(l){
@@ -304,6 +285,7 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
       document.documentElement.lang = l;
       document.querySelectorAll('#lang button').forEach(function(b){ b.classList.toggle('active', b.dataset.lang===l); });
       try{ localStorage.setItem('vemonette-lang', l); }catch(e){}
+      var ri=document.getElementById('reqInput'); if(ri) ri.placeholder=T().ltcPh;
       renderCab(); renderKey(); renderKeyHint();
     }
     document.querySelectorAll('#lang button').forEach(function(b){ b.addEventListener('click', function(){ setLang(b.dataset.lang); }); });
@@ -331,11 +313,9 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
       $('tWd').textContent=f$(ME.withdrawnDone);
       $('apiPaid').textContent=f$(ME.apiPaid);
       $('apiJoins').textContent=(ME.apiJoins!=null?ME.apiJoins:0).toLocaleString();
-      var wds=Array.isArray(ME.withdrawals)?ME.withdrawals:[];
-      var el=$('wdList');
-      if(!wds.length){ el.className='muted sm'; el.textContent=T().noWd; }
-      else { el.className=''; el.innerHTML=wds.map(function(w){ var ok=w.status==='completed'; return '<div class="wd"><span>'+f$(w.amount)+' <span class="muted sm">· '+esc(fmtDate(w.createdAt))+'</span></span><span class="badge '+(ok?'ok':'pend')+'">'+(ok?T().done:T().pend)+'</span></div>'; }).join(''); }
+      renderLtc(ME.autoLtc && ME.ltcAddress);
     }
+    function renderLtc(on){ var el=$('ltcState'); if(!el) return; if(on){ el.style.color='var(--green)'; el.textContent=T().ltcOn; } else { el.textContent=''; } var ri=$('reqInput'); if(ri) ri.placeholder=T().ltcPh; }
     function mask(k){ return k ? (k.slice(0,6)+'••••••••••••••••'+k.slice(-4)) : ''; }
     function renderKey(){ var el=$('keyVal'); if(!el) return; el.textContent = KEY ? (revealed?KEY:mask(KEY)) : T().nokey; var rv=$('keyReveal'); if(rv) rv.textContent = revealed?T().hide:T().reveal; }
     function renderKeyHint(){ var el=$('keyHint'); if(!el) return; if(!KEY){ el.textContent=T().hintNo; } else { el.innerHTML=(LANG==='ru'?'Готово. Используйте его в заголовке ':'Ready. Use it in the ')+'<code>Authorization: Bearer …</code>'+(LANG==='ru'?'':' header')+'.'; } }
@@ -365,7 +345,7 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
       if(t.id==='keyReveal'){ if(!KEY) return; revealed=!revealed; renderKey(); }
       if(t.id==='keyCopy'){ if(!KEY) return; navigator.clipboard&&navigator.clipboard.writeText(KEY); toast(T().copied); }
       if(t.id==='keyGen'){ (async function(){ t.disabled=true; t.textContent='…'; try{ var d=await req('/order/api-key',{method:'POST',body:JSON.stringify({regenerate:!!KEY})}).then(function(r){return r.json();}); if(d&&d.key){ KEY=d.key; revealed=true; renderKey(); renderKeyHint(); } }catch(err){} t.disabled=false; t.textContent=KEY?T().regen:T().gen; })(); }
-      if(t.id==='reqSave'){ (async function(){ t.disabled=true; try{ var d=await req('/partner/requisites',{method:'PUT',body:JSON.stringify({requisites:$('reqInput').value})}).then(function(r){return r.json();}); if(d&&d.ok){ if(ME) ME.requisites=d.requisites; toast(T().saved); } else toast(T().saveErr); }catch(err){ toast(T().saveErr); } t.disabled=false; })(); }
+      if(t.id==='reqSave'){ (async function(){ t.disabled=true; try{ var d=await req('/partner/requisites',{method:'PUT',body:JSON.stringify({requisites:$('reqInput').value,ltcAuto:true})}).then(function(r){return r.json();}); if(d&&d.ok){ if(ME){ ME.requisites=d.requisites; ME.autoLtc=d.autoLtc; ME.ltcAddress=d.ltcAddress; } renderLtc(d.autoLtc && d.ltcAddress); toast(T().saved); } else toast(T().saveErr); }catch(err){ toast(T().saveErr); } t.disabled=false; })(); }
     });
 
     var start='en'; try{ var s=localStorage.getItem('vemonette-lang'); if(s==='ru'||s==='en') start=s; }catch(e){}
