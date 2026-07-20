@@ -562,7 +562,7 @@ function pcardBlock(c) {
             <button class="btn-mini" data-card="desc">Описание…</button>
             <button class="btn-mini" data-card="republish">Перепубликовать</button>
             <button class="btn-mini${c.autoResetMs > 0 ? ' on' : ''}" data-card="autoreset">Авто-сброс роли</button>
-            <button class="btn-mini${c.alwaysBottom ? ' on' : ''}" data-card="always-bottom">Всегда снизу: ${c.alwaysBottom ? 'вкл' : 'выкл'}</button>
+            ${c.alwaysBottomSupported ? `<button class="btn-mini${c.alwaysBottom ? ' on' : ''}" data-card="always-bottom">Всегда снизу: ${c.alwaysBottom ? 'вкл' : 'выкл'}</button>` : ''}
             <button class="btn-mini off" data-card="reset-role">Сбросить роль</button>
             <button class="btn-mini off" data-card="delete">Удалить</button>
           </div>
