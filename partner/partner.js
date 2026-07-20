@@ -339,8 +339,9 @@ function refreshEmpties() {
 
 async function load() {
     wireTabs();
-    const { ok, body } = await get('/me');
-    if (ok) render(body);
+    // All of these endpoints are independent — fire them concurrently instead of
+    // waiting for /me first, so the whole cabinet loads in one round-trip.
+    const mePromise = get('/me');
     loadPartnerAds();
     loadAdHistory();
     loadCards();
@@ -348,6 +349,8 @@ async function load() {
     loadActivity();
     loadReferrals();
     refreshEmpties();
+    const { ok, body } = await mePromise;
+    if (ok) render(body);
 }
 
 // ---- Referrals: who this partner invited and what they earned (10% of each

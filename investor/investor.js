@@ -227,9 +227,9 @@ function srvIcon(name, url) {
         : `<span class="sw-ic sw-ic-fb">${initial}</span>`;
 }
 async function load() {
-    const me = await get('/me');
+    // /me and /servers are independent — fetch them concurrently.
+    const [me, sv] = await Promise.all([get('/me'), get('/servers')]);
     if (me.ok) { PRICING = me.body.pricing || PRICING; if (me.body.minTopup) MIN_TOPUP = me.body.minTopup; renderAccount(me.body); }
-    const sv = await get('/servers');
     if (sv.ok) { PRICING = sv.body.pricing || PRICING; renderServers(sv.body.servers || []); }
 }
 
