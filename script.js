@@ -180,7 +180,7 @@ document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
 
 /* ---------- i18n (EN / RU) ---------- */
 const RU = {
-  nav_what: 'О сервисе', nav_how: 'Как это работает', nav_guides: 'Гайды', nav_numbers: 'Цифры', nav_buyers: 'Покупателям', nav_faq: 'Вопросы', nav_contact: 'Связаться',
+  nav_what: 'О сервисе', nav_how: 'Как это работает', nav_guides: 'Гайды', nav_numbers: 'Цифры', nav_buyers: 'Покупателям', nav_dev: 'Для разработчиков', nav_faq: 'Вопросы', nav_contact: 'Связаться',
   hero_pill: 'Двухминутный обзор для будущих партнёров',
   hero_h1: 'Верификация,<br /><span class="grad">за которую вам платят</span>',
   hero_sub: 'Краткий обзор: что делает Vemoni, как это работает и какие за этим цифры.',

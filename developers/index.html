@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>For developers — Vemoni API</title>
+  <meta name="description" content="Monetize your Discord bot: reward your users for joining sponsor servers and earn for every verified join. Simple REST API." />
+  <link rel="icon" type="image/png" href="/assets/logo.png" />
+  <link rel="apple-touch-icon" href="/assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" /></noscript>
+  <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
+  <style>
+    :root{ --bg:#080b12; --panel:#0f1626; --panel-2:#0c1220; --stroke:rgba(255,255,255,.08); --stroke-2:rgba(255,255,255,.14); --text:#eaf0fa; --muted:#8fa0bb; --dim:#6b7a93; --blue:#5cc8ff; --blurple:#5865f2; --green:#57f287; --amber:#f5a524; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--text);font-family:'Roboto',system-ui,-apple-system,sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased}
+    body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(900px 460px at 82% -6%,rgba(34,168,240,.14),transparent 60%),radial-gradient(700px 460px at 6% 4%,rgba(87,242,135,.06),transparent 60%)}
+    .wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:0 22px}
+    header{border-bottom:1px solid var(--stroke)}
+    .bar{max-width:880px;margin:0 auto;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+    .brand{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:19px;letter-spacing:-.02em;flex:none;text-decoration:none}
+    .brand img{width:28px;height:28px;border-radius:50%}
+    .bar-right{display:flex;align-items:center;gap:14px}
+    .lang{display:inline-flex;background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:8px;overflow:hidden}
+    .lang button{background:none;border:0;color:var(--muted);font:inherit;font-size:13px;font-weight:700;padding:6px 10px;cursor:pointer;transition:.15s}
+    .lang button.active{background:rgba(92,200,255,.16);color:#fff}
+    .back{color:var(--muted);font-size:14px;font-weight:600;text-decoration:none;transition:color .15s;white-space:nowrap}
+    .back:hover{color:#fff}
+    main{padding:46px 0 80px}
+    h1{font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1.08}
+    .lead{color:var(--muted);margin-top:16px;font-size:17px;max-width:620px}
+    h2{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:44px 0 14px;color:#fff}
+    h3{font-size:15px;font-weight:700;color:#fff;margin:0 0 4px}
+    p{color:#c9d4e6;margin:12px 0}
+    a{color:var(--blue);text-decoration:none} a:hover{text-decoration:underline}
+    strong{color:var(--text);font-weight:700}
+    code{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:.9em;background:rgba(255,255,255,.07);border:1px solid var(--stroke);border-radius:6px;padding:1px 6px;color:#dbe7ff}
+    .pill{display:inline-flex;align-items:center;gap:7px;background:rgba(87,242,135,.1);border:1px solid rgba(87,242,135,.3);color:var(--green);font-size:13px;font-weight:700;padding:5px 12px;border-radius:999px}
+    /* steps */
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+    .step{background:var(--panel);border:1px solid var(--stroke);border-radius:14px;padding:18px}
+    .step .n{width:30px;height:30px;border-radius:9px;background:rgba(88,101,242,.16);color:#aab6ff;display:grid;place-items:center;font-weight:800;font-size:15px;margin-bottom:12px}
+    .step p{margin:6px 0 0;font-size:14px;color:var(--muted)}
+    /* key widget */
+    .keybox{background:linear-gradient(180deg,rgba(88,101,242,.1),rgba(88,101,242,.02));border:1px solid rgba(88,101,242,.28);border-radius:16px;padding:22px;margin-top:20px}
+    .keyrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:10px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;transition:.15s;text-decoration:none}
+    .btn.primary{background:var(--blurple);color:#fff} .btn.primary:hover{filter:brightness(1.1);text-decoration:none}
+    .btn.ghost{background:rgba(255,255,255,.05);border-color:var(--stroke-2);color:var(--text)} .btn.ghost:hover{background:rgba(255,255,255,.1);text-decoration:none}
+    .keyfield{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:#0a0f1a;border:1px solid var(--stroke-2);border-radius:10px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:13.5px;color:#dbe7ff;overflow:auto;white-space:nowrap}
+    .muted{color:var(--muted)} .sm{font-size:13px}
+    .warn{color:var(--amber)}
+    /* endpoint reference */
+    .ep{background:var(--panel);border:1px solid var(--stroke);border-radius:12px;padding:15px 17px;margin-top:12px}
+    .ep-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .m{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:12px;padding:3px 8px;border-radius:6px;letter-spacing:.03em}
+    .m.get{background:rgba(87,242,135,.14);color:var(--green)}
+    .m.post{background:rgba(88,101,242,.16);color:#aab6ff}
+    .m.put{background:rgba(245,165,36,.16);color:var(--amber)}
+    .ep-path{font-family:'JetBrains Mono',monospace;font-size:14px;color:#fff;font-weight:600}
+    .ep p{margin:9px 0 0;font-size:13.5px;color:var(--muted)}
+    /* code block */
+    pre{background:#0a0f1a;border:1px solid var(--stroke);border-radius:12px;padding:16px 18px;margin-top:16px;overflow:auto;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;color:#cfe0f5}
+    pre .c{color:#6b7a93} pre .k{color:#c98bff} pre .s{color:#8ee79b} pre .f{color:#7cc7ff}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
+    .card{background:var(--panel);border:1px solid var(--stroke);border-radius:14px;padding:18px 20px}
+    .card h3{margin-bottom:8px}
+    .card p{margin:0;font-size:14px;color:var(--muted)}
+    ul{margin:12px 0 12px 2px;padding-left:20px;color:#c9d4e6} li{margin:8px 0;font-size:14.5px}
+    footer{border-top:1px solid var(--stroke);margin-top:40px}
+    .foot{max-width:880px;margin:0 auto;padding:26px 22px;color:var(--muted);font-size:13.5px;display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;text-align:center}
+    .foot a{color:var(--muted)} .foot a:hover{color:#fff;text-decoration:none}
+    @media(max-width:640px){ h1{font-size:29px} .steps{grid-template-columns:1fr} .grid2{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="bar">
+      <a class="brand" href="/"><img src="/assets/logo.png" alt="Vemoni" />Vemoni</a>
+      <div class="bar-right">
+        <div class="lang" id="lang"><button data-lang="en">EN</button><button data-lang="ru">RU</button></div>
+        <a class="back" href="/" data-i18n="back">← Back to site</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <span class="pill" data-i18n="badge">Monetization for bots</span>
+    <h1 data-i18n="h1" style="margin-top:14px">Reward your users for joining. Get paid for it.</h1>
+    <p class="lead" data-i18n="lead">Vemoni is a Discord ad network. Plug our API into your bot, show your users a sponsor server to join, hand them any bonus you like for joining — and earn for every verified join. A few HTTP calls, no dashboards to babysit.</p>
+
+    <h2 data-i18n="h_how">How it works</h2>
+    <div class="steps">
+      <div class="step"><div class="n">1</div><h3 data-i18n="s1h">Get a key</h3><p data-i18n="s1p">Log in with Discord and generate an API key below. It identifies your payout account.</p></div>
+      <div class="step"><div class="n">2</div><h3 data-i18n="s2h">Show the sponsor</h3><p data-i18n="s2p">Ask <code>GET /api/ad</code> for the current sponsor and show your user its invite, with the bonus you promise them.</p></div>
+      <div class="step"><div class="n">3</div><h3 data-i18n="s3h">Confirm &amp; reward</h3><p data-i18n="s3p">Call <code>POST /api/join-check</code>. We verify the join on Discord and pay you — then you grant your bonus.</p></div>
+    </div>
+
+    <h2 data-i18n="h_key">Get your API key</h2>
+    <div class="keybox" id="keybox">
+      <div id="keyAuthed" hidden>
+        <h3 data-i18n="key_yours">Your API key</h3>
+        <p class="muted sm" style="margin-top:4px" data-i18n="key_secret">Keep it secret — anyone with this key acts as you and earns to your balance. Store it as an environment variable, never in client code.</p>
+        <div class="keyrow">
+          <div class="keyfield"><span id="keyVal">—</span></div>
+          <button class="btn ghost" id="keyCopy" data-i18n="key_copy">Copy</button>
+          <button class="btn ghost" id="keyReveal" data-i18n="key_reveal">Reveal</button>
+          <button class="btn ghost" id="keyGen" data-i18n="key_gen">Generate</button>
+        </div>
+        <p class="muted sm" style="margin-top:12px" id="keyHint"></p>
+      </div>
+      <div id="keyGuest" hidden>
+        <h3 data-i18n="key_login_h">Log in to get a key</h3>
+        <p class="muted sm" style="margin-top:4px" data-i18n="key_login_p">Sign in with Discord — the same account that will receive payouts. Your key and earnings live in the buyer cabinet.</p>
+        <div class="keyrow"><a class="btn primary" href="/order/" data-i18n="key_login_btn">Log in with Discord</a></div>
+      </div>
+      <div id="keyLoading" class="muted sm" data-i18n="key_loading">Checking your session…</div>
+    </div>
+
+    <h2 data-i18n="h_base">Base URL &amp; auth</h2>
+    <p data-i18n="p_base">All endpoints live under one base URL. Send your key on every request as a bearer token (or the <code>X-API-Key</code> header). Calls are made from your server, so your key never touches the browser.</p>
+    <pre><span class="c"># Base URL</span>
+https://secure-gratitude-production.up.railway.app
+
+<span class="c"># Auth header (either one)</span>
+Authorization: Bearer <span class="s">&lt;your-key&gt;</span>
+X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
+
+    <h2 data-i18n="h_quick">Quickstart</h2>
+    <p data-i18n="p_quick">The whole reward loop in one snippet (Node.js). <code>userId</code> is the Discord ID of your user; <code>serverId</code> is a guild your bot operates in — it selects which ad to show.</p>
+    <pre><span class="k">const</span> BASE = <span class="s">'https://secure-gratitude-production.up.railway.app'</span>;
+<span class="k">const</span> h = { <span class="s">'Authorization'</span>: <span class="s">'Bearer '</span> + process.env.<span class="f">VEMONI_KEY</span>, <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span> };
+
+<span class="c">// 1) Get the sponsor to show your user</span>
+<span class="k">const</span> ad = <span class="k">await</span> fetch(<span class="s">`${BASE}/api/ad?serverId=${serverId}`</span>, { headers: h }).then(r =&gt; r.json());
+<span class="k">if</span> (ad.sponsor) showToUser(ad.sponsor.name, ad.sponsor.invite, <span class="s">'Join for +100 coins!'</span>);
+
+<span class="c">// 2) After they join, confirm it — we verify on Discord and pay you</span>
+<span class="k">const</span> out = <span class="k">await</span> fetch(<span class="s">`${BASE}/api/join-check`</span>, {
+  method: <span class="s">'POST'</span>, headers: h,
+  body: JSON.stringify({ userId, serverId })
+}).then(r =&gt; r.json());
+
+<span class="k">if</span> (out.joined) grantBonus(userId, <span class="s">100</span>); <span class="c">// verified → give your bonus</span>
+<span class="k">else</span> tellUser(<span class="s">'Join the server first, then press Check.'</span>);</pre>
+
+    <h2 data-i18n="h_ref">Endpoint reference</h2>
+
+    <div class="ep">
+      <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/ad</span></div>
+      <p data-i18n="ep_ad">Query <code>?serverId=&lt;guild&gt;</code>. Returns the sponsor to show: <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. If <code>sponsor</code> is null there is no ad right now — just skip and verify without a bonus.</p>
+    </div>
+    <div class="ep">
+      <div class="ep-h"><span class="m post">POST</span><span class="ep-path">/api/join-check</span></div>
+      <p data-i18n="ep_jc">Body <code>{ userId, serverId }</code>. We verify on Discord whether the user is a member of the current sponsor. <code>200 { joined:true, credited:true }</code> → paid, grant your bonus. <code>403 { joined:false }</code> → not a member yet, ask them to join. <code>200 { joined:true, ad:false }</code> → no ad was active, no payout. Each member is paid once per sponsor; if they leave, it reverses.</p>
+    </div>
+    <div class="ep">
+      <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/balance</span></div>
+      <p data-i18n="ep_bal">Your current balance and payout details.</p>
+    </div>
+    <div class="ep">
+      <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/stats</span></div>
+      <p data-i18n="ep_stats">Your verified-join stats, per server and over time windows.</p>
+    </div>
+    <div class="ep">
+      <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/requisites</span> <span class="m put">PUT</span></div>
+      <p data-i18n="ep_req">Read or set your payout details. PUT body <code>{ requisites }</code> (crypto wallet, Telegram ID for auto USDT, etc.).</p>
+    </div>
+    <div class="ep">
+      <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/withdrawals</span> <span class="m post">POST</span> <span class="ep-path">/api/withdraw</span></div>
+      <p data-i18n="ep_wd">Your withdrawal history, and a nudge to run the payout check. A payout request is filed automatically once your balance reaches $10.</p>
+    </div>
+
+    <h2 data-i18n="h_safe">Safe by design</h2>
+    <div class="grid2">
+      <div class="card"><h3 data-i18n="safe1h">Real joins only</h3><p data-i18n="safe1p">A join counts only after we confirm the membership against Discord itself. Each member pays once per sponsor, and leaving reverses the credit — so there is nothing to fake.</p></div>
+      <div class="card"><h3 data-i18n="safe2h">You control the bonus</h3><p data-i18n="safe2p">The sponsor and payout rate are set by the network; the bonus you give your users is entirely yours — coins, roles, XP, anything.</p></div>
+      <div class="card"><h3 data-i18n="safe3h">Your key, your money</h3><p data-i18n="safe3p">Keys are secret and revocable. Earnings accrue to your Discord account; you set payout details and withdraw from the cabinet.</p></div>
+      <div class="card"><h3 data-i18n="safe4h">No user data leaks</h3><p data-i18n="safe4p">You only ever send a Discord user ID and a guild ID. We never ask for message content, tokens, or anything private about your users.</p></div>
+    </div>
+
+    <h2 data-i18n="h_help">Need a hand?</h2>
+    <p data-i18n="p_help">Ask in our <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">support server</a> — we will help you wire it up.</p>
+  </main>
+
+  <footer>
+    <div class="foot">
+      <span>© 2026 Vemoni</span>
+      <a href="/privacy/" data-i18n="f_privacy">Privacy Policy</a>
+      <a href="/terms/" data-i18n="f_terms">Terms of Service</a>
+      <a href="https://discord.gg/vemoni" target="_blank" rel="noopener" data-i18n="f_support">Support</a>
+    </div>
+  </footer>
+
+  <script>
+  var I18N = { ru: {
+    back:'← На сайт',
+    badge:'Монетизация для ботов',
+    h1:'Награждайте пользователей за заход. И зарабатывайте на этом.',
+    lead:'Vemoni — рекламная сеть в Discord. Встройте наш API в своего бота, показывайте пользователям сервер спонсора, выдавайте им любой бонус за заход — и получайте оплату за каждый подтверждённый заход. Пара HTTP-запросов, без панелей и возни.',
+    h_how:'Как это работает',
+    s1h:'Получите ключ', s1p:'Войдите через Discord и создайте API-ключ ниже. Он определяет ваш счёт для выплат.',
+    s2h:'Покажите спонсора', s2p:'Запросите <code>GET /api/ad</code> и покажите пользователю приглашение спонсора вместе с обещанным бонусом.',
+    s3h:'Подтвердите и наградите', s3p:'Вызовите <code>POST /api/join-check</code>. Мы проверим заход в Discord и заплатим вам — а вы выдадите свой бонус.',
+    h_key:'Получить API-ключ',
+    key_yours:'Ваш API-ключ',
+    key_secret:'Держите его в секрете — любой, у кого он есть, действует от вашего имени и зарабатывает на ваш баланс. Храните как переменную окружения, никогда в коде клиента.',
+    key_copy:'Копировать', key_reveal:'Показать', key_gen:'Создать',
+    key_login_h:'Войдите, чтобы получить ключ',
+    key_login_p:'Войдите через Discord — тем аккаунтом, который будет получать выплаты. Ключ и заработок хранятся в кабинете покупателя.',
+    key_login_btn:'Войти через Discord',
+    key_loading:'Проверяем сессию…',
+    h_base:'Базовый URL и авторизация',
+    p_base:'Все эндпоинты — под одним базовым URL. Отправляйте ключ в каждом запросе как bearer-токен (или заголовком <code>X-API-Key</code>). Запросы идут с вашего сервера, поэтому ключ никогда не попадает в браузер.',
+    h_quick:'Быстрый старт',
+    p_quick:'Весь цикл награды в одном сниппете (Node.js). <code>userId</code> — Discord ID вашего пользователя; <code>serverId</code> — сервер, где работает ваш бот, он выбирает, какую рекламу показать.',
+    h_ref:'Справочник эндпоинтов',
+    ep_ad:'Параметр <code>?serverId=&lt;guild&gt;</code>. Возвращает спонсора для показа: <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. Если <code>sponsor</code> = null — рекламы сейчас нет, просто пропустите шаг без бонуса.',
+    ep_jc:'Тело <code>{ userId, serverId }</code>. Мы проверяем в Discord, состоит ли пользователь в текущем спонсоре. <code>200 { joined:true, credited:true }</code> → оплачено, выдавайте бонус. <code>403 { joined:false }</code> → ещё не участник, попросите зайти. <code>200 { joined:true, ad:false }</code> → рекламы не было, выплаты нет. Каждый участник оплачивается один раз на спонсора; если уходит — начисление отменяется.',
+    ep_bal:'Ваш текущий баланс и реквизиты для выплат.',
+    ep_stats:'Ваша статистика подтверждённых заходов — по серверам и временным окнам.',
+    ep_req:'Прочитать или задать реквизиты выплат. Тело PUT <code>{ requisites }</code> (крипто-кошелёк, Telegram ID для авто-USDT и т.п.).',
+    ep_wd:'История выводов и «пинок» проверки выплаты. Запрос на вывод подаётся автоматически, как только баланс достигает $10.',
+    h_safe:'Безопасно по устройству',
+    safe1h:'Только реальные заходы', safe1p:'Заход засчитывается только после того, как мы подтвердим членство через сам Discord. Каждый участник оплачивается один раз на спонсора, а уход отменяет начисление — подделывать нечего.',
+    safe2h:'Бонус — на ваше усмотрение', safe2p:'Спонсор и ставка выплаты задаются сетью; бонус пользователям — полностью ваш: монеты, роли, опыт, что угодно.',
+    safe3h:'Ваш ключ — ваши деньги', safe3p:'Ключи секретны и отзываемы. Заработок начисляется на ваш Discord-аккаунт; реквизиты и вывод — в кабинете.',
+    safe4h:'Никаких утечек данных', safe4p:'Вы отправляете только Discord ID пользователя и ID сервера. Мы не просим содержимое сообщений, токены и ничего личного о ваших пользователях.',
+    h_help:'Нужна помощь?',
+    p_help:'Спросите на нашем <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">сервере поддержки</a> — поможем всё подключить.',
+    f_privacy:'Политика конфиденциальности', f_terms:'Условия использования', f_support:'Поддержка'
+  } };
+  (function(){
+    var EN = {}; document.querySelectorAll('[data-i18n]').forEach(function(el){ EN[el.dataset.i18n] = el.innerHTML; });
+    var LANG='en';
+    function setLang(l){
+      LANG=l; var d = l==='ru' ? I18N.ru : EN;
+      document.querySelectorAll('[data-i18n]').forEach(function(el){ var v = d[el.dataset.i18n]; if(v!=null) el.innerHTML = v; });
+      document.documentElement.lang = l;
+      document.querySelectorAll('#lang button').forEach(function(b){ b.classList.toggle('active', b.dataset.lang===l); });
+      try{ localStorage.setItem('vemonette-lang', l); }catch(e){}
+      renderKeyHint();
+    }
+    document.querySelectorAll('#lang button').forEach(function(b){ b.addEventListener('click', function(){ setLang(b.dataset.lang); }); });
+    var start='en'; try{ var s=localStorage.getItem('vemonette-lang'); if(s==='ru'||s==='en') start=s; }catch(e){}
+    setLang(start);
+
+    /* ---- Live API-key widget ---- */
+    var base=(window.__VEMONI_API_BASE__||'').replace(/\/+$/,'');
+    var tok=''; try{ tok=localStorage.getItem('vemoni_tok')||''; }catch(e){}
+    var headers={'Content-Type':'application/json'}; if(tok) headers.Authorization='Bearer '+tok;
+    var KEY=null, revealed=false;
+    var $=function(id){return document.getElementById(id);};
+    function mask(k){ return k ? (k.slice(0,6)+'••••••••••••••••'+k.slice(-4)) : ''; }
+    function renderKey(){ var el=$('keyVal'); if(!el) return; el.textContent = KEY ? (revealed?KEY:mask(KEY)) : (LANG==='ru'?'ключа ещё нет':'no key yet'); }
+    function renderKeyHint(){ var el=$('keyHint'); if(!el) return; if(!KEY){ el.textContent = LANG==='ru'?'Нажмите «Создать», чтобы получить ключ.':'Press “Generate” to create your key.'; } else { el.innerHTML = (LANG==='ru'?'Готово. Используйте его в заголовке ':'Ready. Use it in the ')+'<code>Authorization: Bearer …</code>'+(LANG==='ru'?'':' header')+'.'; } }
+    function show(which){ ['keyLoading','keyAuthed','keyGuest'].forEach(function(id){ var e=$(id); if(e) e.hidden = (id!==which); }); }
+    function apiKeyReq(method){ return fetch(base+'/order/api-key',{method:method,credentials:'include',headers:headers,body:method==='POST'?JSON.stringify({regenerate:!!KEY}):undefined}); }
+    (async function initKey(){
+      try{
+        var r=await fetch(base+'/order/whoami',{credentials:'include',headers:headers});
+        var d=await r.json().catch(function(){return null;});
+        if(!d||!d.authed){ show('keyGuest'); return; }
+        show('keyAuthed');
+        var kr=await apiKeyReq('GET'); var kd=await kr.json().catch(function(){return null;});
+        KEY=(kd&&kd.key)||null; revealed=false; renderKey(); renderKeyHint();
+      }catch(e){ show('keyGuest'); }
+    })();
+    document.addEventListener('click', function(e){
+      var t=e.target;
+      if(t.id==='keyReveal'){ if(!KEY) return; revealed=!revealed; renderKey(); t.textContent = revealed ? (LANG==='ru'?'Скрыть':'Hide') : (LANG==='ru'?'Показать':'Reveal'); }
+      if(t.id==='keyCopy'){ if(!KEY) return; navigator.clipboard&&navigator.clipboard.writeText(KEY); t.textContent = LANG==='ru'?'Скопировано':'Copied'; setTimeout(function(){ t.textContent = LANG==='ru'?'Копировать':'Copy'; },1400); }
+      if(t.id==='keyGen'){ (async function(){ t.disabled=true; var prev=t.textContent; t.textContent='…'; try{ var r=await apiKeyReq('POST'); var d=await r.json().catch(function(){return null;}); if(d&&d.key){ KEY=d.key; revealed=true; renderKey(); renderKeyHint(); var rv=$('keyReveal'); if(rv) rv.textContent=LANG==='ru'?'Скрыть':'Hide'; } }catch(e){} t.disabled=false; t.textContent = LANG==='ru'?'Пересоздать':'Regenerate'; })(); }
+    });
+  })();
+  </script>
+</body>
+</html>
