@@ -554,7 +554,7 @@ setLang(startLang);
 
   // hover tooltips: server name on partner avatars, role labels on buyers/centres
   const tip = document.createElement('div'); tip.className = 'viz-tip'; tip.hidden = true; wrap.appendChild(tip);
-  const LABELS = { b: { ru: 'Покупатель рекламы', en: 'Ad buyer' }, c: { ru: 'Бот-верификатор', en: 'Verification bot' } };
+  const LABELS = { b: { ru: 'Спонсор', en: 'Sponsor' }, c: { ru: 'Бот-верификатор', en: 'Verification bot' } };
   function pickHover(mx, my) {
     let best = null, bd = Infinity;
     const scan = (arr, kind, rr) => arr.forEach((n) => { if ((n._dep || -1) <= 0.02) return; const dx = n._sx - mx, dy = n._sy - my, d = dx * dx + dy * dy, hit = (rr + 5) * (rr + 5); if (d < hit && d < bd) { bd = d; best = { n, kind }; } });

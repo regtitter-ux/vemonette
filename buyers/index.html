@@ -671,7 +671,7 @@ const io=new IntersectionObserver((es)=>{ es.forEach((e)=>{ if(!e.isIntersecting
   wrap.addEventListener('touchend',endTouch); wrap.addEventListener('touchcancel',endTouch);
 
   const tip=document.createElement('div'); tip.className='viz-tip'; tip.hidden=true; wrap.appendChild(tip);
-  const LABELS={ b:{ru:'Покупатель рекламы',en:'Ad buyer'}, c:{ru:'Бот-верификатор',en:'Verification bot'} };
+  const LABELS={ b:{ru:'Спонсор',en:'Sponsor'}, c:{ru:'Бот-верификатор',en:'Verification bot'} };
   function pickHover(mx,my){ let best=null,bd=Infinity; const scan=(arr,kind,rr)=>arr.forEach(n=>{ if((n._dep||-1)<=0.02) return; const dx=n._sx-mx,dy=n._sy-my,d=dx*dx+dy*dy,hit=(rr+5)*(rr+5); if(d<hit&&d<bd){bd=d;best={n,kind};} }); scan(PARTNERS,'p',13); scan(CENTERS,'c',11); scan(BUYERS,'b',8); return best; }
   wrap.addEventListener('mousemove',(e)=>{ if(dragging){ tip.hidden=true; return; } const r=canvas.getBoundingClientRect(); const h=pickHover(e.clientX-r.left,e.clientY-r.top); if(!h){ tip.hidden=true; if(!dragging) wrap.style.cursor='grab'; return; } const lng=document.documentElement.lang==='ru'?'ru':'en'; tip.textContent=h.kind==='p'?(h.n.name||(lng==='ru'?'Сервер-партнёр':'Partner server')):LABELS[h.kind][lng]; tip.style.left=h.n._sx+'px'; tip.style.top=(h.n._sy-14)+'px'; tip.hidden=false; wrap.style.cursor='pointer'; });
   wrap.addEventListener('mouseleave',()=>{ tip.hidden=true; });
