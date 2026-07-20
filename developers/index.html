@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>For developers — Vemoni API</title>
-  <meta name="description" content="Monetize your Discord bot: reward your users for joining sponsor servers and earn for every verified join. Simple REST API." />
+  <meta name="description" content="Turn your Discord bot into income: reward your users for joining sponsor servers and get paid for every join we verify. A simple REST API." />
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -30,7 +30,7 @@
     .back:hover{color:#fff}
     main{padding:46px 0 80px}
     h1{font-size:36px;font-weight:800;letter-spacing:-.02em;line-height:1.08}
-    .lead{color:var(--muted);margin-top:16px;font-size:17px;max-width:620px}
+    .lead{color:var(--muted);margin-top:16px;font-size:17px;max-width:640px}
     h2{font-size:22px;font-weight:800;letter-spacing:-.01em;margin:44px 0 14px;color:#fff}
     h3{font-size:15px;font-weight:700;color:#fff;margin:0 0 4px}
     p{color:#c9d4e6;margin:12px 0}
@@ -87,22 +87,22 @@
   </header>
 
   <main class="wrap">
-    <span class="pill" data-i18n="badge">Monetization for bots</span>
-    <h1 data-i18n="h1" style="margin-top:14px">Reward your users for joining. Get paid for it.</h1>
-    <p class="lead" data-i18n="lead">Vemoni is a Discord ad network. Plug our API into your bot, show your users a sponsor server to join, hand them any bonus you like for joining — and earn for every verified join. A few HTTP calls, no dashboards to babysit.</p>
+    <span class="pill" data-i18n="badge">Turn your bot into income</span>
+    <h1 data-i18n="h1" style="margin-top:14px">Your bot already has an audience. Let it earn.</h1>
+    <p class="lead" data-i18n="lead">Vemoni is a Discord ad network. Add a few calls to your bot, offer your users a reward for joining a sponsor server, and we pay you for every join we verify. You choose the reward; we handle the sponsors, the checking and the payouts. Three endpoints, one key, and you are live.</p>
 
-    <h2 data-i18n="h_how">How it works</h2>
+    <h2 data-i18n="h_how">How it works, start to finish</h2>
     <div class="steps">
-      <div class="step"><div class="n">1</div><h3 data-i18n="s1h">Get a key</h3><p data-i18n="s1p">Log in with Discord and generate an API key below. It identifies your payout account.</p></div>
-      <div class="step"><div class="n">2</div><h3 data-i18n="s2h">Show the sponsor</h3><p data-i18n="s2p">Ask <code>GET /api/ad</code> for the current sponsor and show your user its invite, with the bonus you promise them.</p></div>
-      <div class="step"><div class="n">3</div><h3 data-i18n="s3h">Confirm &amp; reward</h3><p data-i18n="s3p">Call <code>POST /api/join-check</code>. We verify the join on Discord and pay you — then you grant your bonus.</p></div>
+      <div class="step"><div class="n">1</div><h3 data-i18n="s1h">Create a key</h3><p data-i18n="s1p">Sign in with Discord and generate your key right below. It is how we know which account to pay.</p></div>
+      <div class="step"><div class="n">2</div><h3 data-i18n="s2h">Offer a sponsor</h3><p data-i18n="s2p">Ask <code>GET /api/ad</code> which server to promote, then show your user its invite next to the reward you are giving.</p></div>
+      <div class="step"><div class="n">3</div><h3 data-i18n="s3h">Confirm, then reward</h3><p data-i18n="s3p">After they join, call <code>POST /api/join-check</code>. We confirm it with Discord and credit you — then you hand over the reward.</p></div>
     </div>
 
     <h2 data-i18n="h_key">Get your API key</h2>
     <div class="keybox" id="keybox">
       <div id="keyAuthed" hidden>
         <h3 data-i18n="key_yours">Your API key</h3>
-        <p class="muted sm" style="margin-top:4px" data-i18n="key_secret">Keep it secret — anyone with this key acts as you and earns to your balance. Store it as an environment variable, never in client code.</p>
+        <p class="muted sm" style="margin-top:4px" data-i18n="key_secret">Treat it like a password: whoever has it acts as you and earns to your balance. Keep it in an environment variable on your server — never in code that ships to users.</p>
         <div class="keyrow">
           <div class="keyfield"><span id="keyVal">—</span></div>
           <button class="btn ghost" id="keyCopy" data-i18n="key_copy">Copy</button>
@@ -112,77 +112,77 @@
         <p class="muted sm" style="margin-top:12px" id="keyHint"></p>
       </div>
       <div id="keyGuest" hidden>
-        <h3 data-i18n="key_login_h">Log in to get a key</h3>
-        <p class="muted sm" style="margin-top:4px" data-i18n="key_login_p">Sign in with Discord — the same account that will receive payouts. Your key and earnings live in the buyer cabinet.</p>
+        <h3 data-i18n="key_login_h">Sign in to get a key</h3>
+        <p class="muted sm" style="margin-top:4px" data-i18n="key_login_p">Use the Discord account that should receive the money. Your key, balance and withdrawals all live together in the buyer cabinet.</p>
         <div class="keyrow"><a class="btn primary" href="/order/" data-i18n="key_login_btn">Log in with Discord</a></div>
       </div>
       <div id="keyLoading" class="muted sm" data-i18n="key_loading">Checking your session…</div>
     </div>
 
-    <h2 data-i18n="h_base">Base URL &amp; auth</h2>
-    <p data-i18n="p_base">All endpoints live under one base URL. Send your key on every request as a bearer token (or the <code>X-API-Key</code> header). Calls are made from your server, so your key never touches the browser.</p>
+    <h2 data-i18n="h_base">The base URL and your key</h2>
+    <p data-i18n="p_base">Every endpoint sits under one base URL. Send your key with each request — either as a bearer token or in the <code>X-API-Key</code> header. Because calls come from your server, the key never touches a browser.</p>
     <pre><span class="c"># Base URL</span>
 https://secure-gratitude-production.up.railway.app
 
-<span class="c"># Auth header (either one)</span>
+<span class="c"># Send your key one of these two ways</span>
 Authorization: Bearer <span class="s">&lt;your-key&gt;</span>
 X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
 
-    <h2 data-i18n="h_quick">Quickstart</h2>
-    <p data-i18n="p_quick">The whole reward loop in one snippet (Node.js). <code>userId</code> is the Discord ID of your user; <code>serverId</code> is a guild your bot operates in — it selects which ad to show.</p>
+    <h2 data-i18n="h_quick">A working example in one screen</h2>
+    <p data-i18n="p_quick">Here is the whole reward loop (Node.js). <code>userId</code> is your user's Discord ID; <code>serverId</code> is a guild your bot is in — it decides which sponsor to show.</p>
     <pre><span class="k">const</span> BASE = <span class="s">'https://secure-gratitude-production.up.railway.app'</span>;
 <span class="k">const</span> h = { <span class="s">'Authorization'</span>: <span class="s">'Bearer '</span> + process.env.<span class="f">VEMONI_KEY</span>, <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span> };
 
-<span class="c">// 1) Get the sponsor to show your user</span>
+<span class="c">// 1) Ask which sponsor to show, then show it to your user</span>
 <span class="k">const</span> ad = <span class="k">await</span> fetch(<span class="s">`${BASE}/api/ad?serverId=${serverId}`</span>, { headers: h }).then(r =&gt; r.json());
 <span class="k">if</span> (ad.sponsor) showToUser(ad.sponsor.name, ad.sponsor.invite, <span class="s">'Join for +100 coins!'</span>);
 
-<span class="c">// 2) After they join, confirm it — we verify on Discord and pay you</span>
+<span class="c">// 2) When they say they joined, confirm it — we check Discord and pay you</span>
 <span class="k">const</span> out = <span class="k">await</span> fetch(<span class="s">`${BASE}/api/join-check`</span>, {
   method: <span class="s">'POST'</span>, headers: h,
   body: JSON.stringify({ userId, serverId })
 }).then(r =&gt; r.json());
 
-<span class="k">if</span> (out.joined) grantBonus(userId, <span class="s">100</span>); <span class="c">// verified → give your bonus</span>
+<span class="k">if</span> (out.joined) grantBonus(userId, <span class="s">100</span>); <span class="c">// confirmed → give your reward</span>
 <span class="k">else</span> tellUser(<span class="s">'Join the server first, then press Check.'</span>);</pre>
 
-    <h2 data-i18n="h_ref">Endpoint reference</h2>
+    <h2 data-i18n="h_ref">The endpoints, one by one</h2>
 
     <div class="ep">
       <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/ad</span></div>
-      <p data-i18n="ep_ad">Query <code>?serverId=&lt;guild&gt;</code>. Returns the sponsor to show: <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. If <code>sponsor</code> is null there is no ad right now — just skip and verify without a bonus.</p>
+      <p data-i18n="ep_ad">Add <code>?serverId=&lt;guild&gt;</code>. Returns the sponsor to show: <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. If <code>sponsor</code> is null, there is nothing to promote right now — skip the reward and let the user through.</p>
     </div>
     <div class="ep">
       <div class="ep-h"><span class="m post">POST</span><span class="ep-path">/api/join-check</span></div>
-      <p data-i18n="ep_jc">Body <code>{ userId, serverId }</code>. We verify on Discord whether the user is a member of the current sponsor. <code>200 { joined:true, credited:true }</code> → paid, grant your bonus. <code>403 { joined:false }</code> → not a member yet, ask them to join. <code>200 { joined:true, ad:false }</code> → no ad was active, no payout. Each member is paid once per sponsor; if they leave, it reverses.</p>
+      <p data-i18n="ep_jc">Send <code>{ userId, serverId }</code>. We ask Discord whether the user is in the current sponsor and answer: <code>200 { joined:true, credited:true }</code> — confirmed and you have been paid, so give the reward; <code>403 { joined:false }</code> — not in yet, ask them to join; <code>200 { joined:true, ad:false }</code> — no sponsor was running, so no payout. Each member counts once per sponsor, and if they leave, the credit is reversed.</p>
     </div>
     <div class="ep">
       <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/balance</span></div>
-      <p data-i18n="ep_bal">Your current balance and payout details.</p>
+      <p data-i18n="ep_bal">Your current balance and the payout details on file.</p>
     </div>
     <div class="ep">
       <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/stats</span></div>
-      <p data-i18n="ep_stats">Your verified-join stats, per server and over time windows.</p>
+      <p data-i18n="ep_stats">Your confirmed joins, broken down by server and by time window.</p>
     </div>
     <div class="ep">
       <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/requisites</span> <span class="m put">PUT</span></div>
-      <p data-i18n="ep_req">Read or set your payout details. PUT body <code>{ requisites }</code> (crypto wallet, Telegram ID for auto USDT, etc.).</p>
+      <p data-i18n="ep_req">See or change where the money goes. PUT <code>{ requisites }</code> — a crypto wallet, a Telegram ID for automatic USDT, and so on.</p>
     </div>
     <div class="ep">
       <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/withdrawals</span> <span class="m post">POST</span> <span class="ep-path">/api/withdraw</span></div>
-      <p data-i18n="ep_wd">Your withdrawal history, and a nudge to run the payout check. A payout request is filed automatically once your balance reaches $10.</p>
+      <p data-i18n="ep_wd">Your withdrawal history, plus a way to nudge the payout check. Once your balance reaches $10, a request is filed for you automatically.</p>
     </div>
 
-    <h2 data-i18n="h_safe">Safe by design</h2>
+    <h2 data-i18n="h_safe">Safe for you, safe for us</h2>
     <div class="grid2">
-      <div class="card"><h3 data-i18n="safe1h">Real joins only</h3><p data-i18n="safe1p">A join counts only after we confirm the membership against Discord itself. Each member pays once per sponsor, and leaving reverses the credit — so there is nothing to fake.</p></div>
-      <div class="card"><h3 data-i18n="safe2h">You control the bonus</h3><p data-i18n="safe2p">The sponsor and payout rate are set by the network; the bonus you give your users is entirely yours — coins, roles, XP, anything.</p></div>
-      <div class="card"><h3 data-i18n="safe3h">Your key, your money</h3><p data-i18n="safe3p">Keys are secret and revocable. Earnings accrue to your Discord account; you set payout details and withdraw from the cabinet.</p></div>
-      <div class="card"><h3 data-i18n="safe4h">No user data leaks</h3><p data-i18n="safe4p">You only ever send a Discord user ID and a guild ID. We never ask for message content, tokens, or anything private about your users.</p></div>
+      <div class="card"><h3 data-i18n="safe1h">Only real joins pay</h3><p data-i18n="safe1p">A join earns only after we confirm the membership with Discord itself. Each member counts once per sponsor, and leaving reverses the credit — so there is nothing worth faking.</p></div>
+      <div class="card"><h3 data-i18n="safe2h">You decide the reward</h3><p data-i18n="safe2p">The network picks the sponsor and the payout rate; the reward your users get is entirely yours to choose — coins, roles, XP, anything that fits your bot.</p></div>
+      <div class="card"><h3 data-i18n="safe3h">Your key, your money</h3><p data-i18n="safe3p">Keys are secret and can be regenerated any time. Earnings sit on your Discord account, and you set the payout details and withdraw from the cabinet.</p></div>
+      <div class="card"><h3 data-i18n="safe4h">No private data changes hands</h3><p data-i18n="safe4p">You only ever send a Discord user ID and a guild ID. We never ask for message content, tokens, or anything private about your users.</p></div>
     </div>
 
-    <h2 data-i18n="h_help">Need a hand?</h2>
-    <p data-i18n="p_help">Ask in our <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">support server</a> — we will help you wire it up.</p>
+    <h2 data-i18n="h_help">Questions? We are around</h2>
+    <p data-i18n="p_help">Drop into our <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">support server</a> and we will help you wire it up.</p>
   </main>
 
   <footer>
@@ -197,39 +197,39 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
   <script>
   var I18N = { ru: {
     back:'← На сайт',
-    badge:'Монетизация для ботов',
-    h1:'Награждайте пользователей за заход. И зарабатывайте на этом.',
-    lead:'Vemoni — рекламная сеть в Discord. Встройте наш API в своего бота, показывайте пользователям сервер спонсора, выдавайте им любой бонус за заход — и получайте оплату за каждый подтверждённый заход. Пара HTTP-запросов, без панелей и возни.',
-    h_how:'Как это работает',
-    s1h:'Получите ключ', s1p:'Войдите через Discord и создайте API-ключ ниже. Он определяет ваш счёт для выплат.',
-    s2h:'Покажите спонсора', s2p:'Запросите <code>GET /api/ad</code> и покажите пользователю приглашение спонсора вместе с обещанным бонусом.',
-    s3h:'Подтвердите и наградите', s3p:'Вызовите <code>POST /api/join-check</code>. Мы проверим заход в Discord и заплатим вам — а вы выдадите свой бонус.',
-    h_key:'Получить API-ключ',
+    badge:'Превратите бота в доход',
+    h1:'У вашего бота уже есть аудитория. Дайте ему зарабатывать.',
+    lead:'Vemoni — рекламная сеть в Discord. Добавьте в бота пару вызовов, предложите пользователю награду за заход на сервер спонсора — и мы платим вам за каждый подтверждённый заход. Награду выбираете вы; спонсоров, проверку и выплаты берём на себя мы. Три эндпоинта, один ключ — и вы в деле.',
+    h_how:'Как это работает — от начала до конца',
+    s1h:'Создайте ключ', s1p:'Войдите через Discord и создайте ключ прямо ниже. По нему мы понимаем, какому аккаунту платить.',
+    s2h:'Предложите спонсора', s2p:'Спросите у <code>GET /api/ad</code>, какой сервер продвигать, и покажите пользователю приглашение рядом с наградой, которую даёте.',
+    s3h:'Подтвердите и наградите', s3p:'После захода вызовите <code>POST /api/join-check</code>. Мы подтверждаем его через Discord и начисляем вам — а вы выдаёте награду.',
+    h_key:'Получите свой API-ключ',
     key_yours:'Ваш API-ключ',
-    key_secret:'Держите его в секрете — любой, у кого он есть, действует от вашего имени и зарабатывает на ваш баланс. Храните как переменную окружения, никогда в коде клиента.',
+    key_secret:'Относитесь к нему как к паролю: у кого он есть — тот действует от вашего имени и зарабатывает на ваш баланс. Храните его в переменной окружения на сервере, а не в коде, который получают пользователи.',
     key_copy:'Копировать', key_reveal:'Показать', key_gen:'Создать',
     key_login_h:'Войдите, чтобы получить ключ',
-    key_login_p:'Войдите через Discord — тем аккаунтом, который будет получать выплаты. Ключ и заработок хранятся в кабинете покупателя.',
+    key_login_p:'Используйте тот Discord-аккаунт, на который должны идти деньги. Ключ, баланс и выводы лежат вместе в кабинете покупателя.',
     key_login_btn:'Войти через Discord',
     key_loading:'Проверяем сессию…',
-    h_base:'Базовый URL и авторизация',
-    p_base:'Все эндпоинты — под одним базовым URL. Отправляйте ключ в каждом запросе как bearer-токен (или заголовком <code>X-API-Key</code>). Запросы идут с вашего сервера, поэтому ключ никогда не попадает в браузер.',
-    h_quick:'Быстрый старт',
-    p_quick:'Весь цикл награды в одном сниппете (Node.js). <code>userId</code> — Discord ID вашего пользователя; <code>serverId</code> — сервер, где работает ваш бот, он выбирает, какую рекламу показать.',
-    h_ref:'Справочник эндпоинтов',
-    ep_ad:'Параметр <code>?serverId=&lt;guild&gt;</code>. Возвращает спонсора для показа: <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. Если <code>sponsor</code> = null — рекламы сейчас нет, просто пропустите шаг без бонуса.',
-    ep_jc:'Тело <code>{ userId, serverId }</code>. Мы проверяем в Discord, состоит ли пользователь в текущем спонсоре. <code>200 { joined:true, credited:true }</code> → оплачено, выдавайте бонус. <code>403 { joined:false }</code> → ещё не участник, попросите зайти. <code>200 { joined:true, ad:false }</code> → рекламы не было, выплаты нет. Каждый участник оплачивается один раз на спонсора; если уходит — начисление отменяется.',
-    ep_bal:'Ваш текущий баланс и реквизиты для выплат.',
-    ep_stats:'Ваша статистика подтверждённых заходов — по серверам и временным окнам.',
-    ep_req:'Прочитать или задать реквизиты выплат. Тело PUT <code>{ requisites }</code> (крипто-кошелёк, Telegram ID для авто-USDT и т.п.).',
-    ep_wd:'История выводов и «пинок» проверки выплаты. Запрос на вывод подаётся автоматически, как только баланс достигает $10.',
-    h_safe:'Безопасно по устройству',
-    safe1h:'Только реальные заходы', safe1p:'Заход засчитывается только после того, как мы подтвердим членство через сам Discord. Каждый участник оплачивается один раз на спонсора, а уход отменяет начисление — подделывать нечего.',
-    safe2h:'Бонус — на ваше усмотрение', safe2p:'Спонсор и ставка выплаты задаются сетью; бонус пользователям — полностью ваш: монеты, роли, опыт, что угодно.',
-    safe3h:'Ваш ключ — ваши деньги', safe3p:'Ключи секретны и отзываемы. Заработок начисляется на ваш Discord-аккаунт; реквизиты и вывод — в кабинете.',
-    safe4h:'Никаких утечек данных', safe4p:'Вы отправляете только Discord ID пользователя и ID сервера. Мы не просим содержимое сообщений, токены и ничего личного о ваших пользователях.',
-    h_help:'Нужна помощь?',
-    p_help:'Спросите на нашем <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">сервере поддержки</a> — поможем всё подключить.',
+    h_base:'Базовый URL и ваш ключ',
+    p_base:'Все эндпоинты — под одним базовым URL. Отправляйте ключ с каждым запросом — bearer-токеном или заголовком <code>X-API-Key</code>. Запросы идут с вашего сервера, поэтому ключ никогда не попадает в браузер.',
+    h_quick:'Рабочий пример на один экран',
+    p_quick:'Вот весь цикл награды (Node.js). <code>userId</code> — Discord ID вашего пользователя; <code>serverId</code> — сервер, где стоит ваш бот, он решает, какого спонсора показать.',
+    h_ref:'Эндпоинты по порядку',
+    ep_ad:'Добавьте <code>?serverId=&lt;guild&gt;</code>. Возвращает спонсора для показа: <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. Если <code>sponsor</code> = null — продвигать сейчас нечего: пропустите награду и пропустите пользователя дальше.',
+    ep_jc:'Отправьте <code>{ userId, serverId }</code>. Мы спрашиваем у Discord, состоит ли пользователь в текущем спонсоре, и отвечаем: <code>200 { joined:true, credited:true }</code> — подтверждено, вам начислено, выдавайте награду; <code>403 { joined:false }</code> — ещё не зашёл, попросите зайти; <code>200 { joined:true, ad:false }</code> — спонсора не было, выплаты нет. Каждый участник считается один раз на спонсора, а если уходит — начисление отменяется.',
+    ep_bal:'Ваш текущий баланс и сохранённые реквизиты для выплат.',
+    ep_stats:'Ваши подтверждённые заходы — по серверам и по временным окнам.',
+    ep_req:'Посмотреть или изменить, куда идут деньги. PUT <code>{ requisites }</code> — крипто-кошелёк, Telegram ID для авто-USDT и так далее.',
+    ep_wd:'История выводов и способ «подтолкнуть» проверку выплаты. Как только баланс достигает $10, запрос подаётся за вас автоматически.',
+    h_safe:'Безопасно и вам, и нам',
+    safe1h:'Платят только реальные заходы', safe1p:'Заход приносит деньги только после того, как мы подтвердим членство через сам Discord. Каждый участник считается один раз на спонсора, а уход отменяет начисление — подделывать нечего.',
+    safe2h:'Награду выбираете вы', safe2p:'Спонсора и ставку выплаты выбирает сеть; какую награду получат ваши пользователи — целиком на ваше усмотрение: монеты, роли, опыт — что угодно, что подходит вашему боту.',
+    safe3h:'Ваш ключ — ваши деньги', safe3p:'Ключи секретны и в любой момент пересоздаются. Заработок — на вашем Discord-аккаунте, реквизиты и вывод — в кабинете.',
+    safe4h:'Ничего личного не передаётся', safe4p:'Вы отправляете только Discord ID пользователя и ID сервера. Мы не просим содержимое сообщений, токены и ничего личного о ваших пользователях.',
+    h_help:'Вопросы? Мы на связи',
+    p_help:'Загляните на наш <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">сервер поддержки</a> — поможем всё подключить.',
     f_privacy:'Политика конфиденциальности', f_terms:'Условия использования', f_support:'Поддержка'
   } };
   (function(){
