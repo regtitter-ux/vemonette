@@ -379,7 +379,7 @@ setLang(startLang);
     const pPos = fibSphere(Math.max(1, all.length));
     const cPos = [ll(90, 0), ll(-90, 0), ll(0, 0), ll(0, 180)]; // two poles + two opposite equator points
     const bPos = [ll(8, 26), ll(48, -66), ll(-28, 116), ll(64, 6), ll(-56, 44), ll(20, -174), ll(40, 168), ll(-6, -54), ll(30, -118), ll(-46, -20), ll(56, 128), ll(-18, 74)];
-    pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
+    pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || (typeof iconUrl === 'function' ? iconUrl(s.id, s.icon) : null); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null, letter: (s.letter || (s.name || '?').trim()[0] || '?').toUpperCase() }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
     cPos.forEach((p) => CENTERS.push({ p }));
     bPos.forEach((p) => BUYERS.push({ p, center: null }));
     BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
@@ -522,7 +522,7 @@ setLang(startLang);
       } else if (it.kind === 'p') {
         const rr = 13; ctx.globalAlpha = fade;
         if (n.img) { ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.fillStyle = '#0e1a2c'; ctx.fillRect(p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore(); } // opaque backing so transparent (SVG) avatars don't shimmer over the starfield
-        else { ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = '#0a1a13'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = n.color; ctx.stroke(); ctx.beginPath(); ctx.arc(p[0], p[1], 2, 0, 7); ctx.fillStyle = n.color; ctx.fill(); }
+        else { ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = n.color; ctx.fill(); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `800 ${Math.round(rr * 1.15)}px Roboto,system-ui,sans-serif`; ctx.fillText(n.letter || '?', p[0], p[1] + 0.5); } // no avatar in the feed: coloured initial tile, like the marquee
         ctx.globalAlpha = 1;
       } else {
         const rr = 11;
