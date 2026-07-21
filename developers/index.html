@@ -199,9 +199,9 @@
       <h2 data-i18n="wh_h">Webhooks</h2>
       <div class="keybox">
         <p class="muted sm" data-i18n="wh_p">Get a signed callback when a join is <code>credited</code> or <code>reverted</code> (member left), so your economy stays in sync. We POST JSON to your URL with an HMAC-SHA256 signature in the <code>X-Vemoni-Signature</code> header — see the docs below.</p>
-        <div class="keyrow" style="margin-top:10px"><div class="field" style="flex:1;min-width:240px"><input id="whUrl" class="inp" type="url" spellcheck="false" autocomplete="off" placeholder="https://your.app/vemoni-webhook" /></div></div>
+        <div class="keyrow" style="margin-top:10px"><div class="field" style="flex:1;min-width:240px;margin:0"><input id="whUrl" class="inp" type="url" spellcheck="false" autocomplete="off" placeholder="https://your.app/vemoni-webhook" /></div></div>
         <div class="keyrow" style="margin-top:8px">
-          <div class="field" style="flex:1;min-width:240px"><input id="whSecret" class="inp" type="text" spellcheck="false" autocomplete="off" data-i18n-ph="wh_secret_ph" placeholder="signing secret" /></div>
+          <div class="field" style="flex:1;min-width:240px;margin:0"><input id="whSecret" class="inp" type="text" spellcheck="false" autocomplete="off" data-i18n-ph="wh_secret_ph" placeholder="signing secret" /></div>
           <button class="btn ghost" id="whSave" data-i18n="wh_save">Save</button>
           <button class="btn ghost" id="whClear" data-i18n="wh_clear">Disable</button>
         </div>
