@@ -83,6 +83,17 @@
     .apitile{background:linear-gradient(180deg,rgba(87,242,135,.08),rgba(87,242,135,.02));border:1px solid rgba(87,242,135,.25);border-radius:14px;padding:16px 18px}
     .apitile .k{color:var(--muted);font-size:12.5px;font-weight:600}
     .apitile .v{font-size:24px;font-weight:800;color:var(--green);margin-top:6px;font-variant-numeric:tabular-nums}
+    /* bot funnels */
+    .bf-empty{color:var(--muted)}
+    .bf-card{background:var(--panel);border:1px solid var(--stroke);border-radius:14px;padding:15px 17px;margin-top:12px}
+    .bf-head{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+    .bf-av{width:32px;height:32px;border-radius:50%;background:#243049 center/cover no-repeat;flex:none;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px}
+    .bf-nm{font-weight:700;color:#fff;font-size:14.5px}
+    .bf-id{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+    .bf-table{width:100%;border-collapse:collapse;font-size:13.5px}
+    .bf-table th{color:var(--muted);font-weight:600;font-size:12px;padding:4px 8px;text-align:left}
+    .bf-table th.num,.bf-table td.num{text-align:right;font-variant-numeric:tabular-nums}
+    .bf-table td{padding:7px 8px;border-top:1px solid var(--stroke)}
     /* key widget */
     .keybox{background:var(--panel);border:1px solid var(--stroke);border-radius:16px;padding:20px;margin-top:12px}
     .keyrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
@@ -165,6 +176,9 @@
         <div class="apitile"><div class="k" data-i18n="api_earned">Earned via API</div><div class="v" id="apiPaid">$0.00</div></div>
         <div class="apitile"><div class="k" data-i18n="api_joins">API joins</div><div class="v" id="apiJoins">0</div></div>
       </div>
+
+      <h2 data-i18n="bf_h">Funnels by bot</h2>
+      <div id="botFunnels" class="bf-empty sm"></div>
 
       <h2 data-i18n="key_yours">Your API key</h2>
       <div class="keybox">
@@ -272,7 +286,7 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
   var I18N = { ru: {
     t_balance:'Баланс',
     m_home:'Главная', m_partner:'Партнёрам', m_buyers:'Покупателям', m_myorders:'Мои заказы', m_invest:'Инвесторам', m_dev:'Разработчикам', m_admin:'Администраторам', m_logout:'Выйти',
-    api_earned:'Заработано через API', api_joins:'Заходы через API',
+    api_earned:'Заработано через API', api_joins:'Заходы через API', bf_h:'Воронки по ботам',
     key_yours:'Ваш API-ключ',
     key_secret:'Относитесь к нему как к паролю: у кого он есть — тот действует от вашего имени и зарабатывает на ваш баланс. Храните его в переменной окружения на сервере, а не в коде, который получают пользователи.',
     key_copy:'Копировать', key_reveal:'Показать', key_gen:'Создать',
@@ -305,8 +319,8 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     var EN = {}; document.querySelectorAll('[data-i18n]').forEach(function(el){ EN[el.dataset.i18n] = el.innerHTML; });
     var LANG='en';
     var TXT={
-      en:{ ltcPh:'Enter your LTC address', ltcOn:'✓ LTC auto-payout is on', saved:'Payout details saved', saveErr:'Could not save', gen:'Generate', regen:'Regenerate', reveal:'Reveal', hide:'Hide', copy:'Copy', copied:'Copied', nokey:'no key yet', hintNo:'Press “Generate” to create your key.' },
-      ru:{ ltcPh:'Введите ваш LTC адрес', ltcOn:'✓ Авто-вывод в LTC включён', saved:'Реквизиты сохранены', saveErr:'Не удалось сохранить', gen:'Создать', regen:'Пересоздать', reveal:'Показать', hide:'Скрыть', copy:'Копировать', copied:'Скопировано', nokey:'ключа ещё нет', hintNo:'Нажмите «Создать», чтобы получить ключ.' }
+      en:{ ltcPh:'Enter your LTC address', ltcOn:'✓ LTC auto-payout is on', saved:'Payout details saved', saveErr:'Could not save', gen:'Generate', regen:'Regenerate', reveal:'Reveal', hide:'Hide', copy:'Copy', copied:'Copied', nokey:'no key yet', hintNo:'Press “Generate” to create your key.', bfEmpty:'No data yet — funnels appear once your bot starts sending botId.', bfFunnel:'Funnel', bfHour:'hour', bfDay:'day', bfWeek:'week', bfStarted:'1. Ad shown', bfChecked:'2. Join checked', bfStayed:'3. Stayed' },
+      ru:{ ltcPh:'Введите ваш LTC адрес', ltcOn:'✓ Авто-вывод в LTC включён', saved:'Реквизиты сохранены', saveErr:'Не удалось сохранить', gen:'Создать', regen:'Пересоздать', reveal:'Показать', hide:'Скрыть', copy:'Копировать', copied:'Скопировано', nokey:'ключа ещё нет', hintNo:'Нажмите «Создать», чтобы получить ключ.', bfEmpty:'Данных пока нет — воронки появятся, как только бот начнёт передавать botId.', bfFunnel:'Воронка', bfHour:'час', bfDay:'день', bfWeek:'неделя', bfStarted:'1. Показ рекламы', bfChecked:'2. Заход проверен', bfStayed:'3. Остались' }
     };
     function T(){ return TXT[LANG]; }
     function setLang(l){
@@ -316,7 +330,7 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
       document.querySelectorAll('#lang button').forEach(function(b){ b.classList.toggle('active', b.dataset.lang===l); });
       try{ localStorage.setItem('vemonette-lang', l); }catch(e){}
       var ri=document.getElementById('reqInput'); if(ri) ri.placeholder=T().ltcPh;
-      renderCab(); renderKey(); renderKeyHint();
+      renderCab(); renderKey(); renderKeyHint(); renderBotFunnels();
     }
     document.querySelectorAll('#lang button').forEach(function(b){ b.addEventListener('click', function(){ setLang(b.dataset.lang); }); });
 
@@ -375,6 +389,26 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
         var ri=$('reqInput'); if(ri) ri.value=ME.requisites||'';
         renderCab(); renderKey(); renderKeyHint();
       }catch(e){}
+      loadBotFunnels();
+    }
+    var FUNNELS=[];
+    async function loadBotFunnels(){
+      try{ var r=await req('/order/bot-funnels'); var d=await r.json().catch(function(){return null;}); FUNNELS=(d&&d.bots)||[]; }catch(e){ FUNNELS=[]; }
+      renderBotFunnels();
+    }
+    function renderBotFunnels(){
+      var box=$('botFunnels'); if(!box) return;
+      if(!FUNNELS||!FUNNELS.length){ box.className='bf-empty sm'; box.textContent=T().bfEmpty; return; }
+      box.className='';
+      box.innerHTML=FUNNELS.map(function(b){
+        var letter=(String(b.name||b.username||'B').trim()[0]||'B').toUpperCase();
+        var av=b.avatar?('<span class="bf-av" style="background-image:url(\''+esc(b.avatar)+'\')"></span>'):('<span class="bf-av">'+esc(letter)+'</span>');
+        var row=function(label,w){ return '<tr><td>'+esc(label)+'</td><td class="num">'+w.hour+'</td><td class="num">'+w.day+'</td><td class="num">'+w.week+'</td></tr>'; };
+        return '<div class="bf-card"><div class="bf-head">'+av+'<div><div class="bf-nm">'+esc(b.name||b.username||('Bot '+b.botId))+'</div><div class="bf-id">'+esc(b.botId)+'</div></div></div>'
+          +'<table class="bf-table"><thead><tr><th>'+esc(T().bfFunnel)+'</th><th class="num">'+esc(T().bfHour)+'</th><th class="num">'+esc(T().bfDay)+'</th><th class="num">'+esc(T().bfWeek)+'</th></tr></thead><tbody>'
+          +row(T().bfStarted,b.started)+row(T().bfChecked,b.checked)+row(T().bfStayed,b.stayed)
+          +'</tbody></table></div>';
+      }).join('');
     }
     function asGuest(){ var l=$('hdrLogin'); if(l) l.hidden=false; var m=$('cabMenu'); if(m) m.hidden=true; show('devGuest'); }
     (async function init(){
