@@ -79,7 +79,7 @@ const DICT = {
     pin: 'В приоритет', unpin: 'Снять приоритет', pinned: 'Приоритет', pinned_toast: 'Приоритет установлен — заказ показывается первым', unpinned_toast: 'Приоритет снят',
     srv_loading: 'Загрузка…', srv_error: 'Ошибка', srv_empty: 'Пока нет доставленных заходов по серверам.',
     disable: 'Отключить', disabled: 'Выключен',
-    srv_off: 'Сервер отключён', srv_on: 'Сервер включён',
+    srv_off: 'Отключено', srv_on: 'Включено', bot_tag: 'бот',
     bot_warn: 'Реклама не запустится: на вашем сервере нет нашего бота. Добавьте его — проверка заходов без него невозможна.',
     add_bot: 'Добавить бота',
     st_pending: 'Ожидает оплаты', st_active: 'Активна', st_paused: 'На паузе',
@@ -174,7 +174,7 @@ const DICT = {
     pin: 'Prioritize', unpin: 'Unpin', pinned: 'Priority', pinned_toast: 'Priority set — this order shows first', unpinned_toast: 'Priority cleared',
     srv_loading: 'Loading…', srv_error: 'Error', srv_empty: 'No delivered stays per server yet.',
     disable: 'Disable', disabled: 'Disabled',
-    srv_off: 'Server disabled', srv_on: 'Server enabled',
+    srv_off: 'Disabled', srv_on: 'Enabled', bot_tag: 'bot',
     bot_warn: "The ad won't run: our bot isn't on your server. Add it — stay verification is impossible without it.",
     add_bot: 'Add the bot',
     st_pending: 'Awaiting payment', st_active: 'Active', st_paused: 'Paused',
@@ -851,7 +851,10 @@ function wireCampaigns(list) {
         box.innerHTML = servers.length ? servers.map((s) => srvRow(id, s)).join('') : `<div class="muted sm">${esc(t('srv_empty'))}</div>`;
         box.querySelectorAll('[data-toggle]').forEach((btn) => btn.onclick = async () => {
             const disable = btn.dataset.state === 'on';
-            const { ok } = await put(`/campaigns/${id}/server`, { gid: btn.dataset.toggle, disabled: disable });
+            const isBot = btn.dataset.kind === 'bot';
+            const { ok } = isBot
+                ? await put(`/campaigns/${id}/bot`, { botId: btn.dataset.toggle, disabled: disable })
+                : await put(`/campaigns/${id}/server`, { gid: btn.dataset.toggle, disabled: disable });
             if (ok) { toast(disable ? t('srv_off') : t('srv_on')); b.click(); b.click(); }
         });
     });
@@ -861,13 +864,18 @@ function srvRow(campId, s) {
     const ic = s.icon
         ? `<img class="srv-ic" src="${esc(s.icon)}" alt="" onerror="this.outerHTML='<span class=\\'srv-ic srv-ic-fb\\'>${esc((s.name || '?')[0].toUpperCase())}</span>'" />`
         : `<span class="srv-ic srv-ic-fb">${esc((s.name || '?')[0].toUpperCase())}</span>`;
+    // API deliveries are shown inside a bot — toggle routes to the bot endpoint
+    // and the row is tagged so the buyer can tell it apart from a server.
+    const tid = s.isBot ? s.botId : s.gid;
+    const kind = s.isBot ? 'bot' : 'server';
     const btn = s.disabled
-        ? `<button class="btn-mini off" data-toggle="${s.gid}" data-state="off">${esc(t('disabled'))}</button>`
-        : `<button class="btn-mini" data-toggle="${s.gid}" data-state="on">${esc(t('disable'))}</button>`;
+        ? `<button class="btn-mini off" data-toggle="${tid}" data-kind="${kind}" data-state="off">${esc(t('disabled'))}</button>`
+        : `<button class="btn-mini" data-toggle="${tid}" data-kind="${kind}" data-state="on">${esc(t('disable'))}</button>`;
+    const botTag = s.isBot ? `<span class="srv-bot" title="${esc(t('bot_tag'))}">${esc(t('bot_tag'))}</span> ` : '';
     // Admin only: `(N)` = how many were delivered here via the EXTRA bonus ad
     // (partner not paid). Backend sends `extra` only to admins.
     const extra = (s.extra != null && s.extra > 0) ? ` <span class="srv-extra" title="через экстра-рекламу">(${s.extra})</span>` : '';
-    return `<div class="srv-row">${ic}<span class="srv-name">${esc(s.name || 'Server')} </span><span class="srv-count">${s.count}${extra}</span>${btn}</div>`;
+    return `<div class="srv-row">${ic}${botTag}<span class="srv-name">${esc(s.name || (s.isBot ? 'Bot' : 'Server'))} </span><span class="srv-count">${s.count}${extra}</span>${btn}</div>`;
 }
 
 // ---------- Boot ----------
