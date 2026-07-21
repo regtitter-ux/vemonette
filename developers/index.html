@@ -277,7 +277,8 @@ H = { <span class="s">"Authorization"</span>: <span class="s">"Bearer "</span> +
 <span class="c"># 1) on your command: get an ad and show it</span>
 ad = <span class="k">await</span> api(<span class="s">"GET"</span>, f<span class="s">"/api/ad?serverId={gid}&amp;botId={bid}&amp;userId={uid}"</span>)
 <span class="k">if</span> ad.get(<span class="s">"sponsor"</span>):
-    <span class="k">await</span> show_button(ad[<span class="s">"adText"</span>], sponsor_id=ad[<span class="s">"sponsor"</span>][<span class="s">"guildId"</span>])
+    sp = ad[<span class="s">"sponsor"</span>]
+    <span class="k">await</span> show_button(f<span class="s">"Join {sp['name']}: {sp['invite']}"</span>, sponsor_id=sp[<span class="s">"guildId"</span>])
 
 <span class="c"># 2) on the "I joined" button: verify + reward</span>
 out = <span class="k">await</span> api(<span class="s">"POST"</span>, <span class="s">"/api/join-check"</span>, json={<span class="s">"userId"</span>: uid, <span class="s">"botId"</span>: bid, <span class="s">"sponsorId"</span>: sponsor_id})
@@ -292,7 +293,7 @@ out = <span class="k">await</span> api(<span class="s">"POST"</span>, <span clas
 
 <span class="c">// 1) on your slash command</span>
 <span class="k">const</span> ad = <span class="k">await</span> api(<span class="s">'GET'</span>, <span class="s">`/api/ad?serverId=${gid}&amp;botId=${bid}&amp;userId=${uid}`</span>);
-<span class="k">if</span> (ad.sponsor) showButton(ad.adText, ad.sponsor.guildId);
+<span class="k">if</span> (ad.sponsor) showButton(<span class="s">`Join ${ad.sponsor.name}: ${ad.sponsor.invite}`</span>, ad.sponsor.guildId);
 
 <span class="c">// 2) on the "I joined" button</span>
 <span class="k">const</span> out = <span class="k">await</span> api(<span class="s">'POST'</span>, <span class="s">'/api/join-check'</span>, { userId: uid, botId: bid, sponsorId });
@@ -303,7 +304,7 @@ out = <span class="k">await</span> api(<span class="s">"POST"</span>, <span clas
     <h2 data-i18n="h_ref">The endpoints, one by one</h2>
     <div class="ep">
       <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/ad</span></div>
-      <p data-i18n="ep_ad">Parameters (all required): <code>?serverId=&lt;guild&gt;&botId=&lt;bot&gt;&userId=&lt;user&gt;</code>. Returns <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code> — show <code>adText</code> to the user. If <code>sponsor</code> is <code>null</code>, there's nothing to show: let the user through with no reward. <code>400</code> if a parameter is missing.</p>
+      <p data-i18n="ep_ad">Parameters (all required): <code>?serverId=&lt;guild&gt;&botId=&lt;bot&gt;&userId=&lt;user&gt;</code>. Returns <code>{ sponsor: { guildId, name, invite } | null, fallbackText }</code> — build your message from <code>sponsor.name</code> and <code>sponsor.invite</code>. If <code>sponsor</code> is <code>null</code>, there's nothing to show: let the user through with no reward. <code>400</code> if a parameter is missing.</p>
     </div>
     <div class="ep">
       <div class="ep-h"><span class="m post">POST</span><span class="ep-path">/api/join-check</span></div>
@@ -384,7 +385,7 @@ out = <span class="k">await</span> api(<span class="s">"POST"</span>, <span clas
     h_quick:'Рабочий пример на один экран',
     p_quick:'Полный цикл награды (Node.js). Три ID, все обязательны: <code>userId</code> — пользователь Discord, которого награждаете; <code>serverId</code> — сервер, где работает ваш бот (под него подбираем спонсора); <code>botId</code> — application (client) ID вашего бота.',
     h_ref:'Эндпоинты по порядку',
-    ep_ad:'Параметры (все обязательны): <code>?serverId=&lt;guild&gt;&botId=&lt;bot&gt;&userId=&lt;user&gt;</code>. Возвращает <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code> — покажите <code>adText</code> пользователю. Если <code>sponsor</code> = <code>null</code> — показывать нечего: пропустите пользователя без награды. <code>400</code>, если параметра не хватает.',
+    ep_ad:'Параметры (все обязательны): <code>?serverId=&lt;guild&gt;&botId=&lt;bot&gt;&userId=&lt;user&gt;</code>. Возвращает <code>{ sponsor: { guildId, name, invite } | null, fallbackText }</code> — соберите сообщение сами из <code>sponsor.name</code> и <code>sponsor.invite</code>. Если <code>sponsor</code> = <code>null</code> — показывать нечего: пропустите пользователя без награды. <code>400</code>, если параметра не хватает.',
     ep_jc:'Тело: <code>{ userId, botId, sponsorId? }</code>. <code>sponsorId</code> — это <code>guildId</code> из <code>/api/ad</code>: передайте его, чтобы проверка привязалась ровно к тому спонсору (рекомендуется, если бот запускает несколько рекламных команд сразу); без него берём последнюю рекламу, показанную этому пользователю. В каждом ответе есть поле <code>status</code> — на него и смотрите, награду выдавайте <strong>только при <code>"credited"</code></strong>: <code>200 "credited"</code> — заход подтверждён и вам начислено → выдавайте награду; <code>200 "not_joined"</code> (<code>joined:false</code>) — ещё не состоит в спонсоре → попросите зайти, награды нет; <code>200 "already_counted"</code> — уже засчитан за этого спонсора → награды нет; <code>200 "no_ad"</code> — ничего не показывали → награды нет; <code>503 "uncertain"</code> — не удалось проверить сейчас, повторите. Считается один раз на членство; при уходе начисление отменяется, а реальный повторный заход засчитывается снова.',
     h_rules:'Ошибки, лимиты и правила',
     r_pre:'<strong>У спонсора должен стоять бот Vemoni.</strong> Заход засчитывается, только если наш бот есть на сервере-спонсоре — так мы проверяем членство. Сервера без него <code>/api/ad</code> вообще не предлагает.',
