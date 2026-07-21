@@ -196,6 +196,18 @@
         <p class="muted sm" style="margin-top:12px" id="keyHint"></p>
       </div>
 
+      <h2 data-i18n="wh_h">Webhooks</h2>
+      <div class="keybox">
+        <p class="muted sm" data-i18n="wh_p">Get a signed callback when a join is <code>credited</code> or <code>reverted</code> (member left), so your economy stays in sync. We POST JSON to your URL with an HMAC-SHA256 signature in the <code>X-Vemoni-Signature</code> header — see the docs below.</p>
+        <div class="keyrow" style="margin-top:10px"><div class="field" style="flex:1;min-width:240px"><input id="whUrl" class="inp" type="url" spellcheck="false" autocomplete="off" placeholder="https://your.app/vemoni-webhook" /></div></div>
+        <div class="keyrow" style="margin-top:8px">
+          <div class="field" style="flex:1;min-width:240px"><input id="whSecret" class="inp" type="text" spellcheck="false" autocomplete="off" data-i18n-ph="wh_secret_ph" placeholder="signing secret" /></div>
+          <button class="btn ghost" id="whSave" data-i18n="wh_save">Save</button>
+          <button class="btn ghost" id="whClear" data-i18n="wh_clear">Disable</button>
+        </div>
+        <p class="muted sm" style="margin-top:10px" id="whState"></p>
+      </div>
+
       <h2 data-i18n="cab_payout_h">Payout details (LTC address)</h2>
       <div class="field"><input id="reqInput" class="inp" type="text" spellcheck="false" autocomplete="off" /></div>
       <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn primary" id="reqSave" data-i18n="cab_payout_save">Save</button><span id="ltcState" class="sm"></span></div>
@@ -249,6 +261,45 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
 <span class="k">else</span> <span class="k">if</span> (out.status === <span class="s">'already_counted'</span>) tellUser(<span class="s">'You already got the reward for this server.'</span>);
 <span class="c">// 'no_ad' → nothing to promote right now → let them through, no reward.</span></pre>
 
+    <h2 data-i18n="h_sdk">Examples: discord.py &amp; discord.js</h2>
+    <p data-i18n="p_sdk">The same three steps in a real bot — ask for an ad, show it, verify when the user presses your button.</p>
+    <pre><span class="c"># discord.py</span>
+import os, aiohttp
+
+BASE = <span class="s">"https://api.vemoni.info"</span>
+H = { <span class="s">"Authorization"</span>: <span class="s">"Bearer "</span> + os.environ[<span class="s">"VEMONI_KEY"</span>] }
+
+<span class="k">async def</span> api(method, path, **kw):
+    <span class="k">async with</span> aiohttp.ClientSession() <span class="k">as</span> s:
+        <span class="k">async with</span> s.request(method, BASE + path, headers=H, **kw) <span class="k">as</span> r:
+            <span class="k">return await</span> r.json()
+
+<span class="c"># 1) on your command: get an ad and show it</span>
+ad = <span class="k">await</span> api(<span class="s">"GET"</span>, f<span class="s">"/api/ad?serverId={gid}&amp;botId={bid}&amp;userId={uid}"</span>)
+<span class="k">if</span> ad.get(<span class="s">"sponsor"</span>):
+    <span class="k">await</span> show_button(ad[<span class="s">"adText"</span>], sponsor_id=ad[<span class="s">"sponsor"</span>][<span class="s">"guildId"</span>])
+
+<span class="c"># 2) on the "I joined" button: verify + reward</span>
+out = <span class="k">await</span> api(<span class="s">"POST"</span>, <span class="s">"/api/join-check"</span>, json={<span class="s">"userId"</span>: uid, <span class="s">"botId"</span>: bid, <span class="s">"sponsorId"</span>: sponsor_id})
+<span class="k">if</span> out[<span class="s">"status"</span>] == <span class="s">"credited"</span>:        grant_bonus(uid, <span class="s">100</span>)
+<span class="k">elif</span> out[<span class="s">"status"</span>] == <span class="s">"not_joined"</span>:     reply(<span class="s">"Join the server first, then press Check."</span>)
+<span class="k">elif</span> out[<span class="s">"status"</span>] == <span class="s">"already_counted"</span>: reply(<span class="s">"You already got the reward for this server."</span>)
+<span class="c"># 'no_ad' → let them through, no reward</span></pre>
+    <pre><span class="c">// discord.js</span>
+<span class="k">const</span> BASE = <span class="s">'https://api.vemoni.info'</span>;
+<span class="k">const</span> H = { Authorization: <span class="s">'Bearer '</span> + process.env.<span class="f">VEMONI_KEY</span>, <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span> };
+<span class="k">const</span> api = (m, p, body) =&gt; fetch(BASE + p, { method: m, headers: H, body: body &amp;&amp; JSON.stringify(body) }).then(r =&gt; r.json());
+
+<span class="c">// 1) on your slash command</span>
+<span class="k">const</span> ad = <span class="k">await</span> api(<span class="s">'GET'</span>, <span class="s">`/api/ad?serverId=${gid}&amp;botId=${bid}&amp;userId=${uid}`</span>);
+<span class="k">if</span> (ad.sponsor) showButton(ad.adText, ad.sponsor.guildId);
+
+<span class="c">// 2) on the "I joined" button</span>
+<span class="k">const</span> out = <span class="k">await</span> api(<span class="s">'POST'</span>, <span class="s">'/api/join-check'</span>, { userId: uid, botId: bid, sponsorId });
+<span class="k">if</span> (out.status === <span class="s">'credited'</span>) grantBonus(uid, <span class="s">100</span>);
+<span class="k">else</span> <span class="k">if</span> (out.status === <span class="s">'not_joined'</span>) reply(<span class="s">'Join the server first, then press Check.'</span>);
+<span class="k">else</span> <span class="k">if</span> (out.status === <span class="s">'already_counted'</span>) reply(<span class="s">'You already got the reward for this server.'</span>);</pre>
+
     <h2 data-i18n="h_ref">The endpoints, one by one</h2>
     <div class="ep">
       <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/ad</span></div>
@@ -266,6 +317,31 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
       <li data-i18n="r_rate"><strong>Rate limits are per-IP.</strong> Ask <code>/api/ad</code> once per user action, and call <code>/api/join-check</code> only when the user presses your check button. Back off on <code>429</code>.</li>
       <li data-i18n="r_idem"><strong>Safe to retry.</strong> A membership is credited once — a double click or repeated call returns <code>already_counted</code>, never a double reward.</li>
       <li data-i18n="r_fraud"><strong>userId is verified.</strong> We check the user's real Discord membership of the shown sponsor, so passing IDs that didn't actually join earns nothing.</li>
+    </ul>
+
+    <h2 data-i18n="h_wh">Webhooks</h2>
+    <p data-i18n="p_wh">Set a URL in your cabinet (above) and we POST a signed event when a join is credited or reversed. Dedupe on <code>eventId</code>. Body:</p>
+    <pre>{
+  <span class="s">"event"</span>: <span class="s">"credited"</span>,        <span class="c">// or "reverted" (member left → undo the reward)</span>
+  <span class="s">"eventId"</span>: <span class="s">"a1b2c3…"</span>,       <span class="c">// unique per delivery</span>
+  <span class="s">"timestamp"</span>: 1730000000000,
+  <span class="s">"user"</span>: <span class="s">"&lt;discord user id&gt;"</span>,
+  <span class="s">"sponsorId"</span>: <span class="s">"&lt;guild id&gt;"</span>,
+  <span class="s">"botId"</span>: <span class="s">"&lt;your bot id&gt;"</span>,
+  <span class="s">"amount"</span>: 0.05
+}</pre>
+    <p data-i18n="p_wh2">Verify the <code>X-Vemoni-Signature: sha256=…</code> header against the raw body before trusting it:</p>
+    <pre><span class="c">// Node — verify the signature</span>
+<span class="k">const</span> crypto = require(<span class="s">'crypto'</span>);
+<span class="k">const</span> expected = <span class="s">'sha256='</span> + crypto.createHmac(<span class="s">'sha256'</span>, SECRET).update(rawBody).digest(<span class="s">'hex'</span>);
+<span class="k">if</span> (expected !== req.headers[<span class="s">'x-vemoni-signature'</span>]) <span class="k">return</span> res.sendStatus(<span class="s">401</span>);</pre>
+
+    <h2 data-i18n="h_cl">Changelog</h2>
+    <p data-i18n="p_cl">Latest changes (machine-readable at <code>GET /api/changelog</code>). Prefer the versioned path <code>/v1/api/…</code>.</p>
+    <ul class="rules">
+      <li><strong>2026-07-22</strong> — 200 (not 403) for not-joined; <code>status</code> enum; optional <code>sponsorId</code>; error <code>code</code>s; signed webhooks; <code>/v1</code> alias.</li>
+      <li><strong>2026-07-19</strong> — <code>join-check</code> no longer needs <code>serverId</code>; a real leave-then-rejoin counts again.</li>
+      <li><strong>2026-07-17</strong> — <code>botId</code> (and <code>userId</code> on <code>/api/ad</code>) became required.</li>
     </ul>
 
     <h2 data-i18n="h_help">Questions? We are around</h2>
@@ -290,6 +366,9 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     key_yours:'Ваш API-ключ',
     key_secret:'Относитесь к нему как к паролю: у кого он есть — тот действует от вашего имени и зарабатывает на ваш баланс. Храните его в переменной окружения на сервере, а не в коде, который получают пользователи.',
     key_copy:'Копировать', key_reveal:'Показать', key_gen:'Создать',
+    wh_h:'Вебхуки',
+    wh_p:'Получайте подписанный колбэк, когда заход <code>credited</code> (засчитан) или <code>reverted</code> (пользователь ушёл) — чтобы держать свою экономику в согласии. Мы шлём POST с JSON на ваш URL и подписью HMAC-SHA256 в заголовке <code>X-Vemoni-Signature</code> — см. доку ниже.',
+    wh_save:'Сохранить', wh_clear:'Отключить',
     cab_payout_h:'Реквизиты для выплат (LTC адрес)',
     cab_payout_save:'Сохранить',
     key_login_h:'Войдите, чтобы открыть кабинет',
@@ -313,6 +392,13 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     r_rate:'<strong>Лимиты — по IP.</strong> Спрашивайте <code>/api/ad</code> раз на действие пользователя, а <code>/api/join-check</code> вызывайте только когда пользователь нажал вашу кнопку проверки. На <code>429</code> делайте паузу.',
     r_idem:'<strong>Повторный вызов безопасен.</strong> Членство засчитывается один раз — двойной клик или повтор вернёт <code>already_counted</code>, а не двойную награду.',
     r_fraud:'<strong>userId проверяется.</strong> Мы сверяем реальное членство пользователя в показанном спонсоре в Discord, поэтому переданные «просто так» ID ничего не приносят.',
+    h_sdk:'Примеры: discord.py и discord.js',
+    p_sdk:'Те же три шага в реальном боте — запросить рекламу, показать, проверить по нажатию кнопки.',
+    h_wh:'Вебхуки',
+    p_wh:'Укажите URL в кабинете (выше) — и мы будем слать подписанный POST, когда заход засчитан или отменён. Дедуп по <code>eventId</code>. Тело:',
+    p_wh2:'Перед доверием проверьте заголовок <code>X-Vemoni-Signature: sha256=…</code> по сырому телу запроса:',
+    h_cl:'История изменений',
+    p_cl:'Последние изменения (машиночитаемо — <code>GET /api/changelog</code>). Используйте версионированный путь <code>/v1/api/…</code>.',
     h_help:'Вопросы? Мы на связи',
     p_help:'Загляните на наш <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">сервер поддержки</a> — поможем всё подключить.',
     f_privacy:'Политика конфиденциальности', f_terms:'Условия использования', f_support:'Поддержка'
@@ -321,8 +407,8 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     var EN = {}; document.querySelectorAll('[data-i18n]').forEach(function(el){ EN[el.dataset.i18n] = el.innerHTML; });
     var LANG='en';
     var TXT={
-      en:{ ltcPh:'Enter your LTC address', ltcOn:'✓ LTC auto-payout is on', saved:'Payout details saved', saveErr:'Could not save', gen:'Generate', regen:'Regenerate', reveal:'Reveal', hide:'Hide', copy:'Copy', copied:'Copied', nokey:'no key yet', hintNo:'Press “Generate” to create your key.', bfEmpty:'No data yet — funnels appear once your bot starts sending botId.', bfFunnel:'Funnel', bfHour:'hour', bfDay:'day', bfWeek:'week', bfStarted:'1. Ad shown', bfChecked:'2. Join checked', bfStayed:'3. Stayed' },
-      ru:{ ltcPh:'Введите ваш LTC адрес', ltcOn:'✓ Авто-вывод в LTC включён', saved:'Реквизиты сохранены', saveErr:'Не удалось сохранить', gen:'Создать', regen:'Пересоздать', reveal:'Показать', hide:'Скрыть', copy:'Копировать', copied:'Скопировано', nokey:'ключа ещё нет', hintNo:'Нажмите «Создать», чтобы получить ключ.', bfEmpty:'Данных пока нет — воронки появятся, как только бот начнёт передавать botId.', bfFunnel:'Воронка', bfHour:'час', bfDay:'день', bfWeek:'неделя', bfStarted:'1. Показ рекламы', bfChecked:'2. Заход проверен', bfStayed:'3. Остались' }
+      en:{ ltcPh:'Enter your LTC address', ltcOn:'✓ LTC auto-payout is on', saved:'Payout details saved', saveErr:'Could not save', gen:'Generate', regen:'Regenerate', reveal:'Reveal', hide:'Hide', copy:'Copy', copied:'Copied', nokey:'no key yet', hintNo:'Press “Generate” to create your key.', bfEmpty:'No data yet — funnels appear once your bot starts sending botId.', bfFunnel:'Funnel', bfHour:'hour', bfDay:'day', bfWeek:'week', bfStarted:'1. Ad shown', bfChecked:'2. Join checked', bfStayed:'3. Stayed', whSecretPh:'signing secret', whSaved:'Webhook saved', whCleared:'Webhook disabled', whErr:'Could not save', whOn:'Active → ', whOff:'Not set — add a URL to enable.', whNoUrl:'Enter an https:// URL.' },
+      ru:{ ltcPh:'Введите ваш LTC адрес', ltcOn:'✓ Авто-вывод в LTC включён', saved:'Реквизиты сохранены', saveErr:'Не удалось сохранить', gen:'Создать', regen:'Пересоздать', reveal:'Показать', hide:'Скрыть', copy:'Копировать', copied:'Скопировано', nokey:'ключа ещё нет', hintNo:'Нажмите «Создать», чтобы получить ключ.', bfEmpty:'Данных пока нет — воронки появятся, как только бот начнёт передавать botId.', bfFunnel:'Воронка', bfHour:'час', bfDay:'день', bfWeek:'неделя', bfStarted:'1. Показ рекламы', bfChecked:'2. Заход проверен', bfStayed:'3. Остались', whSecretPh:'секрет подписи', whSaved:'Вебхук сохранён', whCleared:'Вебхук отключён', whErr:'Не удалось сохранить', whOn:'Активен → ', whOff:'Не задан — добавьте URL, чтобы включить.', whNoUrl:'Введите https:// URL.' }
     };
     function T(){ return TXT[LANG]; }
     function setLang(l){
@@ -332,7 +418,8 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
       document.querySelectorAll('#lang button').forEach(function(b){ b.classList.toggle('active', b.dataset.lang===l); });
       try{ localStorage.setItem('vemonette-lang', l); }catch(e){}
       var ri=document.getElementById('reqInput'); if(ri) ri.placeholder=T().ltcPh;
-      renderCab(); renderKey(); renderKeyHint(); renderBotFunnels();
+      var ws=document.getElementById('whSecret'); if(ws) ws.placeholder=T().whSecretPh;
+      renderCab(); renderKey(); renderKeyHint(); renderBotFunnels(); renderWebhook();
     }
     document.querySelectorAll('#lang button').forEach(function(b){ b.addEventListener('click', function(){ setLang(b.dataset.lang); }); });
 
@@ -348,7 +435,7 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     function req(path,opts){ return fetch(base+path, Object.assign({credentials:'include',headers:headers}, opts||{})); }
 
     /* ---- cabinet data ---- */
-    var ME=null, KEY=null, revealed=false;
+    var ME=null, KEY=null, revealed=false, WH=null;
     function show(which){ ['devLoading','devCab','devGuest'].forEach(function(id){ var e=$(id); if(e) e.hidden=(id!==which); }); }
     function fmtDate(ts){ if(!ts) return ''; try{ return new Date(ts).toLocaleDateString(LANG==='ru'?'ru-RU':'en-US',{day:'2-digit',month:'short',year:'numeric'}); }catch(e){ return ''; } }
     function renderCab(){
@@ -363,6 +450,7 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     function mask(k){ return k ? (k.slice(0,6)+'••••••••••••••••'+k.slice(-4)) : ''; }
     function renderKey(){ var el=$('keyVal'); if(!el) return; el.textContent = KEY ? (revealed?KEY:mask(KEY)) : T().nokey; var rv=$('keyReveal'); if(rv) rv.textContent = revealed?T().hide:T().reveal; }
     function renderKeyHint(){ var el=$('keyHint'); if(!el) return; if(!KEY){ el.textContent=T().hintNo; } else { el.innerHTML=(LANG==='ru'?'Готово. Используйте его в заголовке ':'Ready. Use it in the ')+'<code>Authorization: Bearer …</code>'+(LANG==='ru'?'':' header')+'.'; } }
+    function renderWebhook(){ var el=$('whState'); if(!el) return; if(WH&&WH.url){ el.style.color='var(--green)'; el.innerHTML=esc(T().whOn)+'<code>'+esc(WH.url)+'</code>'+(WH.hasSecret?'':' ⚠'); } else { el.style.color=''; el.textContent=T().whOff; } }
 
     function wireHeader(who){
       var name = who.name || who.username || 'Developer';
@@ -386,10 +474,11 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     async function loadCab(who){
       wireHeader(who);
       try{
-        var results=await Promise.all([ req('/partner/me').then(function(r){return r.json();}), req('/order/api-key').then(function(r){return r.json();}) ]);
+        var results=await Promise.all([ req('/partner/me').then(function(r){return r.json();}), req('/order/api-key').then(function(r){return r.json();}), req('/order/webhook').then(function(r){return r.json();}).catch(function(){return null;}) ]);
         ME=results[0]||{}; KEY=(results[1]&&results[1].key)||null; revealed=false;
+        WH=results[2]||{}; var wu=$('whUrl'); if(wu) wu.value=(WH&&WH.url)||'';
         var ri=$('reqInput'); if(ri) ri.value=ME.requisites||'';
-        renderCab(); renderKey(); renderKeyHint();
+        renderCab(); renderKey(); renderKeyHint(); renderWebhook();
       }catch(e){}
       loadBotFunnels();
     }
@@ -429,6 +518,8 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
       if(t.id==='keyCopy'){ if(!KEY) return; navigator.clipboard&&navigator.clipboard.writeText(KEY); toast(T().copied); }
       if(t.id==='keyGen'){ (async function(){ t.disabled=true; t.textContent='…'; try{ var d=await req('/order/api-key',{method:'POST',body:JSON.stringify({regenerate:!!KEY})}).then(function(r){return r.json();}); if(d&&d.key){ KEY=d.key; revealed=true; renderKey(); renderKeyHint(); } }catch(err){} t.disabled=false; t.textContent=KEY?T().regen:T().gen; })(); }
       if(t.id==='reqSave'){ (async function(){ t.disabled=true; try{ var d=await req('/partner/requisites',{method:'PUT',body:JSON.stringify({requisites:$('reqInput').value,ltcAuto:true})}).then(function(r){return r.json();}); if(d&&d.ok){ if(ME){ ME.requisites=d.requisites; ME.autoLtc=d.autoLtc; ME.ltcAddress=d.ltcAddress; } renderLtc(d.autoLtc && d.ltcAddress); toast(T().saved); } else toast(T().saveErr); }catch(err){ toast(T().saveErr); } t.disabled=false; })(); }
+      if(t.id==='whSave'){ (async function(){ var url=($('whUrl').value||'').trim(); if(url && !/^https:\/\//i.test(url)){ toast(T().whNoUrl); return; } t.disabled=true; try{ var sec=$('whSecret').value; var d=await req('/order/webhook',{method:'PUT',body:JSON.stringify({url:url,secret:sec})}).then(function(r){return r.json();}); if(d&&('url' in d)){ WH={url:d.url,hasSecret:d.hasSecret}; $('whSecret').value=''; renderWebhook(); toast(T().whSaved); } else toast(T().whErr); }catch(err){ toast(T().whErr); } t.disabled=false; })(); }
+      if(t.id==='whClear'){ (async function(){ t.disabled=true; try{ await req('/order/webhook',{method:'PUT',body:JSON.stringify({url:'',secret:''})}); WH={url:null,hasSecret:false}; $('whUrl').value=''; $('whSecret').value=''; renderWebhook(); toast(T().whCleared); }catch(err){ toast(T().whErr); } t.disabled=false; })(); }
     });
 
     var start='en'; try{ var s=localStorage.getItem('vemonette-lang'); if(s==='ru'||s==='en') start=s; }catch(e){}
