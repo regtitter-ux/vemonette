@@ -239,8 +239,10 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
   body: JSON.stringify({ userId, serverId, botId })
 }).then(r =&gt; r.json());
 
-<span class="k">if</span> (out.joined) grantBonus(userId, <span class="s">100</span>); <span class="c">// confirmed → give your reward</span>
-<span class="k">else</span> tellUser(<span class="s">'Join the server first, then press Check.'</span>);</pre>
+<span class="c">// Reward ONLY on credited — that means a real sponsor join was verified and you were paid.</span>
+<span class="k">if</span> (out.credited) grantBonus(userId, <span class="s">100</span>);
+<span class="k">else</span> <span class="k">if</span> (out.joined === <span class="k">false</span>) tellUser(<span class="s">'Join the server first, then press Check.'</span>);
+<span class="c">// else: joined:true but no ad ran (credited:false) → let them through, no reward.</span></pre>
 
     <h2 data-i18n="h_ref">The endpoints, one by one</h2>
     <div class="ep">
@@ -249,24 +251,9 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     </div>
     <div class="ep">
       <div class="ep-h"><span class="m post">POST</span><span class="ep-path">/api/join-check</span></div>
-      <p data-i18n="ep_jc">Send <code>{ userId, serverId, botId }</code> — all required. We check the user's membership against every advertisable sponsor for your server: <code>200 { joined:true, credited:true }</code> — confirmed and you have been paid, so give the reward; <code>403 { joined:false }</code> — not in any yet, ask them to join; <code>200 { joined:true, ad:false }</code> — no sponsor was running, so no payout. Each member counts once per sponsor, and if they leave, the credit is reversed. <code>400</code> if any ID is missing.</p>
+      <p data-i18n="ep_jc">Send <code>{ userId, serverId, botId }</code> — all required. Reward the user <strong>only on <code>credited:true</code></strong>. <code>200 { joined:true, credited:true }</code> — a real sponsor join was verified and you were paid → give the reward; <code>403 { joined:false }</code> — not in any sponsor yet, ask them to join, no reward; <code>200 { joined:true, credited:false, ad:false }</code> — no ad was running → let them through but do NOT reward. Each member counts once per sponsor, and if they leave, the credit is reversed. <code>400</code> if any ID is missing.</p>
     </div>
-    <div class="ep">
-      <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/balance</span></div>
-      <p data-i18n="ep_bal">Your current balance and the payout details on file.</p>
-    </div>
-    <div class="ep">
-      <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/stats</span></div>
-      <p data-i18n="ep_stats">Your confirmed joins, broken down by server and by time window.</p>
-    </div>
-    <div class="ep">
-      <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/requisites</span> <span class="m put">PUT</span></div>
-      <p data-i18n="ep_req">See or change where the money goes. PUT <code>{ requisites }</code> — a crypto wallet, a Telegram ID for automatic USDT, and so on.</p>
-    </div>
-    <div class="ep">
-      <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/withdrawals</span> <span class="m post">POST</span> <span class="ep-path">/api/withdraw</span></div>
-      <p data-i18n="ep_wd">Your withdrawal history, plus a way to nudge the payout check. Once your balance reaches $10, a request is filed for you automatically.</p>
-    </div>
+    <p class="muted sm" style="margin-top:14px" data-i18n="ep_note">Balance, stats, payout details and withdrawals aren't API endpoints — you view and manage them right here in your cabinet.</p>
 
     <h2 data-i18n="h_help">Questions? We are around</h2>
     <p data-i18n="p_help">Drop into our <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">support server</a> and we will help you wire it up.</p>
@@ -306,11 +293,8 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     p_quick:'Вот весь цикл награды (Node.js). Все три ID обязательны: <code>userId</code> — Discord ID пользователя; <code>serverId</code> — сервер, где стоит ваш бот (определяет спонсора); <code>botId</code> — application (client) ID вашего бота.',
     h_ref:'Эндпоинты по порядку',
     ep_ad:'Все три обязательны: <code>?serverId=&lt;guild&gt;&botId=&lt;bot&gt;&userId=&lt;user&gt;</code>. Возвращает спонсора для показа: <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. Спонсор, в котором пользователь уже состоит, пропускается автоматически. Если <code>sponsor</code> = null — продвигать сейчас нечего: пропустите награду и пропустите пользователя дальше. <code>400</code>, если какого-то ID нет.',
-    ep_jc:'Отправьте <code>{ userId, serverId, botId }</code> — все обязательны. Мы проверяем членство пользователя по всем рекламируемым спонсорам вашего сервера: <code>200 { joined:true, credited:true }</code> — подтверждено, вам начислено, выдавайте награду; <code>403 { joined:false }</code> — ещё ни в одном, попросите зайти; <code>200 { joined:true, ad:false }</code> — спонсора не было, выплаты нет. Каждый участник считается один раз на спонсора, а если уходит — начисление отменяется. <code>400</code>, если какого-то ID нет.',
-    ep_bal:'Ваш текущий баланс и сохранённые реквизиты для выплат.',
-    ep_stats:'Ваши подтверждённые заходы — по серверам и по временным окнам.',
-    ep_req:'Посмотреть или изменить, куда идут деньги. PUT <code>{ requisites }</code> — крипто-кошелёк, Telegram ID для авто-USDT и так далее.',
-    ep_wd:'История выводов и способ «подтолкнуть» проверку выплаты. Как только баланс достигает $10, запрос подаётся за вас автоматически.',
+    ep_jc:'Отправьте <code>{ userId, serverId, botId }</code> — все обязательны. Выдавайте награду <strong>только при <code>credited:true</code></strong>. <code>200 { joined:true, credited:true }</code> — реальный заход на спонсора подтверждён и вам начислено → выдавайте награду; <code>403 { joined:false }</code> — ещё ни в одном спонсоре, попросите зайти, награды нет; <code>200 { joined:true, credited:false, ad:false }</code> — рекламы не было → пропустите пользователя, но награду НЕ выдавайте. Каждый участник считается один раз на спонсора, а если уходит — начисление отменяется. <code>400</code>, если какого-то ID нет.',
+    ep_note:'Баланс, статистика, реквизиты и выводы — это не эндпоинты API: смотрите и меняйте их прямо здесь, в кабинете.',
     h_help:'Вопросы? Мы на связи',
     p_help:'Загляните на наш <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">сервер поддержки</a> — поможем всё подключить.',
     f_privacy:'Политика конфиденциальности', f_terms:'Условия использования', f_support:'Поддержка'
