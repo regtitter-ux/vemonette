@@ -192,16 +192,6 @@
         <p class="muted sm" style="margin-top:12px" id="keyHint"></p>
       </div>
 
-      <h2 data-i18n="test_h">Testing</h2>
-      <div class="keybox">
-        <p class="muted sm" data-i18n="test_p">Testing with your own account? Once you've been credited for a sponsor you stay a member, so the next check returns <code>alreadyCounted</code> — that's correct (a member is paid once). To run the join→reward flow again with the same account, reset your test join below: it reverses your own credit (a clawback) so a fresh join counts again.</p>
-        <div class="keyrow" style="margin-top:10px">
-          <div class="field" style="flex:1;min-width:220px"><input id="resetUser" class="inp" type="text" spellcheck="false" autocomplete="off" data-i18n-ph="test_ph" placeholder="Discord user ID to reset" /></div>
-          <button class="btn ghost" id="resetBtn" data-i18n="test_btn">Reset test join</button>
-        </div>
-        <p class="muted sm" style="margin-top:10px" id="resetState"></p>
-      </div>
-
       <h2 data-i18n="cab_payout_h">Payout details (LTC address)</h2>
       <div class="field"><input id="reqInput" class="inp" type="text" spellcheck="false" autocomplete="off" /></div>
       <div style="margin-top:10px;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button class="btn primary" id="reqSave" data-i18n="cab_payout_save">Save</button><span id="ltcState" class="sm"></span></div>
@@ -288,9 +278,6 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     key_yours:'Ваш API-ключ',
     key_secret:'Относитесь к нему как к паролю: у кого он есть — тот действует от вашего имени и зарабатывает на ваш баланс. Храните его в переменной окружения на сервере, а не в коде, который получают пользователи.',
     key_copy:'Копировать', key_reveal:'Показать', key_gen:'Создать',
-    test_h:'Тестирование',
-    test_p:'Тестируете своим же аккаунтом? После зачёта за спонсора вы остаётесь его участником, поэтому следующая проверка вернёт <code>alreadyCounted</code> — это правильно (участник оплачивается один раз). Чтобы прогнать цикл «заход → награда» снова тем же аккаунтом, сбросьте свой тестовый заход ниже: это отменит ваше начисление (клоубэк), и новый заход снова засчитается.',
-    test_btn:'Сбросить тестовый заход',
     cab_payout_h:'Реквизиты для выплат (LTC адрес)',
     cab_payout_save:'Сохранить',
     key_login_h:'Войдите, чтобы открыть кабинет',
@@ -317,8 +304,8 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     var EN = {}; document.querySelectorAll('[data-i18n]').forEach(function(el){ EN[el.dataset.i18n] = el.innerHTML; });
     var LANG='en';
     var TXT={
-      en:{ ltcPh:'Enter your LTC address', ltcOn:'✓ LTC auto-payout is on', saved:'Payout details saved', saveErr:'Could not save', gen:'Generate', regen:'Regenerate', reveal:'Reveal', hide:'Hide', copy:'Copy', copied:'Copied', nokey:'no key yet', hintNo:'Press “Generate” to create your key.', bfEmpty:'No data yet — funnels appear once your bot starts sending botId.', bfFunnel:'Funnel', bfHour:'hour', bfDay:'day', bfWeek:'week', bfStarted:'1. Ad shown', bfChecked:'2. Join checked', bfStayed:'3. Stayed', resetPh:'Discord user ID to reset', resetting:'Resetting…', resetNoKey:'Create an API key first.', resetNoUser:'Enter a Discord user ID.', resetDone:'Reset done — that user can be credited for the sponsor again. Rejoin and press Check.', resetNone:'Nothing to reset — no active join for that user under your key.', resetErr:'Could not reset — try again.' },
-      ru:{ ltcPh:'Введите ваш LTC адрес', ltcOn:'✓ Авто-вывод в LTC включён', saved:'Реквизиты сохранены', saveErr:'Не удалось сохранить', gen:'Создать', regen:'Пересоздать', reveal:'Показать', hide:'Скрыть', copy:'Копировать', copied:'Скопировано', nokey:'ключа ещё нет', hintNo:'Нажмите «Создать», чтобы получить ключ.', bfEmpty:'Данных пока нет — воронки появятся, как только бот начнёт передавать botId.', bfFunnel:'Воронка', bfHour:'час', bfDay:'день', bfWeek:'неделя', bfStarted:'1. Показ рекламы', bfChecked:'2. Заход проверен', bfStayed:'3. Остались', resetPh:'Discord ID пользователя для сброса', resetting:'Сбрасываю…', resetNoKey:'Сначала создайте API-ключ.', resetNoUser:'Введите Discord ID пользователя.', resetDone:'Сброшено — этого пользователя снова можно засчитать за спонсора. Зайдите заново и нажмите проверку.', resetNone:'Сбрасывать нечего — активного захода этого пользователя под вашим ключом нет.', resetErr:'Не удалось сбросить — попробуйте ещё раз.' }
+      en:{ ltcPh:'Enter your LTC address', ltcOn:'✓ LTC auto-payout is on', saved:'Payout details saved', saveErr:'Could not save', gen:'Generate', regen:'Regenerate', reveal:'Reveal', hide:'Hide', copy:'Copy', copied:'Copied', nokey:'no key yet', hintNo:'Press “Generate” to create your key.', bfEmpty:'No data yet — funnels appear once your bot starts sending botId.', bfFunnel:'Funnel', bfHour:'hour', bfDay:'day', bfWeek:'week', bfStarted:'1. Ad shown', bfChecked:'2. Join checked', bfStayed:'3. Stayed' },
+      ru:{ ltcPh:'Введите ваш LTC адрес', ltcOn:'✓ Авто-вывод в LTC включён', saved:'Реквизиты сохранены', saveErr:'Не удалось сохранить', gen:'Создать', regen:'Пересоздать', reveal:'Показать', hide:'Скрыть', copy:'Копировать', copied:'Скопировано', nokey:'ключа ещё нет', hintNo:'Нажмите «Создать», чтобы получить ключ.', bfEmpty:'Данных пока нет — воронки появятся, как только бот начнёт передавать botId.', bfFunnel:'Воронка', bfHour:'час', bfDay:'день', bfWeek:'неделя', bfStarted:'1. Показ рекламы', bfChecked:'2. Заход проверен', bfStayed:'3. Остались' }
     };
     function T(){ return TXT[LANG]; }
     function setLang(l){
@@ -328,7 +315,6 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
       document.querySelectorAll('#lang button').forEach(function(b){ b.classList.toggle('active', b.dataset.lang===l); });
       try{ localStorage.setItem('vemonette-lang', l); }catch(e){}
       var ri=document.getElementById('reqInput'); if(ri) ri.placeholder=T().ltcPh;
-      var ru2=document.getElementById('resetUser'); if(ru2) ru2.placeholder=T().resetPh;
       renderCab(); renderKey(); renderKeyHint(); renderBotFunnels();
     }
     document.querySelectorAll('#lang button').forEach(function(b){ b.addEventListener('click', function(){ setLang(b.dataset.lang); }); });
@@ -426,7 +412,6 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
       if(t.id==='keyCopy'){ if(!KEY) return; navigator.clipboard&&navigator.clipboard.writeText(KEY); toast(T().copied); }
       if(t.id==='keyGen'){ (async function(){ t.disabled=true; t.textContent='…'; try{ var d=await req('/order/api-key',{method:'POST',body:JSON.stringify({regenerate:!!KEY})}).then(function(r){return r.json();}); if(d&&d.key){ KEY=d.key; revealed=true; renderKey(); renderKeyHint(); } }catch(err){} t.disabled=false; t.textContent=KEY?T().regen:T().gen; })(); }
       if(t.id==='reqSave'){ (async function(){ t.disabled=true; try{ var d=await req('/partner/requisites',{method:'PUT',body:JSON.stringify({requisites:$('reqInput').value,ltcAuto:true})}).then(function(r){return r.json();}); if(d&&d.ok){ if(ME){ ME.requisites=d.requisites; ME.autoLtc=d.autoLtc; ME.ltcAddress=d.ltcAddress; } renderLtc(d.autoLtc && d.ltcAddress); toast(T().saved); } else toast(T().saveErr); }catch(err){ toast(T().saveErr); } t.disabled=false; })(); }
-      if(t.id==='resetBtn'){ (async function(){ var st=$('resetState'); st.style.color=''; if(!KEY){ st.textContent=T().resetNoKey; return; } var uid=($('resetUser').value||'').trim(); if(!/^\d{17,20}$/.test(uid)){ st.textContent=T().resetNoUser; return; } t.disabled=true; st.textContent=T().resetting; try{ var d=await fetch(base+'/api/test-reset',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+KEY},body:JSON.stringify({userId:uid})}).then(function(r){return r.json();}); if(d&&typeof d.reset==='number'){ st.style.color=d.reset>0?'var(--green)':''; st.textContent=d.reset>0?T().resetDone:T().resetNone; } else st.textContent=T().resetErr; }catch(err){ st.textContent=T().resetErr; } t.disabled=false; })(); }
     });
 
     var start='en'; try{ var s=localStorage.getItem('vemonette-lang'); if(s==='ru'||s==='en') start=s; }catch(e){}
