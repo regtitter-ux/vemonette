@@ -31,7 +31,11 @@
     .lang-switch{display:inline-flex;gap:2px;background:rgba(255,255,255,.05);border:1px solid var(--stroke-2);border-radius:999px;padding:2px}
     .lang-switch button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;cursor:pointer}
     .lang-switch button.active{background:var(--blue);color:#06121c}
+    .hdr-login{display:inline-flex;align-items:center;gap:8px;background:#5865F2;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:8px 15px;border-radius:999px;transition:filter .15s}
+    .hdr-login:hover{filter:brightness(1.08);text-decoration:none}
+    .hdr-login[hidden]{display:none}
     .cab-menu{position:relative;display:flex;align-items:center}
+    .cab-menu[hidden]{display:none}
     .cab-av{width:42px;height:42px;border-radius:50%;padding:0;border:1px solid var(--stroke-2);background-size:cover;background-position:center;background-color:var(--panel-2);color:var(--text);font-weight:700;font-size:16px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:.15s}
     .cab-av:hover{border-color:var(--blue)}
     .nav-menu{position:absolute;top:calc(100% + 12px);right:0;width:262px;background:var(--panel);border:1px solid var(--stroke-2);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px -24px rgba(0,0,0,.85);z-index:60}
@@ -130,7 +134,8 @@
     <div class="top-right">
       <span class="bal-pill" id="balPill" hidden><span class="muted sm" data-i18n="t_balance">Balance</span> <b id="topBal">$0.00</b></span>
       <div class="lang-switch" id="lang"><button data-lang="en">EN</button><button data-lang="ru">RU</button></div>
-      <div class="cab-menu">
+      <a class="hdr-login" id="hdrLogin" href="/order/" hidden><svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M20.317 4.369A19.79 19.79 0 0 0 15.885 3c-.196.35-.42.82-.577 1.19a18.27 18.27 0 0 0-5.487 0A12.6 12.6 0 0 0 9.24 3a19.74 19.74 0 0 0-4.434 1.369C1.61 9.046.73 13.605 1.17 18.1a19.9 19.9 0 0 0 6.073 3.058c.49-.667.927-1.376 1.302-2.122-.716-.269-1.4-.6-2.045-.99.171-.125.34-.255.5-.39a14.2 14.2 0 0 0 12.198 0c.164.14.332.27.5.39-.647.39-1.332.722-2.049.99.375.746.81 1.454 1.3 2.122a19.85 19.85 0 0 0 6.076-3.058c.5-5.177-.838-9.694-3.508-13.731ZM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.955 2.42-2.157 2.42Zm7.96 0c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.946 2.42-2.157 2.42Z"/></svg> <span data-i18n="key_login_btn">Log in with Discord</span></a>
+      <div class="cab-menu" id="cabMenu" hidden>
         <button class="cab-av" id="cabAv" aria-label="Account"></button>
         <div class="nav-menu" id="navMenu" hidden>
           <div class="nm-head">
@@ -371,12 +376,14 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
         renderCab(); renderKey(); renderKeyHint();
       }catch(e){}
     }
+    function asGuest(){ var l=$('hdrLogin'); if(l) l.hidden=false; var m=$('cabMenu'); if(m) m.hidden=true; show('devGuest'); }
     (async function init(){
       try{
         var who=await req('/order/whoami').then(function(r){return r.json();}).catch(function(){return null;});
-        if(!who||!who.authed){ show('devGuest'); return; }
+        if(!who||!who.authed){ asGuest(); return; }
+        var l=$('hdrLogin'); if(l) l.hidden=true; var m=$('cabMenu'); if(m) m.hidden=false;
         show('devCab'); loadCab(who);
-      }catch(e){ show('devGuest'); }
+      }catch(e){ asGuest(); }
     })();
 
     /* ---- actions ---- */
