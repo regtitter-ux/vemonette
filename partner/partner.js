@@ -158,6 +158,7 @@ const TR = {
   // requisites
   'Реквизиты для выплат':'Payout details','Крипто-адрес и сеть, например:':'Crypto address and network, e.g.:','. Без реквизитов вывод невозможен.':'. Without details, withdrawal is not possible.',
   'Реквизиты сохранены':'Requisites saved','Не удалось сохранить':'Could not save','Инвест-кабинет':'Investor cabinet',
+  '✓ Авто-вывод в LTC включён':'✓ LTC auto-payout is on',
   // verifications table
   'Верификации по серверам':'Verifications by server','Пока нет оплаченных верификаций':'No paid verifications yet','Осталось / всего зашло':'Stayed / total joined',
   // main cards
@@ -960,6 +961,7 @@ function render(d) {
     // Requisites (don't clobber while the user is editing)
     const reqEl = $('#p-req');
     if (document.activeElement !== reqEl) reqEl.value = d.requisites || '';
+    renderLtcState(d.autoLtc && d.ltcAddress);
 
     // Verifications
     const pg = d.verifications?.perGuild || [];
@@ -1008,9 +1010,15 @@ function renderWithdrawals() {
     if (next) next.onclick = () => { if (wdPage < pages - 1) { wdPage++; renderWithdrawals(); } };
 }
 
+function renderLtcState(on) {
+    const el = $('#p-ltc-state'); if (!el) return;
+    if (on) { el.style.color = 'var(--green)'; el.textContent = '✓ Авто-вывод в LTC включён'; }
+    else el.textContent = '';
+}
 $('#p-req-save').addEventListener('click', async () => {
-    const { ok, body } = await put('/requisites', { requisites: $('#p-req').value });
-    if (ok) toast('Реквизиты сохранены'); else toast(body?.error || 'Не удалось сохранить', 'err');
+    // ltcAuto: a valid LTC address auto-enables LTC auto-payout to it; anything else turns it off.
+    const { ok, body } = await put('/requisites', { requisites: $('#p-req').value, ltcAuto: true });
+    if (ok) { toast('Реквизиты сохранены'); renderLtcState(body && body.autoLtc && body.ltcAddress); } else toast(body?.error || 'Не удалось сохранить', 'err');
 });
 
 // Referral link: capture ?ref=<id> BEFORE login and remember it (it survives the
