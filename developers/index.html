@@ -75,11 +75,10 @@
     .tile.acc .v{color:var(--green)}
     .ratebar{margin-top:12px;color:var(--muted);font-size:13.5px}
     .ratebar b{color:var(--text)}
-    .apibox{margin-top:14px;background:linear-gradient(180deg,rgba(87,242,135,.08),rgba(87,242,135,.02));border:1px solid rgba(87,242,135,.25);border-radius:14px;padding:15px 18px;display:grid;grid-template-columns:repeat(2,auto);justify-content:start;gap:6px 34px}
-    .apibox .k{color:var(--muted);font-size:12.5px;font-weight:600}
-    .apibox .v{font-size:21px;font-weight:800;color:var(--green);margin-top:3px;font-variant-numeric:tabular-nums}
-    .apibox .apinote{grid-column:1/-1;margin:8px 0 0}
-    @media(max-width:640px){ .apibox{grid-template-columns:1fr 1fr;gap:6px 16px} }
+    .apitiles{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .apitile{background:linear-gradient(180deg,rgba(87,242,135,.08),rgba(87,242,135,.02));border:1px solid rgba(87,242,135,.25);border-radius:14px;padding:16px 18px}
+    .apitile .k{color:var(--muted);font-size:12.5px;font-weight:600}
+    .apitile .v{font-size:24px;font-weight:800;color:var(--green);margin-top:6px;font-variant-numeric:tabular-nums}
     /* key widget */
     .keybox{background:var(--panel);border:1px solid var(--stroke);border-radius:16px;padding:20px;margin-top:12px}
     .keyrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
@@ -157,10 +156,9 @@
   <main class="wrap">
     <!-- ===== Cabinet (logged in) ===== -->
     <section id="devCab" hidden>
-      <div class="apibox" style="margin-top:28px">
-        <div><div class="k" data-i18n="api_earned">Earned via API</div><div class="v" id="apiPaid">$0.00</div></div>
-        <div><div class="k" data-i18n="api_joins">API joins</div><div class="v" id="apiJoins">0</div></div>
-        <p class="muted sm apinote" data-i18n="api_note">This is the slice of your balance earned through your bot via the API. Anything on top of it comes from a verification bot you run on a Discord server.</p>
+      <div class="apitiles" style="margin-top:28px">
+        <div class="apitile"><div class="k" data-i18n="api_earned">Earned via API</div><div class="v" id="apiPaid">$0.00</div></div>
+        <div class="apitile"><div class="k" data-i18n="api_joins">API joins</div><div class="v" id="apiJoins">0</div></div>
       </div>
 
       <h2 data-i18n="key_yours">Your API key</h2>
@@ -270,7 +268,6 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     t_balance:'Баланс',
     m_home:'Главная', m_partner:'Партнёрам', m_buyers:'Покупателям', m_myorders:'Мои заказы', m_invest:'Инвесторам', m_dev:'Разработчикам', m_admin:'Администраторам', m_logout:'Выйти',
     api_earned:'Заработано через API', api_joins:'Заходы через API',
-    api_note:'Это часть баланса, заработанная через вашего бота по API. Всё сверх неё — от бота-верификатора, который вы держите на Discord-сервере.',
     key_yours:'Ваш API-ключ',
     key_secret:'Относитесь к нему как к паролю: у кого он есть — тот действует от вашего имени и зарабатывает на ваш баланс. Храните его в переменной окружения на сервере, а не в коде, который получают пользователи.',
     key_copy:'Копировать', key_reveal:'Показать', key_gen:'Создать',
