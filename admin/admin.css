@@ -127,6 +127,31 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 
 /* --- App layout --- */
 #app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+/* Top bar — unified with the cabinet pages (avatar burger holds the cross-cabinet
+   links + logout; the sidebar keeps only the admin section tabs). */
+.topbar { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 12px 20px; border-bottom: 1px solid var(--stroke); background: rgba(11,15,23,0.85); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); position: sticky; top: 0; z-index: 30; }
+.topbar .brand-sm { margin-bottom: 0; font-size: 20px; }
+.top-right { display: flex; align-items: center; gap: 12px; }
+.cab-menu { position: relative; display: flex; align-items: center; }
+.cab-av { width: 40px; height: 40px; border-radius: 50%; padding: 0; border: 1px solid var(--stroke-2); background-size: cover; background-position: center; background-color: var(--band, #141a26); color: var(--text); font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.cab-av:hover { border-color: var(--blue); }
+.nav-menu { position: absolute; top: calc(100% + 12px); right: 0; width: 250px; background: var(--panel, #141a26); border: 1px solid var(--stroke-2); border-radius: 14px; overflow: hidden; box-shadow: 0 24px 60px -24px rgba(0,0,0,0.85); z-index: 60; }
+.nav-menu[hidden] { display: none; }
+.nm-head { position: relative; height: 84px; overflow: hidden; }
+.nm-banner { position: absolute; inset: 0; background: linear-gradient(135deg, var(--blue), var(--blue-2)); background-size: cover; background-position: center; }
+.nm-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.2), rgba(0,0,0,0.72)); }
+.nm-id { position: absolute; left: 14px; right: 14px; bottom: 11px; z-index: 1; display: flex; align-items: center; gap: 11px; }
+.nm-av { width: 44px; height: 44px; border-radius: 50%; flex: none; border: 2px solid rgba(255,255,255,0.9); background-size: cover; background-position: center; background-color: var(--blue); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+.nm-txt { min-width: 0; }
+.nm-txt b { display: block; color: #fff; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 3px rgba(0,0,0,0.55); }
+.nm-txt span { display: block; color: rgba(255,255,255,0.85); font-size: 12.5px; text-shadow: 0 1px 3px rgba(0,0,0,0.55); }
+.nm-items { padding: 6px; }
+.nm-items a, .nm-items .nav-logout { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; color: var(--text); font-size: 14px; font-weight: 600; background: transparent; border: 0; width: 100%; text-align: left; cursor: pointer; font-family: inherit; text-decoration: none; }
+.nm-items a:hover, .nm-items .nav-logout:hover { background: rgba(255,255,255,0.06); }
+.nm-sep { height: 1px; background: var(--stroke); margin: 6px 8px; }
+.nm-items .nav-logout { color: #ff9a9c; }
+.nm-items .nav-logout:hover { background: rgba(237,66,69,0.14); }
 .sidebar {
   background: var(--band); border-right: 1px solid var(--stroke);
   padding: 24px 16px; display: flex; flex-direction: column; gap: 12px;

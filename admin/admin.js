@@ -364,9 +364,31 @@ document.addEventListener('click', (e) => {
 // ---------- Login ----------
 async function checkAuth() {
     const { ok, body } = await get('/whoami');
-    if (ok && body?.authed === true) { currentRole = body.role || 'admin'; return true; }
+    if (ok && body?.authed === true) { currentRole = body.role || 'admin'; renderAdminProfile(body); return true; }
     return false;
 }
+
+// Fill the topbar avatar + burger-menu header from /whoami.
+function renderAdminProfile(who) {
+    const initial = (((who && (who.name || who.username)) || 'A')[0] || 'A').toUpperCase();
+    const av = who && who.avatar;
+    const cab = $('#cabAv');
+    if (cab) { if (av) { cab.style.backgroundImage = `url('${av}')`; cab.textContent = ''; } else { cab.textContent = initial; } }
+    const nmAv = $('#nmAv');
+    if (nmAv) { if (av) nmAv.style.backgroundImage = `url('${av}')`; else nmAv.textContent = initial; }
+    const nmName = $('#nmName'); if (nmName) nmName.textContent = (who && (who.name || who.username)) || 'Admin';
+    const nmUser = $('#nmUser'); if (nmUser) nmUser.textContent = who && who.username ? '@' + who.username : '';
+    const nmBanner = $('#nmBanner'); if (nmBanner && who && who.banner) nmBanner.style.backgroundImage = `url('${who.banner}')`;
+}
+
+// Avatar burger-menu toggle (mirrors the cabinet pages).
+(function () {
+    const av = $('#cabAv'), menu = $('#navMenu');
+    if (!av || !menu) return;
+    av.addEventListener('click', (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; });
+    menu.addEventListener('click', (e) => e.stopPropagation());
+    document.addEventListener('click', () => { menu.hidden = true; });
+})();
 
 // Role of the logged-in user: 'owner' | 'admin'. Owner-only UI is hidden
 // for admins.

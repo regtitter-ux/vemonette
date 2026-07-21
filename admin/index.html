@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="/admin/admin.css?v=40" />
+  <link rel="stylesheet" href="/admin/admin.css?v=41" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -30,13 +30,33 @@
 </div>
 
 <div id="app" hidden>
+  <header class="topbar">
+    <a class="brand-sm" href="/"><img src="/assets/logo.png" alt="Vemoni" /><span>Vemoni · Admin</span></a>
+    <div class="top-right">
+      <div class="lang-switch" id="langSwitch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+      <div class="cab-menu">
+        <button class="cab-av" id="cabAv" aria-label="Профиль"></button>
+        <div class="nav-menu" id="navMenu" hidden>
+          <div class="nm-head"><div class="nm-banner" id="nmBanner"></div><div class="nm-id"><div class="nm-av" id="nmAv"></div><div class="nm-txt"><b id="nmName">Admin</b><span id="nmUser"></span></div></div></div>
+          <div class="nm-items">
+            <a href="/" data-i18n="nav_home">Главная</a>
+            <a href="/order/" data-i18n="nav_orders">Заказы</a>
+            <a href="/partner/" data-i18n="nav_partner">Партнёр</a>
+            <a href="/investor/" data-i18n="nav_investor">Инвест</a>
+            <a href="/developers/" data-i18n="nav_dev">Разработчикам</a>
+            <div class="nm-sep"></div>
+            <button class="nav-logout" id="logout" data-i18n="logout">Выйти</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
   <div id="view-banner" hidden>
     👁 Просмотр от лица админа — часть функций скрыта
     <button id="view-exit">Выйти из режима</button>
   </div>
   <div id="nojoincheck-banner" class="warn-banner" hidden></div>
   <aside class="sidebar">
-    <a class="brand-sm" href="/"><img src="/assets/logo.png" alt="Vemoni" /><span>Vemoni</span></a>
     <nav class="tabs">
       <button data-tab="stats" class="tab active" data-i18n="tab_stats">Статистика</button>
       <button data-tab="bi" class="tab" data-owner-only data-i18n="tab_bi">Обзор</button>
@@ -52,15 +72,6 @@
       <button data-tab="settings" class="tab" data-owner-only data-i18n="tab_settings">Настройки</button>
       <button data-tab="admins" class="tab" data-owner-only data-i18n="tab_admins">Админы</button>
     </nav>
-    <nav class="cab-links">
-      <a href="/" class="cl-link" data-i18n="nav_home">Главная</a>
-      <a href="/order/" class="cl-link" data-i18n="nav_orders">Заказы</a>
-      <a href="/partner/" class="cl-link" data-i18n="nav_partner">Партнёр</a>
-      <a href="/investor/" class="cl-link" data-i18n="nav_investor">Инвест</a>
-      <a href="/developers/" class="cl-link" data-i18n="nav_dev">Разработчикам</a>
-    </nav>
-    <div class="lang-switch" id="langSwitch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
-    <button id="logout" class="btn ghost sm" data-i18n="logout">Выйти</button>
   </aside>
 
   <main class="content">
@@ -408,6 +419,7 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=91"></script>
+<script src="/admin/admin.js?v=92"></script>
+  <script src="/assets/owner-search.js" defer></script>
 </body>
 </html>
