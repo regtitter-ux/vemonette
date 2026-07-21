@@ -122,6 +122,10 @@
     .m.put{background:rgba(245,165,36,.16);color:var(--amber)}
     .ep-path{font-family:'JetBrains Mono',monospace;font-size:14px;color:#fff;font-weight:600}
     .ep p{margin:9px 0 0;font-size:13.5px;color:var(--muted)}
+    .rules{margin:14px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+    .rules li{font-size:13.5px;color:var(--muted);line-height:1.55;padding-left:16px;position:relative}
+    .rules li::before{content:'•';position:absolute;left:0;color:var(--acc,#7cc7ff)}
+    .rules strong{color:#e6eefb;font-weight:600}
     pre{background:#0a0f1a;border:1px solid var(--stroke);border-radius:12px;padding:16px 18px;margin-top:16px;overflow:auto;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;color:#cfe0f5}
     pre .c{color:#6b7a93} pre .k{color:#c98bff} pre .s{color:#8ee79b} pre .f{color:#7cc7ff}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px}
@@ -236,24 +240,33 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
 <span class="c">// 2) When they say they joined, confirm it — we check Discord and pay you</span>
 <span class="k">const</span> out = <span class="k">await</span> fetch(<span class="s">`${BASE}/api/join-check`</span>, {
   method: <span class="s">'POST'</span>, headers: h,
-  body: JSON.stringify({ userId, botId }) <span class="c">// we verify exactly what /api/ad showed this user</span>
+  body: JSON.stringify({ userId, botId, sponsorId: ad.sponsor &amp;&amp; ad.sponsor.guildId })
 }).then(r =&gt; r.json());
 
-<span class="c">// Reward ONLY on credited — that means a real sponsor join was verified and you were paid.</span>
-<span class="k">if</span> (out.credited) grantBonus(userId, <span class="s">100</span>);
-<span class="k">else</span> <span class="k">if</span> (out.joined === <span class="k">false</span>) tellUser(<span class="s">'Join the server first, then press Check.'</span>);
-<span class="k">else</span> <span class="k">if</span> (out.alreadyCounted) tellUser(<span class="s">'You already got the reward for this server.'</span>);
-<span class="c">// else: joined:true but no ad ran right now (credited:false) → let them through, no reward.</span></pre>
+<span class="c">// One field to switch on — reward ONLY on 'credited'.</span>
+<span class="k">if</span> (out.status === <span class="s">'credited'</span>) grantBonus(userId, <span class="s">100</span>);
+<span class="k">else</span> <span class="k">if</span> (out.status === <span class="s">'not_joined'</span>) tellUser(<span class="s">'Join the server first, then press Check.'</span>);
+<span class="k">else</span> <span class="k">if</span> (out.status === <span class="s">'already_counted'</span>) tellUser(<span class="s">'You already got the reward for this server.'</span>);
+<span class="c">// 'no_ad' → nothing to promote right now → let them through, no reward.</span></pre>
 
     <h2 data-i18n="h_ref">The endpoints, one by one</h2>
     <div class="ep">
       <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/ad</span></div>
-      <p data-i18n="ep_ad">Query params, all required: <code>?serverId=&lt;guild&gt;&botId=&lt;bot&gt;&userId=&lt;user&gt;</code>. <code>serverId</code> is the server your bot runs in (where the user is), not the sponsor — we use it to choose a sponsor. Returns <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. A sponsor the user already joined is skipped. If <code>sponsor</code> is <code>null</code>, there's nothing to show — give no reward and let the user through. <code>400</code> if an ID is missing.</p>
+      <p data-i18n="ep_ad">Query params, all required: <code>?serverId=&lt;guild&gt;&botId=&lt;bot&gt;&userId=&lt;user&gt;</code>. <code>serverId</code> is the server your bot runs in (where the user is), not the sponsor — we use it to choose a sponsor. Returns <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. <code>adText</code> is a short plain-text line that already includes the invite link; <code>sponsor.invite</code> is that link on its own if you'd rather build your own message. A sponsor the user already joined is skipped. If <code>sponsor</code> is <code>null</code>, there's nothing to show — give no reward and let the user through. <code>400</code> if an ID is missing.</p>
     </div>
     <div class="ep">
       <div class="ep-h"><span class="m post">POST</span><span class="ep-path">/api/join-check</span></div>
-      <p data-i18n="ep_jc">Body: <code>{ userId, botId }</code>. Reward <strong>only on <code>credited:true</code></strong>. Responses: <code>200 { joined:true, credited:true }</code> — join confirmed and you were paid → give the reward; <code>403 { joined:false }</code> — not in the sponsor yet → ask them to join, no reward; <code>200 { joined:true, credited:false, alreadyCounted:true }</code> — already credited for this sponsor → let them through, no reward; <code>200 { joined:true, credited:false, ad:false }</code> — nothing was shown → let them through, no reward. Counts once per membership; if they leave the credit is reversed, and a real rejoin counts again.</p>
+      <p data-i18n="ep_jc">Body: <code>{ userId, botId, sponsorId? }</code>. <code>sponsorId</code> is the <code>guildId</code> from <code>/api/ad</code> — pass it to pin the check to that exact sponsor (recommended if your bot runs several ad commands at once); omit it and we use the most recent ad shown to this user. Every response has a <code>status</code> field — switch on it and reward <strong>only on <code>"credited"</code></strong>: <code>200 "credited"</code> — join verified and you were paid → give the reward; <code>200 "not_joined"</code> (<code>joined:false</code>) — not in the sponsor yet → ask them to join, no reward; <code>200 "already_counted"</code> — already credited for this sponsor → no reward; <code>200 "no_ad"</code> — nothing was shown → no reward; <code>503 "uncertain"</code> — couldn't check right now, retry. Counts once per membership; leaving reverses the credit, a real rejoin counts again.</p>
     </div>
+
+    <h2 data-i18n="h_rules">Errors, limits &amp; rules</h2>
+    <ul class="rules">
+      <li data-i18n="r_pre"><strong>The sponsor must run the Vemoni bot.</strong> A join is credited only when our bot is on the sponsor server — that's how we verify membership. Servers without it are never offered by <code>/api/ad</code>.</li>
+      <li data-i18n="r_err"><strong>Errors are JSON</strong> <code>{ error, code }</code>: <code>401 invalid_key</code> — bad or missing key; <code>400</code> — a required field is missing (<code>code</code> names which); <code>429</code> — rate limited (honour <code>Retry-After</code>); <code>503 uncertain</code> — retry.</li>
+      <li data-i18n="r_rate"><strong>Rate limits are per-IP.</strong> Ask <code>/api/ad</code> once per user action, and call <code>/api/join-check</code> only when the user presses your check button. Back off on <code>429</code>.</li>
+      <li data-i18n="r_idem"><strong>Safe to retry.</strong> A membership is credited once — a double click or repeated call returns <code>already_counted</code>, never a double reward.</li>
+      <li data-i18n="r_fraud"><strong>userId is verified.</strong> We check the user's real Discord membership of the shown sponsor, so passing IDs that didn't actually join earns nothing.</li>
+    </ul>
 
     <h2 data-i18n="h_help">Questions? We are around</h2>
     <p data-i18n="p_help">Drop into our <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">support server</a> and we will help you wire it up.</p>
@@ -292,8 +305,14 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     h_quick:'Рабочий пример на один экран',
     p_quick:'Полный цикл награды (Node.js). Три ID, все обязательны: <code>userId</code> — пользователь Discord, которого награждаете; <code>serverId</code> — сервер, где работает ваш бот (под него подбираем спонсора); <code>botId</code> — application (client) ID вашего бота.',
     h_ref:'Эндпоинты по порядку',
-    ep_ad:'Параметры запроса, все обязательны: <code>?serverId=&lt;guild&gt;&botId=&lt;bot&gt;&userId=&lt;user&gt;</code>. <code>serverId</code> — это сервер, где работает ваш бот (где находится пользователь), а не спонсор; по нему мы подбираем спонсора. Возвращает <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. Спонсор, в котором пользователь уже состоит, пропускается. Если <code>sponsor</code> = <code>null</code> — показывать нечего: награду не выдавайте, пользователя пропустите. <code>400</code>, если какого-то ID нет.',
-    ep_jc:'Тело: <code>{ userId, botId }</code>. Награду выдавайте <strong>только при <code>credited:true</code></strong>. Ответы: <code>200 { joined:true, credited:true }</code> — заход подтверждён и вам начислено → выдавайте награду; <code>403 { joined:false }</code> — ещё не состоит в спонсоре → попросите зайти, награды нет; <code>200 { joined:true, credited:false, alreadyCounted:true }</code> — уже засчитан за этого спонсора → пропустите, награды нет; <code>200 { joined:true, credited:false, ad:false }</code> — ничего не показывали → пропустите, награды нет. Считается один раз на членство; при уходе начисление отменяется, а реальный повторный заход засчитывается снова.',
+    ep_ad:'Параметры запроса, все обязательны: <code>?serverId=&lt;guild&gt;&botId=&lt;bot&gt;&userId=&lt;user&gt;</code>. <code>serverId</code> — это сервер, где работает ваш бот (где находится пользователь), а не спонсор; по нему мы подбираем спонсора. Возвращает <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. <code>adText</code> — короткая строка обычного текста, уже со ссылкой-приглашением внутри; <code>sponsor.invite</code> — та же ссылка отдельно, если хотите собрать сообщение сами. Спонсор, в котором пользователь уже состоит, пропускается. Если <code>sponsor</code> = <code>null</code> — показывать нечего: награду не выдавайте, пользователя пропустите. <code>400</code>, если какого-то ID нет.',
+    ep_jc:'Тело: <code>{ userId, botId, sponsorId? }</code>. <code>sponsorId</code> — это <code>guildId</code> из <code>/api/ad</code>: передайте его, чтобы проверка привязалась ровно к тому спонсору (рекомендуется, если бот запускает несколько рекламных команд сразу); без него берём последнюю рекламу, показанную этому пользователю. В каждом ответе есть поле <code>status</code> — на него и смотрите, награду выдавайте <strong>только при <code>"credited"</code></strong>: <code>200 "credited"</code> — заход подтверждён и вам начислено → выдавайте награду; <code>200 "not_joined"</code> (<code>joined:false</code>) — ещё не состоит в спонсоре → попросите зайти, награды нет; <code>200 "already_counted"</code> — уже засчитан за этого спонсора → награды нет; <code>200 "no_ad"</code> — ничего не показывали → награды нет; <code>503 "uncertain"</code> — не удалось проверить сейчас, повторите. Считается один раз на членство; при уходе начисление отменяется, а реальный повторный заход засчитывается снова.',
+    h_rules:'Ошибки, лимиты и правила',
+    r_pre:'<strong>У спонсора должен стоять бот Vemoni.</strong> Заход засчитывается, только если наш бот есть на сервере-спонсоре — так мы проверяем членство. Сервера без него <code>/api/ad</code> вообще не предлагает.',
+    r_err:'<strong>Ошибки — это JSON</strong> <code>{ error, code }</code>: <code>401 invalid_key</code> — неверный или отсутствующий ключ; <code>400</code> — нет обязательного поля (<code>code</code> подскажет какого); <code>429</code> — превышен лимит (учитывайте <code>Retry-After</code>); <code>503 uncertain</code> — повторите.',
+    r_rate:'<strong>Лимиты — по IP.</strong> Спрашивайте <code>/api/ad</code> раз на действие пользователя, а <code>/api/join-check</code> вызывайте только когда пользователь нажал вашу кнопку проверки. На <code>429</code> делайте паузу.',
+    r_idem:'<strong>Повторный вызов безопасен.</strong> Членство засчитывается один раз — двойной клик или повтор вернёт <code>already_counted</code>, а не двойную награду.',
+    r_fraud:'<strong>userId проверяется.</strong> Мы сверяем реальное членство пользователя в показанном спонсоре в Discord, поэтому переданные «просто так» ID ничего не приносят.',
     h_help:'Вопросы? Мы на связи',
     p_help:'Загляните на наш <a href="https://discord.gg/vemoni" target="_blank" rel="noopener">сервер поддержки</a> — поможем всё подключить.',
     f_privacy:'Политика конфиденциальности', f_terms:'Условия использования', f_support:'Поддержка'
