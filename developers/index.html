@@ -211,18 +211,18 @@ Authorization: Bearer <span class="s">&lt;your-key&gt;</span>
 X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
 
     <h2 data-i18n="h_quick">A working example in one screen</h2>
-    <p data-i18n="p_quick">Here is the whole reward loop (Node.js). <code>userId</code> is your user's Discord ID; <code>serverId</code> is a guild your bot is in — it decides which sponsor to show.</p>
+    <p data-i18n="p_quick">Here is the whole reward loop (Node.js). All three IDs are required: <code>userId</code> — your user's Discord ID; <code>serverId</code> — a guild your bot is in (picks which sponsor); <code>botId</code> — your bot's application (client) ID.</p>
     <pre><span class="k">const</span> BASE = <span class="s">'https://api.vemoni.info'</span>;
 <span class="k">const</span> h = { <span class="s">'Authorization'</span>: <span class="s">'Bearer '</span> + process.env.<span class="f">VEMONI_KEY</span>, <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span> };
 
 <span class="c">// 1) Ask which sponsor to show, then show it to your user</span>
-<span class="k">const</span> ad = <span class="k">await</span> fetch(<span class="s">`${BASE}/api/ad?serverId=${serverId}`</span>, { headers: h }).then(r =&gt; r.json());
+<span class="k">const</span> ad = <span class="k">await</span> fetch(<span class="s">`${BASE}/api/ad?serverId=${serverId}&botId=${botId}&userId=${userId}`</span>, { headers: h }).then(r =&gt; r.json());
 <span class="k">if</span> (ad.sponsor) showToUser(ad.sponsor.name, ad.sponsor.invite, <span class="s">'Join for +100 coins!'</span>);
 
 <span class="c">// 2) When they say they joined, confirm it — we check Discord and pay you</span>
 <span class="k">const</span> out = <span class="k">await</span> fetch(<span class="s">`${BASE}/api/join-check`</span>, {
   method: <span class="s">'POST'</span>, headers: h,
-  body: JSON.stringify({ userId, serverId })
+  body: JSON.stringify({ userId, serverId, botId })
 }).then(r =&gt; r.json());
 
 <span class="k">if</span> (out.joined) grantBonus(userId, <span class="s">100</span>); <span class="c">// confirmed → give your reward</span>
@@ -231,11 +231,11 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     <h2 data-i18n="h_ref">The endpoints, one by one</h2>
     <div class="ep">
       <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/ad</span></div>
-      <p data-i18n="ep_ad">Add <code>?serverId=&lt;guild&gt;</code>. Returns the sponsor to show: <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. If <code>sponsor</code> is null, there is nothing to promote right now — skip the reward and let the user through.</p>
+      <p data-i18n="ep_ad">All three are required: <code>?serverId=&lt;guild&gt;&botId=&lt;bot&gt;&userId=&lt;user&gt;</code>. Returns the sponsor to show: <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. A sponsor the user is already in is skipped automatically. If <code>sponsor</code> is null, there is nothing to promote right now — skip the reward and let the user through. <code>400</code> if any ID is missing.</p>
     </div>
     <div class="ep">
       <div class="ep-h"><span class="m post">POST</span><span class="ep-path">/api/join-check</span></div>
-      <p data-i18n="ep_jc">Send <code>{ userId, serverId }</code>. We ask Discord whether the user is in the current sponsor and answer: <code>200 { joined:true, credited:true }</code> — confirmed and you have been paid, so give the reward; <code>403 { joined:false }</code> — not in yet, ask them to join; <code>200 { joined:true, ad:false }</code> — no sponsor was running, so no payout. Each member counts once per sponsor, and if they leave, the credit is reversed.</p>
+      <p data-i18n="ep_jc">Send <code>{ userId, serverId, botId }</code> — all required. We check the user's membership against every advertisable sponsor for your server: <code>200 { joined:true, credited:true }</code> — confirmed and you have been paid, so give the reward; <code>403 { joined:false }</code> — not in any yet, ask them to join; <code>200 { joined:true, ad:false }</code> — no sponsor was running, so no payout. Each member counts once per sponsor, and if they leave, the credit is reversed. <code>400</code> if any ID is missing.</p>
     </div>
     <div class="ep">
       <div class="ep-h"><span class="m get">GET</span><span class="ep-path">/api/balance</span></div>
@@ -289,10 +289,10 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
     h_base:'Базовый URL и ваш ключ',
     p_base:'Все эндпоинты — под одним базовым URL. Отправляйте ключ с каждым запросом — bearer-токеном или заголовком <code>X-API-Key</code>. Запросы идут с вашего сервера, поэтому ключ никогда не попадает в браузер.',
     h_quick:'Рабочий пример на один экран',
-    p_quick:'Вот весь цикл награды (Node.js). <code>userId</code> — Discord ID вашего пользователя; <code>serverId</code> — сервер, где стоит ваш бот, он решает, какого спонсора показать.',
+    p_quick:'Вот весь цикл награды (Node.js). Все три ID обязательны: <code>userId</code> — Discord ID пользователя; <code>serverId</code> — сервер, где стоит ваш бот (определяет спонсора); <code>botId</code> — application (client) ID вашего бота.',
     h_ref:'Эндпоинты по порядку',
-    ep_ad:'Добавьте <code>?serverId=&lt;guild&gt;</code>. Возвращает спонсора для показа: <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. Если <code>sponsor</code> = null — продвигать сейчас нечего: пропустите награду и пропустите пользователя дальше.',
-    ep_jc:'Отправьте <code>{ userId, serverId }</code>. Мы спрашиваем у Discord, состоит ли пользователь в текущем спонсоре, и отвечаем: <code>200 { joined:true, credited:true }</code> — подтверждено, вам начислено, выдавайте награду; <code>403 { joined:false }</code> — ещё не зашёл, попросите зайти; <code>200 { joined:true, ad:false }</code> — спонсора не было, выплаты нет. Каждый участник считается один раз на спонсора, а если уходит — начисление отменяется.',
+    ep_ad:'Все три обязательны: <code>?serverId=&lt;guild&gt;&botId=&lt;bot&gt;&userId=&lt;user&gt;</code>. Возвращает спонсора для показа: <code>{ sponsor: { guildId, name, invite } | null, adText, fallbackText }</code>. Спонсор, в котором пользователь уже состоит, пропускается автоматически. Если <code>sponsor</code> = null — продвигать сейчас нечего: пропустите награду и пропустите пользователя дальше. <code>400</code>, если какого-то ID нет.',
+    ep_jc:'Отправьте <code>{ userId, serverId, botId }</code> — все обязательны. Мы проверяем членство пользователя по всем рекламируемым спонсорам вашего сервера: <code>200 { joined:true, credited:true }</code> — подтверждено, вам начислено, выдавайте награду; <code>403 { joined:false }</code> — ещё ни в одном, попросите зайти; <code>200 { joined:true, ad:false }</code> — спонсора не было, выплаты нет. Каждый участник считается один раз на спонсора, а если уходит — начисление отменяется. <code>400</code>, если какого-то ID нет.',
     ep_bal:'Ваш текущий баланс и сохранённые реквизиты для выплат.',
     ep_stats:'Ваши подтверждённые заходы — по серверам и по временным окнам.',
     ep_req:'Посмотреть или изменить, куда идут деньги. PUT <code>{ requisites }</code> — крипто-кошелёк, Telegram ID для авто-USDT и так далее.',
