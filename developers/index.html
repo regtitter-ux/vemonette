@@ -13,13 +13,15 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" /></noscript>
   <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
   <style>
-    :root{ --bg:#080b12; --panel:#0f1626; --panel-2:#0c1220; --stroke:rgba(255,255,255,.08); --stroke-2:rgba(255,255,255,.14); --text:#eaf0fa; --muted:#8fa0bb; --dim:#6b7a93; --blue:#5cc8ff; --blue-2:#22a8f0; --blurple:#5865f2; --green:#57f287; --amber:#f5a524; --red:#ed4245; }
+    :root{ --bg:#0b0f17; --panel:#141b26; --panel-2:#1a2331; --stroke:#232d3d; --stroke-2:#2d3a4d; --text:#e7ecf6; --muted:#8b97ab; --dim:#6b7a93; --blue:#22a8f0; --blue-2:#5cc3ff; --blurple:#5865f2; --green:#57f287; --amber:#f5b300; --red:#ed4245; }
     *{box-sizing:border-box;margin:0;padding:0}
-    body{background:var(--bg);color:var(--text);font-family:'Roboto',system-ui,-apple-system,sans-serif;line-height:1.65;-webkit-font-smoothing:antialiased}
-    body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(900px 460px at 82% -6%,rgba(34,168,240,.14),transparent 60%),radial-gradient(700px 460px at 6% 4%,rgba(87,242,135,.06),transparent 60%)}
+    html,body{overflow-x:hidden;max-width:100%}
+    body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+    *{scrollbar-width:none;-ms-overflow-style:none}
+    *::-webkit-scrollbar{width:0;height:0;display:none}
     .wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:0 22px}
     /* topbar (same as the partner cabinet) */
-    .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:14px 22px;max-width:880px;margin:0 auto;border-bottom:1px solid var(--stroke);background:rgba(11,15,23,.8);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+    .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:24px;padding:14px 22px;border-bottom:1px solid var(--stroke);background:rgba(11,15,23,.9);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
     .brand-sm{display:flex;align-items:center;gap:8px;font-weight:700;font-size:22px;color:var(--text);text-decoration:none}
     .brand-sm img{width:30px;height:30px;border-radius:50%;display:block;flex:none}
     .top-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
@@ -79,10 +81,10 @@
     .apibox .apinote{grid-column:1/-1;margin:8px 0 0}
     @media(max-width:640px){ .apibox{grid-template-columns:1fr 1fr;gap:6px 16px} }
     /* key widget */
-    .keybox{background:linear-gradient(180deg,rgba(88,101,242,.1),rgba(88,101,242,.02));border:1px solid rgba(88,101,242,.28);border-radius:16px;padding:20px;margin-top:12px}
+    .keybox{background:var(--panel);border:1px solid var(--stroke);border-radius:16px;padding:20px;margin-top:12px}
     .keyrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
     .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid transparent;border-radius:10px;font:inherit;font-weight:700;font-size:14px;padding:10px 16px;cursor:pointer;transition:.15s;text-decoration:none}
-    .btn.primary{background:var(--blurple);color:#fff} .btn.primary:hover{filter:brightness(1.1);text-decoration:none}
+    .btn.primary{background:var(--blue);color:#06121c} .btn.primary:hover{background:var(--blue-2);text-decoration:none}
     .btn.ghost{background:rgba(255,255,255,.05);border-color:var(--stroke-2);color:var(--text)} .btn.ghost:hover{background:rgba(255,255,255,.1);text-decoration:none}
     .keyfield{flex:1;min-width:220px;display:flex;align-items:center;gap:8px;background:#0a0f1a;border:1px solid var(--stroke-2);border-radius:10px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:13.5px;color:#dbe7ff;overflow:auto;white-space:nowrap}
     .muted{color:var(--muted)} .sm{font-size:13px}
@@ -113,7 +115,7 @@
     .grid2 .card p{margin:0;font-size:14px;color:var(--muted)}
     .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
     .step{background:var(--panel);border:1px solid var(--stroke);border-radius:14px;padding:18px}
-    .step .n{width:30px;height:30px;border-radius:9px;background:rgba(88,101,242,.16);color:#aab6ff;display:grid;place-items:center;font-weight:800;font-size:15px;margin-bottom:12px}
+    .step .n{width:30px;height:30px;border-radius:9px;background:rgba(34,168,240,.16);color:var(--blue-2);display:grid;place-items:center;font-weight:800;font-size:15px;margin-bottom:12px}
     .step p{margin:6px 0 0;font-size:14px;color:var(--muted)}
     footer{border-top:1px solid var(--stroke);margin-top:40px}
     .foot{max-width:880px;margin:0 auto;padding:26px 22px;color:var(--muted);font-size:13.5px;display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;text-align:center}
@@ -153,12 +155,9 @@
   </header>
 
   <main class="wrap">
-    <h1 data-i18n="h1">Monetize your Discord bot with Vemoni</h1>
-    <p class="lead" data-i18n="lead">Vemoni is a Discord ad network. Add a few calls to your bot, offer your users a reward for joining a sponsor server, and earn $5 for every 100 joins.</p>
-
     <!-- ===== Cabinet (logged in) ===== -->
     <section id="devCab" hidden>
-      <div class="apibox" style="margin-top:26px">
+      <div class="apibox" style="margin-top:28px">
         <div><div class="k" data-i18n="api_earned">Earned via API</div><div class="v" id="apiPaid">$0.00</div></div>
         <div><div class="k" data-i18n="api_joins">API joins</div><div class="v" id="apiJoins">0</div></div>
         <p class="muted sm apinote" data-i18n="api_note">This is the slice of your balance earned through your bot via the API. Anything on top of it comes from a verification bot you run on a Discord server.</p>
@@ -268,8 +267,6 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
 
   <script>
   var I18N = { ru: {
-    h1:'Монетизируйте Discord-бота с Vemoni',
-    lead:'Vemoni — рекламная сеть в Discord. Добавьте в бота пару вызовов, предложите пользователю награду за переход на сервер спонсора — и получайте $5 за каждые 100 переходов.',
     t_balance:'Баланс',
     m_home:'Главная', m_partner:'Партнёрам', m_buyers:'Покупателям', m_myorders:'Мои заказы', m_invest:'Инвесторам', m_dev:'Разработчикам', m_admin:'Администраторам', m_logout:'Выйти',
     api_earned:'Заработано через API', api_joins:'Заходы через API',
