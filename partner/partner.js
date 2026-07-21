@@ -89,22 +89,22 @@ const WHOLE = {
   'Возврат выплаты':'Payout refund','Начисление вручную':'Manual credit','Выплата средств':'Payout',
   'Возврат реф. бонуса':'Referral bonus reversed','Списание вручную':'Manual debit','Участник ушёл (возврат)':'Member left (clawback)',
   'Корректировка баланса':'Balance adjustment','Выплата':'Payout',
-  '10% с вывода реферала':"10% of referral's withdrawal",'на основной баланс':'to main balance',
+  '10% с захода реферала':"10% of referral's join",'на основной баланс':'to main balance',
   'перевод не прошёл':'transfer failed','начисление вручную':'manual credit','вывод':'withdrawal',
   'заход реферала отменён':'referral join reversed','списание вручную':'manual debit',
   // Referrals tab
   'Рефералы':'Referrals','Рефералов':'Referrals','Активных':'Active','Заработано с рефералов':'Earned from referrals',
   'Ожидает вывода':'Pending withdrawal','выведено':'withdrawn','Сервер:':'Server:','Не удалось загрузить рефералов.':'Could not load referrals.',
-  'Приглашайте пользователей — и получайте 10% от каждого их вывода. Ниже — кого вы пригласили и сколько это принесло. Статистика собрана по уже имеющимся данным.':'Invite users and earn 10% of every withdrawal they make. Below is who you invited and how much it brought in. Stats are reconstructed from existing data.',
-  'У вас пока нет рефералов. Приглашайте пользователей и получайте 10% с каждого их вывода.':'You have no referrals yet. Invite users and earn 10% of each withdrawal they make.',
+  'Приглашайте пользователей — и получайте 10% с каждого их захода. Ниже — кого вы пригласили и сколько это принесло. Статистика собрана по уже имеющимся данным.':'Invite users and earn 10% of every join they make. Below is who you invited and how much it brought in. Stats are reconstructed from existing data.',
+  'У вас пока нет рефералов. Приглашайте пользователей и получайте 10% с каждого их захода.':'You have no referrals yet. Invite users and earn 10% of each join they make.',
   // "your referrer" block
   'Ваш реферр:':'Your referrer:',
-  'Вас кто-то пригласил? Впишите его Discord ID — он будет получать реф-бонус с ваших выводов. Указать можно только один раз.':'Were you invited? Enter their Discord ID — they will earn a referral bonus from your withdrawals. Can be set only once.',
+  'Вас кто-то пригласил? Впишите его Discord ID — он будет получать реф-бонус с ваших заходов. Указать можно только один раз.':'Were you invited? Enter their Discord ID — they will earn a referral bonus from your joins. Can be set only once.',
   'Discord ID реферра':'Referrer Discord ID','Реферр сохранён':'Referrer saved',
   'Реферр уже указан — изменить нельзя.':'Referrer already set — cannot change.','Нельзя указать самого себя.':"You can't refer yourself.",
   'Введите корректный Discord ID.':'Enter a valid Discord ID.','Не удалось сохранить.':'Could not save.',
   'Ваша реферальная ссылка':'Your referral link',
-  '— делитесь ей: каждый, кто войдёт по ней, станет вашим рефералом, и вы получите реф-бонус с его выводов.':'— share it: everyone who signs in via it becomes your referral and you earn a referral bonus from their withdrawals.',
+  '— делитесь ей: каждый, кто войдёт по ней, станет вашим рефералом, и вы получите реф-бонус с его заходов.':'— share it: everyone who signs in via it becomes your referral and you earn a referral bonus from their joins.',
   'Скопировать':'Copy','Ссылка скопирована':'Link copied','Реферр засчитан':'Referrer applied'
 };
 function bannerFromAvatar(url) {
@@ -366,7 +366,7 @@ function renderRefLink(pct) {
     const link = `${location.origin}/partner/?ref=${myId}`;
     box.innerHTML = `
       <div class="reflink-box">
-        <div class="reflink-head"><b>Ваша реферальная ссылка</b> <span class="muted sm">— делитесь ей: каждый, кто войдёт по ней, станет вашим рефералом, и вы получите реф-бонус с его выводов.</span></div>
+        <div class="reflink-head"><b>Ваша реферальная ссылка</b> <span class="muted sm">— делитесь ей: каждый, кто войдёт по ней, станет вашим рефералом, и вы получите реф-бонус с его заходов.</span></div>
         <div class="reflink-row">
           <input id="reflink-input" type="text" readonly value="${esc(link)}" />
           <button class="btn primary sm" id="reflink-copy">Скопировать</button>
@@ -390,7 +390,7 @@ function renderMyReferrer(ref, pct) {
     }
     box.innerHTML = `
       <div class="myref-form">
-        <div class="muted sm" style="margin-bottom:8px">Вас кто-то пригласил? Впишите его Discord ID — он будет получать реф-бонус с ваших выводов. Указать можно только один раз.</div>
+        <div class="muted sm" style="margin-bottom:8px">Вас кто-то пригласил? Впишите его Discord ID — он будет получать реф-бонус с ваших заходов. Указать можно только один раз.</div>
         <div class="myref-row">
           <input id="myref-input" type="text" inputmode="numeric" placeholder="Discord ID реферра" maxlength="20" />
           <button class="btn primary sm" id="myref-save">Сохранить</button>
@@ -421,11 +421,10 @@ async function loadReferrals() {
     if (cards) cards.innerHTML = [
         { k: 'Рефералов', v: body.count },
         { k: 'Активных', v: body.activeCount },
-        { k: 'Заработано с рефералов', v: money(body.totalEarned) },
-        { k: 'Ожидает вывода', v: money(body.pending) }
+        { k: 'Заработано с рефералов', v: money(body.totalEarned) }
     ].map((c) => `<div class="pcard"><div class="k">${esc(c.k)}</div><div class="v">${esc(String(c.v))}</div></div>`).join('');
     const refs = body.referrals || [];
-    if (!refs.length) { if (list) list.innerHTML = `<div class="muted">У вас пока нет рефералов. Приглашайте пользователей и получайте ${pct}% с каждого их вывода.</div>`; return; }
+    if (!refs.length) { if (list) list.innerHTML = `<div class="muted">У вас пока нет рефералов. Приглашайте пользователей и получайте ${pct}% с каждого их захода.</div>`; return; }
     list.innerHTML = '<div class="ref-list">' + refs.map(refRow).join('') + '</div>';
 }
 function refRow(r) {
@@ -825,7 +824,7 @@ const PLOG_LABEL = {
     debit_left: { cls: 'd', title: 'Списание', tag: 'участник ушёл' },
     unverify_left: { cls: 'u', title: 'Снята верификация', tag: 'участник ушёл' },
     // money credits
-    credit_referral_bonus: { cls: 'g', title: 'Реферальный бонус', tag: '10% с вывода реферала' },
+    credit_referral_bonus: { cls: 'g', title: 'Реферальный бонус', tag: '10% с захода реферала' },
     credit_invest_withdraw: { cls: 'g', title: 'Вывод из инвестиций', tag: 'на основной баланс' },
     credit_payout_refund: { cls: 'g', title: 'Возврат выплаты', tag: 'перевод не прошёл' },
     credit_admin_credit: { cls: 'g', title: 'Корректировка баланса', tag: 'начисление вручную' },
