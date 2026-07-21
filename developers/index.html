@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" media="print" onload="this.media='all'" />
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&family=JetBrains+Mono:wght@400;600&display=swap" /></noscript>
-  <script>window.__VEMONI_API_BASE__ = 'https://secure-gratitude-production.up.railway.app';</script>
+  <script>window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';</script>
   <style>
     :root{ --bg:#0b0f17; --panel:#141b26; --panel-2:#1a2331; --stroke:#232d3d; --stroke-2:#2d3a4d; --text:#e7ecf6; --muted:#8b97ab; --dim:#6b7a93; --blue:#22a8f0; --blue-2:#5cc3ff; --blurple:#5865f2; --green:#57f287; --amber:#f5b300; --red:#ed4245; }
     *{box-sizing:border-box;margin:0;padding:0}
@@ -199,7 +199,7 @@
     <h2 data-i18n="h_base">The base URL and your key</h2>
     <p data-i18n="p_base">Every endpoint sits under one base URL. Send your key with each request — either as a bearer token or in the <code>X-API-Key</code> header. Because calls come from your server, the key never touches a browser.</p>
     <pre><span class="c"># Base URL</span>
-https://secure-gratitude-production.up.railway.app
+https://api.vemoni.info
 
 <span class="c"># Send your key one of these two ways</span>
 Authorization: Bearer <span class="s">&lt;your-key&gt;</span>
@@ -207,7 +207,7 @@ X-API-Key: <span class="s">&lt;your-key&gt;</span></pre>
 
     <h2 data-i18n="h_quick">A working example in one screen</h2>
     <p data-i18n="p_quick">Here is the whole reward loop (Node.js). <code>userId</code> is your user's Discord ID; <code>serverId</code> is a guild your bot is in — it decides which sponsor to show.</p>
-    <pre><span class="k">const</span> BASE = <span class="s">'https://secure-gratitude-production.up.railway.app'</span>;
+    <pre><span class="k">const</span> BASE = <span class="s">'https://api.vemoni.info'</span>;
 <span class="k">const</span> h = { <span class="s">'Authorization'</span>: <span class="s">'Bearer '</span> + process.env.<span class="f">VEMONI_KEY</span>, <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span> };
 
 <span class="c">// 1) Ask which sponsor to show, then show it to your user</span>
