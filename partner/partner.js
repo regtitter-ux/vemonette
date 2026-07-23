@@ -345,21 +345,29 @@ function refreshEmpties() {
 let _ownerInit = false;
 function balEditHtml(id) {
     return '<div class="xbal-edit">'
-        + '<select id="' + id + '-mode"><option value="set">= установить</option><option value="add">± изменить</option></select>'
-        + '<input id="' + id + '-inp" type="number" step="0.01" placeholder="0.00"/>'
+        + '<div class="xseg" id="' + id + '-seg">'
+        +   '<button type="button" class="xseg-b active" data-m="set" title="Установить точное значение">=</button>'
+        +   '<button type="button" class="xseg-b" data-m="add" title="Прибавить или вычесть">±</button>'
+        + '</div>'
+        + '<input id="' + id + '-inp" type="number" step="0.01" placeholder="сумма" />'
         + '<button class="xbtn" id="' + id + '-btn">OK</button></div>';
 }
 function wireBalEdit(id, kind, onDone) {
     const btn = $('#' + id + '-btn'); if (!btn) return;
-    btn.onclick = async () => {
-        const amount = Number($('#' + id + '-inp').value);
-        if (!isFinite(amount)) { toast('Введите число', 'err'); return; }
+    const seg = $('#' + id + '-seg'); const inp = $('#' + id + '-inp');
+    let mode = 'set';
+    if (seg) seg.querySelectorAll('.xseg-b').forEach((b) => { b.onclick = () => { mode = b.dataset.m; seg.querySelectorAll('.xseg-b').forEach((x) => x.classList.toggle('active', x === b)); inp.focus(); }; });
+    const submit = async () => {
+        const amount = Number(inp.value);
+        if (!isFinite(amount) || inp.value === '') { toast('Введите число', 'err'); return; }
         btn.disabled = true;
-        const r = await post('/x-balance', { kind, mode: $('#' + id + '-mode').value, amount });
+        const r = await post('/x-balance', { kind, mode, amount });
         btn.disabled = false;
-        if (r.ok && r.body && r.body.ok) { $('#' + id + '-inp').value = ''; toast('Баланс обновлён'); if (onDone) onDone(r.body.value); }
+        if (r.ok && r.body && r.body.ok) { inp.value = ''; toast('Баланс обновлён'); if (onDone) onDone(r.body.value); }
         else toast('Не удалось изменить баланс', 'err');
     };
+    btn.onclick = submit;
+    if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
 }
 function statusLabel(s) { return ({ active: 'Активна', complete: 'Выполнена', paused: 'На паузе', invalid: 'Ошибка ссылки' })[s] || s || '—'; }
 

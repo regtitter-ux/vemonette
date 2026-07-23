@@ -69,13 +69,17 @@ h2{font-size:18px;margin-bottom:14px}
 .xbal-card{flex:1;min-width:230px;background:var(--panel);border:1px solid var(--stroke);border-radius:12px;padding:15px 17px}
 .xbal-card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
 .xbal-card .v{font-size:25px;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums}
-.xbal-edit{display:flex;gap:7px;margin-top:11px;align-items:center}
-.xbal-edit select,.xbal-edit input{background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:8px;color:var(--text);font:inherit;font-size:13px;padding:7px 9px;outline:none}
-.xbal-edit input{flex:1;min-width:0}
-.xbal-edit select{flex:none}
-.xbal-edit input:focus,.xbal-edit select:focus{border-color:var(--blue)}
-.xbtn{white-space:nowrap;background:var(--blue);color:#fff;border:0;border-radius:8px;font:inherit;font-size:13px;font-weight:700;padding:7px 13px;cursor:pointer}
-.xbtn:hover{filter:brightness(1.08)}
+.xbal-edit{display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap}
+.xseg{display:inline-flex;background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:9px;padding:2px;flex:none}
+.xseg-b{background:transparent;border:0;color:var(--muted);font:inherit;font-size:15px;font-weight:700;width:36px;height:33px;border-radius:7px;cursor:pointer;line-height:1;transition:background .12s,color .12s}
+.xseg-b:hover{color:var(--text)}
+.xseg-b.active{background:var(--blue);color:#fff}
+.xbal-edit input{flex:1;min-width:80px;background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:9px;color:var(--text);font:inherit;font-size:14px;padding:8px 11px;outline:none}
+.xbal-edit input:focus{border-color:var(--blue);background:rgba(255,255,255,.07)}
+.xbal-edit input::placeholder{color:var(--muted)}
+.xbtn{white-space:nowrap;background:var(--blue);color:#fff;border:0;border-radius:9px;font:inherit;font-size:14px;font-weight:700;padding:8px 17px;cursor:pointer;flex:none;transition:filter .12s,transform .05s}
+.xbtn:hover{filter:brightness(1.1)}
+.xbtn:active{transform:translateY(1px)}
 .xbtn:disabled{opacity:.5;cursor:default}
 /* referrals */
 .ref-list{display:flex;flex-direction:column;gap:10px}
