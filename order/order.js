@@ -848,8 +848,13 @@ function wireCampaigns(list) {
         const { ok, body } = await get(`/campaigns/${id}/servers`);
         if (!ok) { box.innerHTML = `<div class="err sm">${esc(t('srv_error'))}</div>`; return; }
         const servers = body.servers || [];
-        box.innerHTML = servers.length ? servers.map((s) => srvRow(id, s)).join('') : `<div class="muted sm">${esc(t('srv_empty'))}</div>`;
-        box.querySelectorAll('[data-toggle]').forEach((btn) => btn.onclick = async () => {
+        if (!servers.length) { box.innerHTML = `<div class="muted sm">${esc(t('srv_empty'))}</div>`; return; }
+        // Paginate: 10 servers per page with ‹ › flip (the list now includes every
+        // active partner, so it can be long). Sorted by joins desc from the backend.
+        const PER = 10;
+        const pages = Math.ceil(servers.length / PER);
+        let page = 0;
+        const wireToggles = () => box.querySelectorAll('[data-toggle]').forEach((btn) => btn.onclick = async () => {
             const disable = btn.dataset.state === 'on';
             const isBot = btn.dataset.kind === 'bot';
             const { ok } = isBot
@@ -857,6 +862,18 @@ function wireCampaigns(list) {
                 : await put(`/campaigns/${id}/server`, { gid: btn.dataset.toggle, disabled: disable });
             if (ok) { toast(disable ? t('srv_off') : t('srv_on')); b.click(); b.click(); }
         });
+        const renderPage = () => {
+            const rows = servers.slice(page * PER, page * PER + PER).map((s) => srvRow(id, s)).join('');
+            const nav = pages > 1
+                ? `<div class="srv-pager"><button class="btn-mini srv-prev"${page === 0 ? ' disabled' : ''}>‹</button><span class="srv-pageinfo">${page + 1} / ${pages}</span><button class="btn-mini srv-next"${page >= pages - 1 ? ' disabled' : ''}>›</button></div>`
+                : '';
+            box.innerHTML = rows + nav;
+            wireToggles();
+            const prev = box.querySelector('.srv-prev'), next = box.querySelector('.srv-next');
+            if (prev) prev.onclick = () => { if (page > 0) { page--; renderPage(); } };
+            if (next) next.onclick = () => { if (page < pages - 1) { page++; renderPage(); } };
+        };
+        renderPage();
     });
 }
 
