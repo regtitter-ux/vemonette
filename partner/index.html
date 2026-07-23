@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Кабинет партнёра</title>
-  <link rel="stylesheet" href="/partner/partner.css?v=38" />
+  <link rel="stylesheet" href="/partner/partner.css?v=39" />
   <script>window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';</script>
   <script>try{if(localStorage.getItem('vemoni_authed'))document.documentElement.classList.add('pre-auth')}catch(e){}</script>
 </head>
@@ -83,6 +83,8 @@
       <button class="p-tab" data-pane="log">Журнал</button>
       <button class="p-tab" data-pane="refs">Рефералы</button>
       <button class="p-tab" data-pane="pay">Выплаты</button>
+      <button class="p-tab owner-tab" data-pane="xorders" hidden>🛒 Заказы</button>
+      <button class="p-tab owner-tab" data-pane="xinvest" hidden>📈 Инвест</button>
     </nav>
 
     <div class="p-pane active" data-pane="overview">
@@ -202,6 +204,26 @@
         <div id="p-wd-pager" class="wd-pager" hidden></div>
       </section>
     </div>
+
+    <!-- Owner-only: this user's buyer orders + wallet -->
+    <div class="p-pane" data-pane="xorders">
+      <section>
+        <h2>Заказы покупателя <span class="owner-badge">только овнер</span></h2>
+        <div id="xo-bal" class="xbal"></div>
+        <div class="table-wrap"><table id="xo-table"></table></div>
+        <div class="muted p-empty" id="xo-empty" hidden>У пользователя нет заказов.</div>
+      </section>
+    </div>
+
+    <!-- Owner-only: this user's investor account -->
+    <div class="p-pane" data-pane="xinvest">
+      <section>
+        <h2>Инвестиции <span class="owner-badge">только овнер</span></h2>
+        <div id="xi-bal" class="xbal"></div>
+        <div id="xi-stats" class="xstats"></div>
+        <div id="xi-top-sec" hidden><h2 class="sub">Пополнения инвест-счёта</h2><div class="table-wrap"><table id="xi-topups"></table></div></div>
+      </section>
+    </div>
   </main>
 </div>
 
@@ -258,7 +280,7 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/partner/partner.js?v=48"></script>
+<script src="/partner/partner.js?v=49"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

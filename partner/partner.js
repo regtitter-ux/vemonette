@@ -338,6 +338,75 @@ function refreshEmpties() {
     const c = $('#cards-empty'); if (c) c.hidden = vis('vcards-section');
 }
 
+// ---- Owner-only: extra tabs to view this user's buyer orders + investor account,
+// and edit ALL balance types (partner earnings, buyer wallet, investor). Shown
+// only when acting-as another user (ACT_AS). All writes go through the acting-as
+// aware /partner/x-* endpoints (owner-gated server-side). ----
+let _ownerInit = false;
+function balEditHtml(id) {
+    return '<div class="xbal-edit">'
+        + '<select id="' + id + '-mode"><option value="set">= установить</option><option value="add">± изменить</option></select>'
+        + '<input id="' + id + '-inp" type="number" step="0.01" placeholder="0.00"/>'
+        + '<button class="xbtn" id="' + id + '-btn">OK</button></div>';
+}
+function wireBalEdit(id, kind, onDone) {
+    const btn = $('#' + id + '-btn'); if (!btn) return;
+    btn.onclick = async () => {
+        const amount = Number($('#' + id + '-inp').value);
+        if (!isFinite(amount)) { toast('Введите число', 'err'); return; }
+        btn.disabled = true;
+        const r = await post('/x-balance', { kind, mode: $('#' + id + '-mode').value, amount });
+        btn.disabled = false;
+        if (r.ok && r.body && r.body.ok) { $('#' + id + '-inp').value = ''; toast('Баланс обновлён'); if (onDone) onDone(r.body.value); }
+        else toast('Не удалось изменить баланс', 'err');
+    };
+}
+function statusLabel(s) { return ({ active: 'Активна', complete: 'Выполнена', paused: 'На паузе', invalid: 'Ошибка ссылки' })[s] || s || '—'; }
+
+async function loadOwnerOrders() {
+    const r = await get('/x-orders'); if (!r.ok || !r.body) return;
+    $('#xo-bal').innerHTML = '<div class="xbal-card"><div class="k">Баланс кошелька (покупатель)</div><div class="v" id="xo-wv">' + money(r.body.wallet) + '</div>' + balEditHtml('xo') + '</div>';
+    wireBalEdit('xo', 'wallet', (v) => { $('#xo-wv').textContent = money(v); });
+    const camps = r.body.campaigns || [];
+    $('#xo-empty').hidden = camps.length > 0;
+    $('#xo-table').innerHTML = camps.length
+        ? '<thead><tr><th>Сервер</th><th class="num">Доставлено</th><th>Статус</th><th class="num">Сумма</th></tr></thead><tbody>'
+          + camps.map((c) => '<tr><td>' + esc(c.serverName || c.sponsorGuildId || '—') + '</td><td class="num">' + c.delivered + '/' + c.purchased + '</td><td>' + esc(statusLabel(c.status)) + '</td><td class="num">' + money(c.price) + '</td></tr>').join('') + '</tbody>'
+        : '';
+}
+async function loadOwnerInvest() {
+    const r = await get('/x-investments'); if (!r.ok || !r.body) return;
+    const a = r.body.account || {};
+    $('#xi-bal').innerHTML = '<div class="xbal-card"><div class="k">Доступно на инвест-счёте</div><div class="v" id="xi-av">' + money(a.available) + '</div>' + balEditHtml('xi') + '</div>';
+    wireBalEdit('xi', 'investor', (v) => { $('#xi-av').textContent = money(v); });
+    const stat = (k, v) => '<div class="pcard"><div class="k">' + esc(k) + '</div><div class="v">' + v + '</div></div>';
+    $('#xi-stats').innerHTML = [
+        stat('Вложено', money(a.invested)), stat('Возвращено', money(a.returned)), stat('Выведено', money(a.withdrawn)),
+        stat('Куплено инвайтов', a.owned || 0), stat('Продано', a.sold || 0), stat('В работе', a.outstanding || 0),
+        stat('Прибыль', money(a.profit)), stat('Ручная корр.', money(a.manualAdjust || 0))
+    ].join('');
+    const tops = r.body.topups || [];
+    $('#xi-top-sec').hidden = tops.length === 0;
+    if (tops.length) $('#xi-topups').innerHTML = '<thead><tr><th class="num">Сумма</th><th>Статус</th><th>Дата</th></tr></thead><tbody>'
+        + tops.map((t) => '<tr><td class="num">' + money(t.amount) + '</td><td>' + esc(t.status || '') + '</td><td>' + (t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '') + '</td></tr>').join('') + '</tbody>';
+}
+function initOwnerTabs() {
+    document.querySelectorAll('.owner-tab').forEach((b) => { b.hidden = false; });
+    if (_ownerInit) return;
+    _ownerInit = true;
+    wireTabs();   // wire the newly-revealed tab buttons (idempotent)
+    // Partner-balance editor injected onto the Overview cards (the 3rd balance type).
+    const host = $('#p-cards');
+    if (host && !$('#xp-edit')) {
+        const box = document.createElement('div'); box.id = 'xp-edit'; box.style.cssText = 'margin-top:14px;max-width:360px';
+        box.innerHTML = '<div style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">✏️ Баланс партнёра (овнер)</div>' + balEditHtml('xp');
+        host.parentNode.insertBefore(box, host.nextSibling);
+        wireBalEdit('xp', 'partner', (v) => { $('#top-balance').textContent = money(v); const vc = document.querySelector('#p-cards .pcard .v'); if (vc) vc.innerHTML = money(v); });
+    }
+    loadOwnerOrders();
+    loadOwnerInvest();
+}
+
 async function load() {
     wireTabs();
     // All of these endpoints are independent — fire them concurrently instead of
@@ -941,6 +1010,7 @@ function focusOpenCard() {
 function render(d) {
     window.__PARTNER_ID__ = d.userId || window.__PARTNER_ID__;
     renderViewBanner(d.actingAs);
+    if (ACT_AS) initOwnerTabs();   // owner viewing another profile → extra tabs + balance editing
     $('#top-balance').textContent = money(d.balance);
     const boost = d.boosted ? ` <span class="chip amber">🔥 буст ${fmtBoost(d.boostLeftMs)}</span>` : '';
     const cards = [

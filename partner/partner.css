@@ -59,6 +59,24 @@ h2{font-size:18px;margin-bottom:14px}
 .pcard .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
 .pcard .v{font-size:22px;font-weight:800;margin-top:6px}
 .pcard .n{color:var(--muted);font-size:11.5px;margin-top:6px}
+/* owner-only tabs (buyer orders / investments) */
+.owner-tab{color:#e0a13c}
+.owner-tab:hover{color:#f0b357;background:rgba(240,179,87,.06)}
+.owner-tab.active{color:#f5c877;border-bottom-color:#e0a13c}
+.owner-badge{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#f0b357;background:rgba(240,179,87,.14);border-radius:6px;padding:3px 8px;vertical-align:middle;margin-left:8px}
+.xstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:8px}
+.xbal{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:20px}
+.xbal-card{flex:1;min-width:230px;background:var(--panel);border:1px solid var(--stroke);border-radius:12px;padding:15px 17px}
+.xbal-card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.xbal-card .v{font-size:25px;font-weight:800;margin-top:6px;font-variant-numeric:tabular-nums}
+.xbal-edit{display:flex;gap:7px;margin-top:11px;align-items:center}
+.xbal-edit select,.xbal-edit input{background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:8px;color:var(--text);font:inherit;font-size:13px;padding:7px 9px;outline:none}
+.xbal-edit input{flex:1;min-width:0}
+.xbal-edit select{flex:none}
+.xbal-edit input:focus,.xbal-edit select:focus{border-color:var(--blue)}
+.xbtn{white-space:nowrap;background:var(--blue);color:#fff;border:0;border-radius:8px;font:inherit;font-size:13px;font-weight:700;padding:7px 13px;cursor:pointer}
+.xbtn:hover{filter:brightness(1.08)}
+.xbtn:disabled{opacity:.5;cursor:default}
 /* referrals */
 .ref-list{display:flex;flex-direction:column;gap:10px}
 .ref-card{background:var(--panel);border:1px solid var(--stroke);border-radius:12px;padding:14px 16px}
