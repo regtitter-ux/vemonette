@@ -81,6 +81,8 @@ const DICT = {
     srv_loading: 'Загрузка…', srv_error: 'Ошибка', srv_empty: 'Пока нет доставленных заходов по серверам.',
     disable: 'Отключить', disabled: 'Выключен',
     srv_off: 'Отключено', srv_on: 'Включено', bot_tag: 'бот',
+    srv_disable_all: 'Отключить у всех', srv_enable_all: 'Включить у всех',
+    srv_all_off: 'Реклама отключена на всех серверах', srv_all_on: 'Реклама включена на всех серверах',
     bot_warn: 'Реклама не запустится: на вашем сервере нет нашего бота. Добавьте его — проверка заходов без него невозможна.',
     add_bot: 'Добавить бота',
     st_pending: 'Ожидает оплаты', st_active: 'Активна', st_paused: 'На паузе',
@@ -177,6 +179,8 @@ const DICT = {
     srv_loading: 'Loading…', srv_error: 'Error', srv_empty: 'No delivered stays per server yet.',
     disable: 'Disable', disabled: 'Disabled',
     srv_off: 'Disabled', srv_on: 'Enabled', bot_tag: 'bot',
+    srv_disable_all: 'Disable on all', srv_enable_all: 'Enable on all',
+    srv_all_off: 'Ad disabled on all servers', srv_all_on: 'Ad enabled on all servers',
     bot_warn: "The ad won't run: our bot isn't on your server. Add it — stay verification is impossible without it.",
     add_bot: 'Add the bot',
     st_pending: 'Awaiting payment', st_active: 'Active', st_paused: 'Paused',
@@ -885,13 +889,26 @@ function wireCampaigns(list) {
                 : await put(`/campaigns/${id}/server`, { gid: btn.dataset.toggle, disabled: disable });
             if (ok) { toast(disable ? t('srv_off') : t('srv_on')); b.click(); b.click(); }
         });
+        // Master toggle: off everywhere when everything is currently on, else on
+        // everywhere. Lets the buyer clear the board with one click, then hand-pick
+        // servers — and flip it all back on the same way. One atomic backend write.
+        const allEnabled = servers.every((s) => !s.disabled);
+        const bulkRow = () => `<div class="srv-bulk"><button class="btn-mini srv-all ${allEnabled ? 'off' : 'on'}" data-srv-all="${allEnabled ? '1' : '0'}">${esc(allEnabled ? t('srv_disable_all') : t('srv_enable_all'))}</button></div>`;
+        const wireBulk = () => { const ab = box.querySelector('[data-srv-all]'); if (!ab) return; ab.onclick = async () => {
+            const disable = ab.dataset.srvAll === '1';
+            ab.disabled = true;
+            const { ok } = await put(`/campaigns/${id}/servers/all`, { disabled: disable });
+            if (ok) { toast(disable ? t('srv_all_off') : t('srv_all_on')); b.click(); b.click(); }
+            else { ab.disabled = false; toast(t('srv_error'), 'err'); }
+        }; };
         const renderPage = () => {
             const rows = servers.slice(page * PER, page * PER + PER).map((s) => srvRow(id, s)).join('');
             const nav = pages > 1
                 ? `<div class="srv-pager"><button class="btn-mini srv-prev"${page === 0 ? ' disabled' : ''}>‹</button><span class="srv-pageinfo">${page + 1} / ${pages}</span><button class="btn-mini srv-next"${page >= pages - 1 ? ' disabled' : ''}>›</button></div>`
                 : '';
-            box.innerHTML = rows + nav;
+            box.innerHTML = bulkRow() + rows + nav;
             wireToggles();
+            wireBulk();
             const prev = box.querySelector('.srv-prev'), next = box.querySelector('.srv-next');
             if (prev) prev.onclick = () => { if (page > 0) { page--; renderPage(); } };
             if (next) next.onclick = () => { if (page < pages - 1) { page++; renderPage(); } };
