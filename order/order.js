@@ -41,6 +41,7 @@ const DICT = {
     my_camps: 'Мои кампании',
     tab_active: 'Активные', tab_paused: 'На паузе', tab_finished: 'Завершено',
     tab_all: 'Все заказы', tab_all_done: 'Все завершённые',
+    search_ph: 'Поиск: ссылка, ID, сервер, заказчик…', no_search_matches: 'Ничего не найдено по запросу.',
     no_all_camps: 'Активных заказов в сети нет.', no_all_done: 'Завершённых заказов нет.',
     q_showing: 'Показывается', q_waiting: (p, tot) => `Место в очереди №${p} из ${tot}`, q_nobot: 'Ждёт бота',
     q_verifier_off: 'Проверка недоступна',
@@ -136,6 +137,7 @@ const DICT = {
     my_camps: 'My campaigns',
     tab_active: 'Active', tab_paused: 'Paused', tab_finished: 'Completed',
     tab_all: 'All orders', tab_all_done: 'All completed',
+    search_ph: 'Search: link, ID, server, buyer…', no_search_matches: 'No orders match your search.',
     no_all_camps: 'No active orders on the network.', no_all_done: 'No completed orders.',
     q_showing: 'Showing', q_waiting: (p, tot) => `Queue position #${p} of ${tot}`, q_nobot: 'Waiting for bot',
     q_verifier_off: 'Checker offline',
@@ -248,6 +250,7 @@ function noBotWarnHtml() {
 function applyLang() {
     document.documentElement.lang = lang;
     $$('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    $$('[data-i18n-ph]').forEach((el) => { el.setAttribute('placeholder', t(el.dataset.i18nPh)); });
     $$('.lang-switch button').forEach((b) => b.classList.toggle('active', b.dataset.lang === lang));
     $('#ord-rate').textContent = t('rate', CFG.pricePer100);
     const note = $('#mgr-note');
@@ -268,6 +271,12 @@ function renderLoadBanner() {
     if (on) el.innerHTML = `<span class="lb-ico">⚠️</span><span>${esc(t('load_warn'))}</span>`;
 }
 $$('.lang-switch button').forEach((b) => b.addEventListener('click', () => { lang = b.dataset.lang; localStorage.setItem('vemoni_lang', lang); applyLang(); }));
+// Live order search: filter the visible tab as the user types (list only re-renders,
+// so the input keeps focus). Wired once — the input lives outside #camp-list.
+(() => {
+    const inp = $('#camp-search-input'); if (!inp) return;
+    inp.addEventListener('input', () => { campSearch = inp.value; campPage = 1; renderCampaigns(); });
+})();
 
 // ---------- Alternative login: one-time code via Discord DM ----------
 (() => {
@@ -646,7 +655,16 @@ function reloadCurrentTab() {
 
 let campTab = 'active';
 let campPage = 1;
+let campSearch = '';
 const CAMP_PAGE_SIZE = 10;
+// Live order search — filters the current tab by invite link, campaign id, server
+// name, or buyer name/id (case-insensitive substring, all matched at once).
+function filterBySearch(list) {
+    const q = campSearch.trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((c) => [c.id, c.invite, c.serverName, c.buyerName, c.buyerId]
+        .filter(Boolean).join('   ').toLowerCase().includes(q));
+}
 function campPagerHtml(pages, cur) {
     if (pages <= 1) return '';
     return `<div class="camp-pager"><button class="cp-nav" data-camppage="${cur - 1}" ${cur <= 1 ? 'disabled' : ''}>‹</button><span class="cp-info">${cur} / ${pages}</span><button class="cp-nav" data-camppage="${cur + 1}" ${cur >= pages ? 'disabled' : ''}>›</button></div>`;
@@ -659,8 +677,10 @@ function renderCampaigns() {
     const paused = lastCampaigns.filter((c) => c.status === 'active' && c.paused);
     const finished = lastCampaigns.filter((c) => c.status !== 'active');
 
-    // A non-admin with no orders at all: the simple empty state, no tabs.
-    if (!admin && !lastCampaigns.length) { if (tabs) tabs.hidden = true; box.innerHTML = `<div class="muted">${esc(t('no_camps'))}</div>`; return; }
+    const searchBox = $('#camp-search');
+    // A non-admin with no orders at all: the simple empty state, no tabs, no search.
+    if (!admin && !lastCampaigns.length) { if (tabs) tabs.hidden = true; if (searchBox) searchBox.hidden = true; box.innerHTML = `<div class="muted">${esc(t('no_camps'))}</div>`; return; }
+    if (searchBox) searchBox.hidden = false;
     if ((campTab === 'all' || campTab === 'all-done') && !admin) campTab = 'active';
     if (campTab === 'finished' && !finished.length && !admin) campTab = 'active';
 
@@ -689,9 +709,12 @@ function renderCampaigns() {
         box.innerHTML = `<div class="muted">${esc(empty)}</div>`;
         return;
     }
-    const pages = Math.max(1, Math.ceil(shown.length / CAMP_PAGE_SIZE));
+    // Live search filters the current tab (across ALL its orders, before paging).
+    const list = filterBySearch(shown);
+    if (!list.length) { box.innerHTML = `<div class="muted">${esc(t('no_search_matches'))}</div>`; return; }
+    const pages = Math.max(1, Math.ceil(list.length / CAMP_PAGE_SIZE));
     if (campPage > pages) campPage = pages;
-    const pageItems = shown.slice((campPage - 1) * CAMP_PAGE_SIZE, campPage * CAMP_PAGE_SIZE);
+    const pageItems = list.slice((campPage - 1) * CAMP_PAGE_SIZE, campPage * CAMP_PAGE_SIZE);
     box.innerHTML = pageItems.map(campCard).join('') + campPagerHtml(pages, campPage);
     wireCampaigns(pageItems);
     box.querySelectorAll('[data-camppage]').forEach((b) => b.onclick = () => {
