@@ -129,6 +129,8 @@ const TR = {
   'Пока ссылки на этот сервер нет в рекламе партнёров, выход участника <b>не снимает</b> выплату — заход финальный. Как только реклама снова начнёт показываться, снятие возобновится; но ушедшие в период без показа больше не учитываются.':'While this server is not being advertised, a member leaving <b>does not</b> reverse the payout — the join is final. Once the ad shows again, clawback resumes; those who left during the off period are no longer revisited.',
   'Выход участника <b>снимает</b> выплату партнёру обратно (стандартное поведение), даже если реклама сейчас не показывается.':'A member leaving <b>reverses</b> the partner payout (default behavior), even if the ad is not showing now.',
   'Включить снятие':'Enable clawback','Отключить снятие':'Disable clawback',
+  'NSFW-сервер':'NSFW server','Реклама с ограничением «Только SFW» никогда не показывается на NSFW-серверах.':'Ads restricted to “SFW only” are never shown on NSFW servers.',
+  'Сервер помечен NSFW':'Server marked NSFW','Метка NSFW снята':'NSFW mark removed',
   'Персональная реклама этого сервера. Если оставить пустым и удалить — юзеры увидят глобальную.':'This server’s own ad. Leave empty and delete — users will see the global one.',
   'Последнее обновление:':'Last updated:','Текст рекламы':'Ad text','Удалить':'Delete',
   'Снятие при выходе (без показа) отключено':'Leave clawback (while off) disabled','Снятие при выходе включено':'Leave clawback enabled',
@@ -1401,7 +1403,19 @@ function openServerAdModal(gid) {
     // Owner-only: keep-payouts-after-completion toggle for this server.
     const isOwner = effRole() === 'owner';
     const clawOff = Boolean((state.clawbackOffAfterComplete || {})[gid]);
+    const isNsfw = Boolean((state.nsfwServers || {})[gid]);
     const showing = Boolean(guildEntry?.adShowing);
+    let nsfwBlock = '';
+    if (isOwner) {
+        nsfwBlock = `
+        <div class="setting wide" style="margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;">
+          <label class="nsfw-check" style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;">
+            <input type="checkbox" data-act="nsfw-toggle" ${isNsfw ? 'checked' : ''} />
+            <span>NSFW-сервер</span>
+          </label>
+          <p class="muted" style="margin:6px 0 0;">Реклама с ограничением «Только SFW» никогда не показывается на NSFW-серверах.</p>
+        </div>`;
+    }
     let clawBlock = '';
     if (isOwner) {
         const chip = clawOff
@@ -1442,11 +1456,22 @@ function openServerAdModal(gid) {
             <button class="btn primary sm" data-act="save">Сохранить</button>
           </div>
         </div>
+        ${nsfwBlock}
         ${clawBlock}
       </div>`;
     $('#server-ad-modal').hidden = false;
 
     if (isOwner) {
+        const nsfwBox = $('#server-ad-modal-body [data-act="nsfw-toggle"]');
+        if (nsfwBox) nsfwBox.onchange = async () => {
+            const nsfw = nsfwBox.checked;
+            const { ok, body } = await put('/server-nsfw', { gid, nsfw });
+            if (ok) {
+                state.nsfwServers = state.nsfwServers || {};
+                if (nsfw) state.nsfwServers[gid] = true; else delete state.nsfwServers[gid];
+                toast(nsfw ? 'Сервер помечен NSFW' : 'Метка NSFW снята');
+            } else { nsfwBox.checked = !nsfw; toast(body?.error || 'Не удалось переключить', 'err'); }
+        };
         const clawBtn = $('#server-ad-modal-body [data-act="claw-toggle"]');
         if (clawBtn) clawBtn.onclick = async () => {
             const newOff = !clawOff;

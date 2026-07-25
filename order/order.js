@@ -65,6 +65,9 @@ const DICT = {
     pay: 'Оплатить',
     pause: 'Пауза', resume: 'Возобновить',
     servers_btn: 'Серверы показа',
+    all_servers: 'Все серверы', only_sfw: 'Только SFW',
+    sfw_hint: 'Только SFW: реклама никогда не покажется на NSFW-серверах',
+    sfw_on_toast: 'Реклама ограничена SFW-серверами', sfw_off_toast: 'Реклама показывается на всех серверах',
     change_link: 'Сменить ссылку', save: 'Сохранить', cancel: 'Отмена',
     link_ph: 'https://discord.gg/xxxx',
     limit_label: 'Лимит заходов на эту ссылку (необязательно)',
@@ -163,6 +166,9 @@ const DICT = {
     pay: 'Pay',
     pause: 'Pause', resume: 'Resume',
     servers_btn: 'Shown on servers',
+    all_servers: 'All servers', only_sfw: 'SFW only',
+    sfw_hint: 'SFW only: the ad will never show on NSFW servers',
+    sfw_on_toast: 'Ad restricted to SFW servers', sfw_off_toast: 'Ad shows on all servers',
     change_link: 'Change link', save: 'Save', cancel: 'Cancel',
     link_ph: 'https://discord.gg/xxxx',
     limit_label: 'Join limit for this link (optional)',
@@ -754,6 +760,9 @@ function campCard(c) {
     const resumeLimitBtn = (canManage && c.limitReached && !c.paused) ? `<button class="btn-mini on" data-resumelimit="${c.id}">${esc(t('resume_limit'))}</button>` : '';
     const linkBtn = canManage ? `<button class="btn-mini" data-editlink="${c.id}">${esc(t('change_link'))}</button>` : '';
     const srvBtn = (c.status === 'active' || c.status === 'complete') ? `<button class="btn-mini" data-servers="${c.id}">${esc(t('servers_btn'))}</button>` : '';
+    // Audience mode: All servers (default) vs Only SFW (never shown on NSFW servers).
+    // Shows the CURRENT mode and flips on click; highlighted when the SFW filter is on.
+    const sfwBtn = canManage ? `<button class="btn-mini${c.onlySfw ? ' on' : ''}" data-sfw="${c.id}" data-onlysfw="${c.onlySfw ? '1' : '0'}" title="${esc(t('sfw_hint'))}">${esc(c.onlySfw ? t('only_sfw') : t('all_servers'))}</button>` : '';
     // Service priority pin (only in the "all orders" staff view, active orders):
     // pins one campaign to the front of the queue network-wide. Partner per-server
     // pins still override it in delivery.
@@ -785,7 +794,7 @@ function campCard(c) {
         <div class="progress"><i style="width:${pct}%"></i></div>
         <div class="camp-nums"><span>${esc(t('delivered'))} <b>${c.delivered}</b> / ${c.purchased}</span><span>${money(c.price)}</span></div>
         ${retentionRow(c.retention)}
-        <div class="camp-actions">${payLink}${prioBtn}${pauseBtn}${resumeLimitBtn}${linkBtn}${srvBtn}</div>
+        <div class="camp-actions">${payLink}${prioBtn}${pauseBtn}${resumeLimitBtn}${linkBtn}${srvBtn}${sfwBtn}</div>
         <div class="link-edit" data-link-edit="${c.id}" hidden>
           <input type="text" class="link-input" data-link-input="${c.id}" value="${esc(c.invite)}" placeholder="${esc(t('link_ph'))}" />
           <label class="limit-label muted sm">${esc(t('limit_label'))}</label>
@@ -806,6 +815,15 @@ function wireCampaigns(list) {
         const c = list.find((x) => x.id === b.dataset.pause);
         const { ok } = await post(`/campaigns/${b.dataset.pause}/pause`, { paused: !c.paused });
         if (ok) { toast(!c.paused ? t('paused_toast') : t('resumed_toast')); reloadCurrentTab(); }
+    });
+    // Audience mode toggle: All servers ↔ Only SFW.
+    $$('#camp-list [data-sfw]').forEach((b) => b.onclick = async () => {
+        const next = b.dataset.onlysfw !== '1';
+        b.disabled = true;
+        const { ok, body } = await put(`/campaigns/${b.dataset.sfw}/only-sfw`, { onlySfw: next });
+        b.disabled = false;
+        if (ok) { toast(next ? t('sfw_on_toast') : t('sfw_off_toast')); reloadCurrentTab(); }
+        else toast(errText(body?.error), 'err');
     });
     // Service priority pin (staff, all-orders view): toggle this campaign as the
     // global front-of-queue pin. Sending an empty id clears the pin.
