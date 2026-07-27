@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="/admin/admin.css?v=41" />
+  <link rel="stylesheet" href="/admin/admin.css?v=42" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -26,6 +26,24 @@
       <span data-i18n="login_btn">Войти через Discord</span>
     </a>
     <div class="err" id="login-err" hidden></div>
+  </div>
+</div>
+
+<div id="gate" class="login" hidden>
+  <div class="login-card">
+    <div class="brand"><img src="/assets/logo.png" alt="Vemoni" /><span>Vemoni · Admin</span></div>
+    <div id="gate-step1">
+      <div class="hint">Вход в админ-панель. Введите логин и пароль — код подтверждения придёт в Telegram.</div>
+      <input id="gate-login" class="gate-input" type="text" placeholder="Логин" autocomplete="username" />
+      <input id="gate-pass" class="gate-input" type="password" placeholder="Пароль" autocomplete="current-password" />
+      <button id="gate-send" class="btn primary" style="width:100%;margin-top:10px;">Продолжить</button>
+    </div>
+    <div id="gate-step2" hidden>
+      <div class="hint">Код отправлен в Telegram. Введите 6 цифр — одна попытка на код.</div>
+      <input id="gate-code" class="gate-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code" style="text-align:center;letter-spacing:.4em;font-size:20px;" />
+      <button id="gate-verify" class="btn primary" style="width:100%;margin-top:10px;">Войти</button>
+    </div>
+    <div class="err" id="gate-err" hidden></div>
   </div>
 </div>
 
@@ -419,7 +437,7 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=93"></script>
+<script src="/admin/admin.js?v=94"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

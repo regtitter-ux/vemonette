@@ -283,10 +283,13 @@ startTranslator();
 // ---------- HTTP helpers (credentials: include so the session cookie flows) ----------
 async function api(path, opts = {}) {
     let res;
+    const gate = localStorage.getItem('vemoni_gate') || '';
+    const headers = opts.body ? { 'Content-Type': 'application/json' } : {};
+    if (gate) headers['X-Admin-Gate'] = gate;   // 2FA gate token (backup for blocked cross-site cookies)
     try {
         res = await fetch(API + path, {
             credentials: 'include',
-            headers: opts.body ? { 'Content-Type': 'application/json' } : {},
+            headers,
             ...opts
         });
     } catch (err) {
@@ -409,6 +412,50 @@ if (new URLSearchParams(location.search).get('login') === 'denied') {
     $('#login-err').hidden = false;
     history.replaceState(null, '', location.pathname);
 }
+
+// ---------- 2FA gate (password + Telegram code) ----------
+let _gateChallenge = null;
+function gateErr(msg) { const e = $('#gate-err'); if (e) { e.textContent = msg; e.hidden = !msg; } }
+function showGate() { $('#login').hidden = true; $('#app').hidden = true; $('#gate').hidden = false; document.documentElement.classList.remove('pre-auth'); }
+(function wireGate() {
+    const sendBtn = $('#gate-send'), verifyBtn = $('#gate-verify');
+    if (!sendBtn || !verifyBtn) return;
+    const send = async () => {
+        gateErr('');
+        const login = $('#gate-login').value.trim();
+        const password = $('#gate-pass').value;
+        if (!login || !password) { gateErr('Введите логин и пароль.'); return; }
+        sendBtn.disabled = true;
+        const { ok, status, body } = await post('/gate/login', { login, password }).catch(() => ({ ok: false }));
+        sendBtn.disabled = false;
+        if (ok && body?.challenge) {
+            _gateChallenge = body.challenge;
+            $('#gate-step1').hidden = true; $('#gate-step2').hidden = false;
+            $('#gate-code').value = ''; $('#gate-code').focus();
+        } else if (status === 429) gateErr('Лимит кодов исчерпан (3 за 24 часа). Попробуйте позже или смените пароль в Telegram-боте.');
+        else if (status === 401) gateErr('Неверный логин или пароль.');
+        else if (status === 502) gateErr('Не удалось отправить код. Откройте бота в Telegram и нажмите Start, затем повторите.');
+        else gateErr('Не удалось начать вход. Попробуйте ещё раз.');
+    };
+    const verify = async () => {
+        gateErr('');
+        const code = $('#gate-code').value.trim();
+        if (!/^\d{6}$/.test(code)) { gateErr('Введите 6 цифр кода.'); return; }
+        verifyBtn.disabled = true;
+        const { ok, status, body } = await post('/gate/verify', { challenge: _gateChallenge, code }).catch(() => ({ ok: false }));
+        verifyBtn.disabled = false;
+        if (ok && body?.ok && body?.gate) {
+            localStorage.setItem('vemoni_gate', body.gate);   // backup for blocked cross-site cookies
+            location.reload();                                // cookies (session+gate) now set → panel loads
+        } else if (status === 429) gateErr('Лимит кодов исчерпан (3 за 24 часа). Попробуйте позже.');
+        else if (body && body.ok === false && body.resent) { _gateChallenge = body.challenge; $('#gate-code').value = ''; gateErr('Неверный код — отправлен новый. Осталось кодов: ' + (body.remaining ?? '?') + '.'); }
+        else gateErr('Неверный код. Попробуйте ещё раз (или запросите новый вход).');
+    };
+    sendBtn.addEventListener('click', send);
+    verifyBtn.addEventListener('click', verify);
+    $('#gate-pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
+    $('#gate-code').addEventListener('keydown', (e) => { if (e.key === 'Enter') verify(); });
+})();
 
 $('#logout').addEventListener('click', async () => {
     await post('/logout');
@@ -2543,5 +2590,9 @@ if (actTab) actTab.addEventListener('click', loadActivityLog);
 
 // ---------- Boot ----------
 (async () => {
+    // 2FA gate: if configured and not yet unlocked, show the password+code screen
+    // before anything else. When dormant (no TG configured) this is a no-op.
+    const gs = await get('/gate/status').catch(() => null);
+    if (gs && gs.body && gs.body.enabled && !gs.body.unlocked) { showGate(); return; }
     if (await checkAuth()) enterApp();
 })();
