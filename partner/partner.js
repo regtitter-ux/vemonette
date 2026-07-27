@@ -411,8 +411,36 @@ function initOwnerTabs() {
         host.parentNode.insertBefore(box, host.nextSibling);
         wireBalEdit('xp', 'partner', (v) => { $('#top-balance').textContent = money(v); const vc = document.querySelector('#p-cards .pcard .v'); if (vc) vc.innerHTML = money(v); });
     }
+    // Owner-only: DM the viewed user through a random fleet bot that can reach them.
+    if (host && !$('#xp-dm')) {
+        const anchor = $('#xp-edit') || host;
+        const dm = document.createElement('div'); dm.id = 'xp-dm'; dm.style.cssText = 'margin-top:16px;max-width:460px';
+        dm.innerHTML = '<div style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">✉️ Написать пользователю (овнер)</div>'
+            + '<div class="xdm-row"><input id="xp-dm-inp" type="text" placeholder="Текст сообщения…" maxlength="2000" autocomplete="off" />'
+            + '<button class="xbtn" id="xp-dm-btn">Отправить</button></div>'
+            + '<div id="xp-dm-status" class="xdm-status" hidden></div>';
+        anchor.parentNode.insertBefore(dm, anchor.nextSibling);
+        wireDm();
+    }
     loadOwnerOrders();
     loadOwnerInvest();
+}
+function wireDm() {
+    const btn = $('#xp-dm-btn'), inp = $('#xp-dm-inp'), st = $('#xp-dm-status');
+    if (!btn) return;
+    const setStatus = (cls, html) => { st.hidden = false; st.className = 'xdm-status ' + cls; st.innerHTML = html; };
+    const submit = async () => {
+        const text = (inp.value || '').trim();
+        if (!text) { setStatus('warn', 'Введите текст сообщения'); return; }
+        btn.disabled = true; setStatus('pending', '⏳ Отправка…');
+        const r = await post('/x-dm', { text });
+        btn.disabled = false;
+        if (r.ok && r.body && r.body.ok) { setStatus('ok', '✅ Отправлено' + (r.body.botName ? ' (бот ' + esc(r.body.botName) + ')' : '')); inp.value = ''; }
+        else if (r.ok && r.body) setStatus('err', '❌ Не доставлено — ни один бот не может написать этому пользователю (закрыты ЛС или нет общего сервера)');
+        else setStatus('err', '❌ Ошибка отправки. Попробуйте ещё раз.');
+    };
+    btn.onclick = submit;
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
 }
 
 async function load() {

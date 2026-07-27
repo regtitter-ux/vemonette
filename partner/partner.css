@@ -81,6 +81,15 @@ h2{font-size:18px;margin-bottom:14px}
 .xbtn:hover{filter:brightness(1.1)}
 .xbtn:active{transform:translateY(1px)}
 .xbtn:disabled{opacity:.5;cursor:default}
+/* Owner-only "message the user" box */
+.xdm-row{display:flex;gap:8px;align-items:center}
+.xdm-row input{flex:1;min-width:0;background:var(--bg);color:var(--text);border:1px solid var(--stroke-2);border-radius:10px;padding:10px 13px;font-size:14px;font-family:inherit}
+.xdm-row input:focus{outline:none;border-color:var(--blue)}
+.xdm-status{margin-top:8px;font-size:13px}
+.xdm-status.pending{color:var(--muted)}
+.xdm-status.ok{color:var(--green)}
+.xdm-status.err{color:var(--red)}
+.xdm-status.warn{color:var(--amber)}
 /* referrals */
 .ref-list{display:flex;flex-direction:column;gap:10px}
 .ref-card{background:var(--panel);border:1px solid var(--stroke);border-radius:12px;padding:14px 16px}
