@@ -416,7 +416,7 @@ function initOwnerTabs() {
         const anchor = $('#xp-edit') || host;
         const dm = document.createElement('div'); dm.id = 'xp-dm'; dm.style.cssText = 'margin-top:16px;max-width:460px';
         dm.innerHTML = '<div style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">✉️ Написать пользователю (овнер)</div>'
-            + '<div class="xdm-row"><input id="xp-dm-inp" type="text" placeholder="Текст сообщения…" maxlength="2000" autocomplete="off" />'
+            + '<div class="xdm-row"><textarea id="xp-dm-inp" rows="3" placeholder="Текст сообщения… (перенос строки — Enter, отправить — Ctrl+Enter)" maxlength="2000"></textarea>'
             + '<button class="xbtn" id="xp-dm-btn">Отправить</button></div>'
             + '<div id="xp-dm-status" class="xdm-status" hidden></div>';
         anchor.parentNode.insertBefore(dm, anchor.nextSibling);
@@ -440,7 +440,8 @@ function wireDm() {
         else setStatus('err', '❌ Ошибка отправки. Попробуйте ещё раз.');
     };
     btn.onclick = submit;
-    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+    // Enter = newline (multi-line messages); Ctrl/Cmd+Enter = send.
+    inp.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } });
 }
 
 async function load() {
