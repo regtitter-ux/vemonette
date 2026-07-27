@@ -2590,9 +2590,16 @@ if (actTab) actTab.addEventListener('click', loadActivityLog);
 
 // ---------- Boot ----------
 (async () => {
-    // 2FA gate: if configured and not yet unlocked, show the password+code screen
-    // before anything else. When dormant (no TG configured) this is a no-op.
-    const gs = await get('/gate/status').catch(() => null);
-    if (gs && gs.body && gs.body.enabled && !gs.body.unlocked) { showGate(); return; }
+    // The 2FA gate (password + Telegram code) is the ONLY admin login — there is no
+    // Discord step here. Fail-safe: if the status check can't be reached, assume the
+    // gate is on (never fall back to the Discord screen).
+    const gs = await get('/gate/status').catch(() => ({ body: { enabled: true, unlocked: false } }));
+    const g = (gs && gs.body) || { enabled: true, unlocked: false };
+    if (g.enabled) {
+        if (g.unlocked && await checkAuth()) { enterApp(); return; }
+        showGate();   // locked, or session gone → re-enter via the gate, never Discord
+        return;
+    }
+    // Gate not configured (dormant) → legacy Discord login.
     if (await checkAuth()) enterApp();
 })();
