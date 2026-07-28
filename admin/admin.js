@@ -446,7 +446,8 @@ function showGate() { $('#login').hidden = true; $('#app').hidden = true; $('#ga
         verifyBtn.disabled = false;
         if (ok && body?.ok && body?.gate) {
             localStorage.setItem('vemoni_gate', body.gate);   // backup for blocked cross-site cookies
-            location.reload();                                // cookies (session+gate) now set → panel loads
+            if (body.buyer) localStorage.setItem('vemoni_tok', body.buyer);   // buyer session → order/partner/investor cabinets open as the owner too
+            location.reload();                                // cookies (session+gate+buyer) now set → panel loads
         } else if (status === 429) gateErr('Лимит кодов исчерпан (3 за 24 часа). Попробуйте позже.');
         else if (body && body.ok === false && body.resent) { _gateChallenge = body.challenge; $('#gate-code').value = ''; gateErr('Неверный код — отправлен новый. Осталось кодов: ' + (body.remaining ?? '?') + '.'); }
         else gateErr('Неверный код. Попробуйте ещё раз (или запросите новый вход).');
