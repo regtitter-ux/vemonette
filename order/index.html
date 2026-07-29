@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/order/order.css?v=35" />
-  <link rel="stylesheet" href="/order/dmall.css?v=27" />
+  <link rel="stylesheet" href="/order/dmall.css?v=28" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';
   </script>
@@ -80,8 +80,91 @@
     <div class="dm-modebar" id="dm-modebar" hidden>
       <button class="dm-mode active" data-mode="stays">Stays</button>
       <button class="dm-mode" data-mode="dmall">DMALL</button>
+      <button class="dm-mode" data-mode="api">API</button>
       <div id="dm-selbar" hidden><button class="dm-btn ghost sm" id="dm-changeserver">← <span data-dm="change_server">Change server</span></button><span class="dm-selname" id="dm-selname"></span></div>
     </div>
+
+    <!-- ===================== DMALL external API documentation ===================== -->
+    <section id="dmapi" hidden>
+      <div class="dmapi-doc">
+        <h1>DMALL — External API</h1>
+        <p class="dmapi-lead">Клиенты настраивают и оплачивают рассылку на этом сайте. Ваш сервис забирает <b>оплаченные</b> задания через этот API, сам выполняет рассылку в Discord и отправляет статус обратно. Ниже — всё, что нужно разработчику.</p>
+
+        <div class="dmapi-key">
+          <div><span class="dmapi-k">Base URL</span><code id="dmapi-base">https://api.vemoni.info</code></div>
+          <div><span class="dmapi-k">API key</span><code id="dmapi-keyval">— (только для владельца)</code></div>
+          <div class="dmapi-note">Авторизация: заголовок <code>Authorization: Bearer &lt;API key&gt;</code> (или <code>X-Api-Key: &lt;key&gt;</code>). Server-to-server, ключ держать в секрете.</div>
+        </div>
+
+        <h2>Жизненный цикл задания</h2>
+        <p><code>paid</code> → (вы claim) <code>claimed</code> → (progress) <code>running</code> → (complete) <code>done</code> / <code>failed</code>. Задание оплачено клиентом в момент создания.</p>
+
+        <h2>Рабочий цикл сервиса</h2>
+        <ol class="dmapi-steps">
+          <li>Опрашивайте <code>GET /dmall/v1/jobs?status=paid</code> (например, раз в 10–30 c).</li>
+          <li>На каждое задание — <code>POST /dmall/v1/jobs/:id/claim</code> (чтобы два воркера не отправили дважды). 409 = уже занято/не в статусе paid.</li>
+          <li>Рассылайте. Периодически шлите <code>POST /dmall/v1/jobs/:id/progress</code> с <code>sent</code>/<code>failed</code>.</li>
+          <li>По завершении — <code>POST /dmall/v1/jobs/:id/complete</code> со статусом <code>done</code> или <code>failed</code>.</li>
+        </ol>
+
+        <h2>Endpoints</h2>
+        <div class="dmapi-ep"><span class="m get">GET</span><code>/dmall/v1/ping</code><span class="d">проверка ключа/связи → <code>{ ok:true }</code></span></div>
+        <div class="dmapi-ep"><span class="m get">GET</span><code>/dmall/v1/jobs?status=paid&amp;limit=100</code><span class="d">список заданий (по статусу) → <code>{ jobs:[…] }</code></span></div>
+        <div class="dmapi-ep"><span class="m get">GET</span><code>/dmall/v1/jobs/:id</code><span class="d">одно задание → <code>{ job }</code></span></div>
+        <div class="dmapi-ep"><span class="m post">POST</span><code>/dmall/v1/jobs/:id/claim</code><span class="d">тело <code>{ worker }</code> → 200 <code>{ job }</code> · 409 если не paid</span></div>
+        <div class="dmapi-ep"><span class="m post">POST</span><code>/dmall/v1/jobs/:id/progress</code><span class="d">тело <code>{ sent, failed, note, running }</code> → <code>{ job }</code></span></div>
+        <div class="dmapi-ep"><span class="m post">POST</span><code>/dmall/v1/jobs/:id/complete</code><span class="d">тело <code>{ status:"done"|"failed", sent, failed, note }</code> → <code>{ job }</code></span></div>
+
+        <h2>Схема задания (Job)</h2>
+        <pre class="dmapi-code">{
+  "id": "dm_lz9…",                // идентификатор задания
+  "status": "paid",              // paid|claimed|running|done|failed|cancelled
+  "createdAt": 1750000000000,    // ms
+  "buyerId": "8334…",            // Discord ID клиента
+  "price": 5.00,                 // списано с баланса клиента (USD)
+  "messageCount": 5000,          // сколько сообщений оплачено (сколько отправить)
+  "target": {
+    "guildId": "1392…",          // СЕРВЕР, участникам которого рассылать
+    "guildName": "My Server"
+  },
+  "message": {
+    "content": "Текст… {{LINK}}",// плейсхолдер {{LINK}} и т.п. подставляет ваш сервис
+    "username": "Sender" | null, // webhook-имя (если задан setName), иначе null
+    "avatarUrl": "https://…" | null,
+    "status": "custom status" | null,
+    "embeds": [ { "title":"", "desc":"", "color":"#5865f2", "image":"",
+                  "btnlabel":"", "btnurl":"", "…":"" } ]
+  },
+  "filters": {
+    "excludeIds": ["…"],         // не отправлять этим member/role ID
+    "cooldown": { "enabled": true, "days": 7, "hours": 0 },
+    "priority": "normal"
+  },
+  "progress": { "claimedBy":null, "claimedAt":null, "startedAt":null,
+                "finishedAt":null, "sent":0, "failed":0, "note":"" },
+  "raw": { "fields": { … }, "embeds": [ … ] }   // исходный конфиг «как есть», на случай доп. полей
+}</pre>
+
+        <h2>Пример</h2>
+        <pre class="dmapi-code"># забрать оплаченные задания
+curl -H "Authorization: Bearer $KEY" \
+     "https://api.vemoni.info/dmall/v1/jobs?status=paid"
+
+# занять задание
+curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+     -d '{"worker":"node-1"}' \
+     "https://api.vemoni.info/dmall/v1/jobs/dm_lz9.../claim"
+
+# прогресс и завершение
+curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+     -d '{"sent":1200,"failed":15}' ".../dmall/v1/jobs/dm_lz9.../progress"
+curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json" \
+     -d '{"status":"done","sent":4980,"failed":20}' ".../dmall/v1/jobs/dm_lz9.../complete"</pre>
+
+        <p class="dmapi-note">Ошибки: <code>401</code> неверный ключ · <code>404</code> нет задания/маршрута · <code>409</code> конфликт статуса · <code>503</code> API не сконфигурирован (не задан <code>DMALL_API_KEY</code>).</p>
+      </div>
+    </section>
+
     <div class="load-banner" id="load-banner" hidden></div>
     <section class="card order-card">
       <h1 data-i18n="order_h1">Новый заказ</h1>
@@ -193,7 +276,8 @@
           <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_aud">Audience:</span> <b data-dm="aud_all">All members</b></div>
           <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_online">Online:</span> <b data-dm="no_prio">No priority</b></div>
         </div>
-        <button class="dm-btn primary full" style="margin-top:16px" disabled><span><span data-dm="start_broadcast">Start broadcast</span> <span data-dm="for_word">for</span> <span id="dm-l-price">$1</span></span></button>
+        <button class="dm-btn primary full" id="dm-launch-go" style="margin-top:16px"><span><span data-dm="start_broadcast">Start broadcast</span> <span data-dm="for_word">for</span> <span id="dm-l-price">$1</span></span></button>
+        <div id="dm-launch-status" class="dm-launch-status" hidden></div>
               </div>
             </div>
           </div>
@@ -265,7 +349,7 @@
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=47"></script>
-<script src="/order/dmall.js?v=42"></script>
+<script src="/order/dmall.js?v=43"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

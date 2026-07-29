@@ -18,12 +18,30 @@
 
   /* ---- ad-mode switch: Stays (orders) vs DMALL (broadcast console) ---- */
   let dmServer = null, dmServerId = null, dmServerAv = '';   // the server the broadcast is configured for (from the picker)
+  const apiEl = $('#dmapi');
+  let apiDocsLoaded = false;
+  async function loadApiDocs() {
+    if (apiDocsLoaded) return; apiDocsLoaded = true;
+    try {
+      const base = window.__VEMONI_API_BASE__ || '';
+      const tok = localStorage.getItem('vemoni_tok') || '';
+      const r = await fetch(base + '/order/dmall/apikey', { credentials: 'include', headers: tok ? { Authorization: 'Bearer ' + tok } : {} });
+      if (!r.ok) return;                       // non-owner: the docs still render, just without the live key
+      const d = await r.json();
+      if (d.base) { const el = $('#dmapi-base'); if (el) el.textContent = d.base; }
+      const kv = $('#dmapi-keyval');
+      if (kv) kv.textContent = d.key ? d.key : (d.configured ? '••• (задан, скрыт)' : 'не задан — DMALL_API_KEY');
+    } catch (_) { /* ignore */ }
+  }
   $$('.dm-mode', modebar).forEach((btn) => {
     btn.addEventListener('click', () => {
-      const dm = btn.dataset.mode === 'dmall';
+      const mode = btn.dataset.mode;
+      const dm = mode === 'dmall', api = mode === 'api';
       $$('.dm-mode', modebar).forEach((b) => b.classList.toggle('active', b === btn));
-      wrap.classList.toggle('dmall-on', dm);
+      wrap.classList.toggle('dmall-on', dm || api);   // hide the Stays view for both non-Stays modes
       dmall.hidden = !dm;
+      if (apiEl) apiEl.hidden = !api;
+      if (api) loadApiDocs();
       if (dm && !dmServer) dmall.classList.add('picking');   // choose a server first
       if (bell) bell.hidden = !dm || dmall.classList.contains('picking');
       { const sb = $('#dm-selbar'); if (sb) sb.hidden = !dm || !dmServer || dmall.classList.contains('picking'); }
@@ -182,6 +200,31 @@
     b.addEventListener('click', () => { const inp = $('#dm-l-count'); if (inp) inp.value = b.dataset.amt; updateLaunchPrice(); });
   });
   { const lc = $('#dm-l-count'); if (lc) lc.addEventListener('input', updateLaunchPrice); }
+  /* ---- buy + create the broadcast job (backend charges the wallet, stores a PAID
+     job the external service pulls via /dmall/v1) ---- */
+  async function launchBroadcast() {
+    const st = $('#dm-launch-status');
+    const setSt = (cls, msg) => { if (st) { st.hidden = false; st.className = 'dm-launch-status ' + cls; st.textContent = msg; } };
+    if (!dmServerId) { setSt('err', 'Сначала выберите сервер рассылки'); return; }
+    const count = Math.floor(Number(($('#dm-l-count') || {}).value) || 0);
+    if (!count || count < 1) { setSt('err', 'Укажите количество сообщений'); return; }
+    const cfg = collectState();
+    cfg.target = { guildId: dmServerId, guildName: (typeof dmServer === 'string' ? dmServer : null) };
+    const go = $('#dm-launch-go'); if (go) go.disabled = true;
+    setSt('pending', 'Оплата и создание задания…');
+    try {
+      const base = window.__VEMONI_API_BASE__ || '';
+      const tok = localStorage.getItem('vemoni_tok') || '';
+      const r = await fetch(base + '/order/dmall/launch', { method: 'POST', credentials: 'include', headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { Authorization: 'Bearer ' + tok } : {}), body: JSON.stringify({ config: cfg }) });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok && d.ok) setSt('ok', 'Задание создано ✓ ' + d.jobId + ' · списано $' + d.price + ' · баланс $' + d.balance);
+      else if (r.status === 402) setSt('err', 'Недостаточно средств: нужно $' + (d.price != null ? d.price : '?') + ', на балансе $' + (d.balance != null ? d.balance : '?'));
+      else if (r.status === 403) setSt('err', 'Нет доступа к DMALL');
+      else setSt('err', 'Ошибка: ' + (d.error || r.status));
+    } catch (e) { setSt('err', 'Сеть недоступна, попробуйте ещё раз'); }
+    finally { if (go) go.disabled = false; }
+  }
+  { const go = $('#dm-launch-go'); if (go) go.addEventListener('click', launchBroadcast); }
   updateLaunchPrice();
 
   /* ---- cooldown cap: total (days×24 + hours) ≤ 365 days; auto-reset if exceeded ---- */

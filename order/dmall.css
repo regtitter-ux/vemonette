@@ -35,7 +35,30 @@
 
 /* When DMALL is on: hide the Stays order content and widen the page for the console. */
 .wrap.dmall-on{ max-width:1200px; }
-.wrap.dmall-on > *:not(.dm-modebar):not(#dmall):not(.dm-nbell):not(.dm-notif){ display:none; }
+.wrap.dmall-on > *:not(.dm-modebar):not(#dmall):not(#dmapi):not(.dm-nbell):not(.dm-notif){ display:none; }
+/* DMALL external-API docs */
+#dmapi{ width:100%; color:var(--dm-txt); }
+.dmapi-doc{ max-width:900px; }
+.dmapi-doc h1{ font-size:24px; margin:0 0 6px; }
+.dmapi-doc h2{ font-size:16px; margin:26px 0 10px; }
+.dmapi-lead{ color:var(--dm-mut,#9aa6b8); font-size:14.5px; line-height:1.6; margin:0 0 18px; max-width:760px; }
+.dmapi-doc code{ background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.10); border-radius:6px; padding:1px 6px; font-size:13px; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; }
+.dmapi-key{ background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.10); border-radius:12px; padding:16px 18px; display:flex; flex-direction:column; gap:10px; }
+.dmapi-key > div{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.dmapi-k{ display:inline-block; min-width:74px; color:var(--dm-mut,#9aa6b8); font-size:11px; text-transform:uppercase; letter-spacing:.05em; font-weight:700; }
+.dmapi-key code{ font-size:13.5px; word-break:break-all; }
+.dmapi-note{ color:var(--dm-mut,#9aa6b8); font-size:12.5px; line-height:1.5; }
+.dmapi-steps{ margin:0; padding-left:20px; color:var(--dm-txt); font-size:14px; line-height:1.8; }
+.dmapi-ep{ display:flex; align-items:baseline; gap:10px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,.06); flex-wrap:wrap; }
+.dmapi-ep .m{ font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px; letter-spacing:.03em; }
+.dmapi-ep .m.get{ background:rgba(87,242,135,.15); color:#57f287; }
+.dmapi-ep .m.post{ background:rgba(88,101,242,.18); color:#8b9bff; }
+.dmapi-ep .d{ color:var(--dm-mut,#9aa6b8); font-size:13px; }
+.dmapi-code{ background:#0c1016; border:1px solid rgba(255,255,255,.10); border-radius:12px; padding:14px 16px; overflow-x:auto; font-size:12.5px; line-height:1.55; font-family:ui-monospace,SFMono-Regular,Consolas,monospace; color:#cdd6e4; white-space:pre; }
+.dm-launch-status{ margin-top:10px; font-size:13px; line-height:1.5; }
+.dm-launch-status.pending{ color:var(--dm-mut,#9aa6b8); }
+.dm-launch-status.ok{ color:#57f287; }
+.dm-launch-status.err{ color:#ed4245; }
 
 /* ---- console shell ---- */
 #dmall{ width:100%; color:var(--dm-txt); }
