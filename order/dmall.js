@@ -22,17 +22,37 @@
   let apiDocsLoaded = false;
   async function loadApiDocs() {
     if (apiDocsLoaded) return; apiDocsLoaded = true;
+    const gen = $('#dmapi-gen'), copy = $('#dmapi-copy'), kv = $('#dmapi-keyval');
     try {
       const base = window.__VEMONI_API_BASE__ || '';
       const tok = localStorage.getItem('vemoni_tok') || '';
       const r = await fetch(base + '/order/dmall/apikey', { credentials: 'include', headers: tok ? { Authorization: 'Bearer ' + tok } : {} });
-      if (!r.ok) return;                       // non-owner: the docs still render, just without the live key
+      if (!r.ok) { apiDocsLoaded = false; return; }   // non-owner: docs still render, no key/buttons (allow retry)
       const d = await r.json();
       if (d.base) { const el = $('#dmapi-base'); if (el) el.textContent = d.base; }
-      const kv = $('#dmapi-keyval');
-      if (kv) kv.textContent = d.key ? d.key : (d.configured ? '••• (задан, скрыт)' : 'не задан — DMALL_API_KEY');
-    } catch (_) { /* ignore */ }
+      if (kv) kv.textContent = d.key ? d.key : 'не задан — нажмите «Сгенерировать новый»';
+      if (gen) gen.hidden = false;                    // owner → can (re)generate the key here
+      if (copy) copy.hidden = !d.key;
+    } catch (_) { apiDocsLoaded = false; }
   }
+  { const gen = $('#dmapi-gen'); if (gen) gen.addEventListener('click', async () => {
+      if (!confirm('Сгенерировать новый ключ? Старый перестанет работать сразу — обновите его во внешнем сервисе.')) return;
+      gen.disabled = true;
+      try {
+        const base = window.__VEMONI_API_BASE__ || '';
+        const tok = localStorage.getItem('vemoni_tok') || '';
+        const r = await fetch(base + '/order/dmall/apikey/generate', { method: 'POST', credentials: 'include', headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { Authorization: 'Bearer ' + tok } : {}), body: '{}' });
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.key) { const kv = $('#dmapi-keyval'); if (kv) kv.textContent = d.key; const cp = $('#dmapi-copy'); if (cp) cp.hidden = false; }
+        else alert('Не удалось: ' + (d.error || r.status));
+      } catch (_) { alert('Сеть недоступна'); }
+      finally { gen.disabled = false; }
+  }); }
+  { const copy = $('#dmapi-copy'); if (copy) copy.addEventListener('click', () => {
+      const kv = $('#dmapi-keyval'); const v = kv ? (kv.textContent || '').trim() : '';
+      if (!/^dmall_/.test(v)) return;
+      try { navigator.clipboard.writeText(v); copy.textContent = 'Скопировано ✓'; setTimeout(() => { copy.textContent = 'Копировать'; }, 1500); } catch (_) {}
+  }); }
   $$('.dm-mode', modebar).forEach((btn) => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode;

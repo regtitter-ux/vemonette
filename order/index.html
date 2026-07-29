@@ -92,7 +92,7 @@
 
         <div class="dmapi-key">
           <div><span class="dmapi-k">Base URL</span><code id="dmapi-base">https://api.vemoni.info</code></div>
-          <div><span class="dmapi-k">API key</span><code id="dmapi-keyval">— (только для владельца)</code></div>
+          <div><span class="dmapi-k">API key</span><code id="dmapi-keyval">— (только для владельца)</code><button type="button" class="dm-btn ghost sm" id="dmapi-gen" hidden>Сгенерировать новый</button><button type="button" class="dm-btn ghost sm" id="dmapi-copy" hidden>Копировать</button></div>
           <div class="dmapi-note">Авторизация: заголовок <code>Authorization: Bearer &lt;API key&gt;</code> (или <code>X-Api-Key: &lt;key&gt;</code>). Server-to-server, ключ держать в секрете.</div>
         </div>
 
@@ -349,7 +349,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=47"></script>
-<script src="/order/dmall.js?v=43"></script>
+<script src="/order/dmall.js?v=44"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>
