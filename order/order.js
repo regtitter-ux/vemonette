@@ -40,7 +40,8 @@ const DICT = {
     insufficient: (need) => `Недостаточно средств. Пополните ещё на $${need} и повторите.`,
     my_camps: 'Мои кампании',
     tab_active: 'Активные', tab_paused: 'На паузе', tab_finished: 'Завершено',
-    tab_all: 'Все заказы', tab_all_done: 'Все завершённые',
+    tab_all: 'Все заказы', tab_all_paused: 'Все на паузе', tab_all_done: 'Все завершённые',
+    no_all_paused: 'Заказов на паузе нет.',
     search_ph: 'Поиск: ссылка, ID, сервер, заказчик…', no_search_matches: 'Ничего не найдено по запросу.',
     no_all_camps: 'Активных заказов в сети нет.', no_all_done: 'Завершённых заказов нет.',
     q_showing: 'Показывается', q_waiting: (p, tot) => `Место в очереди №${p} из ${tot}`, q_nobot: 'Ждёт бота',
@@ -141,7 +142,8 @@ const DICT = {
     insufficient: (need) => `Not enough balance. Top up $${need} more and try again.`,
     my_camps: 'My campaigns',
     tab_active: 'Active', tab_paused: 'Paused', tab_finished: 'Completed',
-    tab_all: 'All orders', tab_all_done: 'All completed',
+    tab_all: 'All orders', tab_all_paused: 'All paused', tab_all_done: 'All completed',
+    no_all_paused: 'No paused orders.',
     search_ph: 'Search: link, ID, server, buyer…', no_search_matches: 'No orders match your search.',
     no_all_camps: 'No active orders on the network.', no_all_done: 'No completed orders.',
     q_showing: 'Showing', q_waiting: (p, tot) => `Queue position #${p} of ${tot}`, q_nobot: 'Waiting for bot',
@@ -396,7 +398,7 @@ async function enterApp() {
     loadCampaigns();
     // Admins/owners: prime the "all orders" counts so the extra tabs show numbers
     // before they're opened.
-    if (isAdminView()) { loadAdminCampaigns('active'); loadAdminCampaigns('done'); }
+    if (isAdminView()) { loadAdminCampaigns('active'); loadAdminCampaigns('paused'); loadAdminCampaigns('done'); }
     // Auto-refresh the visible tab, but NOT while the user has an inline panel open
     // (change-link editor / "Shown on servers" list) — re-rendering rebuilds the
     // HTML and would snap the open panel shut. 8s keeps the queue badges live.
@@ -627,7 +629,7 @@ function statusOf(c) {
     })[c.status] || { t: c.status, c: '' };
 }
 
-let adminActive = [], adminDone = [];
+let adminActive = [], adminPaused = [], adminDone = [];
 // Owner, assigned admins AND sales managers get the two "all orders" views —
 // that's where the service-side priority pin is set.
 const isAdminView = () => Boolean(CFG.isAdmin || CFG.isOwner || CFG.isManager);
@@ -641,12 +643,14 @@ async function loadCampaigns() {
     lastCampaigns = body.campaigns || [];
     renderCampaigns();
 }
-// Admin/owner: every buyer's orders (scope 'active' | 'done').
+// Admin/owner: every buyer's orders (scope 'active' | 'paused' | 'done').
 async function loadAdminCampaigns(scope) {
     let ok = false, body = null;
     try { ({ ok, body } = await get('/all-campaigns?scope=' + scope)); } catch { ok = false; }
-    if (!ok) { if (!adminActive.length && !adminDone.length) showCampError(); return; }
-    if (scope === 'done') adminDone = body.campaigns || []; else adminActive = body.campaigns || [];
+    if (!ok) { if (!adminActive.length && !adminDone.length && !adminPaused.length) showCampError(); return; }
+    if (scope === 'done') adminDone = body.campaigns || [];
+    else if (scope === 'paused') adminPaused = body.campaigns || [];
+    else adminActive = body.campaigns || [];
     renderCampaigns();
 }
 // A load error placeholder with a retry button (so a slow/failed fetch never
@@ -659,6 +663,7 @@ function showCampError() {
 // Refresh whatever the visible tab shows — used by the real-time poll and after edits.
 function reloadCurrentTab() {
     if (campTab === 'all') return loadAdminCampaigns('active');
+    if (campTab === 'all-paused') return loadAdminCampaigns('paused');
     if (campTab === 'all-done') return loadAdminCampaigns('done');
     return loadCampaigns();
 }
@@ -683,38 +688,40 @@ function renderCampaigns() {
     const tabs = $('#camp-tabs');
     const box = $('#camp-list');
     const admin = isAdminView();
-    const running = lastCampaigns.filter((c) => c.status === 'active' && !c.paused);
-    const paused = lastCampaigns.filter((c) => c.status === 'active' && c.paused);
+    const running = lastCampaigns.filter((c) => c.status === 'active' && !c.paused && !c.autoPaused);
+    const paused = lastCampaigns.filter((c) => c.status === 'active' && (c.paused || c.autoPaused));
     const finished = lastCampaigns.filter((c) => c.status !== 'active');
 
     const searchBox = $('#camp-search');
     // A non-admin with no orders at all: the simple empty state, no tabs, no search.
     if (!admin && !lastCampaigns.length) { if (tabs) tabs.hidden = true; if (searchBox) searchBox.hidden = true; box.innerHTML = `<div class="muted">${esc(t('no_camps'))}</div>`; return; }
     if (searchBox) searchBox.hidden = false;
-    if ((campTab === 'all' || campTab === 'all-done') && !admin) campTab = 'active';
+    if ((campTab === 'all' || campTab === 'all-done' || campTab === 'all-paused') && !admin) campTab = 'active';
     if (campTab === 'finished' && !finished.length && !admin) campTab = 'active';
 
     if (tabs) {
         tabs.hidden = false;
         const btn = (key, id, n) => `<button data-camptab="${id}" class="${campTab === id ? 'active' : ''}">${esc(t(key))} <span class="cnt">${n}</span></button>`;
         let html = btn('tab_active', 'active', running.length) + btn('tab_paused', 'paused', paused.length) + btn('tab_finished', 'finished', finished.length);
-        if (admin) html += btn('tab_all', 'all', adminActive.length) + btn('tab_all_done', 'all-done', adminDone.length);
+        if (admin) html += btn('tab_all', 'all', adminActive.length) + btn('tab_all_paused', 'all-paused', adminPaused.length) + btn('tab_all_done', 'all-done', adminDone.length);
         tabs.innerHTML = html;
         tabs.querySelectorAll('[data-camptab]').forEach((b) => b.onclick = () => {
             campTab = b.dataset.camptab;
             campPage = 1;
             if (campTab === 'all') loadAdminCampaigns('active');
+            else if (campTab === 'all-paused') loadAdminCampaigns('paused');
             else if (campTab === 'all-done') loadAdminCampaigns('done');
             else renderCampaigns();
         });
     }
 
     const shown = campTab === 'all' ? adminActive
+        : campTab === 'all-paused' ? adminPaused
         : campTab === 'all-done' ? adminDone
         : campTab === 'finished' ? finished
         : campTab === 'paused' ? paused : running;
     if (!shown.length) {
-        const empty = campTab === 'all' ? t('no_all_camps') : campTab === 'all-done' ? t('no_all_done')
+        const empty = campTab === 'all' ? t('no_all_camps') : campTab === 'all-paused' ? t('no_all_paused') : campTab === 'all-done' ? t('no_all_done')
             : campTab === 'finished' ? t('no_done_camps') : campTab === 'paused' ? t('no_paused_camps') : t('no_active_camps');
         box.innerHTML = `<div class="muted">${esc(empty)}</div>`;
         return;
