@@ -1489,6 +1489,32 @@ function openServerAdModal(gid) {
         </div>`;
     }
 
+    // Owner-only: who receives this server's net join income ("доля сервера").
+    // 100% of the server's per-join service profit goes to this user, bypassing
+    // the global shareholder split. Default = the service owner.
+    let profitBlock = '';
+    if (isOwner) {
+        const defOwner = state.defaultProfitOwner || '';
+        const curOwner = ((state.serverProfitOwner || {})[gid]) || '';
+        const effOwner = curOwner || defOwner;
+        const isDefault = !curOwner;
+        profitBlock = `
+        <div class="setting wide" style="margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;">
+          <label>Владелец дохода сервера</label>
+          <p class="muted" style="margin:4px 0 10px;">
+            Весь чистый доход сети с заходов на этот сервер (после выплаты партнёру и комиссий)
+            начисляется на баланс этого пользователя. По умолчанию — владелец сервиса.
+            ${isDefault ? '<span class="chip">Сейчас: владелец сервиса (по умолчанию)</span>' : '<span class="chip blue">Задан вручную</span>'}
+          </p>
+          <div class="actions-row" style="align-items:center;gap:10px;">
+            <input type="text" data-field="profit-owner" value="${escapeHtml(effOwner)}" placeholder="Discord ID пользователя"
+                   style="flex:1;min-width:180px;" inputmode="numeric" />
+            <button class="btn primary sm" data-act="profit-owner-save">Сохранить</button>
+            <button class="btn ghost sm" data-act="profit-owner-reset" ${isDefault ? 'disabled' : ''}>Сбросить</button>
+          </div>
+        </div>`;
+    }
+
     $('#server-ad-modal-body').innerHTML = `
       <div class="modal-body">
         <h2>${escapeHtml(name)} <span class="uid">${escapeHtml(gid)}</span></h2>
@@ -1506,6 +1532,7 @@ function openServerAdModal(gid) {
         </div>
         ${nsfwBlock}
         ${clawBlock}
+        ${profitBlock}
       </div>`;
     $('#server-ad-modal').hidden = false;
 
@@ -1533,6 +1560,24 @@ function openServerAdModal(gid) {
                 refresh();
             } else toast(body?.error || 'Не удалось переключить', 'err');
         };
+        const saveProfitOwner = async (userId) => {
+            const { ok, body } = await put('/server-profit-owner', { gid, userId });
+            if (ok) {
+                state.serverProfitOwner = state.serverProfitOwner || {};
+                if (userId) state.serverProfitOwner[gid] = userId; else delete state.serverProfitOwner[gid];
+                toast(userId ? 'Владелец дохода сервера задан' : 'Владелец дохода сброшен на владельца сервиса');
+                openServerAdModal(gid);
+            } else toast(body?.error || 'Не удалось сохранить', 'err');
+        };
+        const profitSave = $('#server-ad-modal-body [data-act="profit-owner-save"]');
+        if (profitSave) profitSave.onclick = () => {
+            const raw = ($('#server-ad-modal-body [data-field="profit-owner"]').value || '').trim();
+            if (raw && !/^\d{17,20}$/.test(raw)) { toast('Введите корректный Discord ID', 'err'); return; }
+            // Setting it to the service-owner default keeps it as "default" (clears the override).
+            saveProfitOwner(raw && raw === (state.defaultProfitOwner || '') ? '' : raw);
+        };
+        const profitReset = $('#server-ad-modal-body [data-act="profit-owner-reset"]');
+        if (profitReset) profitReset.onclick = () => saveProfitOwner('');
     }
 
     const saveBtn = $('#server-ad-modal-body [data-act="save"]');
