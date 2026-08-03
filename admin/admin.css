@@ -391,6 +391,11 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .wd-row .date { color: var(--muted); font-size: 12px; }
 .wd-row.completed .amount { color: var(--green); }
 .wd-row.processing .amount { color: var(--amber); }
+.wd-row.review .amount, .wd-row.failed .amount { color: var(--red); }
+.wd-row .date { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+.wd-retry { background: transparent; border: 1px solid var(--stroke); color: var(--muted); border-radius: 6px; padding: 2px 8px; font-size: 12px; line-height: 1.4; cursor: pointer; white-space: nowrap; }
+.wd-retry:hover { color: var(--text); border-color: var(--red); }
+.wd-retry:disabled { opacity: .5; cursor: default; }
 
 /* --- Modal settings section --- */
 .settings-grid {

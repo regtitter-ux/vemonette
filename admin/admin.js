@@ -1910,6 +1910,23 @@ function wireBalDetailControls(userId) {
         return btn;
     };
 
+    // Retry a stuck ('review') or dead ('failed') withdrawal. Owner escape-hatch:
+    // a 'review' had its balance consumed but never refunded, so the backend
+    // restores it and re-runs the payout. Warn to verify in NOWPayments first.
+    document.querySelectorAll('[data-retry-wd]').forEach((btn) => {
+        btn.onclick = async () => {
+            const withdrawalId = btn.getAttribute('data-retry-wd');
+            if (!confirm('Повторить этот вывод?\n\nВАЖНО: сначала проверьте в NOWPayments, что оригинальная выплата НЕ была отправлена — иначе средства уйдут дважды.\n\nДля статуса «review» баланс будет восстановлен и выплата запущена заново.')) return;
+            btn.disabled = true;
+            const { ok, body } = await post('/retry-withdrawal', { userId, withdrawalId });
+            if (ok) {
+                toast('Повтор запущен' + (body && body.restored ? `, восстановлено $${body.restored}` : ''));
+                await openBalDetail(userId);
+                loadBalances();
+            } else { btn.disabled = false; toast(body?.error || 'Не удалось повторить', 'err'); }
+        };
+    });
+
     const balBtn = apply('balance');
     if (balBtn) balBtn.onclick = () => {
         const raw = $('[data-edit="balance"]').value.trim().replace(',', '.');
@@ -2012,16 +2029,21 @@ function balDetailHtml(u) {
             </tr>`).join('')
         : '<tr><td colspan="6" class="muted">Пока пусто.</td></tr>';
 
+    const wdChip = (s) => s === 'completed' ? 'green' : (s === 'review' || s === 'failed') ? 'red' : 'chip';
     const wdList = u.withdrawals.length
         ? u.withdrawals.map((w) => `
             <div class="wd-row ${escapeHtml(w.status)}">
               <div>
-                <span class="chip ${w.status === 'completed' ? 'green' : 'chip'}">${escapeHtml(w.status)}</span>
+                <span class="chip ${wdChip(w.status)}">${escapeHtml(w.status)}</span>
                 ${w.method ? `<span class="muted"> · ${escapeHtml(w.method)}</span>` : ''}
+                ${w.reviewReason ? `<div class="muted" style="font-size:11.5px;margin-top:4px;">⚠ ${escapeHtml(String(w.reviewReason).slice(0, 120))}</div>` : ''}
                 ${w.requisites ? `<div class="muted" style="font-size:12px;margin-top:4px;font-family:ui-monospace,Menlo,monospace;">${escapeHtml(w.requisites.slice(0, 100))}</div>` : ''}
               </div>
               <div class="amount">${money(w.amount)}</div>
-              <div class="date">${escapeHtml(relTime(w.completedAt || w.createdAt))}</div>
+              <div class="date">
+                <span>${escapeHtml(relTime(w.completedAt || w.createdAt))}</span>
+                ${w.retryable ? `<button class="wd-retry" data-retry-wd="${escapeHtml(w.id)}" title="Повторить вывод — сначала убедитесь в NOWPayments, что оригинал не был отправлен">↻ Повтор</button>` : ''}
+              </div>
             </div>`).join('')
         : '<div class="muted">Выводов не было.</div>';
 
