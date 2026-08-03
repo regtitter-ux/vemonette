@@ -1976,6 +1976,17 @@ function wireBalDetailControls(userId) {
         editBalanceField(userId, 'joinbid', { joinBid }, 'Join bid сохранён');
     };
 
+    // Owner: end the referral boost early, or restore it within its 7-day window.
+    const boostOffBtn = apply('boost-off');
+    if (boostOffBtn) boostOffBtn.onclick = () => {
+        if (!confirm('Отключить бонусную ставку у этого партнёра досрочно? Ставка вернётся к базовой. Реферер и его 10% сохранятся.')) return;
+        editBalanceField(userId, 'boost', { off: true }, 'Бонусная ставка отключена');
+    };
+    const boostOnBtn = apply('boost-on');
+    if (boostOnBtn) boostOnBtn.onclick = () => {
+        editBalanceField(userId, 'boost', { off: false }, 'Бонусная ставка возвращена');
+    };
+
     const invBtn = apply('investtopup');
     if (invBtn) invBtn.onclick = () => {
         const amount = Number(String($('[data-edit="investTopup"]').value).replace(',', '.'));
@@ -2097,9 +2108,15 @@ function balDetailHtml(u) {
             <div class="actions-row"><button class="btn primary sm" data-edit-act="wallet">Применить</button></div>
           </div>
           <div class="setting">
-            <label>Ставка ($/100 заходов)${u.boosted ? ` · <span class="chip amber">🔥 бонус ${fmtBoostLeft(u.boostLeftMs)}</span>` : ''}</label>
+            <label>Ставка ($/100 заходов)${u.boosted
+                ? ` · <span class="chip amber">🔥 бонус ${fmtBoostLeft(u.boostLeftMs)}</span>`
+                : (u.boostOff && u.boostWindowLeftMs > 0 ? ` · <span class="chip">буст отключён (окно: ${fmtBoostLeft(u.boostWindowLeftMs)})</span>` : '')}</label>
             <input type="number" step="0.01" min="0" data-edit="joinBid" value="${Number(u.joinBid).toFixed(2)}" />
-            <div class="actions-row"><button class="btn primary sm" data-edit-act="joinbid">Сохранить</button></div>
+            <div class="actions-row">
+              <button class="btn primary sm" data-edit-act="joinbid">Сохранить</button>
+              ${u.boosted ? '<button class="btn ghost sm" data-edit-act="boost-off">Отключить буст</button>' : ''}
+              ${!u.boosted && u.boostOff && u.boostWindowLeftMs > 0 ? '<button class="btn ghost sm" data-edit-act="boost-on">Вернуть буст</button>' : ''}
+            </div>
           </div>
           <div class="setting">
             <label>Пополнить инвест-счёт, $</label>
