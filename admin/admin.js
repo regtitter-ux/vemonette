@@ -987,8 +987,14 @@ async function renderAdmins() {
         `<tr>
            <td><div class="srv-cell"><span>${userLink(owner, owner)}</span><button class="btn-mini copy-id" data-copy="${owner}" title="${owner}">Copy ID</button></div></td>
            <td><span class="chip green">Владелец</span></td>
-           <td><span class="muted">—</span></td>
+           <td><span class="muted">основной</span></td>
          </tr>`,
+        ...(body.owners || []).map((id) => `
+         <tr>
+           <td><div class="srv-cell"><span>${escapeHtml(id)}</span><button class="btn-mini copy-id" data-copy="${id}" title="${id}">Copy ID</button></div></td>
+           <td><span class="chip green">Владелец</span></td>
+           <td><button class="btn-mini off" data-owner-del="${escapeHtml(id)}">Убрать</button></td>
+         </tr>`),
         ...body.admins.map((id) => `
          <tr>
            <td><div class="srv-cell"><span>${escapeHtml(id)}</span><button class="btn-mini copy-id" data-copy="${id}" title="${id}">Copy ID</button></div></td>
@@ -1007,6 +1013,14 @@ async function renderAdmins() {
             else toast(body?.error || 'Не удалось', 'err');
         };
     });
+    $$('#admin-table [data-owner-del]').forEach((btn) => {
+        btn.onclick = async () => {
+            if (!confirm('Убрать этот аккаунт из владельцев? Он потеряет права владельца по всему сайту.')) return;
+            const { ok, body } = await put('/owners', { userId: btn.dataset.ownerDel, remove: true });
+            if (ok) { toast('Владелец убран'); renderAdmins(); }
+            else toast(body?.error || 'Не удалось', 'err');
+        };
+    });
 }
 
 const _adminAddBtn = document.getElementById('admin-add');
@@ -1016,6 +1030,16 @@ if (_adminAddBtn) _adminAddBtn.onclick = async () => {
     if (!/^\d{17,20}$/.test(id.trim())) { toast('Неверный ID', 'err'); return; }
     const { ok, body } = await put('/admins', { userId: id.trim() });
     if (ok) { toast('Админ добавлен'); renderAdmins(); }
+    else toast(body?.error || 'Не удалось', 'err');
+};
+
+const _ownerAddBtn = document.getElementById('owner-add');
+if (_ownerAddBtn) _ownerAddBtn.onclick = async () => {
+    const id = prompt('Discord ID нового владельца (17–20 цифр). Он получит ПОЛНЫЕ права владельца по всему сайту:');
+    if (!id) return;
+    if (!/^\d{17,20}$/.test(id.trim())) { toast('Неверный ID', 'err'); return; }
+    const { ok, body } = await put('/owners', { userId: id.trim() });
+    if (ok) { toast('Владелец добавлен'); renderAdmins(); }
     else toast(body?.error || 'Не удалось', 'err');
 };
 

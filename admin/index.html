@@ -382,10 +382,11 @@
     <!-- Admins (owner only) -->
     <section class="pane" data-pane="admins" hidden>
       <h1>Админы
+        <button class="btn primary sm" id="owner-add">＋ Добавить владельца</button>
         <button class="btn primary sm" id="admin-add">＋ Добавить админа</button>
         <button class="btn ghost sm" id="view-as-admin">👁 Просмотр от лица админа</button>
       </h1>
-      <p class="muted">Назначенные админы видят всё, кроме вкладок «Шаблоны» и «Балансы», и не могут пополнять Crypto Pay. Владелец проекта задан жёстко и не редактируется.</p>
+      <p class="muted">Владельцы видят и могут всё на сайте — добавляй сюда свои доп. аккаунты (применяется сразу, без перезапуска). Основной владелец задан жёстко и не удаляется. Назначенные админы видят всё, кроме вкладок «Шаблоны» и «Балансы», и не могут пополнять Crypto Pay.</p>
       <div class="table-wrap"><table class="stat-table" id="admin-table"></table></div>
     </section>
   </main>
@@ -437,7 +438,7 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=98"></script>
+<script src="/admin/admin.js?v=99"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>
