@@ -1940,7 +1940,7 @@ function wireBalDetailControls(userId) {
     document.querySelectorAll('[data-retry-wd]').forEach((btn) => {
         btn.onclick = async () => {
             const withdrawalId = btn.getAttribute('data-retry-wd');
-            if (!confirm('Повторить этот вывод?\n\nВАЖНО: сначала проверьте в NOWPayments, что оригинальная выплата НЕ была отправлена — иначе средства уйдут дважды.\n\nДля статуса «review» баланс будет восстановлен и выплата запущена заново.')) return;
+            if (!confirm('Повторить этот вывод?\n\nВАЖНО: сначала убедитесь, что оригинальная выплата НЕ была отправлена (ни вручную, ни в NOWPayments) — иначе средства уйдут дважды.\n\nБаланс будет восстановлен и выплата запущена заново — уйдёт через настроенный авто-вывод (крипта), либо новым ручным запросом.')) return;
             btn.disabled = true;
             const { ok, body } = await post('/retry-withdrawal', { userId, withdrawalId });
             if (ok) {
