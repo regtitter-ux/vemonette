@@ -64,7 +64,7 @@ const WHOLE = {
   'Обзор':'Overview','Рекламы':'Ads','Карточки':'Cards','Журнал':'Activity','Выплаты':'Payouts',
   'Пока нет активных реклам и истории показов.':'No active ads or shown-ad history yet.','У вас пока нет карточек верификации.':'You have no verification cards yet.',
   'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin',
-  'Партнёрам':'For partners','Покупателям':'For buyers','Инвесторам':'For investors','Разработчикам':'For developers','Администраторам':'For admins',
+  'Партнёрам':'For partners','Покупателям':'For buyers','Инвесторам':'For investors','Разработчикам':'For developers','Для ботоводов':'For bot breeders','Администраторам':'For admins',
   // Activity log
   'Журнал активности':'Activity log','Все типы':'All types','Выдача верификации':'Verification granted',
   'Списания':'Debits','Снятие верификации':'Verification removed','Все причины':'All reasons','Оплачено':'Paid',
@@ -124,6 +124,7 @@ function setupCabNav(who) {
     const path = location.pathname;
     document.querySelectorAll('.nav-menu [data-cn]').forEach((a) => { if (path.indexOf('/' + a.dataset.cn) === 0) a.classList.add('active'); });
     if (who && who.isAdmin) document.querySelectorAll('.nav-menu [data-cn="admin"]').forEach((a) => (a.hidden = false));
+    if (who && who.botfarm) document.querySelectorAll('.nav-menu [data-cn="breeders"]').forEach((a) => (a.hidden = false));
     if (who) {
         const name = who.name || who.username || 'User', letter = (String(name).trim()[0] || 'U').toUpperCase();
         const nmAv = document.getElementById('nmAv'), nmName = document.getElementById('nmName'), nmUser = document.getElementById('nmUser');

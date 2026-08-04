@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" type="image/png" href="/assets/logo.png" />
+  <link rel="apple-touch-icon" href="/assets/logo.png" />
+  <title>Vemoni · Для ботоводов</title>
+  <link rel="stylesheet" href="/breeders/breeders.css?v=1" />
+  <script>window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';</script>
+</head>
+<body>
+
+<div id="login" class="login" hidden>
+  <div class="login-card">
+    <div class="lang-switch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+    <div class="brand">Vemoni · <span data-i18n="brand">Для ботоводов</span></div>
+    <div class="hint" data-i18n="login_hint">Войдите через Discord, чтобы управлять юзер-ботами.</div>
+    <a id="discord-login" class="discord-btn" href="#">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M20.317 4.369A19.79 19.79 0 0 0 15.885 3c-.196.35-.42.82-.577 1.19a18.27 18.27 0 0 0-5.487 0A12.6 12.6 0 0 0 9.24 3a19.74 19.74 0 0 0-4.434 1.369C1.61 9.046.73 13.605 1.17 18.1a19.9 19.9 0 0 0 6.073 3.058c.49-.667.927-1.376 1.302-2.122-.716-.269-1.4-.6-2.045-.99.171-.125.34-.255.5-.39a14.2 14.2 0 0 0 12.198 0c.164.14.332.27.5.39-.647.39-1.332.722-2.049.99.375.746.81 1.454 1.3 2.122a19.85 19.85 0 0 0 6.076-3.058c.5-5.177-.838-9.694-3.508-13.731ZM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.955 2.42-2.157 2.42Zm7.96 0c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.946 2.42-2.157 2.42Z"/></svg>
+      <span data-i18n="login_btn">Войти через Discord</span>
+    </a>
+    <div class="err" id="login-err" hidden></div>
+  </div>
+</div>
+
+<div id="noaccess" class="login" hidden>
+  <div class="login-card">
+    <div class="brand">Vemoni · <span data-i18n="brand">Для ботоводов</span></div>
+    <div class="hint" data-i18n="noaccess">Нет доступа к этому разделу. Обратитесь к владельцу сайта.</div>
+    <a class="btn ghost" href="/order/" data-i18n="to_orders">← К заказам</a>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header class="topbar">
+    <a class="brand-sm" href="/"><img src="/assets/logo.png" alt="Vemoni" /><span>Vemoni</span></a>
+    <div class="top-right">
+      <div class="lang-switch"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
+      <div class="cab-menu">
+        <button class="cab-av" id="cabAv" aria-label="Профиль"></button>
+        <div class="nav-menu" id="navMenu" hidden>
+          <div class="nm-head"><div class="nm-banner" id="nmBanner"></div><div class="nm-id"><div class="nm-av" id="nmAv"></div><div class="nm-txt"><b id="nmName">User</b><span id="nmUser"></span></div></div></div>
+          <div class="nm-items">
+            <a href="/"><span>🏠</span> <span data-i18n="nav_home">Главная</span></a>
+            <a href="/partner/"><span>🤝</span> <span data-i18n="nav_partner">Партнёрам</span></a>
+            <a href="/order/"><span>📦</span> <span data-i18n="nav_orders">Мои заказы</span></a>
+            <a href="/breeders/" class="active"><span>🤖</span> <span data-i18n="nav_breeders">Для ботоводов</span></a>
+            <a href="/admin/" data-cn="admin" hidden><span>🛡️</span> <span data-i18n="nav_admin">Администраторам</span></a>
+            <div class="nm-sep"></div>
+            <button class="nav-logout" id="logout"><span>↩</span> <span data-i18n="logout">Выйти</span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <h1 data-i18n="title">Юзер-боты для проверки заходов</h1>
+    <p class="muted" data-i18n="subtitle">Подключай личные аккаунты-«селф-боты» для проверки заходов на серверах без обычного бота. Каждая карточка — отдельный аккаунт: статус и статистика проверенных заходов.</p>
+
+    <div class="add-row">
+      <input id="tokenInput" type="password" autocomplete="off" spellcheck="false" placeholder="Токен юзер-бота" data-i18n-ph="token_ph" />
+      <button class="btn primary" id="addBtn" data-i18n="add">Добавить</button>
+    </div>
+    <div class="add-hint muted" data-i18n="add_hint">Токен проверяется у Discord при добавлении — нерабочий добавить нельзя. Токен нигде не показывается обратно.</div>
+
+    <div id="cards" class="cards"></div>
+
+    <section id="accessSection" hidden>
+      <h2 data-i18n="access_title">Доступ к этому разделу</h2>
+      <p class="muted" data-i18n="access_hint">Только для владельца. Пользователи из списка (плюс владельцы) видят эту страницу и управляют юзер-ботами.</p>
+      <div class="add-row">
+        <input id="accessInput" type="text" inputmode="numeric" autocomplete="off" placeholder="Discord ID" />
+        <button class="btn primary" id="accessAdd" data-i18n="grant">Выдать доступ</button>
+      </div>
+      <div id="accessList" class="access-list"></div>
+    </section>
+  </main>
+</div>
+
+<div id="toast" class="toast" hidden></div>
+<script src="/breeders/breeders.js?v=1"></script>
+</body>
+</html>

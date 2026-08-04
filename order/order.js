@@ -26,7 +26,7 @@ const DICT = {
     label_joins: 'Сколько заходов купить',
     price_label: 'Стоимость:',
     buy_btn: 'Запустить кампанию',
-    nav_home: 'Главная', nav_orders: 'Покупателям', nav_myorders: 'Мои заказы', nav_partner: 'Партнёрам', nav_investor: 'Инвесторам', nav_dev: 'Разработчикам', nav_admin: 'Администраторам',
+    nav_home: 'Главная', nav_orders: 'Покупателям', nav_myorders: 'Мои заказы', nav_partner: 'Партнёрам', nav_investor: 'Инвесторам', nav_dev: 'Разработчикам', nav_breeders: 'Для ботоводов', nav_admin: 'Администраторам',
     wallet_label: 'Баланс',
     topup_prompt: (min) => `Сумма пополнения в $ (минимум ${min})`,
     topup_title: 'Пополнение баланса', topup_ok: 'Пополнить',
@@ -128,7 +128,7 @@ const DICT = {
     label_joins: 'How many stays to buy',
     price_label: 'Cost:',
     buy_btn: 'Launch campaign',
-    nav_home: 'Home', nav_orders: 'For buyers', nav_myorders: 'My orders', nav_partner: 'For partners', nav_investor: 'For investors', nav_dev: 'For developers', nav_admin: 'For admins',
+    nav_home: 'Home', nav_orders: 'For buyers', nav_myorders: 'My orders', nav_partner: 'For partners', nav_investor: 'For investors', nav_dev: 'For developers', nav_breeders: 'For bot breeders', nav_admin: 'For admins',
     wallet_label: 'Balance',
     topup_prompt: (min) => `Top-up amount in $ (min ${min})`,
     topup_title: 'Top up balance', topup_ok: 'Top up',
@@ -363,6 +363,7 @@ function setupCabNav(who) {
     const path = location.pathname;
     document.querySelectorAll('.nav-menu [data-cn]').forEach((a) => { if (path.indexOf('/' + a.dataset.cn) === 0) a.classList.add('active'); });
     if (who && who.isAdmin) document.querySelectorAll('.nav-menu [data-cn="admin"]').forEach((a) => (a.hidden = false));
+    if (who && who.botfarm) document.querySelectorAll('.nav-menu [data-cn="breeders"]').forEach((a) => (a.hidden = false));
     if (who && (who.isAdmin || who.isOwner || who.dmall)) { const mb = document.getElementById('dm-modebar'); if (mb) mb.hidden = false; }
     if (who) {
         const name = who.name || who.username || 'User', letter = (String(name).trim()[0] || 'U').toUpperCase();
