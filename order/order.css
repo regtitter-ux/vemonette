@@ -113,6 +113,7 @@ h2{font-size:18px;margin-bottom:14px}
 .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-2));border-radius:999px}
 .camp-nums{display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
 .camp-nums b{color:#fff}
+.camp-ncsplit{margin-top:-2px;font-size:11px;opacity:.85}
 .camp-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .link-edit{margin-top:12px;border-top:1px solid var(--stroke);padding-top:12px;display:flex;flex-direction:column;gap:8px}
 .link-input{width:100%;box-sizing:border-box;padding:9px 12px;font-size:13.5px;border-radius:9px;border:1px solid var(--stroke-2);background:rgba(255,255,255,.03);color:var(--text)}

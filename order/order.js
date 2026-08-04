@@ -62,6 +62,7 @@ const DICT = {
     after_pay: 'После оплаты кампания запустится автоматически (в течение минуты).',
     no_camps: 'Заказов пока нет. Оформите первый выше ↑',
     delivered: 'Доставлено:',
+    nc_split: (chk, nc) => `из них ≈${nc} без проверки (CPC), ${chk} проверено`,
     retention: 'Удержание',
     pay: 'Оплатить',
     pause: 'Пауза', resume: 'Возобновить',
@@ -164,6 +165,7 @@ const DICT = {
     after_pay: 'The campaign starts automatically after payment (within a minute).',
     no_camps: 'No orders yet. Place your first one above ↑',
     delivered: 'Delivered:',
+    nc_split: (chk, nc) => `incl. ≈${nc} no-check (CPC), ${chk} verified`,
     retention: 'Retention',
     pay: 'Pay',
     pause: 'Pause', resume: 'Resume',
@@ -800,6 +802,7 @@ function campCard(c) {
         ${botWarn}
         <div class="progress"><i style="width:${pct}%"></i></div>
         <div class="camp-nums"><span>${esc(t('delivered'))} <b>${c.delivered}</b> / ${c.purchased}</span><span>${money(c.price)}</span></div>
+        ${(c.admin && c.noCheckDelivered > 0) ? `<div class="camp-nums camp-ncsplit muted sm"><span>${esc(t('nc_split', Math.max(0, c.delivered - c.noCheckDelivered), c.noCheckDelivered))}</span></div>` : ''}
         ${retentionRow(c.retention)}
         <div class="camp-actions">${payLink}${prioBtn}${pauseBtn}${resumeLimitBtn}${linkBtn}${srvBtn}${sfwBtn}</div>
         <div class="link-edit" data-link-edit="${c.id}" hidden>
