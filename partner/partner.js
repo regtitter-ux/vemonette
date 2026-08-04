@@ -666,6 +666,7 @@ function pcardBlock(c) {
               ${cardStatRow('3. Остались', st.stayed)}
             </tbody>
           </table></div>
+          ${c.conversion && c.conversion.enabled ? `<div class="vcard-conv muted sm" style="margin-top:8px">🎯 Конверсия карточки: <b>${c.conversion.conv != null ? Math.round(c.conversion.conv * 100) + '%' : '—'}</b>${c.conversion.conv != null ? ` · ${money(c.conversion.ratePer100Clicks)}/100 кликов` : ' (копится статистика)'} <span class="muted">· ${c.conversion.joins}/${c.conversion.clickers} за посл. ${c.conversion.sample} заходов</span></div>` : ''}
           <div class="vcard-actions">
             <button class="btn-mini" data-card="fix">Встряхнуть</button>
             <button class="btn-mini" data-card="owner">Владелец…</button>

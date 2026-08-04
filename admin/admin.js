@@ -737,6 +737,7 @@ function cardBlock(c, deleted) {
             ${statRow('3. Остались', st.stayed)}
           </tbody>
         </table></div>
+        ${c.conversion && c.conversion.enabled ? `<div class="cardrow-meta" style="color:var(--accent)">🎯 CPC-конверсия: <b>${c.conversion.conv != null ? Math.round(c.conversion.conv * 100) + '%' : '—'}</b>${c.conversion.conv != null ? ` · $${(Number(c.conversion.ratePer100Clicks) || 0).toFixed(2)}/100 кликов` : ' (копится статистика)'} <span class="muted">· ${c.conversion.joins}/${c.conversion.clickers} за посл. ${c.conversion.sample} заходов</span></div>` : ''}
         <div class="cardrow-actions">${actions}</div>
       </div>`;
 }
@@ -1504,6 +1505,7 @@ function openServerAdModal(gid) {
     const isOwner = effRole() === 'owner';
     const clawOff = Boolean((state.clawbackOffAfterComplete || {})[gid]);
     const isNsfw = Boolean((state.nsfwServers || {})[gid]);
+    const cpcOn = Boolean((state.cpcCalibrated || {})[gid]);
     const showing = Boolean(guildEntry?.adShowing);
     let nsfwBlock = '';
     if (isOwner) {
@@ -1514,6 +1516,17 @@ function openServerAdModal(gid) {
             <span>NSFW-сервер</span>
           </label>
           <p class="muted" style="margin:6px 0 0;">Реклама с ограничением «Только SFW» никогда не показывается на NSFW-серверах.</p>
+        </div>`;
+    }
+    let cpcBlock = '';
+    if (isOwner) {
+        cpcBlock = `
+        <div class="setting wide" style="margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;">
+          <label class="nsfw-check" style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;">
+            <input type="checkbox" data-act="cpc-toggle" ${cpcOn ? 'checked' : ''} />
+            <span>CPC-калибровка (оплата за клики)</span>
+          </label>
+          <p class="muted" style="margin:6px 0 0;">Считает личную конверсию карточек этого сервера по последним 100 проверенным заходам и показывает её в карточках. Для рекламы без проверки на заход оплата за клик считается по этой конверсии. Выкл — обычная оплата за заход.</p>
         </div>`;
     }
     let clawBlock = '';
@@ -1583,6 +1596,7 @@ function openServerAdModal(gid) {
           </div>
         </div>
         ${nsfwBlock}
+        ${cpcBlock}
         ${clawBlock}
         ${profitBlock}
       </div>`;
@@ -1598,6 +1612,16 @@ function openServerAdModal(gid) {
                 if (nsfw) state.nsfwServers[gid] = true; else delete state.nsfwServers[gid];
                 toast(nsfw ? 'Сервер помечен NSFW' : 'Метка NSFW снята');
             } else { nsfwBox.checked = !nsfw; toast(body?.error || 'Не удалось переключить', 'err'); }
+        };
+        const cpcBox = $('#server-ad-modal-body [data-act="cpc-toggle"]');
+        if (cpcBox) cpcBox.onchange = async () => {
+            const on = cpcBox.checked;
+            const { ok, body } = await put('/cpc-calibrated', { gid, on });
+            if (ok) {
+                state.cpcCalibrated = state.cpcCalibrated || {};
+                if (on) state.cpcCalibrated[gid] = true; else delete state.cpcCalibrated[gid];
+                toast(on ? 'CPC-калибровка включена' : 'CPC-калибровка выключена');
+            } else { cpcBox.checked = !on; toast(body?.error || 'Не удалось переключить', 'err'); }
         };
         const clawBtn = $('#server-ad-modal-body [data-act="claw-toggle"]');
         if (clawBtn) clawBtn.onclick = async () => {
