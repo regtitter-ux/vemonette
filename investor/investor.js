@@ -52,8 +52,7 @@ function bannerFromAvatar(url) {
 function setupCabNav(who) {
     const path = location.pathname;
     document.querySelectorAll('.nav-menu [data-cn]').forEach((a) => { if (path.indexOf('/' + a.dataset.cn) === 0) a.classList.add('active'); });
-    if (who && who.isAdmin) document.querySelectorAll('.nav-menu [data-cn="admin"]').forEach((a) => (a.hidden = false));
-    if (who && who.botfarm) document.querySelectorAll('.nav-menu [data-cn="breeders"]').forEach((a) => (a.hidden = false));
+    if (who && (who.isAdmin || who.botfarm)) document.querySelectorAll('.nav-menu [data-cn="admin"]').forEach((a) => (a.hidden = false));
     if (who) {
         const name = who.name || who.username || 'User', letter = (String(name).trim()[0] || 'U').toUpperCase();
         const nmAv = document.getElementById('nmAv'), nmName = document.getElementById('nmName'), nmUser = document.getElementById('nmUser');

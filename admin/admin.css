@@ -389,6 +389,30 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .wd-row:last-child { border-bottom: none; }
 .wd-row .amount { font-weight: 800; font-variant-numeric: tabular-nums; }
 .wd-row .date { color: var(--muted); font-size: 12px; }
+/* User-bots ("Для ботоводов") tab */
+.bf-add-row { display: flex; gap: 10px; margin: 16px 0 0; max-width: 560px; }
+.bf-add-row input { flex: 1; min-width: 0; background: var(--panel); border: 1px solid var(--stroke); color: var(--text); border-radius: 10px; padding: 11px 13px; font-size: 14px; }
+.bf-add-row input:focus { outline: none; border-color: var(--accent); }
+.bf-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-top: 6px; }
+.bf-cards .empty { grid-column: 1/-1; text-align: center; padding: 40px; border: 1px dashed var(--stroke); border-radius: 14px; }
+.bf-card { background: var(--panel); border: 1px solid var(--stroke); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.bf-card.off { border-color: rgba(240,97,109,.4); }
+.bf-card .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.bf-card .title b { display: block; font-size: 15px; word-break: break-word; }
+.bf-card .title .uid { color: var(--muted); font-size: 11.5px; font-family: ui-monospace, Menlo, monospace; }
+.bf-pill { font-size: 11.5px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.bf-pill.green { color: var(--green); background: rgba(63,185,80,.12); }
+.bf-pill.red { color: var(--red); background: rgba(240,97,109,.12); }
+.bf-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bf-stat { background: var(--panel2); border-radius: 10px; padding: 10px 12px; }
+.bf-stat .k { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; }
+.bf-stat .v { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.bf-card .foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--stroke); padding-top: 10px; }
+.bf-access-list { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; max-width: 520px; }
+.bf-access-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border: 1px solid var(--stroke); border-radius: 10px; padding: 9px 13px; font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+.btn.danger { color: var(--red); border-color: rgba(240,97,109,.4); }
+@media (max-width:560px){ .bf-add-row { flex-direction: column; } .bf-cards { grid-template-columns: 1fr; } }
+
 .wd-row.completed .amount { color: var(--green); }
 .wd-row.processing .amount { color: var(--amber); }
 .wd-row.review .amount, .wd-row.failed .amount { color: var(--red); }

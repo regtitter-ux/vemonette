@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="/admin/admin.css?v=43" />
+  <link rel="stylesheet" href="/admin/admin.css?v=44" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -88,6 +88,7 @@
       <button data-tab="lots" class="tab" data-i18n="tab_lots">Лоты</button>
       <button data-tab="system" class="tab" data-owner-only data-i18n="tab_system">Система</button>
       <button data-tab="settings" class="tab" data-owner-only data-i18n="tab_settings">Настройки</button>
+      <button data-tab="breeders" class="tab" data-botkeeper data-i18n="tab_breeders">Юзер-боты</button>
       <button data-tab="admins" class="tab" data-owner-only data-i18n="tab_admins">Админы</button>
     </nav>
   </aside>
@@ -389,6 +390,27 @@
       <p class="muted">Владельцы видят и могут всё на сайте — добавляй сюда свои доп. аккаунты (применяется сразу, без перезапуска). Основной владелец задан жёстко и не удаляется. Назначенные админы видят всё, кроме вкладок «Шаблоны» и «Балансы», и не могут пополнять Crypto Pay.</p>
       <div class="table-wrap"><table class="stat-table" id="admin-table"></table></div>
     </section>
+
+    <!-- User-bots ("Для ботоводов") — visible to owners, admins, and granted keepers -->
+    <section class="pane" data-pane="breeders" hidden>
+      <h1 data-i18n="bf_title">Юзер-боты для проверки заходов</h1>
+      <p class="muted" data-i18n="bf_subtitle">Подключай личные аккаунты-«селф-боты» для проверки заходов на серверах без обычного бота. Каждая карточка — отдельный аккаунт: статус и статистика проверенных заходов.</p>
+      <div class="bf-add-row">
+        <input id="bf-token" type="password" autocomplete="off" spellcheck="false" placeholder="Токен юзер-бота" data-i18n-ph="bf_token_ph" />
+        <button class="btn primary" id="bf-add" data-i18n="bf_add">Добавить</button>
+      </div>
+      <div class="muted sm" style="margin:6px 0 18px" data-i18n="bf_add_hint">Токен проверяется у Discord при добавлении — нерабочий добавить нельзя. Токен нигде не показывается обратно.</div>
+      <div id="bf-cards" class="bf-cards"></div>
+      <section id="bf-access" data-owner-only hidden style="margin-top:26px;border-top:1px solid var(--stroke);padding-top:18px">
+        <h2 style="margin:0 0 6px;font-size:16px" data-i18n="bf_access_title">Доп. доступ к разделу</h2>
+        <p class="muted sm" data-i18n="bf_access_hint">Владельцы и админы уже имеют доступ. Здесь можно выдать доступ и другим Discord-аккаунтам (они увидят только эту вкладку).</p>
+        <div class="bf-add-row" style="max-width:420px">
+          <input id="bf-access-input" type="text" inputmode="numeric" autocomplete="off" placeholder="Discord ID" />
+          <button class="btn primary" id="bf-access-add" data-i18n="bf_grant">Выдать доступ</button>
+        </div>
+        <div id="bf-access-list" class="bf-access-list"></div>
+      </section>
+    </section>
   </main>
 </div>
 
@@ -438,7 +460,7 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=101"></script>
+<script src="/admin/admin.js?v=102"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

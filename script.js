@@ -678,10 +678,7 @@ setLang(startLang);
       const nmBanner = document.getElementById('nmBanner');
       if (nmBanner && d.banner) { nmBanner.style.backgroundImage = 'url("' + d.banner + '")'; nmBanner.style.backgroundSize = 'cover'; nmBanner.style.backgroundPosition = 'center'; }
       else if (d.avatar) bannerFromAvatar(d.avatar);
-      if (!d.isAdmin) box.querySelectorAll('[data-admin]').forEach((el) => el.remove());
-      // Bot-breeders entry: owners + admins + granted keepers (whoami.botfarm).
-      if (d.botfarm || d.isAdmin) box.querySelectorAll('[data-botfarm]').forEach((el) => (el.hidden = false));
-      else box.querySelectorAll('[data-botfarm]').forEach((el) => el.remove());
+      if (!(d.isAdmin || d.botfarm)) box.querySelectorAll('[data-admin]').forEach((el) => el.remove());
       // highlight the section the user is currently on
       box.querySelectorAll('.nm-items a').forEach((a) => { if (a.getAttribute('href') === location.pathname) a.classList.add('active'); });
       box.hidden = false;

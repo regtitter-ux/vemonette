@@ -4,8 +4,8 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
 // ---------- i18n (navigation + login chrome; deeper content is RU) ----------
 const I18N = {
-    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_activity: 'Активность', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_lots: 'Лоты', tab_system: 'Система', tab_settings: 'Настройки', tab_admins: 'Админы', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', nav_dev: 'Разработчикам', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
-    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_activity: 'Activity', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_lots: 'Lots', tab_system: 'System', tab_settings: 'Settings', tab_admins: 'Admins', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', nav_dev: 'Developers', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
+    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_activity: 'Активность', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_lots: 'Лоты', tab_system: 'Система', tab_settings: 'Настройки', tab_admins: 'Админы', tab_breeders: 'Юзер-боты', bf_title: 'Юзер-боты для проверки заходов', bf_subtitle: 'Подключай личные аккаунты-«селф-боты» для проверки заходов на серверах без обычного бота. Каждая карточка — отдельный аккаунт: статус и статистика проверенных заходов.', bf_token_ph: 'Токен юзер-бота', bf_add: 'Добавить', bf_add_hint: 'Токен проверяется у Discord при добавлении — нерабочий добавить нельзя. Токен нигде не показывается обратно.', bf_access_title: 'Доп. доступ к разделу', bf_access_hint: 'Владельцы и админы уже имеют доступ. Здесь можно выдать доступ и другим Discord-аккаунтам (они увидят только эту вкладку).', bf_grant: 'Выдать доступ', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', nav_dev: 'Разработчикам', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
+    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_activity: 'Activity', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_lots: 'Lots', tab_system: 'System', tab_settings: 'Settings', tab_admins: 'Admins', tab_breeders: 'User-bots', bf_title: 'User-bots for join verification', bf_subtitle: 'Connect personal "self-bot" accounts to verify joins on servers without a normal bot. Each card is one account: its status and the join stats it verified.', bf_token_ph: 'User-bot token', bf_add: 'Add', bf_add_hint: 'The token is checked with Discord on add — a dead one can\'t be added. The token is never shown back.', bf_access_title: 'Extra access to this section', bf_access_hint: 'Owners and admins already have access. Here you can grant access to other Discord accounts (they see only this tab).', bf_grant: 'Grant access', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', nav_dev: 'Developers', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
 };
 let adminLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
 if (!I18N[adminLang]) adminLang = 'ru';
@@ -1049,14 +1049,42 @@ let viewAsAdmin = false;
 const effRole = () => (viewAsAdmin ? 'admin' : currentRole);
 
 function applyRole() {
+    // Bot-keeper mode: a non-admin user granted only the user-bots section. Show
+    // ONLY the "Юзер-боты" tab; every other tab and the preview flow stay hidden.
+    if (keeperMode) {
+        $$('.tab').forEach((el) => { el.hidden = el.dataset.tab !== 'breeders'; });
+        $$('[data-owner-only]').forEach((el) => { el.hidden = true; });
+        $('#view-banner').hidden = true;
+        return;
+    }
     const owner = effRole() === 'owner';
     // Hide owner-only tabs (and the whole preview flow is owner-only itself).
     $$('[data-owner-only]').forEach((el) => { el.hidden = !owner; });
+    // The user-bots tab (data-botkeeper) is available to owners AND admins.
+    $$('[data-botkeeper]').forEach((el) => { el.hidden = false; });
     // Preview banner (with the exit button) shows while previewing.
     $('#view-banner').hidden = !viewAsAdmin;
     // If the current tab is now hidden, fall back to Statistics.
     const activeTab = $('.tab.active');
     if (activeTab && activeTab.hidden) $('.tab[data-tab="stats"]').click();
+}
+
+// A user granted ONLY the user-bots section (bot-keeper, not admin/owner): show a
+// stripped-down panel with just that tab. Everything else stays gated server-side —
+// /admin/* still requires the 2FA gate, so this shell can't touch anything but the
+// buyer-authed /breeders/* endpoints.
+let keeperMode = false;
+function enterKeeperApp(who) {
+    keeperMode = true; currentRole = 'keeper';
+    const login = $('#login'), gate = $('#gate'), app = $('#app');
+    if (login) { login.hidden = true; login.style.display = 'none'; }
+    if (gate) gate.hidden = true;
+    app.hidden = false; app.style.display = 'grid';
+    try { renderAdminProfile(who); } catch (_) { /* profile is cosmetic */ }
+    applyRole();
+    const tab = document.querySelector('[data-tab="breeders"]');
+    if (tab) tab.click();
+    loadBreeders();
 }
 
 function setViewAsAdmin(on) {
@@ -2697,6 +2725,98 @@ if (alfReset) alfReset.addEventListener('click', () => { ['#alf-partner', '#alf-
 const actTab = document.querySelector('[data-tab="activity"]');
 if (actTab) actTab.addEventListener('click', loadActivityLog);
 
+// ---------- User-bots ("Для ботоводов") tab ----------
+// These endpoints live at the API ROOT (/breeders/*, /order/whoami), not under
+// /admin, and are buyer/keeper-authed — so an owner (via the gate cookie), an
+// admin, or a granted keeper can all use them.
+const ROOT = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '');
+async function bfApi(path, opts = {}) {
+    const headers = opts.body ? { 'Content-Type': 'application/json' } : {};
+    const gate = localStorage.getItem('vemoni_gate') || '';
+    if (gate) headers['X-Admin-Gate'] = gate;
+    const tk = localStorage.getItem('vemoni_tok') || '';
+    if (tk) headers.Authorization = 'Bearer ' + tk;
+    let res;
+    try { res = await fetch(ROOT + path, { credentials: 'include', cache: 'no-store', headers, ...opts }); }
+    catch { return { ok: false, status: 0, body: null }; }
+    let body = null; try { body = await res.json(); } catch { /* non-json */ }
+    return { ok: res.ok, status: res.status, body };
+}
+function bfPill(s) { return s === 'unavailable' ? '<span class="bf-pill red">● недоступен</span>' : '<span class="bf-pill green">● активен</span>'; }
+function bfCard(b) {
+    const name = b.username ? escapeHtml(b.username) : ('ID ' + escapeHtml(b.id));
+    const by = b.addedBy ? ` · добавил <a href="https://discord.com/users/${escapeHtml(b.addedBy)}" target="_blank" rel="noopener">${escapeHtml(b.addedBy)}</a>` : '';
+    return `<div class="bf-card ${b.status === 'unavailable' ? 'off' : ''}">
+      <div class="head"><div class="title"><b>${name}</b><span class="uid">${escapeHtml(b.id)}</span></div>${bfPill(b.status)}</div>
+      <div class="bf-stats">
+        <div class="bf-stat"><div class="k">зашли</div><div class="v">${Number(b.joined) || 0}</div></div>
+        <div class="bf-stat"><div class="k">остались</div><div class="v">${Number(b.stayed) || 0}</div></div>
+      </div>
+      <div class="foot"><span class="muted sm">добавлен ${escapeHtml(relTime(b.addedAt))}${by}</span>
+        <button class="btn ghost sm danger" data-bf-del="${escapeHtml(b.id)}">Удалить</button></div>
+    </div>`;
+}
+function bfRender(d) {
+    const box = $('#bf-cards'); if (!box) return;
+    box.innerHTML = (d.bots && d.bots.length) ? d.bots.map(bfCard).join('') : '<div class="empty muted">Юзер-ботов пока нет. Добавь токен выше.</div>';
+    box.querySelectorAll('[data-bf-del]').forEach((btn) => { btn.onclick = async () => {
+        if (!confirm('Удалить карточку этого юзер-бота? Его токен будет отключён.')) return;
+        btn.disabled = true;
+        const { ok, body } = await bfApi('/breeders/token', { method: 'DELETE', body: JSON.stringify({ id: btn.dataset.bfDel }) });
+        if (ok) { toast('Карточка удалена'); loadBreeders(); } else { btn.disabled = false; toast(body?.error || 'Ошибка', 'err'); }
+    }; });
+    const sec = $('#bf-access');
+    if (sec) {
+        // Only owners manage the extra-access list (backend enforces it too).
+        if (d.isOwner) {
+            sec.hidden = false;
+            const list = d.access || [];
+            $('#bf-access-list').innerHTML = list.length
+                ? list.map((id) => `<div class="bf-access-row"><a href="https://discord.com/users/${escapeHtml(id)}" target="_blank" rel="noopener">${escapeHtml(id)}</a><button class="btn ghost sm danger" data-bf-revoke="${escapeHtml(id)}">Убрать</button></div>`).join('')
+                : '<div class="muted sm">Доп. пользователей нет — доступ есть у владельцев и админов.</div>';
+            $('#bf-access-list').querySelectorAll('[data-bf-revoke]').forEach((btn) => { btn.onclick = async () => {
+                btn.disabled = true;
+                const { ok, body } = await bfApi('/breeders/access', { method: 'PUT', body: JSON.stringify({ userId: btn.dataset.bfRevoke, remove: true }) });
+                if (ok) { toast('Доступ убран'); loadBreeders(); } else { btn.disabled = false; toast(body?.error || 'Ошибка', 'err'); }
+            }; });
+        } else sec.hidden = true;
+    }
+    if (adminLang === 'en') try { localizeAll($('[data-pane="breeders"]')); } catch (_) { /* best-effort */ }
+}
+let bfTimer = null;
+async function loadBreeders() {
+    const { ok, body } = await bfApi('/breeders/list');
+    if (!ok) { toast(body?.error || 'Ошибка загрузки', 'err'); return; }
+    bfRender(body);
+}
+(function wireBreeders() {
+    const addBtn = $('#bf-add'), inp = $('#bf-token');
+    if (addBtn) addBtn.onclick = async () => {
+        const token = (inp.value || '').trim(); if (!token) return;
+        addBtn.disabled = true;
+        const { ok, body } = await bfApi('/breeders/token', { method: 'POST', body: JSON.stringify({ token }) });
+        addBtn.disabled = false;
+        if (ok) { inp.value = ''; toast('Юзер-бот добавлен'); loadBreeders(); } else toast(body?.error || 'Не удалось добавить', 'err');
+    };
+    if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter' && addBtn) addBtn.click(); });
+    const acc = $('#bf-access-add'), accInp = $('#bf-access-input');
+    if (acc) acc.onclick = async () => {
+        const id = (accInp.value || '').trim();
+        if (!/^\d{17,20}$/.test(id)) { toast('Введите корректный Discord ID', 'err'); return; }
+        const { ok, body } = await bfApi('/breeders/access', { method: 'PUT', body: JSON.stringify({ userId: id }) });
+        if (ok) { accInp.value = ''; toast('Доступ выдан'); loadBreeders(); } else toast(body?.error || 'Ошибка', 'err');
+    };
+    const tab = document.querySelector('[data-tab="breeders"]');
+    if (tab) tab.addEventListener('click', () => { loadBreeders(); if (!bfTimer) bfTimer = setInterval(() => { if (!document.querySelector('[data-pane="breeders"]')?.hidden) loadBreeders(); }, 30000); });
+})();
+
+// Is the signed-in Discord user a bot-keeper (owner/admin/granted) who couldn't
+// pass the 2FA gate? If so, they get the stripped-down keeper panel.
+async function checkBotKeeper() {
+    const { ok, body } = await bfApi('/order/whoami');
+    return (ok && body && body.authed && body.botfarm) ? body : null;
+}
+
 // ---------- Boot ----------
 (async () => {
     // The 2FA gate (password + Telegram code) is the ONLY admin login — there is no
@@ -2706,9 +2826,14 @@ if (actTab) actTab.addEventListener('click', loadActivityLog);
     const g = (gs && gs.body) || { enabled: true, unlocked: false };
     if (g.enabled) {
         if (g.unlocked && await checkAuth()) { enterApp(); return; }
+        // A Discord-logged-in bot-keeper (not the gated owner) → user-bots tab only.
+        const bk = await checkBotKeeper();
+        if (bk) { enterKeeperApp(bk); return; }
         showGate();   // locked, or session gone → re-enter via the gate, never Discord
         return;
     }
     // Gate not configured (dormant) → legacy Discord login.
-    if (await checkAuth()) enterApp();
+    if (await checkAuth()) { enterApp(); return; }
+    const bk = await checkBotKeeper();
+    if (bk) enterKeeperApp(bk);
 })();
