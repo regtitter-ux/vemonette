@@ -11,7 +11,9 @@ async function api(path, opts = {}) {
     const headers = opts.body ? { 'Content-Type': 'application/json' } : {};
     const tk = getTok(); if (tk) headers.Authorization = 'Bearer ' + tk;
     let res;
-    try { res = await fetch(API + path, { credentials: 'include', ...opts, headers }); }
+    // Always hit the network — a stale cached whoami (from before the botfarm flag
+    // existed) would wrongly read as "no access".
+    try { res = await fetch(API + path, { credentials: 'include', cache: 'no-store', ...opts, headers }); }
     catch { throw new Error('Нет связи с сервером'); }
     let body = null; try { body = await res.json(); } catch { /* non-json */ }
     return { ok: res.ok, status: res.status, body };
@@ -38,7 +40,8 @@ let lang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').st
 if (lang !== 'en' && lang !== 'ru') lang = 'ru';
 const EN = {
     brand: 'For bot breeders', login_hint: 'Log in with Discord to manage user-bots.', login_btn: 'Log in with Discord',
-    noaccess: 'No access to this section. Ask the site owner.', to_orders: '← To orders',
+    noaccess_title: 'Bot breeders only', noaccess: 'Managing user-bots is available to site owners and anyone they grant access. Ask an owner to add your account.',
+    to_orders: '← To orders', to_home: 'Home', your_account: 'Your account',
     nav_home: 'Home', nav_partner: 'Partners', nav_orders: 'My orders', nav_breeders: 'For bot breeders', nav_admin: 'Admins', logout: 'Log out',
     title: 'User-bots for join verification',
     subtitle: 'Connect personal "self-bot" accounts to verify joins on servers without a normal bot. Each card is one account: its status and the join stats it verified.',
@@ -56,7 +59,8 @@ const EN = {
 function t(k) { return lang === 'en' ? (EN[k] || k) : RU[k]; }
 const RU = {
     brand: 'Для ботоводов', login_hint: 'Войдите через Discord, чтобы управлять юзер-ботами.', login_btn: 'Войти через Discord',
-    noaccess: 'Нет доступа к этому разделу. Обратитесь к владельцу сайта.', to_orders: '← К заказам',
+    noaccess_title: 'Раздел только для ботоводов', noaccess: 'Доступ к управлению юзер-ботами есть у владельцев сайта и тех, кому его выдали. Попроси владельца добавить твой аккаунт.',
+    to_orders: '← К заказам', to_home: 'На главную', your_account: 'Твой аккаунт',
     nav_home: 'Главная', nav_partner: 'Партнёрам', nav_orders: 'Мои заказы', nav_breeders: 'Для ботоводов', nav_admin: 'Администраторам', logout: 'Выйти',
     title: 'Юзер-боты для проверки заходов',
     subtitle: 'Подключай личные аккаунты-«селф-боты» для проверки заходов на серверах без обычного бота. Каждая карточка — отдельный аккаунт: статус и статистика проверенных заходов.',
@@ -190,7 +194,13 @@ $('#discord-login').addEventListener('click', (e) => { e.preventDefault(); locat
     let who = null;
     try { const { ok, body } = await get('/order/whoami'); if (ok && body && body.authed) who = body; } catch { /* offline */ }
     if (!who) { $('#login').hidden = false; return; }
-    if (!who.botfarm) { wireNav(who); $('#noaccess').hidden = false; return; }
+    if (!who.botfarm) {
+        wireNav(who);
+        const gu = $('#gateUser');
+        if (gu) gu.innerHTML = `<span class="dot"></span>${t('your_account')}: <b>${esc((who.username ? '@' + who.username : (who.name || '')) || ('ID ' + (who.userId || '')))}</b> · <span class="uid">${esc(who.userId || '')}</span>`;
+        $('#noaccess').hidden = false;
+        return;
+    }
     wireNav(who);
     $('#app').hidden = false;
     load();
