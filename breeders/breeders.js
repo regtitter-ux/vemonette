@@ -200,7 +200,11 @@ $('#discord-login').addEventListener('click', (e) => { e.preventDefault(); locat
     if (!(who.botfarm || who.isAdmin || who.isOwner)) {
         wireNav(who);
         const gu = $('#gateUser');
-        if (gu) gu.innerHTML = `<span class="dot"></span>${t('your_account')}: <b>${esc((who.username ? '@' + who.username : (who.name || '')) || ('ID ' + (who.userId || '')))}</b> · <span class="uid">${esc(who.userId || '')}</span>`;
+        if (gu) {
+            const yn = (v) => v ? '✅' : '❌';
+            gu.innerHTML = `<span class="dot"></span>${t('your_account')}: <b>${esc((who.username ? '@' + who.username : (who.name || '')) || ('ID ' + (who.userId || '')))}</b> · <span class="uid">${esc(who.userId || '')}</span>`
+                + `<br><span class="uid" style="opacity:.8">owner ${yn(who.isOwner)} · admin ${yn(who.isAdmin)} · botfarm ${yn(who.botfarm)}</span>`;
+        }
         $('#noaccess').hidden = false;
         return;
     }
