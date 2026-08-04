@@ -390,6 +390,11 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .wd-row .amount { font-weight: 800; font-variant-numeric: tabular-nums; }
 .wd-row .date { color: var(--muted); font-size: 12px; }
 /* User-bots ("Для ботоводов") tab */
+.bf-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 14px 0 6px; }
+.bf-sum-card { background: var(--panel); border: 1px solid var(--stroke); border-radius: 14px; padding: 14px 16px; }
+.bf-sum-card .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+.bf-sum-card .v { font-size: 26px; font-weight: 800; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.bf-sum-card .sub { font-size: 11.5px; margin-top: 4px; }
 .bf-add-row { display: flex; gap: 10px; margin: 16px 0 0; max-width: 560px; }
 .bf-add-row input { flex: 1; min-width: 0; background: var(--panel); border: 1px solid var(--stroke); color: var(--text); border-radius: 10px; padding: 11px 13px; font-size: 14px; }
 .bf-add-row input:focus { outline: none; border-color: var(--accent); }

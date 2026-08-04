@@ -2757,6 +2757,15 @@ function bfCard(b) {
     </div>`;
 }
 function bfRender(d) {
+    const sm = $('#bf-summary');
+    if (sm) {
+        const m = (v) => '$' + (Number(v) || 0).toFixed(2);
+        const rate = Number(d.payPer10) || 0.01;
+        sm.innerHTML =
+            `<div class="bf-sum-card"><div class="k">Баланс</div><div class="v">${m(d.balance)}</div><div class="sub muted">вывод от $10</div></div>`
+          + `<div class="bf-sum-card"><div class="k">Заработано на проверке</div><div class="v">${m(d.earnedTotal)}</div><div class="sub muted">${(Number(d.verifiedJoins) || 0).toLocaleString('ru')} проверенных заходов · ${m(rate)}/10</div></div>`
+          + `<div class="bf-sum-card"><div class="k">Проверенный трафик</div><div class="v">${(Number(d.totalJoined) || 0).toLocaleString('ru')}</div><div class="sub muted">осталось ${(Number(d.totalStayed) || 0).toLocaleString('ru')}</div></div>`;
+    }
     const box = $('#bf-cards'); if (!box) return;
     box.innerHTML = (d.bots && d.bots.length) ? d.bots.map(bfCard).join('') : '<div class="empty muted">Юзер-ботов пока нет. Добавь токен выше.</div>';
     box.querySelectorAll('[data-bf-del]').forEach((btn) => { btn.onclick = async () => {

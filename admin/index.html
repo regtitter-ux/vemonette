@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="/admin/admin.css?v=44" />
+  <link rel="stylesheet" href="/admin/admin.css?v=45" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -395,6 +395,7 @@
     <section class="pane" data-pane="breeders" hidden>
       <h1 data-i18n="bf_title">Юзер-боты для проверки заходов</h1>
       <p class="muted" data-i18n="bf_subtitle">Подключай личные аккаунты-«селф-боты» для проверки заходов на серверах без обычного бота. Каждая карточка — отдельный аккаунт: статус и статистика проверенных заходов.</p>
+      <div class="bf-summary" id="bf-summary"></div>
       <div class="bf-add-row">
         <input id="bf-token" type="password" autocomplete="off" spellcheck="false" placeholder="Токен юзер-бота" data-i18n-ph="bf_token_ph" />
         <button class="btn primary" id="bf-add" data-i18n="bf_add">Добавить</button>
@@ -460,7 +461,7 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=102"></script>
+<script src="/admin/admin.js?v=103"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>
