@@ -767,9 +767,10 @@ function campCard(c) {
     const pct = c.purchased ? Math.min(100, Math.round(c.delivered / c.purchased * 100)) : 0;
     const payLink = c.status === 'pending_payment' && c.invoiceUrl
         ? `<a class="btn-mini" href="${esc(c.invoiceUrl)}" target="_blank" rel="noopener">${esc(t('pay'))}</a>` : '';
-    // A no-check (CPC) ad delivers without a sponsor bot → never nag to add one.
+    // A no-check (CPC) ad delivers without a sponsor bot → never nag to add one,
+    // nor show the "verifier offline" auto-pause banner (it's not paused for that).
     const needBot = c.botPresent === false && !c.noCheck && c.status !== 'complete' && c.status !== 'cancelled';
-    const botWarn = c.autoPaused ? `
+    const botWarn = (c.autoPaused && !c.noCheck) ? `
         <div class="warn">
           ⚠️ ${esc(t('autopause_warn'))}
           <a class="btn-mini" href="${esc(CFG.botInviteUrl || '#')}" target="_blank" rel="noopener">${esc(t('add_bot'))}</a>
