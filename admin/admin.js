@@ -728,6 +728,7 @@ function cardBlock(c, deleted) {
           Владелец: <b>${owner}</b> <button class="btn-mini copy-id" data-copy="${escapeHtml(c.creatorId || '')}">Copy ID</button>
           · Роль: ${role}${avg}
         </div>
+        ${cardConvBadge(c.conversion)}
         ${delMeta}
         <div class="table-wrap"><table class="card-stats">
           <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
@@ -737,9 +738,19 @@ function cardBlock(c, deleted) {
             ${statRow('3. Остались', st.stayed)}
           </tbody>
         </table></div>
-        ${c.conversion && c.conversion.enabled ? `<div class="cardrow-meta" style="color:var(--accent)">🎯 CPC-конверсия: <b>${c.conversion.conv != null ? Math.round(c.conversion.conv * 100) + '%' : '—'}</b>${c.conversion.conv != null ? ` · $${(Number(c.conversion.ratePer100Clicks) || 0).toFixed(2)}/100 кликов` : ' (копится статистика)'} <span class="muted">· ${c.conversion.joins}/${c.conversion.clickers} за посл. ${c.conversion.sample} заходов</span></div>` : ''}
         <div class="cardrow-actions">${actions}</div>
       </div>`;
+}
+// CPC-conversion badge for an admin card row. Shows the card's OWN conversion once
+// measured, else the network-average fallback actually used to price no-check clicks
+// until the card gathers its own stats.
+function cardConvBadge(cv) {
+    if (!cv || !cv.enabled) return '';
+    if (cv.conv == null) return `<div class="cardrow-conv">🎯 Конверсия: <b>—</b> <span class="muted">· статистика ещё копится</span></div>`;
+    const pct = Math.round(cv.conv * 100) + '%';
+    const rate = `$${(Number(cv.ratePer100Clicks) || 0).toFixed(2)}/100 кликов`;
+    if (cv.source === 'network') return `<div class="cardrow-conv">🎯 Конверсия: <b>${pct}</b> <span class="conv-tag">средняя по сети</span> · ${rate} <span class="muted">· своя копится: ${cv.joins}/${cv.clickers} из ${cv.sample}</span></div>`;
+    return `<div class="cardrow-conv">🎯 Конверсия: <b>${pct}</b> · ${rate} <span class="muted">· по ${cv.joins}/${cv.clickers} за посл. ${cv.sample} заходов</span></div>`;
 }
 // Stats for the "EXTRA GWS" bonus ad button (a second ad shown under the ad and
 // under the success message). Joins/stayed split by when the button was shown:

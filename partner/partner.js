@@ -645,6 +645,20 @@ function cardStatRow(label, w) {
     const c = (v) => (v == null ? 0 : v);
     return `<tr><td>${esc(label)}</td><td class="num">${c(w?.hour)}</td><td class="num">${c(w?.day)}</td><td class="num">${c(w?.week)}</td></tr>`;
 }
+// The CPC-conversion badge for a card. Sits on its own line (not inside the
+// funnel/actions flex row, which it used to overflow). Shows the card's OWN
+// conversion once measured, else the network-average fallback that's actually
+// used to price no-check clicks until the card gathers its own stats.
+function convBadge(cv) {
+    if (!cv || !cv.enabled) return '';
+    if (cv.conv == null) return `<div class="vcard-conv">🎯 Конверсия: <b>—</b> <span class="muted">· статистика ещё копится</span></div>`;
+    const pct = Math.round(cv.conv * 100) + '%';
+    const rate = `${money(cv.ratePer100Clicks)}/100 кликов`;
+    if (cv.source === 'network') {
+        return `<div class="vcard-conv">🎯 Конверсия: <b>${pct}</b> <span class="conv-tag">средняя по сети</span> · ${rate} <span class="muted">· своя копится: ${cv.joins}/${cv.clickers} из ${cv.sample}</span></div>`;
+    }
+    return `<div class="vcard-conv">🎯 Конверсия: <b>${pct}</b> · ${rate} <span class="muted">· по ${cv.joins}/${cv.clickers} за посл. ${cv.sample} заходов</span></div>`;
+}
 function pcardBlock(c) {
     const st = c.stats || {};
     const role = c.roleName ? '@' + esc(c.roleName) : (c.roleId ? esc(c.roleId) : 'роль по умолчанию');
@@ -652,11 +666,13 @@ function pcardBlock(c) {
     const link = c.link ? ` · <a href="${esc(c.link)}" target="_blank" rel="noopener">↗ сообщение</a>` : '';
     const avg = c.avgVerifySeconds != null ? ` · ⏱ ~${esc(fmtSec(c.avgVerifySeconds))}` : '';
     const members = c.memberCount != null ? `<div class="vcard-members muted sm">👥 ${Number(c.memberCount).toLocaleString()}</div>` : '';
+    const convLine = convBadge(c.conversion);
     return `
       <div class="vcard" data-mid="${esc(c.messageId)}">
         <div class="vcard-head">${srvIcon(c.guildName, c.guildIcon)}<span><b>${esc(c.guildName || 'Сервер')}</b> · ${chan}${link}</span></div>
         ${members}
         <div class="vcard-meta">Роль: ${role}${avg}</div>
+        ${convLine}
         <div class="vcard-body">
           <div class="table-wrap"><table>
             <thead><tr><th>Воронка</th><th class="num">час</th><th class="num">день</th><th class="num">неделя</th></tr></thead>
@@ -666,7 +682,6 @@ function pcardBlock(c) {
               ${cardStatRow('3. Остались', st.stayed)}
             </tbody>
           </table></div>
-          ${c.conversion && c.conversion.enabled ? `<div class="vcard-conv muted sm" style="margin-top:8px">🎯 Конверсия карточки: <b>${c.conversion.conv != null ? Math.round(c.conversion.conv * 100) + '%' : '—'}</b>${c.conversion.conv != null ? ` · ${money(c.conversion.ratePer100Clicks)}/100 кликов` : ' (копится статистика)'} <span class="muted">· ${c.conversion.joins}/${c.conversion.clickers} за посл. ${c.conversion.sample} заходов</span></div>` : ''}
           <div class="vcard-actions">
             <button class="btn-mini" data-card="fix">Встряхнуть</button>
             <button class="btn-mini" data-card="owner">Владелец…</button>
