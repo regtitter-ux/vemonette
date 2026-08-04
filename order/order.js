@@ -73,6 +73,8 @@ const DICT = {
     nocheck_on: 'Без проверки: вкл', nocheck_off: 'Без проверки: выкл',
     nocheck_hint: 'Показывать эту рекламу без проверки захода (CPC): оплата за клик по конверсии сервера. Срабатывает только на серверах с включённой калибровкой.',
     nocheck_on_toast: 'Реклама переведена в режим без проверки (CPC)', nocheck_off_toast: 'Реклама снова с проверкой захода',
+    nc_create_label: 'Реклама без проверки захода (CPC) — можно без бота на сервере',
+    nc_create_hint: 'Тестовый режим (staff): заходы не проверяются, оплата статистически по конверсии. Показ — только на серверах с включённой калибровкой.',
     change_link: 'Сменить ссылку', save: 'Сохранить', cancel: 'Отмена',
     link_ph: 'https://discord.gg/xxxx',
     limit_label: 'Лимит заходов на эту ссылку (необязательно)',
@@ -179,6 +181,8 @@ const DICT = {
     nocheck_on: 'No-check: on', nocheck_off: 'No-check: off',
     nocheck_hint: 'Show this ad without a join check (CPC): pay per click by the server\'s conversion. Only fires on calibration-enabled servers.',
     nocheck_on_toast: 'Ad switched to no-check (CPC) mode', nocheck_off_toast: 'Ad back to join-check',
+    nc_create_label: 'No-check ad (CPC) — works without a bot on the server',
+    nc_create_hint: 'Staff test mode: joins aren\'t checked, payment is statistical by conversion. Shown only on calibration-enabled servers.',
     change_link: 'Change link', save: 'Save', cancel: 'Cancel',
     link_ph: 'https://discord.gg/xxxx',
     limit_label: 'Join limit for this link (optional)',
@@ -407,6 +411,9 @@ async function enterApp() {
     // Admins/owners: prime the "all orders" counts so the extra tabs show numbers
     // before they're opened.
     if (isAdminView()) { loadAdminCampaigns('active'); loadAdminCampaigns('paused'); loadAdminCampaigns('done'); }
+    // Staff-only: reveal the "no-check (CPC)" order-creation option (delivers without
+    // a sponsor bot — for testing no-check ads before it's default).
+    { const nc = $('#ord-nocheck-wrap'); if (nc) nc.hidden = !isAdminView(); }
     // Auto-refresh the visible tab, but NOT while the user has an inline panel open
     // (change-link editor / "Shown on servers" list) — re-rendering rebuilds the
     // HTML and would snap the open panel shut. 8s keeps the queue badges live.
@@ -606,7 +613,8 @@ $('#ord-buy').addEventListener('click', async () => {
     if (!Number.isFinite(joins) || joins < CFG.minJoins) { toast(t('invite_min', CFG.minJoins), 'err'); return; }
     $('#ord-buy').disabled = true;
     $('#ord-result').innerHTML = `<div class="muted">${esc(t('creating'))}</div>`;
-    const { ok, status, body } = await post('/create', { invite: `https://discord.gg/${code}`, joins });
+    const noCheck = Boolean(isAdminView() && $('#ord-nocheck')?.checked);
+    const { ok, status, body } = await post('/create', { invite: `https://discord.gg/${code}`, joins, noCheck });
     $('#ord-buy').disabled = false;
     if (status === 402 || body?.error === 'insufficient') {
         const need = Number(body?.shortfall ?? Math.max(0, (body?.price || 0) - (body?.balance || 0))).toFixed(2);
@@ -759,7 +767,8 @@ function campCard(c) {
     const pct = c.purchased ? Math.min(100, Math.round(c.delivered / c.purchased * 100)) : 0;
     const payLink = c.status === 'pending_payment' && c.invoiceUrl
         ? `<a class="btn-mini" href="${esc(c.invoiceUrl)}" target="_blank" rel="noopener">${esc(t('pay'))}</a>` : '';
-    const needBot = c.botPresent === false && c.status !== 'complete' && c.status !== 'cancelled';
+    // A no-check (CPC) ad delivers without a sponsor bot → never nag to add one.
+    const needBot = c.botPresent === false && !c.noCheck && c.status !== 'complete' && c.status !== 'cancelled';
     const botWarn = c.autoPaused ? `
         <div class="warn">
           ⚠️ ${esc(t('autopause_warn'))}
@@ -784,9 +793,10 @@ function campCard(c) {
     const prioBtn = (c.admin && c.status === 'active')
         ? `<button class="btn-mini ${c.pinned ? 'on' : ''}" data-prio="${c.id}" data-pinned="${c.pinned ? '1' : '0'}">${c.pinned ? '★ ' + esc(t('unpin')) : '☆ ' + esc(t('pin'))}</button>`
         : '';
-    // Per-ad no-check (CPC) toggle — staff-only. Marks THIS ad to run without a join
-    // check on calibration-enabled servers (pay-per-click by conversion). Manual lever.
-    const noCheckBtn = c.admin
+    // Per-ad no-check (CPC) toggle — staff-only, shown in ANY tab (incl. the owner's
+    // own orders), so a test ad can be flipped without hunting for the "all orders"
+    // view. Marks THIS ad to run without a join check on calibration-enabled servers.
+    const noCheckBtn = (isAdminView() && (c.status === 'active' || c.status === 'complete'))
         ? `<button class="btn-mini ${c.noCheck ? 'on' : ''}" data-nocheck="${c.id}" data-on="${c.noCheck ? '1' : '0'}" title="${esc(t('nocheck_hint'))}">${c.noCheck ? '⚡ ' + esc(t('nocheck_on')) : esc(t('nocheck_off'))}</button>`
         : '';
     const limitCounter = c.linkLimit ? `<div class="camp-linklimit${c.limitReached ? ' reached' : ''}">${c.linkDelivered}/${c.linkLimit}</div>` : '';
