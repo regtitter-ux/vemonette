@@ -186,7 +186,7 @@ const RU = {
   hero_sub: 'Краткий обзор: что делает Vemoni, как это работает и какие за этим цифры.',
   hero_cta: 'Читать ↓',
   invite_bot: 'Добавить бота', nav_login: 'Войти через Discord',
-  menu_home: 'Главная', menu_partner: 'Партнёрам', menu_order: 'Покупателям', menu_myorders: 'Мои заказы', menu_invest: 'Инвесторам', menu_dev: 'Разработчикам', menu_admin: 'Администраторам', menu_logout: 'Выйти',
+  menu_home: 'Главная', menu_partner: 'Партнёрам', menu_order: 'Покупателям', menu_myorders: 'Мои заказы', menu_invest: 'Инвесторам', menu_dev: 'Разработчикам', menu_breeders: 'Для ботоводов', menu_admin: 'Администраторам', menu_logout: 'Выйти',
   viz_buyers: 'Покупатели', viz_partners: 'Партнёры',
   stat1_label: 'Уже выплачено партнёрам',
   stat2_label: 'довольных покупателей',
@@ -679,6 +679,9 @@ setLang(startLang);
       if (nmBanner && d.banner) { nmBanner.style.backgroundImage = 'url("' + d.banner + '")'; nmBanner.style.backgroundSize = 'cover'; nmBanner.style.backgroundPosition = 'center'; }
       else if (d.avatar) bannerFromAvatar(d.avatar);
       if (!d.isAdmin) box.querySelectorAll('[data-admin]').forEach((el) => el.remove());
+      // Bot-breeders entry: owners + admins + granted keepers (whoami.botfarm).
+      if (d.botfarm || d.isAdmin) box.querySelectorAll('[data-botfarm]').forEach((el) => (el.hidden = false));
+      else box.querySelectorAll('[data-botfarm]').forEach((el) => el.remove());
       // highlight the section the user is currently on
       box.querySelectorAll('.nm-items a').forEach((a) => { if (a.getAttribute('href') === location.pathname) a.classList.add('active'); });
       box.hidden = false;

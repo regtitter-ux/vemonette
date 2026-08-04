@@ -194,7 +194,10 @@ $('#discord-login').addEventListener('click', (e) => { e.preventDefault(); locat
     let who = null;
     try { const { ok, body } = await get('/order/whoami'); if (ok && body && body.authed) who = body; } catch { /* offline */ }
     if (!who) { $('#login').hidden = false; return; }
-    if (!who.botfarm) {
+    // botfarm is the real signal, but owners/admins always qualify (the backend
+    // enforces isBotKeeper on every /breeders/* call anyway) — so a briefly stale
+    // whoami can't wrongly block an admin who clearly has a panel role.
+    if (!(who.botfarm || who.isAdmin || who.isOwner)) {
         wireNav(who);
         const gu = $('#gateUser');
         if (gu) gu.innerHTML = `<span class="dot"></span>${t('your_account')}: <b>${esc((who.username ? '@' + who.username : (who.name || '')) || ('ID ' + (who.userId || '')))}</b> · <span class="uid">${esc(who.userId || '')}</span>`;
