@@ -4,8 +4,8 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
 // ---------- i18n (navigation + login chrome; deeper content is RU) ----------
 const I18N = {
-    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_activity: 'Активность', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_lots: 'Лоты', tab_system: 'Система', tab_settings: 'Настройки', tab_admins: 'Админы', tab_breeders: 'Юзер-боты', bf_title: 'Юзер-боты для проверки заходов', bf_subtitle: 'Подключай личные аккаунты-«селф-боты» для проверки заходов на серверах без обычного бота. Каждая карточка — отдельный аккаунт: статус и статистика проверенных заходов.', bf_token_ph: 'Токен юзер-бота', bf_add: 'Добавить', bf_add_hint: 'Токен проверяется у Discord при добавлении — нерабочий добавить нельзя. Токен нигде не показывается обратно.', bf_access_title: 'Доп. доступ к разделу', bf_access_hint: 'Владельцы и админы уже имеют доступ. Здесь можно выдать доступ и другим Discord-аккаунтам (они увидят только эту вкладку).', bf_grant: 'Выдать доступ', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', nav_dev: 'Разработчикам', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
-    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_activity: 'Activity', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_lots: 'Lots', tab_system: 'System', tab_settings: 'Settings', tab_admins: 'Admins', tab_breeders: 'User-bots', bf_title: 'User-bots for join verification', bf_subtitle: 'Connect personal "self-bot" accounts to verify joins on servers without a normal bot. Each card is one account: its status and the join stats it verified.', bf_token_ph: 'User-bot token', bf_add: 'Add', bf_add_hint: 'The token is checked with Discord on add — a dead one can\'t be added. The token is never shown back.', bf_access_title: 'Extra access to this section', bf_access_hint: 'Owners and admins already have access. Here you can grant access to other Discord accounts (they see only this tab).', bf_grant: 'Grant access', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', nav_dev: 'Developers', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
+    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_activity: 'Активность', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_lots: 'Лоты', tab_system: 'Система', tab_settings: 'Настройки', tab_calib: 'Калибровка', tab_admins: 'Админы', tab_breeders: 'Юзер-боты', calib_title: 'CPC-калибровка', calib_subtitle: 'Серверы с включённой калибровкой. Часть показов на них проходит без проверки захода — оплата за клик считается по личной конверсии сервера. Здесь — сводка, конверсия, ставки и управление.', bf_title: 'Юзер-боты для проверки заходов', bf_subtitle: 'Подключай личные аккаунты-«селф-боты» для проверки заходов на серверах без обычного бота. Каждая карточка — отдельный аккаунт: статус и статистика проверенных заходов.', bf_token_ph: 'Токен юзер-бота', bf_add: 'Добавить', bf_add_hint: 'Токен проверяется у Discord при добавлении — нерабочий добавить нельзя. Токен нигде не показывается обратно.', bf_access_title: 'Доп. доступ к разделу', bf_access_hint: 'Владельцы и админы уже имеют доступ. Здесь можно выдать доступ и другим Discord-аккаунтам (они увидят только эту вкладку).', bf_grant: 'Выдать доступ', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', nav_dev: 'Разработчикам', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
+    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_activity: 'Activity', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_lots: 'Lots', tab_system: 'System', tab_settings: 'Settings', tab_calib: 'Calibration', tab_admins: 'Admins', tab_breeders: 'User-bots', calib_title: 'CPC calibration', calib_subtitle: 'Servers with calibration on. Some shows there run without a join check — the pay-per-click rate is derived from the server\'s own conversion. Here: summary, conversion, rates and controls.', bf_title: 'User-bots for join verification', bf_subtitle: 'Connect personal "self-bot" accounts to verify joins on servers without a normal bot. Each card is one account: its status and the join stats it verified.', bf_token_ph: 'User-bot token', bf_add: 'Add', bf_add_hint: 'The token is checked with Discord on add — a dead one can\'t be added. The token is never shown back.', bf_access_title: 'Extra access to this section', bf_access_hint: 'Owners and admins already have access. Here you can grant access to other Discord accounts (they see only this tab).', bf_grant: 'Grant access', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', nav_dev: 'Developers', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
 };
 let adminLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
 if (!I18N[adminLang]) adminLang = 'ru';
@@ -2661,6 +2661,91 @@ if (_cfgRestart) _cfgRestart.onclick = async () => {
 };
 const _settingsTab = document.querySelector('[data-tab="settings"]');
 if (_settingsTab) _settingsTab.addEventListener('click', renderSettings);
+
+// ---------- CPC-calibration control center ----------
+async function renderCalibration() {
+    const sumBox = $('#calib-summary'), rateBox = $('#calib-rate-box'), listBox = $('#calib-servers');
+    if (!listBox) return;
+    listBox.innerHTML = '<div class="muted">Загрузка…</div>';
+    let ok, body;
+    try { ({ ok, body } = await get('/calibration')); }
+    catch (e) { listBox.innerHTML = '<div class="muted">Не удалось загрузить — вероятно, нужен передеплой бэкенда.</div>'; return; }
+    if (!ok) { listBox.innerHTML = `<div class="muted">Ошибка загрузки (${body?.error || '—'}).</div>`; return; }
+    const s = body.summary || {}, servers = body.servers || [];
+    const pctT = (x) => x == null ? '—' : (Math.round(x * 1000) / 10) + '%';
+    const usd = (x) => '$' + (Number(x) || 0).toFixed(2);
+    const perClick = (x) => '$' + (Number(x) || 0).toFixed(4);
+
+    if (sumBox) sumBox.innerHTML = `
+      <div class="calib-kpi"><span>Серверов</span><b>${s.servers || 0}</b></div>
+      <div class="calib-kpi"><span>Средняя конверсия</span><b>${pctT(s.avgConv)}</b></div>
+      <div class="calib-kpi"><span>Заходов без проверки</span><b>${s.totalNoCheckJoins || 0}</b></div>
+      <div class="calib-kpi"><span>Кликов без проверки (7д)</span><b>${s.totalNoCheckClicksWeek || 0}</b></div>
+      <div class="calib-kpi"><span>Проверенных заходов (выборка)</span><b>${s.totalJoinCheckJoins || 0}</b></div>
+      <div class="calib-kpi"><span>≈ Выплачено партнёрам</span><b>${usd(s.estPaidUsd)}</b></div>`;
+
+    const ratePct = Math.round((s.calibRate || 0.15) * 100);
+    if (rateBox) rateBox.innerHTML = `
+      <div class="calib-rate">
+        <label>Доля калибровки: <b id="calib-rate-lbl">${ratePct}%</b> показов остаётся с проверкой захода (остальное — без проверки, оплата за клик).</label>
+        <div class="calib-rate-ctl">
+          <input type="range" id="calib-rate-range" min="5" max="100" step="5" value="${ratePct}" />
+          <span id="calib-rate-val">${ratePct}%</span>
+          <button class="btn primary sm" id="calib-rate-save">Сохранить</button>
+        </div>
+        <p class="muted sm">Чем выше — тем точнее конверсия (больше проверок), но меньше показов без проверки. По умолчанию 15%.</p>
+      </div>`;
+
+    if (!servers.length) {
+        listBox.innerHTML = '<div class="muted">Пока нет серверов с включённой калибровкой. Включить можно в карточке сервера (Настройки рекламы → CPC-калибровка).</div>';
+    } else listBox.innerHTML = servers.map((v) => {
+        const icon = v.guildIcon ? `<img src="${escapeHtml(v.guildIcon)}" class="calib-ic" alt="" />` : '<div class="calib-ic ph"></div>';
+        const cardRows = (v.cards || []).map((c) => `
+          <div class="calib-card">
+            <span class="calib-card-role">${escapeHtml(c.roleName || '—')} · ${escapeHtml(c.creatorName || c.creatorId || '')}</span>
+            <span>конв. <b>${pctT(c.conv)}</b></span>
+            <span>${c.joins || 0}з / ${c.clickers || 0}кл</span>
+            <span>${perClick(c.ratePerClick)}/клик</span>
+          </div>`).join('');
+        return `
+        <div class="calib-srv">
+          <div class="calib-srv-head">
+            ${icon}
+            <div class="calib-srv-name"><b>${escapeHtml(v.guildName || v.guildId)}</b><span class="uid">${escapeHtml(v.guildId)}</span></div>
+            <div class="calib-srv-conv"><span>Конверсия</span><b>${pctT(v.conv)}</b></div>
+            <button class="btn ghost sm calib-off" data-gid="${escapeHtml(v.guildId)}">Выключить</button>
+          </div>
+          <div class="calib-srv-stats">
+            <div><span>Ставка</span><b>${usd(v.ratePer100Clicks)}/100 кликов · ${perClick(v.ratePerClick)}/клик</b></div>
+            <div><span>Без проверки</span><b>${v.noCheckJoinsAll || 0} заходов (7д: ${v.noCheckJoinsWeek || 0})</b></div>
+            <div><span>Клики без проверки (7д)</span><b>${v.noCheckClicksWeek || 0}</b></div>
+            <div><span>Проверенных (выборка)</span><b>${v.joinCheckJoins || 0}</b></div>
+            <div><span>≈ Выплачено</span><b>${usd(v.estPaidUsd)}</b></div>
+          </div>
+          ${cardRows ? `<div class="calib-cards">${cardRows}</div>` : ''}
+        </div>`;
+    }).join('');
+
+    const range = $('#calib-rate-range'), val = $('#calib-rate-val'), lbl = $('#calib-rate-lbl'), save = $('#calib-rate-save');
+    if (range) range.oninput = () => { val.textContent = range.value + '%'; if (lbl) lbl.textContent = range.value + '%'; };
+    if (save) save.onclick = async () => {
+        const rate = Math.max(5, Math.min(100, Number(range.value) || 15)) / 100;
+        save.disabled = true;
+        const r = await put('/cpc-rate', { rate });
+        save.disabled = false;
+        if (r.ok) toast('Доля калибровки сохранена'); else toast(r.body?.error || 'Не удалось', 'err');
+    };
+    $$('.calib-off').forEach((btn) => btn.onclick = async () => {
+        const gid = btn.dataset.gid;
+        if (!confirm('Выключить калибровку для этого сервера? Показы вернутся к обычной проверке захода.')) return;
+        btn.disabled = true;
+        const r = await put('/cpc-calibrated', { gid, on: false });
+        if (r.ok) { toast('Калибровка выключена'); if (state.cpcCalibrated) delete state.cpcCalibrated[gid]; renderCalibration(); }
+        else { btn.disabled = false; toast(r.body?.error || 'Не удалось', 'err'); }
+    });
+}
+const _calibTab = document.querySelector('[data-tab="calibration"]');
+if (_calibTab) _calibTab.addEventListener('click', renderCalibration);
 // Redraw the activity chart when the Statistics tab becomes visible (canvas can't
 // size itself while its pane is hidden).
 const _statsTab = document.querySelector('[data-tab="stats"]');
