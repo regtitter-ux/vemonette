@@ -70,6 +70,9 @@ const DICT = {
     all_servers: 'Все серверы', only_sfw: 'Только SFW',
     sfw_hint: 'Только SFW: реклама никогда не покажется на NSFW-серверах',
     sfw_on_toast: 'Реклама ограничена SFW-серверами', sfw_off_toast: 'Реклама показывается на всех серверах',
+    nocheck_on: 'Без проверки: вкл', nocheck_off: 'Без проверки: выкл',
+    nocheck_hint: 'Показывать эту рекламу без проверки захода (CPC): оплата за клик по конверсии сервера. Срабатывает только на серверах с включённой калибровкой.',
+    nocheck_on_toast: 'Реклама переведена в режим без проверки (CPC)', nocheck_off_toast: 'Реклама снова с проверкой захода',
     change_link: 'Сменить ссылку', save: 'Сохранить', cancel: 'Отмена',
     link_ph: 'https://discord.gg/xxxx',
     limit_label: 'Лимит заходов на эту ссылку (необязательно)',
@@ -173,6 +176,9 @@ const DICT = {
     all_servers: 'All servers', only_sfw: 'SFW only',
     sfw_hint: 'SFW only: the ad will never show on NSFW servers',
     sfw_on_toast: 'Ad restricted to SFW servers', sfw_off_toast: 'Ad shows on all servers',
+    nocheck_on: 'No-check: on', nocheck_off: 'No-check: off',
+    nocheck_hint: 'Show this ad without a join check (CPC): pay per click by the server\'s conversion. Only fires on calibration-enabled servers.',
+    nocheck_on_toast: 'Ad switched to no-check (CPC) mode', nocheck_off_toast: 'Ad back to join-check',
     change_link: 'Change link', save: 'Save', cancel: 'Cancel',
     link_ph: 'https://discord.gg/xxxx',
     limit_label: 'Join limit for this link (optional)',
@@ -778,6 +784,11 @@ function campCard(c) {
     const prioBtn = (c.admin && c.status === 'active')
         ? `<button class="btn-mini ${c.pinned ? 'on' : ''}" data-prio="${c.id}" data-pinned="${c.pinned ? '1' : '0'}">${c.pinned ? '★ ' + esc(t('unpin')) : '☆ ' + esc(t('pin'))}</button>`
         : '';
+    // Per-ad no-check (CPC) toggle — staff-only. Marks THIS ad to run without a join
+    // check on calibration-enabled servers (pay-per-click by conversion). Manual lever.
+    const noCheckBtn = c.admin
+        ? `<button class="btn-mini ${c.noCheck ? 'on' : ''}" data-nocheck="${c.id}" data-on="${c.noCheck ? '1' : '0'}" title="${esc(t('nocheck_hint'))}">${c.noCheck ? '⚡ ' + esc(t('nocheck_on')) : esc(t('nocheck_off'))}</button>`
+        : '';
     const limitCounter = c.linkLimit ? `<div class="camp-linklimit${c.limitReached ? ' reached' : ''}">${c.linkDelivered}/${c.linkLimit}</div>` : '';
     // Live queue badge: is this order being shown in verifications now, or waiting.
     const q = c.queue;
@@ -804,7 +815,7 @@ function campCard(c) {
         <div class="camp-nums"><span>${esc(t('delivered'))} <b>${c.delivered}</b> / ${c.purchased}</span><span>${money(c.price)}</span></div>
         ${(c.admin && c.noCheckDelivered > 0) ? `<div class="camp-nums camp-ncsplit muted sm"><span>${esc(t('nc_split', Math.max(0, c.delivered - c.noCheckDelivered), c.noCheckDelivered))}</span></div>` : ''}
         ${retentionRow(c.retention)}
-        <div class="camp-actions">${payLink}${prioBtn}${pauseBtn}${resumeLimitBtn}${linkBtn}${srvBtn}${sfwBtn}</div>
+        <div class="camp-actions">${payLink}${prioBtn}${noCheckBtn}${pauseBtn}${resumeLimitBtn}${linkBtn}${srvBtn}${sfwBtn}</div>
         <div class="link-edit" data-link-edit="${c.id}" hidden>
           <input type="text" class="link-input" data-link-input="${c.id}" value="${esc(c.invite)}" placeholder="${esc(t('link_ph'))}" />
           <label class="limit-label muted sm">${esc(t('limit_label'))}</label>
@@ -843,6 +854,15 @@ function wireCampaigns(list) {
         const { ok, body } = await put('/priority', { campaignId: pinned ? '' : b.dataset.prio });
         b.disabled = false;
         if (ok) { toast(pinned ? t('unpinned_toast') : t('pinned_toast')); reloadCurrentTab(); }
+        else toast(errText(body?.error), 'err');
+    });
+    // Per-ad no-check (CPC) toggle — staff only.
+    $$('#camp-list [data-nocheck]').forEach((b) => b.onclick = async () => {
+        const on = b.dataset.on !== '1';
+        b.disabled = true;
+        const { ok, body } = await put(`/campaigns/${b.dataset.nocheck}/nocheck`, { on });
+        b.disabled = false;
+        if (ok) { toast(on ? t('nocheck_on_toast') : t('nocheck_off_toast')); reloadCurrentTab(); }
         else toast(errText(body?.error), 'err');
     });
     // Change the invite link mid-flight — toggle inline editor, then save.
