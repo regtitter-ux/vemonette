@@ -234,3 +234,52 @@ h2{font-size:18px;margin-bottom:14px}
 .tp-modal input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 .tp-err{ color:#ff8a8d; font-size:13px; margin-top:8px; }
 .tp-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+
+/* ============ MOBILE RESPONSIVE ============ */
+@media (max-width:900px){
+  .wrap{padding:24px 16px 50px}
+  /* order/status tab pills → a single horizontally-scrollable row (never wrap/clip) */
+  .camp-tabs{display:flex;max-width:100%;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  .camp-tabs button{flex:none;white-space:nowrap}
+}
+@media (max-width:600px){
+  .wrap{padding:20px 14px 48px;gap:22px}
+  .card{padding:18px 16px}
+  h1{font-size:21px}
+  h2{font-size:16.5px}
+  .topbar{gap:12px;padding:12px 14px}
+  .brand-sm{font-size:20px}
+  .brand-sm img{width:28px;height:28px}
+  .bal-pill{padding:5px 8px 5px 12px;font-size:14px}
+  /* account dropdown never exceeds the viewport, scrolls if tall */
+  .nav-menu{width:min(100vw - 20px,262px);max-height:82vh;overflow-y:auto}
+  .nm-items a,.nm-items .nav-logout{min-height:44px}
+  /* comfortable tap targets */
+  .btn{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+  .btn.sm{min-height:36px}
+  .btn-mini{min-height:34px;padding:7px 12px;font-size:12px}
+  /* new-order footer stacks: price above, full-width submit */
+  .order-foot{flex-direction:column;align-items:stretch;gap:12px}
+  .order-foot .btn{width:100%}
+  .price{text-align:center}
+  .camp{padding:16px 15px}
+  .camp-chips{justify-content:flex-start}
+  /* inline editors (change link / add manager): input + button stack */
+  .link-row{flex-direction:column}
+  .link-row .btn{width:100%}
+  .mgr-add{flex-direction:column;align-items:stretch}
+  .mgr-add .btn{width:100%}
+  /* top-up modal near full-width, top-aligned */
+  .tp-overlay{padding:12px;align-items:flex-start}
+  .tp-modal{max-width:none;width:100%;padding:18px 16px;margin-top:8vh}
+  .toast{left:12px;right:12px;transform:none;text-align:center;max-width:none}
+}
+@media (max-width:400px){
+  .wrap{padding:16px 11px 44px}
+  h1{font-size:19px}
+  .brand-sm{font-size:18px}
+  .brand-sm img{width:26px;height:26px}
+  .camp-tabs button{padding:7px 12px;font-size:12.5px}
+  .camp{padding:14px 13px}
+  .camp-title{font-size:14.5px}
+}

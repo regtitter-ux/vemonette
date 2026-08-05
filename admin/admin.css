@@ -525,7 +525,8 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .toast.ok  { border-color: rgba(87,242,135,0.5); }
 
 /* --- Responsive --- */
-@media (max-width: 800px) {
+/* 900px: sidebar collapses, content goes full-width, tabs become a swipeable strip */
+@media (max-width: 900px) {
   #app { grid-template-columns: 1fr; }
   .sidebar {
     border-right: none; border-bottom: 1px solid var(--stroke);
@@ -540,11 +541,13 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
     width: 100%; order: 3;
     overflow-x: auto; -webkit-overflow-scrolling: touch;
     scrollbar-width: none; -ms-overflow-style: none;
+    padding-bottom: 2px; /* keeps active-tab outline from clipping at the strip edge */
   }
   .tabs::-webkit-scrollbar { display: none; }
   .cab-links { flex-direction: row; flex-wrap: wrap; margin-top: 0; padding-top: 0; border-top: none; order: 4; width: 100%; }
   .cab-links .cl-link { padding: 6px 10px; font-size: 13px; }
-  .tab { white-space: nowrap; padding: 8px 12px; font-size: 13.5px; }
+  /* Tabs: ≥40px tall, easy to tap */
+  .tab { white-space: nowrap; padding: 10px 14px; font-size: 13.5px; min-height: 40px; }
   .content { padding: 18px 14px; max-width: 100%; }
   .pane h1 { font-size: 21px; }
 
@@ -552,7 +555,10 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
   .stat-card { padding: 12px 14px; }
   .stat-card .v { font-size: 20px; }
 
-  .stat-table { font-size: 13px; }
+  /* Big tables: scroll horizontally, never squish columns */
+  .table-wrap { -webkit-overflow-scrolling: touch; }
+  .stat-table { font-size: 13px; min-width: 480px; }
+  .card-stats { min-width: 0; } /* compact funnel table — stays at natural width */
   .stat-table th, .stat-table td { padding: 8px 8px; }
   .stat-table .actions { flex-wrap: wrap; }
 
@@ -568,15 +574,90 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
   .ad-stat-head { flex-direction: column; align-items: stretch; }
   .ad-limit-row input[type="number"] { flex: 1; width: auto; }
 
+  .lot-field input { width: 130px; }
+
   .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
 }
 
-/* Small phones */
-@media (max-width: 420px) {
-  .pane h1 { font-size: 19px; flex-direction: column; align-items: flex-start; }
-  .stat-pill { min-width: 40px; padding: 3px 7px; font-size: 13px; }
-  .login-card { padding: 24px 18px; }
-  #code { font-size: 19px; letter-spacing: 6px; }
+/* Phone (≤600px): stack controls, full-width buttons, near-full modals */
+@media (max-width: 600px) {
+  .content { padding: 14px 12px; }
+  .pane h1 { font-size: 19px; }
+  .pane h2 { font-size: 16px; }
+
+  /* Tabs: slightly taller for easier tap */
+  .tab { padding: 10px 12px; font-size: 13px; min-height: 42px; }
+
+  /* Modals: near-full-width, top-aligned, internal scroll keeps close button reachable */
+  .modal { width: calc(100vw - 20px); max-width: none; max-height: calc(100vh - 20px); }
+  .modal-overlay { align-items: flex-start; padding: 10px; }
+  .modal-close { top: 10px; right: 10px; min-width: 36px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
+  .modal .kv-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Filter bars: stack to full-width columns, ≥40px tap height */
+  .filters { flex-direction: column; }
+  .filters input, .filters select { width: 100%; min-width: 0; flex: none; min-height: 40px; box-sizing: border-box; }
+  .filters .btn { width: 100%; min-height: 40px; justify-content: center; }
+
+  /* Activity-log filter strip */
+  .plog-filters { flex-direction: column; }
+  .plog-sel, .plog-inp { width: 100%; min-width: 0; min-height: 40px; box-sizing: border-box; }
+  .plog-filters .btn { width: 100%; min-height: 40px; }
+
+  /* Lot form: stacked column, full-width fields */
+  .lot-form { flex-direction: column; gap: 10px; }
+  .lot-field { width: 100%; }
+  .lot-field input { width: 100%; }
+  .lot-form > .btn { width: 100%; min-height: 44px; }
+
+  /* Emergency tab — card action buttons: full-width, thumb-friendly */
+  .cardrow-actions { flex-direction: column; gap: 6px; }
+  .cardrow-actions .btn-mini {
+    width: 100%; justify-content: center; text-align: center;
+    min-height: 42px; border-radius: 10px;
+  }
+
+  /* Stats activity chart bar: column layout */
+  .vchart-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .vchart-tiles { justify-content: flex-start; }
+
+  /* CPC calibration rate slider: stack label + range */
+  .calib-rate-ctl { flex-direction: column; align-items: stretch; }
+  .calib-rate-ctl input[type=range] { min-width: 0; width: 100%; }
+
+  /* User-bots add row: respect full container width */
+  .bf-add-row { max-width: 100%; }
+
+  /* Tables: tighter min-width so the scroll starts later on real phones */
+  .stat-table { min-width: 360px; font-size: 12.5px; }
+  .stat-table th, .stat-table td { padding: 7px 6px; }
+
+  /* Settings bar buttons: comfortable tap height */
+  .settings-bar .btn { min-height: 40px; }
+}
+
+/* Small phones (≤400px) */
+@media (max-width: 400px) {
+  .pane h1 { font-size: 18px; flex-direction: column; align-items: flex-start; }
+  .stat-pill { min-width: 38px; padding: 3px 6px; font-size: 12px; }
+  .login-card { padding: 20px 14px; }
+  #code { font-size: 18px; letter-spacing: 5px; }
+
+  .tab { padding: 10px 10px; font-size: 12.5px; }
+
+  /* kv-grid: single column on very narrow screens */
+  .modal .kv-grid { grid-template-columns: 1fr; }
+
+  /* Calibration grids: tighten to 1 column */
+  .calib-srv-stats { grid-template-columns: 1fr; }
+  /* bf-summary: 1 column so values breathe */
+  .bf-summary { grid-template-columns: 1fr; }
+
+  /* Tables: minimal sizing for 320px screens */
+  .stat-table { min-width: 300px; font-size: 12px; }
+  .stat-table th, .stat-table td { padding: 6px 5px; }
+
+  .toast { padding: 10px 13px; font-size: 13px; }
 }
 
 /* Verification-card management ("Экстренно" tab) */

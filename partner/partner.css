@@ -335,3 +335,117 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
 .view-banner .vb-exit{margin-left:10px;color:var(--blue-2);font-weight:700;text-decoration:none}
 .view-banner .vb-exit:hover{text-decoration:underline}
 .vcard-flash{outline:2px solid var(--amber);outline-offset:2px;transition:outline .3s;border-radius:12px}
+
+/* ===================================================================
+   MOBILE RESPONSIVE — phones 320-430 px
+   All visual rules are inside max-width queries — desktop untouched.
+   Global rules below are additive properties only (min-width, touch
+   scroll) that have zero effect when the container is wide enough.
+   =================================================================== */
+
+/* Scrollable table containers: touch momentum + minimum table width so
+   narrow phones get a horizontal scroll instead of crushed columns.
+   On desktop the table is always width:100% of a wide container so
+   min-width never triggers an overflow there. */
+.table-wrap{-webkit-overflow-scrolling:touch}
+.table-wrap table{min-width:360px}
+/* Funnel / stat tables (4 narrower cols) can be a bit tighter */
+.vcard .table-wrap table,.ref-card .table-wrap table{min-width:280px}
+
+/* ---- 900 px: start narrowing wrap padding ---- */
+@media(max-width:900px){
+  .wrap{padding:24px 16px 50px}
+}
+
+/* ---- 600 px: phones ---- */
+@media(max-width:600px){
+  /* wrap & cards */
+  .wrap{padding:20px 14px 50px}
+  .card{padding:16px}
+
+  /* topbar: compact tokens so brand + right side fit one line */
+  .topbar{padding:10px 12px;gap:8px}
+  .top-right{gap:6px}
+  .bal-pill{padding:5px 10px;font-size:13px;gap:5px}
+  .lang-switch button{padding:2px 7px;font-size:11.5px}
+
+  /* nav dropdown: never cut off at viewport edge */
+  .nav-menu{right:0;left:auto;width:min(calc(100vw - 20px),280px);max-height:85vh;overflow-y:auto}
+  .nm-items a,.nm-items .nav-logout{min-height:44px;padding:10px 10px}
+
+  /* section tabs: single horizontal scroll row — no word-wrap */
+  .p-tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;scrollbar-width:none}
+  .p-tabs::-webkit-scrollbar{display:none}
+  .p-tab{white-space:nowrap;flex:none}
+
+  /* touch targets ≥ 40 px */
+  .btn{min-height:40px}
+  .btn.sm{min-height:36px;padding:9px 13px}
+  .btn-mini{min-height:40px;padding:8px 11px;font-size:12.5px}
+  .xbtn{min-height:40px}
+  .cab-burger{min-width:42px;min-height:42px}
+  .cab-av{min-width:42px;min-height:42px}
+
+  /* activity log: right column stacks; filter bar goes 2-per-row */
+  .plog-right{flex-direction:column;align-items:flex-end;gap:2px}
+  .plog-filters{gap:6px}
+  .plog-sel{flex:1 1 calc(50% - 6px);min-width:0;min-height:40px}
+  .plog-inp{flex:1 1 100%;min-width:0;min-height:40px}
+
+  /* alternative login: stack fields vertically */
+  .alt-row{flex-direction:column;gap:6px}
+  .alt-row .btn{width:100%;min-height:44px}
+
+  /* stat card grids: at least 2 per row */
+  .pcards{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+  .xstats{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+
+  /* owner balance cards: single column */
+  .xbal{flex-direction:column;gap:10px}
+  .xbal-card{min-width:0;width:100%}
+  .xbal-edit{flex-wrap:wrap}
+  .xbal-edit input{flex:1 1 auto;min-height:40px}
+
+  /* modals: near full screen, internal scroll */
+  .pmodal{padding:10px;align-items:flex-start;padding-top:20px}
+  .pmodal-card{max-width:100%;max-height:88vh;overflow-y:auto;padding:16px}
+  /* auto-reset modal: stack day/hour fields */
+  .ar-inputs{flex-direction:column;gap:8px}
+  .ar-field input{min-height:40px}
+
+  /* referral link & my-referrer: stack on phone */
+  .reflink-row{flex-direction:column;gap:6px}
+  .reflink-row input{min-width:0;min-height:40px;width:100%}
+  .reflink-row .btn{min-height:40px;width:100%}
+  .myref-row{flex-direction:column;gap:6px}
+  .myref-row input{min-height:40px;flex:none;min-width:0;width:100%}
+  .myref-row .btn{min-height:40px;width:100%}
+
+  /* active-ad rows: allow inner elements to wrap */
+  .pad-row{flex-wrap:wrap;gap:8px}
+
+  /* server switcher: horizontal scroll, never wrap */
+  .srv-switch{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .srv-switch::-webkit-scrollbar{display:none}
+  .sw-btn{flex:none}
+
+  /* headings */
+  h1{font-size:20px}
+  h2{font-size:16px}
+}
+
+/* ---- 400 px: very small phones ---- */
+@media(max-width:400px){
+  .wrap{padding:16px 10px 50px}
+  .card{padding:12px}
+  .topbar{padding:8px 10px}
+  .brand-sm{font-size:20px}
+  .brand-sm img{width:26px;height:26px}
+  .bal-pill{font-size:12px;padding:4px 8px;gap:4px}
+  /* nav dropdown: full edge-to-edge on 320-400 px screens */
+  .nav-menu{left:8px;right:8px;width:auto}
+  /* filter selects: one per row */
+  .plog-sel{flex:1 1 100%}
+  /* tabs: tighter label */
+  .p-tab{font-size:12.5px;padding:8px 10px}
+}

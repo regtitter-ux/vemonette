@@ -44,3 +44,30 @@
 .iv-modal input::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 .iv-m-err{ color:#ff8a8d; font-size:13px; margin-top:8px; }
 .iv-m-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+
+/* ===================================================================
+   MOBILE RESPONSIVE — investor cabinet
+   Supplements partner.css responsive rules for investor-specific elements.
+   =================================================================== */
+
+@media(max-width:600px){
+  /* Number-input modal: less padding, touch-friendly actions */
+  .iv-overlay{padding:12px}
+  .iv-modal{padding:16px}
+  .iv-m-actions{gap:8px}
+  .iv-m-actions .btn{min-height:40px}
+
+  /* "Your invites" stat grid: tighter gaps */
+  .inv-mine-grid{gap:4px 12px}
+
+  /* Server-card action area: buy button full width on phone */
+  .vcard .vcard-actions .btn.ghost{width:100%;justify-content:center;min-height:40px}
+
+  /* Investor topbar action buttons: stay comfortable when wrapped */
+  #inv-topup,#inv-withdraw{min-height:36px}
+}
+
+@media(max-width:400px){
+  /* how-it-works note: slightly smaller so it breathes */
+  .how-note{font-size:12px;line-height:1.5}
+}

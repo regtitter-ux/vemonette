@@ -445,6 +445,17 @@ a.dm-mlink:hover{ text-decoration:underline; }
   .dm-cols{ grid-template-columns:1fr; }
   .dm-bigrow{ grid-template-columns:1fr; }
 }
+/* ===== Mobile: 600 px ===== */
+@media (max-width:600px){
+  .dm-modebar{ flex-wrap:wrap; gap:6px; }
+  .dm-mode{ min-height:36px; padding:7px 14px; }
+  #dm-selbar{ flex-wrap:wrap; }
+  /* server picker: single column on phones */
+  .dm-sp-grid{ grid-template-columns:1fr; }
+  .dm-access-add{ flex-wrap:wrap; }
+  .dm-access-add .dm-btn{ width:100%; justify-content:center; }
+}
+
 @media (max-width:520px){
   .dm-card{ padding:16px 14px; border-radius:14px; }
   .dm-tab{ padding:8px 12px; font-size:12.5px; }
