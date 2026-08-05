@@ -1517,6 +1517,7 @@ function openServerAdModal(gid) {
     const clawOff = Boolean((state.clawbackOffAfterComplete || {})[gid]);
     const isNsfw = Boolean((state.nsfwServers || {})[gid]);
     const cpcOn = Boolean((state.cpcCalibrated || {})[gid]);
+    const extraOff = Boolean((state.extraAdOff || {})[gid]);
     const showing = Boolean(guildEntry?.adShowing);
     let nsfwBlock = '';
     if (isOwner) {
@@ -1538,6 +1539,17 @@ function openServerAdModal(gid) {
             <span>CPC-калибровка (оплата за клики)</span>
           </label>
           <p class="muted" style="margin:6px 0 0;">Считает личную конверсию карточек этого сервера по последним 100 проверенным заходам и показывает её в карточках. Для рекламы без проверки на заход оплата за клик считается по этой конверсии. Выкл — обычная оплата за заход.</p>
+        </div>`;
+    }
+    let extraAdBlock = '';
+    if (isOwner) {
+        extraAdBlock = `
+        <div class="setting wide" style="margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;">
+          <label class="nsfw-check" style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;">
+            <input type="checkbox" data-act="extra-ad-toggle" ${extraOff ? 'checked' : ''} />
+            <span>Отключить экстра-рекламу (доп. кнопку)</span>
+          </label>
+          <p class="muted" style="margin:6px 0 0;">Бонусная кнопка с дополнительной рекламой (под рекламой и под сообщением об успехе) не будет показываться на этом сервере. Для партнёров, которые категорически против неё.</p>
         </div>`;
     }
     let clawBlock = '';
@@ -1608,6 +1620,7 @@ function openServerAdModal(gid) {
         </div>
         ${nsfwBlock}
         ${cpcBlock}
+        ${extraAdBlock}
         ${clawBlock}
         ${profitBlock}
       </div>`;
@@ -1623,6 +1636,16 @@ function openServerAdModal(gid) {
                 if (nsfw) state.nsfwServers[gid] = true; else delete state.nsfwServers[gid];
                 toast(nsfw ? 'Сервер помечен NSFW' : 'Метка NSFW снята');
             } else { nsfwBox.checked = !nsfw; toast(body?.error || 'Не удалось переключить', 'err'); }
+        };
+        const extraBox = $('#server-ad-modal-body [data-act="extra-ad-toggle"]');
+        if (extraBox) extraBox.onchange = async () => {
+            const off = extraBox.checked;
+            const { ok, body } = await put('/server-extra-ad', { gid, off });
+            if (ok) {
+                state.extraAdOff = state.extraAdOff || {};
+                if (off) state.extraAdOff[gid] = true; else delete state.extraAdOff[gid];
+                toast(off ? 'Экстра-реклама отключена на сервере' : 'Экстра-реклама включена');
+            } else { extraBox.checked = !off; toast(body?.error || 'Не удалось переключить', 'err'); }
         };
         const cpcBox = $('#server-ad-modal-body [data-act="cpc-toggle"]');
         if (cpcBox) cpcBox.onchange = async () => {
