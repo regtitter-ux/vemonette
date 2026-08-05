@@ -2705,6 +2705,22 @@ async function renderCalibration() {
           <button class="btn primary sm" id="calib-rate-save">Сохранить</button>
         </div>
         <p class="muted sm">Чем выше — тем точнее конверсия (больше проверок), но меньше показов без проверки. По умолчанию 15%.</p>
+      </div>
+      <div class="calib-rate" style="margin-top:12px">
+        <label>Сервер для калибровки <span class="muted">(куда ведёт проверочная реклама)</span></label>
+        <div class="calib-rate-ctl">
+          <input type="text" id="calib-invite" placeholder="https://discord.gg/..." value="${escapeHtml(s.calibrationInvite || '')}" style="flex:1;min-width:220px" />
+          <button class="btn primary sm" id="calib-invite-save">Сохранить</button>
+        </div>
+        <p class="muted sm">${s.calibrationConfigured ? '✅ Настроено. ' : '⚠️ Не настроено — без ссылки кнопка «Калибровка» не запустится. '}Кнопка «Калибровка» у сервера запускает проверочную рекламу (лимит 100 заходов, высший приоритет, партнёр не может скрыть). Заходы оплачиваются партнёру как обычно; сервис несёт стоимость.</p>
+      </div>
+      <div class="calib-rate" style="margin-top:12px">
+        <label>Сброс статистики конверсии</label>
+        <div class="calib-rate-ctl">
+          <button class="btn ghost sm" id="calib-reset">Сбросить конверсию всем</button>
+          ${s.convResetAt ? `<span class="muted sm">последний сброс: ${new Date(s.convResetAt).toLocaleString()}</span>` : ''}
+        </div>
+        <p class="muted sm">Обнуляет накопленную конверсию по всем серверам — старые клики/заходы перестают учитываться, счёт идёт заново. Денежные записи не трогаются.</p>
       </div>`;
 
     if (!servers.length) {
@@ -2724,6 +2740,9 @@ async function renderCalibration() {
             ${icon}
             <div class="calib-srv-name"><b>${escapeHtml(v.guildName || v.guildId)}</b><span class="uid">${escapeHtml(v.guildId)}</span></div>
             <div class="calib-srv-conv"><span>Конверсия</span><b>${pctT(v.conv)}</b></div>
+            ${v.calibrationActive
+                ? `<button class="btn sm calib-run running" data-gid="${escapeHtml(v.guildId)}">⏹ Стоп калибровку · ${v.calibrationDelivered}/${v.calibrationGoal}</button>`
+                : `<button class="btn sm calib-run" data-gid="${escapeHtml(v.guildId)}">🎯 Калибровка</button>`}
             <button class="btn ghost sm calib-off" data-gid="${escapeHtml(v.guildId)}">Выключить</button>
           </div>
           <div class="calib-srv-stats">
@@ -2754,6 +2773,45 @@ async function renderCalibration() {
         if (r.ok) { toast('Калибровка выключена'); if (state.cpcCalibrated) delete state.cpcCalibrated[gid]; renderCalibration(); }
         else { btn.disabled = false; toast(r.body?.error || 'Не удалось', 'err'); }
     });
+    // Save the calibration sponsor invite.
+    const invSave = $('#calib-invite-save');
+    if (invSave) invSave.onclick = async () => {
+        const invite = ($('#calib-invite')?.value || '').trim();
+        invSave.disabled = true;
+        const r = await put('/calibration/invite', { invite });
+        invSave.disabled = false;
+        if (r.ok) { toast(invite ? 'Сервер калибровки сохранён' : 'Ссылка очищена'); renderCalibration(); }
+        else toast(({ 'bad-invite': 'Некорректная ссылка' })[r.body?.error] || r.body?.error || 'Не удалось', 'err');
+    };
+    // Reset all conversion stats (cutoff).
+    const resetBtn = $('#calib-reset');
+    if (resetBtn) resetBtn.onclick = async () => {
+        if (!confirm('Сбросить накопленную конверсию по ВСЕМ серверам? Старые клики и заходы перестанут учитываться (деньги не трогаются). Счёт пойдёт заново.')) return;
+        resetBtn.disabled = true;
+        const r = await post('/calibration/reset');
+        resetBtn.disabled = false;
+        if (r.ok) { toast('Конверсия сброшена'); renderCalibration(); }
+        else toast(r.body?.error || 'Не удалось', 'err');
+    };
+    // Start / stop the per-server calibration ad.
+    $$('.calib-run').forEach((btn) => btn.onclick = async () => {
+        const gid = btn.dataset.gid;
+        btn.disabled = true;
+        const r = await post('/calibration/run', { gid });
+        if (r.ok) { toast(r.body.running ? 'Калибровка запущена (100 заходов)' : 'Калибровка остановлена'); renderCalibration(); }
+        else {
+            btn.disabled = false;
+            toast(({ 'no-calibration-invite': 'Сначала укажите сервер для калибровки выше', 'sponsor-no-bot': 'На сервере калибровки нет нашего бота', 'sponsor-is-target': 'Сервер калибровки не может совпадать с проверяемым' })[r.body?.error] || r.body?.error || 'Не удалось', 'err');
+        }
+    });
+    // Live-refresh while any calibration is running — progress + conversion update
+    // in real time (conversion is recomputed server-side on every load).
+    clearTimeout(window._calibTimer);
+    if (servers.some((v) => v.calibrationActive)) {
+        window._calibTimer = setTimeout(() => {
+            if (!document.querySelector('[data-pane="calibration"]')?.hidden) renderCalibration();
+        }, 15000);
+    }
 }
 const _calibTab = document.querySelector('[data-tab="calibration"]');
 if (_calibTab) _calibTab.addEventListener('click', renderCalibration);
