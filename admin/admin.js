@@ -182,6 +182,9 @@ const TR = {
   'Вернуть':'Restore','Убрать из списка':'Remove from list','Встряхнуть':'Shake','Владелец…':'Owner…','Роль…':'Role…','Описание…':'Description…',
   'Перепубликовать':'Republish','Сбросить роль':'Reset role','Роль:':'Role:',
   '1. Клик (начали)':'1. Click (started)','2. Заход проверен':'2. Join checked','3. Остались':'3. Stayed',
+  'Без проверки (CPC)':'No-check (CPC)','Конверсия сети':'Network conversion','(остались ÷ клики с проверкой)':'(stayed ÷ checked clicks)',
+  'Из кликов — показов без проверки':'Of the clicks — no-check impressions',
+  '«Заход проверен» и «Остались» — реальные заходы с проверкой на заход (нетто, за вычетом ушедших). «Без проверки (CPC)» — статистические начисления за клики по рекламе без проверки, считаются отдельно и не входят в «заход проверен». Клик — все начатые верификации.':'“Join checked” and “Stayed” are real join-checked joins (net of leavers). “No-check (CPC)” is statistical pay-per-click credits from no-check ads, counted separately and NOT included in “join checked”. Click = every started verification.',
   'Карточек пока нет. Создайте через /verify или добавьте по ссылке выше.':'No cards yet. Create one via /verify or add by link above.','Удалённых карточек нет.':'No deleted cards.',
   'Карточка пересобрана':'Card rebuilt','Удалить старое сообщение и опубликовать карточку заново (владелец и роль сохранятся)?':'Delete the old message and post the card again (owner and role kept)?',
   'Карточка перепубликована':'Card republished','Удалить карточку (сообщение бота будет удалено)?':'Delete the card (the bot message will be removed)?','Карточка удалена':'Card deleted',
@@ -1234,7 +1237,16 @@ function renderStats() {
     const nfBox = $('#vemoni-funnel');
     if (nfBox && nf) {
         const side = (noad ? nf.noAd : nf.ads) || {};
-        const frow = (label, w) => `<tr><td>${escapeHtml(label)}</td><td class="num">${(w && w.hour) || 0}</td><td class="num">${(w && w.day) || 0}</td><td class="num">${(w && w.week) || 0}</td></tr>`;
+        const frow = (label, w, style) => `<tr${style ? ` style="${style}"` : ''}><td>${escapeHtml(label)}</td><td class="num">${(w && w.hour) || 0}</td><td class="num">${(w && w.day) || 0}</td><td class="num">${(w && w.week) || 0}</td></tr>`;
+        // No-check (CPC) credits are a separate, statistical row (only with-ads, only
+        // when there's any such activity). Conversion + click split shown below.
+        const hasNc = !noad && nf.noCheck && ((nf.noCheck.week || 0) > 0);
+        const ncRow = hasNc ? frow('Без проверки (CPC)', nf.noCheck, 'color:var(--blue-2,#5cc3ff)') : '';
+        const conv = nf.conv || {};
+        const cpct = (v) => (v == null ? '—' : v + '%');
+        const convLine = noad ? '' : `<div class="muted sm" style="margin-top:8px">🎯 Конверсия сети <span class="muted">(остались ÷ клики с проверкой)</span>: час <b>${cpct(conv.hour)}</b> · день <b>${cpct(conv.day)}</b> · неделя <b>${cpct(conv.week)}</b></div>`;
+        const ncClk = nf.clicksNc || {};
+        const ncClkNote = (!noad && (ncClk.week || 0) > 0) ? ` Из кликов — показов без проверки: час ${ncClk.hour || 0} · день ${ncClk.day || 0} · неделя ${ncClk.week || 0}.` : '';
         nfBox.innerHTML = `
           <div class="ref-card vemoni-card">
             <div class="ref-head">
@@ -1247,11 +1259,13 @@ function renderStats() {
                 ${frow('1. Клик (начали)', nf.clicks)}
                 ${frow('2. Заход проверен', side.checked)}
                 ${frow('3. Остались', side.stayed)}
+                ${ncRow}
               </tbody>
             </table></div>
+            ${convLine}
             <div class="muted sm" style="margin-top:8px">${noad
-                ? 'Органические верификации — рекламу не показывали, заход на спонсора не проверялся, поэтому «заход» и «остались» совпадают.'
-                : 'Только верификации с показом рекламы — совпадает с карточками выше.'} Клики не делятся по рекламе: это все начатые верификации.</div>
+                ? 'Органические верификации — рекламу не показывали, заход на спонсора не проверялся, поэтому «заход» и «остались» совпадают. Клик — все начатые верификации.'
+                : '«Заход проверен» и «Остались» — реальные заходы с проверкой на заход (нетто, за вычетом ушедших). «Без проверки (CPC)» — статистические начисления за клики по рекламе без проверки, считаются отдельно и не входят в «заход проверен». Клик — все начатые верификации.' + ncClkNote}</div>
           </div>`;
     } else if (nfBox) { nfBox.innerHTML = ''; }
 
