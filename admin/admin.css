@@ -134,7 +134,14 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
 .btn.sm { padding: 8px 14px; font-size: 12.5px; }
 
 /* --- App layout --- */
-#app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+#app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; max-width: 100vw; }
+/* The content column is the grid's 1fr track. Without min-width:0 a grid item won't
+   shrink below its content's min-content size, so a wide child (funnel table, chart,
+   card row, server chips) forces the whole column past the viewport — and body's
+   overflow-x:hidden then CLIPS it (the "cut off on the right" on phones and in the
+   browser's desktop-site mode). min-width:0 lets it shrink; wide children scroll
+   inside their own overflow-x:auto wrappers instead of blowing out the page. */
+#app > .content, #app > .sidebar { min-width: 0; }
 
 /* Top bar — unified with the cabinet pages (avatar burger holds the cross-cabinet
    links + logout; the sidebar keeps only the admin section tabs). */
