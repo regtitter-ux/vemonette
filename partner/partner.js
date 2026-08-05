@@ -85,7 +85,7 @@ const WHOLE = {
   'Уже в рекламе':'Already in the ad','Лимит показов':'Display limit','Нет реклам':'No ads',
   // money credits / debits (log rows + filter options)
   'Начисления':'Credits','По сумме':'By amount','Без оплаты':'Unpaid',
-  'Оплачено — заход':'Paid — join','Реферальный бонус':'Referral bonus','Вывод из инвестиций':'Investment withdrawal',
+  'Оплачено — заход':'Paid — join','Оплата за клик':'Pay per click','реклама без проверки':'no-check ad','клик по рекламе':'ad click','Реферальный бонус':'Referral bonus','Вывод из инвестиций':'Investment withdrawal',
   'Возврат выплаты':'Payout refund','Начисление вручную':'Manual credit','Выплата средств':'Payout',
   'Возврат реф. бонуса':'Referral bonus reversed','Списание вручную':'Manual debit','Участник ушёл (возврат)':'Member left (clawback)',
   'Корректировка баланса':'Balance adjustment','Выплата':'Payout',
@@ -934,6 +934,7 @@ let plogUserTimer = null;
 const NOPAY = 'Выдана верификация · без оплаты';
 const PLOG_LABEL = {
     grant_paid: { cls: 'g', title: 'Выдана верификация', tag: 'начислено' },
+    grant_paid_click: { cls: 'g', title: 'Оплата за клик', tag: 'реклама без проверки' },
     grant_no_ad: { cls: 'n', title: NOPAY, tag: 'рекламы не было' },
     grant_ads_off: { cls: 'n', title: NOPAY, tag: 'реклама отключена' },
     grant_server_off: { cls: 'n', title: NOPAY, tag: 'реклама отключена на сервере' },
@@ -962,7 +963,7 @@ function plogRow(e, servers, users) {
     const L = plogLabel(e);
     const amt = (e.type === 'debit' && e.amount)
         ? `<span class="plog-amt neg">−${money(e.amount)}</span>`
-        : ((e.type === 'credit' || (e.type === 'grant' && e.reason === 'paid')) && e.amount ? `<span class="plog-amt pos">+${money(e.amount)}</span>` : '');
+        : ((e.type === 'credit' || (e.type === 'grant' && (e.reason === 'paid' || e.reason === 'paid_click'))) && e.amount ? `<span class="plog-amt pos">+${money(e.amount)}</span>` : '');
     const sv = e.guildId ? (servers[e.guildId] || e.guildId) : '';
     const uname = e.userId ? (users && users[e.userId]) : '';
     const usr = e.userId ? `<span class="plog-usr">${uname ? `<b>${esc(uname)}</b> · ` : ''}ID ${esc(e.userId)}</span>` : '';
@@ -970,6 +971,7 @@ function plogRow(e, servers, users) {
     // with a direction word so "who + where" reads at a glance.
     const sp = e.sponsorGuildId ? (servers[e.sponsorGuildId] || e.sponsorGuildId) : '';
     const dir = (e.type === 'debit' || e.type === 'unverify') ? 'ушёл из'
+        : e.reason === 'paid_click' ? 'клик по рекламе'
         : (e.reason === 'dup_join' || e.reason === 'already_member') ? 'уже был в' : 'зашёл в';
     const spPart = sp ? `<span class="plog-sp">${dir}: ${esc(sp)}</span>` : '';
     return `<div class="plog-row plog-${L.cls}">

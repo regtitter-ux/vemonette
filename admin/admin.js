@@ -49,6 +49,8 @@ const TR_RE = [
   [/серв(?:ере|ерах)(?![а-яё])/gi,'server(s)']
 ];
 const TR = {
+  // activity-log: no-check (CPC) click earnings
+  'Оплата за клик':'Pay per click','реклама без проверки':'no-check ad','клик по рекламе':'ad click',
   // login / chrome / banners
   'Войдите через Discord, чтобы получить доступ к панели.':'Log in with Discord to access the panel.',
   'Войти через Discord':'Log in with Discord','Выйти':'Log out',
@@ -2849,6 +2851,7 @@ const ALOG_MONEY = (n) => '$' + Number(n || 0).toFixed(2);
 const ALOG_NOPAY = 'Выдана верификация · без оплаты';
 const ALOG_LABEL = {
     grant_paid: { cls: 'g', title: 'Выдана верификация', tag: 'начислено' },
+    grant_paid_click: { cls: 'g', title: 'Оплата за клик', tag: 'реклама без проверки' },
     grant_no_ad: { cls: 'n', title: ALOG_NOPAY, tag: 'рекламы не было' },
     grant_ads_off: { cls: 'n', title: ALOG_NOPAY, tag: 'реклама отключена' },
     grant_server_off: { cls: 'n', title: ALOG_NOPAY, tag: 'реклама отключена на сервере' },
@@ -2872,12 +2875,13 @@ function alogQuery() {
 function alogRow(e, maps) {
     const L = ALOG_LABEL[`${e.type}_${e.reason}`] || { cls: 'n', title: e.type, tag: e.reason || '' };
     const amt = e.type === 'debit' ? `<span class="plog-amt neg">−${ALOG_MONEY(e.amount)}</span>`
-        : (e.type === 'grant' && e.reason === 'paid' && e.amount ? `<span class="plog-amt pos">+${ALOG_MONEY(e.amount)}</span>` : '');
+        : (e.type === 'grant' && (e.reason === 'paid' || e.reason === 'paid_click') && e.amount ? `<span class="plog-amt pos">+${ALOG_MONEY(e.amount)}</span>` : '');
     const partner = e.creatorId ? `<span class="plog-sv">Партнёр: ${userLink(e.creatorId, maps.partners[e.creatorId] || e.creatorId)}</span>` : '';
     const sv = e.guildId ? `<span class="plog-sv">${serverLink(e.guildId, maps.servers[e.guildId] || e.guildId)}</span>` : '';
     const usr = e.userId ? `<span class="plog-usr">${userLink(e.userId, maps.users[e.userId] || ('ID ' + e.userId))}</span>` : '';
     // Sponsor server the member joined into / left from (where known).
     const spDir = (e.type === 'debit' || e.type === 'unverify') ? 'ушёл из'
+        : e.reason === 'paid_click' ? 'клик по рекламе'
         : (e.reason === 'dup_join' || e.reason === 'already_member') ? 'уже был в' : 'зашёл в';
     const sp = e.sponsorGuildId ? `<span class="plog-sp">${spDir}: ${serverLink(e.sponsorGuildId, maps.servers[e.sponsorGuildId] || e.sponsorGuildId)}</span>` : '';
     return `<div class="plog-row plog-${L.cls}">
