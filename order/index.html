@@ -178,9 +178,10 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
         <label data-i18n="label_joins">Сколько заходов купить</label>
         <input id="ord-joins" type="number" min="1" step="1" value="100" />
       </div>
+      <p class="muted sm" id="ord-nobot-note" data-i18n="nobot_note" style="margin-top:8px">Бота на сервере может не быть — тогда заказ выполнится рекламой без проверки на заход (оплата по конверсии). Если наш бот на сервере есть — идёт обычная проверка захода.</p>
       <div class="field ord-nocheck" id="ord-nocheck-wrap" hidden>
-        <label class="nocheck-check"><input type="checkbox" id="ord-nocheck" /> <span data-i18n="nc_create_label">Реклама без проверки захода (CPC) — можно без бота на сервере</span></label>
-        <p class="muted sm" data-i18n="nc_create_hint">Тестовый режим (staff): заходы не проверяются, оплата статистически по конверсии. Показ — только на серверах с включённой калибровкой.</p>
+        <label class="nocheck-check"><input type="checkbox" id="ord-nocheck" /> <span data-i18n="nc_create_label">Принудительно без проверки захода (даже если бот есть)</span></label>
+        <p class="muted sm" data-i18n="nc_create_hint">Заходы не проверяются, оплата за клик по конверсии. Без бота заказ и так идёт без проверки — этот флажок нужен, только чтобы форсировать режим на сервере с ботом.</p>
       </div>
       <div class="order-foot">
         <div class="price"><span data-i18n="price_label">К оплате:</span> <b id="ord-price">$10.00</b> <span class="muted" id="ord-rate"></span></div>
@@ -352,7 +353,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/order/order.js?v=54"></script>
+<script src="/order/order.js?v=55"></script>
 <script src="/order/dmall.js?v=44"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
