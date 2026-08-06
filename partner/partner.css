@@ -369,8 +369,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   .bal-pill{padding:5px 10px;font-size:13px;gap:5px}
   .lang-switch button{padding:2px 7px;font-size:11.5px}
 
-  /* nav dropdown: never cut off at viewport edge */
-  .nav-menu{right:0;left:auto;width:min(calc(100vw - 20px),280px);max-height:85vh;overflow-y:auto}
+  /* nav dropdown: FIXED to the viewport (not the topbar) so it can't slide off the
+     right edge even if the sticky topbar is pushed wide — the "menu opens off-screen"
+     bug. Right-anchored 8px from the visible edge, opens just below the topbar. */
+  .nav-menu{position:fixed;top:58px;right:8px;left:auto;width:min(calc(100vw - 16px),300px);max-height:calc(100vh - 70px);overflow-y:auto}
   .nm-items a,.nm-items .nav-logout{min-height:44px;padding:10px 10px}
 
   /* section tabs: single horizontal scroll row — no word-wrap */
@@ -399,6 +401,10 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   /* stat card grids: at least 2 per row */
   .pcards{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
   .xstats{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+  /* Cards must be shrinkable so a wide value/label can't push the grid past the
+     screen edge (the "content cut off on the right" symptom). Long numbers/ids wrap. */
+  .pcard,.xstat,.xbal-card,.stat-card,.xbal{min-width:0}
+  .pcard .v,.pcard .n,.xbal-card .v,.xstat .v{overflow-wrap:anywhere}
 
   /* owner balance cards: single column */
   .xbal{flex-direction:column;gap:10px}
@@ -442,8 +448,8 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
   .brand-sm{font-size:20px}
   .brand-sm img{width:26px;height:26px}
   .bal-pill{font-size:12px;padding:4px 8px;gap:4px}
-  /* nav dropdown: full edge-to-edge on 320-400 px screens */
-  .nav-menu{left:8px;right:8px;width:auto}
+  /* nav dropdown: full edge-to-edge on 320-400 px screens (still fixed to viewport) */
+  .nav-menu{left:8px;right:8px;width:auto;max-width:none}
   /* filter selects: one per row */
   .plog-sel{flex:1 1 100%}
   /* tabs: tighter label */

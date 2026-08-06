@@ -632,6 +632,16 @@ code { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: rgba(
   .calib-rate-ctl { flex-direction: column; align-items: stretch; }
   .calib-rate-ctl input[type=range] { min-width: 0; width: 100%; }
 
+  /* Calibration server card header: was one cramped flex row where the conversion,
+     server id and the two buttons overlapped. Now the icon + name + conversion sit on
+     the first line and each action button drops to its own full-width, tappable row. */
+  .calib-srv-head { flex-wrap: wrap; row-gap: 10px; }
+  .calib-srv-conv { margin-right: 0; }
+  .calib-run, .calib-off {
+    flex: 1 1 100%; min-height: 42px;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+  }
+
   /* User-bots add row: respect full container width */
   .bf-add-row { max-width: 100%; }
 
