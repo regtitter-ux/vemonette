@@ -2734,18 +2734,8 @@ async function renderCalibration() {
       <div class="calib-kpi"><span>Проверенных заходов (выборка)</span><b>${s.totalJoinCheckJoins || 0}</b></div>
       <div class="calib-kpi"><span>≈ Выплачено партнёрам</span><b>${usd(s.estPaidUsd)}</b></div>`;
 
-    const ratePct = Math.round((s.calibRate || 0.15) * 100);
     if (rateBox) rateBox.innerHTML = `
       <div class="calib-rate">
-        <label>Доля калибровки: <b id="calib-rate-lbl">${ratePct}%</b> показов остаётся с проверкой захода (остальное — без проверки, оплата за клик).</label>
-        <div class="calib-rate-ctl">
-          <input type="range" id="calib-rate-range" min="5" max="100" step="5" value="${ratePct}" />
-          <span id="calib-rate-val">${ratePct}%</span>
-          <button class="btn primary sm" id="calib-rate-save">Сохранить</button>
-        </div>
-        <p class="muted sm">Чем выше — тем точнее конверсия (больше проверок), но меньше показов без проверки. По умолчанию 15%.</p>
-      </div>
-      <div class="calib-rate" style="margin-top:12px">
         <label>Сервер для калибровки <span class="muted">(куда ведёт проверочная реклама)</span></label>
         <div class="calib-rate-ctl">
           <input type="text" id="calib-invite" placeholder="https://discord.gg/..." value="${escapeHtml(s.calibrationInvite || '')}" style="flex:1;min-width:220px" />
@@ -2795,15 +2785,6 @@ async function renderCalibration() {
         </div>`;
     }).join('');
 
-    const range = $('#calib-rate-range'), val = $('#calib-rate-val'), lbl = $('#calib-rate-lbl'), save = $('#calib-rate-save');
-    if (range) range.oninput = () => { val.textContent = range.value + '%'; if (lbl) lbl.textContent = range.value + '%'; };
-    if (save) save.onclick = async () => {
-        const rate = Math.max(5, Math.min(100, Number(range.value) || 15)) / 100;
-        save.disabled = true;
-        const r = await put('/cpc-rate', { rate });
-        save.disabled = false;
-        if (r.ok) toast('Доля калибровки сохранена'); else toast(r.body?.error || 'Не удалось', 'err');
-    };
     $$('.calib-off').forEach((btn) => btn.onclick = async () => {
         const gid = btn.dataset.gid;
         if (!confirm('Выключить калибровку для этого сервера? Показы вернутся к обычной проверке захода.')) return;
