@@ -1534,6 +1534,10 @@ function openServerAdModal(gid) {
     const isNsfw = Boolean((state.nsfwServers || {})[gid]);
     const cpcOn = Boolean((state.cpcCalibrated || {})[gid]);
     const extraOff = Boolean((state.extraAdOff || {})[gid]);
+    const pcpc = Boolean((state.personalAdCpc || {})[gid]);
+    const pcpcUnlim = Boolean((state.personalAdUnlimited || {})[gid]);
+    const pcpcLimit = Number((state.personalAdLimit || {})[gid]) || 1000;
+    const pcpcStats = (state.personalAdStats || {})[gid] || { clicks: 0, paidUsd: 0 };
     const showing = Boolean(guildEntry?.adShowing);
     let nsfwBlock = '';
     if (isOwner) {
@@ -1566,6 +1570,22 @@ function openServerAdModal(gid) {
             <span>Отключить экстра-рекламу (доп. кнопку)</span>
           </label>
           <p class="muted" style="margin:6px 0 0;">Бонусная кнопка с дополнительной рекламой (под рекламой и под сообщением об успехе) не будет показываться на этом сервере. Для партнёров, которые категорически против неё.</p>
+        </div>`;
+    }
+    let personalCpcBlock = '';
+    if (isOwner) {
+        personalCpcBlock = `
+        <div class="setting wide" style="margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:14px;">
+          <label class="nsfw-check" style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:600;">
+            <input type="checkbox" data-act="pcpc-toggle" ${pcpc ? 'checked' : ''} />
+            <span>Персональная реклама с оплатой за клики (CPC)</span>
+          </label>
+          <p class="muted" style="margin:6px 0 8px;">Показывает персональную рекламу этого сервера (текст выше — <b>любой</b>) как филлер, <b>только когда нет других заказов</b> (удобно для NSFW-серверов, когда все заказы в SFW-режиме). Обычная реклама других серверов её перекрывает. Юзер верифицируется без захода; партнёру начисляется за клик по конверсии (после калибровки).${pcpcStats.clicks ? ` <br>Уже: <b>${pcpcStats.clicks}</b> клик., выплачено <b>$${(pcpcStats.paidUsd || 0).toFixed(2)}</b>.` : ''}</p>
+          <div class="calib-rate-ctl" style="gap:12px;flex-wrap:wrap;align-items:center;">
+            <label class="nsfw-check" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer;"><input type="checkbox" data-act="pcpc-unlim" ${pcpcUnlim ? 'checked' : ''} /> <span>Безлимит показов</span></label>
+            <span style="display:inline-flex;align-items:center;gap:6px;${pcpcUnlim ? 'opacity:.45;' : ''}">Лимит кликов: <input type="number" min="0" step="50" data-act="pcpc-limit" value="${pcpcLimit}" style="width:110px" ${pcpcUnlim ? 'disabled' : ''} /></span>
+            <button class="btn primary sm" data-act="pcpc-save">Сохранить</button>
+          </div>
         </div>`;
     }
     let clawBlock = '';
@@ -1637,6 +1657,7 @@ function openServerAdModal(gid) {
         ${nsfwBlock}
         ${cpcBlock}
         ${extraAdBlock}
+        ${personalCpcBlock}
         ${clawBlock}
         ${profitBlock}
       </div>`;
@@ -1662,6 +1683,25 @@ function openServerAdModal(gid) {
                 if (off) state.extraAdOff[gid] = true; else delete state.extraAdOff[gid];
                 toast(off ? 'Экстра-реклама отключена на сервере' : 'Экстра-реклама включена');
             } else { extraBox.checked = !off; toast(body?.error || 'Не удалось переключить', 'err'); }
+        };
+        // Personal-ad CPC: unlimited disables the limit input; Save persists all three.
+        const pcpcUnlimBox = $('#server-ad-modal-body [data-act="pcpc-unlim"]');
+        const pcpcLimitInp = $('#server-ad-modal-body [data-act="pcpc-limit"]');
+        if (pcpcUnlimBox) pcpcUnlimBox.onchange = () => { if (pcpcLimitInp) pcpcLimitInp.disabled = pcpcUnlimBox.checked; };
+        const pcpcSave = $('#server-ad-modal-body [data-act="pcpc-save"]');
+        if (pcpcSave) pcpcSave.onclick = async () => {
+            const cpc = $('#server-ad-modal-body [data-act="pcpc-toggle"]').checked;
+            const unlimited = pcpcUnlimBox ? pcpcUnlimBox.checked : false;
+            const limit = Math.max(0, Math.floor(Number(pcpcLimitInp && pcpcLimitInp.value) || 0));
+            pcpcSave.disabled = true;
+            const { ok, body } = await put('/server-ad-cpc', { gid, cpc, unlimited, limit });
+            pcpcSave.disabled = false;
+            if (ok) {
+                state.personalAdCpc = state.personalAdCpc || {}; if (cpc) state.personalAdCpc[gid] = true; else delete state.personalAdCpc[gid];
+                state.personalAdUnlimited = state.personalAdUnlimited || {}; if (unlimited) state.personalAdUnlimited[gid] = true; else delete state.personalAdUnlimited[gid];
+                state.personalAdLimit = state.personalAdLimit || {}; if (limit > 0) state.personalAdLimit[gid] = limit; else delete state.personalAdLimit[gid];
+                toast('Персональная реклама (CPC) сохранена');
+            } else toast(body?.error || 'Не удалось', 'err');
         };
         const cpcBox = $('#server-ad-modal-body [data-act="cpc-toggle"]');
         if (cpcBox) cpcBox.onchange = async () => {
