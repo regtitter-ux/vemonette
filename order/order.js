@@ -226,6 +226,36 @@ let lang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').st
 if (!DICT[lang]) lang = 'ru';
 function t(key, ...args) { const v = DICT[lang][key] ?? DICT.ru[key] ?? key; return typeof v === 'function' ? v(...args) : v; }
 
+// Map — traffic-route bindings (self-serve). Keys merged in to keep the big DICT tidy.
+Object.assign(DICT.ru, {
+    map_h2: 'Map — маршруты трафика',
+    map_desc: 'Свяжи свою ссылку (куда ведём участников) с серверами-источниками (откуда идёт трафик). Пока связка запущена, ссылка показывается как реклама на выбранных серверах, когда там нет других заказов, и статистически считает заходы. За каждый заход списывается с баланса, а владельцу сервера-источника начисляется за предоставленный заход. Счётчик заходов оценочный — возможна погрешность до 15%.',
+    map_add: '＋ Новая связка', map_empty: 'Пока нет связок. Нажми «Новая связка» и вставь ссылку на сервер, куда вести трафик.',
+    map_link_label: 'Моя ссылка (куда ведём)', map_sources_label: 'Источники трафика',
+    map_add_src: '＋ добавить сервер-источник…', map_src_empty: 'Пока пусто — добавь сервер справа',
+    map_stop: '⏸ Остановить', map_resume: '▶ Продолжить', map_save: 'Сохранить', map_del: 'Удалить',
+    map_limit: 'Лимит заходов', map_price: 'Цена/100 зах., $', map_spent: 'Списано:', map_delivered: 'Доставлено:',
+    map_joins: 'Заходы:', map_hist: 'История ссылок', map_no_hist: 'Изменений ссылки ещё не было.',
+    map_balance: 'Баланс:', map_prompt: 'Вставь ссылку на сервер, куда вести трафик (https://discord.gg/…):',
+    map_created: 'Связка создана — теперь добавь источники и запусти', map_saved: 'Связка сохранена',
+    map_started: 'Связка запущена', map_stopped: 'Связка остановлена', map_deleted: 'Связка удалена',
+    map_del_confirm: 'Удалить связку?', map_bad_invite: 'Некорректная ссылка', map_lim_hit: '(лимит достигнут)', map_funds: '(недостаточно средств)'
+});
+Object.assign(DICT.en, {
+    map_h2: 'Map — traffic routes',
+    map_desc: 'Bind your link (where participants go) to source servers (where the traffic comes from). While a binding runs, the link is shown as an ad on the chosen servers whenever they have no other order, and counts joins statistically. Each join is charged to your balance, and the source server\'s owner is paid for the join they provided. The join counter is an estimate — up to 15% off.',
+    map_add: '＋ New binding', map_empty: 'No bindings yet. Click “New binding” and paste a link to the server to drive traffic to.',
+    map_link_label: 'My link (destination)', map_sources_label: 'Traffic sources',
+    map_add_src: '＋ add a source server…', map_src_empty: 'Empty — add a server on the right',
+    map_stop: '⏸ Stop', map_resume: '▶ Resume', map_save: 'Save', map_del: 'Delete',
+    map_limit: 'Join limit', map_price: 'Price /100 joins, $', map_spent: 'Charged:', map_delivered: 'Delivered:',
+    map_joins: 'Joins:', map_hist: 'Link history', map_no_hist: 'No link changes yet.',
+    map_balance: 'Balance:', map_prompt: 'Paste a link to the server to drive traffic to (https://discord.gg/…):',
+    map_created: 'Binding created — now add sources and start it', map_saved: 'Binding saved',
+    map_started: 'Binding started', map_stopped: 'Binding stopped', map_deleted: 'Binding deleted',
+    map_del_confirm: 'Delete this binding?', map_bad_invite: 'Invalid link', map_lim_hit: '(limit reached)', map_funds: '(insufficient funds)'
+});
+
 // Map short backend error codes to localized text.
 function errText(code) {
     return ({ 'bad-invite': t('invite_bad'), 'min-joins': t('invite_min', CFG.minJoins), 'invoice-failed': t('order_fail'), 'min-topup': t('topup_min', (typeof WALLET !== 'undefined' && WALLET.minTopup) || 5), 'no-bot': t('link_nobot'), 'not-active': t('order_fail') })[code] || code || t('order_fail');
@@ -253,6 +283,7 @@ async function api(path, opts = {}) {
 const get = (p) => api(p);
 const post = (p, o) => api(p, { method: 'POST', body: o ? JSON.stringify(o) : undefined });
 const put = (p, o) => api(p, { method: 'PUT', body: JSON.stringify(o || {}) });
+const del = (p, o) => api(p, { method: 'DELETE', body: o ? JSON.stringify(o) : undefined });
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
@@ -284,6 +315,7 @@ function applyLang() {
     const mgrCard = $('#mgr-card');
     if (CFG.isOwner && mgrCard && !mgrCard.hidden) loadManagers();
     if (lastCampaigns.length || adminActive.length || adminDone.length) renderCampaigns();
+    if (mapData.bindings.length) renderMap();
     renderTopup();
     renderLoadBanner();
 }
@@ -400,6 +432,186 @@ function setupCabNav(who) {
     }
 }
 
+// ---------- Map: self-serve traffic-route bindings ----------
+// A binding = "my destination link → source servers". While running, the link shows as a
+// NO-CHECK filler on the sources (a real paid order overrides it), verifies without a
+// join, charges the buyer per statistical join (±15%) and pays the source partner. Every
+// row is the caller's own (backend-scoped). Loaded lazily; a light 20s poll refreshes the
+// live counters while something runs, without clobbering an in-progress edit.
+let mapData = { bindings: [], sources: [], balance: 0, networkConv: 0, srcLoaded: false, wired: false };
+const _mapNum = (x) => { const n = Number(x) || 0; return n >= 10 ? Math.round(n) : Math.round(n * 10) / 10; };
+const _mapSrcById = (gid) => mapData.sources.find((s) => s.gid === String(gid)) || null;
+
+function setupMap() {
+    const sec = $('#map-section'); if (!sec) return;
+    if (!mapData.wired) {
+        mapData.wired = true;
+        const addBtn = $('#map-add');
+        if (addBtn) addBtn.onclick = async () => {
+            const invite = prompt(t('map_prompt'));
+            if (invite == null) return;
+            const v = invite.trim(); if (!v) return;
+            addBtn.disabled = true;
+            const { ok, body } = await post('/map', { invite: v });
+            addBtn.disabled = false;
+            if (ok) { mapReplace(body.binding); toast(t('map_created')); mapData.srcLoaded = false; loadMap(); }
+            else toast(body?.error === 'bad-invite' ? t('map_bad_invite') : (body?.error || 'error'), 'err');
+        };
+        setInterval(() => {
+            if (document.hidden) return;
+            if (!mapData.bindings.some((b) => b.running)) return;
+            if (document.activeElement && document.activeElement.closest && document.activeElement.closest('.map-card')) return;
+            loadMap();
+        }, 20000);
+    }
+    loadMap();
+}
+
+async function loadMap() {
+    const listBox = $('#map-list'); if (!listBox) return;
+    if (!mapData.bindings.length) listBox.innerHTML = `<div class="muted">${esc(t('loading'))}</div>`;
+    const reqs = [get('/map')];
+    if (!mapData.srcLoaded) reqs.push(get('/map/sources'));
+    let mapRes, srcRes;
+    try { [mapRes, srcRes] = await Promise.all(reqs); } catch { return; }
+    if (!mapRes.ok) { listBox.innerHTML = `<div class="muted">${esc(mapRes.body?.error || 'error')}</div>`; return; }
+    mapData.bindings = mapRes.body.bindings || [];
+    mapData.balance = Number(mapRes.body.balance) || 0;
+    mapData.networkConv = Number(mapRes.body.networkConv) || 0;
+    if (srcRes && srcRes.ok) { mapData.sources = srcRes.body.sources || []; mapData.srcLoaded = true; }
+    renderMap();
+}
+
+function renderMap() {
+    const listBox = $('#map-list'); if (!listBox) return;
+    const bal = $('#map-balance');
+    if (bal) bal.innerHTML = `${esc(t('map_balance'))} <b>${money(mapData.balance)}</b>`;
+    if (!mapData.bindings.length) { listBox.innerHTML = `<div class="map-empty muted">${esc(t('map_empty'))}</div>`; return; }
+    listBox.innerHTML = mapData.bindings.map(mapCardHtml).join('');
+    mapData.bindings.forEach((b) => wireMapCard(b.id));
+}
+
+function mapFlowSvg(b) {
+    const srcs = Array.isArray(b.sources) ? b.sources : [];
+    const W = 300, rowH = 30, H = Math.max(74, srcs.length * rowH + 20), midY = H / 2;
+    const leftX = 16, mergeX = W * 0.52, destX = W - 18, running = b.running;
+    const ys = srcs.length ? srcs.map((_, i) => 18 + (H - 36) * (srcs.length === 1 ? 0.5 : i / (srcs.length - 1))) : [midY];
+    let paths = '', dots = '', nodes = '';
+    ys.forEach((y, i) => {
+        const cx = (leftX + mergeX) / 2;
+        const d = `M ${leftX} ${y.toFixed(1)} C ${cx} ${y.toFixed(1)}, ${cx} ${midY}, ${mergeX} ${midY}`;
+        paths += `<path d="${d}" class="mf-line" />`;
+        if (running) for (let k = 0; k < 2; k++) dots += `<circle r="2.6" class="mf-dot"><animateMotion dur="2.4s" begin="-${(k * 1.2 + i * 0.3).toFixed(2)}s" repeatCount="indefinite" path="${d}" /></circle>`;
+        nodes += `<circle cx="${leftX}" cy="${y.toFixed(1)}" r="5" class="mf-node mf-src"/>`;
+    });
+    const cx2 = (mergeX + destX) / 2;
+    const dd = `M ${mergeX} ${midY} C ${cx2} ${midY}, ${cx2} ${midY}, ${destX} ${midY}`;
+    paths += `<path d="${dd}" class="mf-line mf-main" />`;
+    if (running) for (let k = 0; k < 3; k++) dots += `<circle r="3.2" class="mf-dot mf-dot-main"><animateMotion dur="1.6s" begin="-${(k * 0.53).toFixed(2)}s" repeatCount="indefinite" path="${dd}" /></circle>`;
+    nodes += `<circle cx="${mergeX.toFixed(1)}" cy="${midY}" r="4" class="mf-node mf-merge"/>`;
+    nodes += `<circle cx="${destX}" cy="${midY}" r="7" class="mf-node mf-dest ${running ? 'live' : ''}"/>`;
+    return `<svg class="map-flow-svg ${running ? 'run' : 'stopped'}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${paths}${dots}${nodes}</svg>`;
+}
+
+function mapSrcChip(gid) {
+    const s = _mapSrcById(gid);
+    const name = s ? (s.name || gid) : gid;
+    const est = s ? `~${_mapNum(s.est && s.est.day)}/д` : '';
+    return `<span class="map-chip"><span class="map-chip-name" title="${esc(name)}">${esc(name)}</span>${est ? `<span class="map-chip-est">${esc(est)}</span>` : ''}<button class="map-chip-x" data-act="rm-src" data-gid="${esc(gid)}" title="✕">✕</button></span>`;
+}
+
+function mapCardHtml(b) {
+    const dest = b.destName || b.destGuildId || '—';
+    const destIcon = b.destIcon ? `<img class="map-dest-ic" src="${esc(b.destIcon)}" alt="" />` : '<span class="map-dest-ic ph"></span>';
+    const selected = new Set(b.sources || []);
+    const opts = mapData.sources.filter((s) => !selected.has(s.gid) && s.gid !== b.destGuildId)
+        .map((s) => `<option value="${esc(s.gid)}">${esc(s.name || s.gid)} — ~${_mapNum(s.est && s.est.week)}/нед · ${s.memberCount || 0}</option>`).join('');
+    const stopReason = b.stoppedReason === 'limit' ? ' ' + t('map_lim_hit') : b.stoppedReason === 'funds' ? ' ' + t('map_funds') : '';
+    const prog = b.limit > 0 ? `${b.delivered} / ${b.limit}` : `${b.delivered}`;
+    return `<div class="map-card ${b.running ? 'running' : 'stopped'}" data-id="${esc(b.id)}">
+      <div class="map-row">
+        <div class="map-col map-col-left">
+          <label class="map-label">${esc(t('map_link_label'))}</label>
+          <input class="map-link-input" data-act="link" value="${esc(b.invite)}" placeholder="https://discord.gg/..." spellcheck="false" />
+          <div class="map-dest-info">${destIcon}<span><b>${esc(dest)}</b></span></div>
+          <button class="btn-mini" data-act="history">${esc(t('map_hist'))} (${(b.history || []).length})</button>
+        </div>
+        <div class="map-col map-col-flow">${mapFlowSvg(b)}</div>
+        <div class="map-col map-col-right">
+          <label class="map-label">${esc(t('map_sources_label'))} (${(b.sources || []).length})</label>
+          <div class="map-sources">${(b.sources || []).map(mapSrcChip).join('') || `<span class="muted">${esc(t('map_src_empty'))}</span>`}</div>
+          <select class="map-src-add" data-act="add-src"><option value="">${esc(t('map_add_src'))}</option>${opts}</select>
+        </div>
+      </div>
+      <div class="map-history" hidden>${(b.history || []).slice().reverse().map((h) => `<div class="map-hist-row"><span class="map-hist-link">${esc(h.invite)}</span><span class="muted">${esc(h.destName || h.destGuildId || '')}</span></div>`).join('') || `<span class="muted">${esc(t('map_no_hist'))}</span>`}</div>
+      <div class="map-foot">
+        <button class="map-toggle ${b.running ? 'on' : 'off'}" data-act="toggle">${b.running ? esc(t('map_stop')) : esc(t('map_resume'))}</button>
+        <span class="map-stat">${esc(t('map_joins'))} <b>${_mapNum(b.joins && b.joins.hour)}</b>/ч · <b>${_mapNum(b.joins && b.joins.day)}</b>/д · <b>${_mapNum(b.joins && b.joins.week)}</b>/нед <i class="map-err">±15%</i></span>
+        <span class="map-progress">${esc(t('map_delivered'))} <b>${prog}</b>${stopReason}</span>
+        <label class="map-inl">${esc(t('map_limit'))} <input type="number" min="0" step="50" data-act="limit" value="${b.limit || 0}" /></label>
+        <label class="map-inl">${esc(t('map_price'))} <input type="number" min="0" step="0.5" data-act="price" value="${b.pricePer100 || 0}" /></label>
+        <span class="map-spent">${esc(t('map_spent'))} <b>${money(b.spentUsd)}</b></span>
+        <button class="btn primary sm" data-act="save">${esc(t('map_save'))}</button>
+        <button class="btn-mini off" data-act="del">${esc(t('map_del'))}</button>
+      </div>
+    </div>`;
+}
+
+function mapCollectEdits() {
+    for (const b of mapData.bindings) {
+        const card = document.querySelector(`.map-card[data-id="${CSS.escape(b.id)}"]`);
+        if (!card) continue;
+        const link = card.querySelector('[data-act="link"]'); if (link) b.invite = link.value.trim();
+        const lim = card.querySelector('[data-act="limit"]'); if (lim) b.limit = Math.max(0, Math.floor(Number(lim.value) || 0));
+        const pr = card.querySelector('[data-act="price"]'); if (pr) b.pricePer100 = Math.max(0, Number(pr.value) || 0);
+    }
+}
+
+function wireMapCard(id) {
+    const card = document.querySelector(`.map-card[data-id="${CSS.escape(id)}"]`);
+    if (!card) return;
+    const b = mapData.bindings.find((x) => x.id === id); if (!b) return;
+    const q = (sel) => card.querySelector(sel);
+    q('[data-act="history"]').onclick = () => { const h = card.querySelector('.map-history'); if (h) h.hidden = !h.hidden; };
+    const addSel = q('[data-act="add-src"]');
+    if (addSel) addSel.onchange = () => {
+        const gid = addSel.value; if (!gid) return;
+        mapCollectEdits(); if (!b.sources) b.sources = [];
+        if (!b.sources.includes(gid)) b.sources.push(gid);
+        renderMap();
+    };
+    card.querySelectorAll('[data-act="rm-src"]').forEach((x) => x.onclick = () => {
+        mapCollectEdits(); b.sources = (b.sources || []).filter((g) => g !== x.dataset.gid); renderMap();
+    });
+    q('[data-act="toggle"]').onclick = async () => {
+        mapCollectEdits();
+        const payload = b.running ? { id, running: false } : { id, running: true, invite: b.invite, sources: b.sources || [], limit: b.limit || 0, pricePer100: b.pricePer100 || 0 };
+        const { ok, body } = await put('/map', payload);
+        if (ok) { mapReplace(body.binding); toast(b.running ? t('map_stopped') : t('map_started')); renderMap(); }
+        else toast(body?.error === 'bad-invite' ? t('map_bad_invite') : (body?.error || 'error'), 'err');
+    };
+    q('[data-act="save"]').onclick = async () => {
+        mapCollectEdits();
+        const btn = q('[data-act="save"]'); btn.disabled = true;
+        const { ok, body } = await put('/map', { id, invite: b.invite, sources: b.sources || [], limit: b.limit || 0, pricePer100: b.pricePer100 || 0 });
+        btn.disabled = false;
+        if (ok) { mapReplace(body.binding); toast(t('map_saved')); renderMap(); }
+        else toast(body?.error === 'bad-invite' ? t('map_bad_invite') : (body?.error || 'error'), 'err');
+    };
+    q('[data-act="del"]').onclick = async () => {
+        if (!confirm(t('map_del_confirm'))) return;
+        const { ok, body } = await del('/map', { id });
+        if (ok) { mapData.bindings = mapData.bindings.filter((x) => x.id !== id); toast(t('map_deleted')); renderMap(); }
+        else toast(body?.error || 'error', 'err');
+    };
+}
+
+function mapReplace(binding) {
+    if (!binding || !binding.id) return;
+    const i = mapData.bindings.findIndex((x) => x.id === binding.id);
+    if (i >= 0) mapData.bindings[i] = binding; else mapData.bindings.push(binding);
+}
+
 async function enterApp() {
     setAuthed(true);
     $('#login').hidden = true; $('#app').hidden = false;
@@ -408,6 +620,7 @@ async function enterApp() {
     updatePrice();
     setupManagers();
     setupDmallAccess();
+    setupMap();
     loadWallet();
     loadCampaigns();
     // Admins/owners: prime the "all orders" counts so the extra tabs show numbers
