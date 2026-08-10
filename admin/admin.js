@@ -2892,6 +2892,11 @@ async function renderCalibration() {
 const _calibTab = document.querySelector('[data-tab="calibration"]');
 if (_calibTab) _calibTab.addEventListener('click', renderCalibration);
 
+// Stays category = the order cabinet's Stays view embedded inline (chrome-less). Lazy-load
+// the iframe on first open so the orders app isn't fetched until the tab is used.
+const _staysTab = document.querySelector('[data-tab="stays"]');
+if (_staysTab) _staysTab.addEventListener('click', () => { const f = document.getElementById('stays-frame'); if (f && !f.getAttribute('src')) f.src = '/order/?embed=stays'; });
+
 // Redraw the activity chart when the Statistics tab becomes visible (canvas can't
 // size itself while its pane is hidden).
 const _statsTab = document.querySelector('[data-tab="stats"]');

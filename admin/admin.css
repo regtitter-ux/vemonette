@@ -873,3 +873,7 @@ textarea.cfg-input { resize: vertical; word-break: break-all; }
 .calib-card{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);background:var(--panel-2);border-radius:8px;padding:7px 10px}
 .calib-card b{color:var(--text)}
 .calib-card-role{flex:1;min-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Stays category — embedded orders cabinet (chrome-less iframe) */
+.stays-pane{padding:0}
+.stays-frame{width:100%;height:calc(100vh - 64px);border:0;display:block;background:var(--bg);border-radius:12px}

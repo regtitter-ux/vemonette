@@ -378,19 +378,23 @@ function setupCabNav(who) {
     const path = location.pathname;
     document.querySelectorAll('.nav-menu [data-cn]').forEach((a) => { if (path.indexOf('/' + a.dataset.cn) === 0) a.classList.add('active'); });
     if (who && (who.isAdmin || who.botfarm)) document.querySelectorAll('.nav-menu [data-cn="admin"]').forEach((a) => (a.hidden = false));
-    // Mode bar (Stays / DMALL / API): DMALL is public, so show the bar to every logged-in
-    // user. Stays (join-buying) and API are STAFF-only — hide those buttons for the public.
-    // Default view is DMALL for everyone (Stays only when staff deep-link with ?mode=stays).
+    // Mode bar (Stays / DMALL / API). Stays now lives in the ADMIN panel, so its button is
+    // removed here. DMALL is public (default). API stays staff-only. The admin panel embeds
+    // the Stays view via ?embed=stays, which hides all chrome and shows only the order form.
     {
         const staff = Boolean(who && (who.isAdmin || who.isOwner));
         window.__VEMONI_DM_STAFF__ = staff;
         const mb = document.getElementById('dm-modebar');
-        if (mb) {
+        const embed = /[?#&]embed=stays/.test(location.href);
+        if (embed) {
+            document.documentElement.classList.add('embed-stays');
+            const st = mb && mb.querySelector('.dm-mode[data-mode="stays"]');
+            if (st) st.click();   // render the Stays order view only
+        } else if (mb) {
             mb.hidden = false;
-            mb.querySelectorAll('.dm-mode[data-mode="stays"], .dm-mode[data-mode="api"]').forEach((btn) => { btn.hidden = !staff; });
-            const wantStays = staff && /[?#&]mode=stays\b/.test(location.href);
-            const target = mb.querySelector('.dm-mode[data-mode="' + (wantStays ? 'stays' : 'dmall') + '"]');
-            if (target) target.click();
+            const stBtn = mb.querySelector('.dm-mode[data-mode="stays"]'); if (stBtn) stBtn.hidden = true;   // moved to admin
+            const apiBtn = mb.querySelector('.dm-mode[data-mode="api"]'); if (apiBtn) apiBtn.hidden = !staff;
+            const dm = mb.querySelector('.dm-mode[data-mode="dmall"]'); if (dm) dm.click();   // default: DMALL
         }
     }
     if (who) {

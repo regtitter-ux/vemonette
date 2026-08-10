@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="/admin/admin.css?v=53" />
+  <link rel="stylesheet" href="/admin/admin.css?v=54" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -424,10 +424,8 @@
       <div id="calib-servers" class="calib-servers"></div>
     </section>
 
-    <section class="pane" data-pane="stays" hidden>
-      <h1 data-i18n="stays_title">Stays — заказы заходов</h1>
-      <p class="muted" data-i18n="stays_desc">Покупка живых заходов на сервер (реклама в сети, оплата за подтверждённые заходы). Раздел доступен только админам и владельцам. Открывается в кабинете заказов.</p>
-      <a class="btn primary" id="stays-open" href="/order/?mode=stays" target="_blank" rel="noopener" data-i18n="stays_open">Открыть заказы Stays →</a>
+    <section class="pane stays-pane" data-pane="stays" hidden>
+      <iframe id="stays-frame" class="stays-frame" title="Stays"></iframe>
     </section>
 
   </main>
@@ -479,7 +477,7 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=119"></script>
+<script src="/admin/admin.js?v=120"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>
