@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/order/order.css?v=39" />
-  <link rel="stylesheet" href="/order/dmall.css?v=30" />
+  <link rel="stylesheet" href="/order/dmall.css?v=31" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';
   </script>
@@ -302,48 +302,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
             <button data-dtaskt="paused"><span data-dm="dm_tab_paused">Paused</span> <span class="cnt" id="dm-tc-paused">0</span></button>
             <button data-dtaskt="done"><span data-dm="dm_tab_done">Completed</span> <span class="cnt" id="dm-tc-done">0</span></button>
           </div>
-          <div class="dm-setup-tasks">
-            <div class="camp">
-              <div class="camp-head">
-                <div><div class="camp-title">◟̆◞ ༉ catcore ♡ ‿ guild tags · emotes · giveaways · social</div><div class="camp-sub">discord.gg/7F9yXdGSc</div></div>
-                <span class="camp-chips"><span class="chip green" data-dm="dm_active">status</span></span>
-              </div>
-              <div class="progress"><i style="width:60%"></i></div>
-              <div class="camp-nums"><span><span data-dm="sent_word">Sent</span> <b>8 345</b> / 14 000</span><span>$14</span></div>
-              <div class="camp-aud" data-dm-html="task_aud"><b>Audience</b> All members · Online first  then offline</div>
-              <div class="camp-actions"><button class="btn-mini on" data-dm="dm_pause">btn</button></div>
-            </div>
-            <div class="camp">
-              <div class="camp-head">
-                <div><div class="camp-title">valentines · social · giveaways · emotes</div><div class="camp-sub">discord.gg/valentines</div></div>
-                <span class="camp-chips"><span class="chip amber" data-dm="dm_paused">status</span></span>
-              </div>
-              <div class="progress"><i style="width:35%"></i></div>
-              <div class="camp-nums"><span><span data-dm="sent_word">Sent</span> <b>4 200</b> / 12 000</span><span>$12</span></div>
-              <div class="camp-aud" data-dm-html="task_aud"><b>Audience</b> All members · Online first  then offline</div>
-              <div class="camp-actions"><button class="btn-mini off" data-dm="dm_resume">btn</button></div>
-            </div>
-            <div class="camp">
-              <div class="camp-head">
-                <div><div class="camp-title">Egirl World™ · 24/7 Active Chats</div><div class="camp-sub">discord.gg/baddie</div></div>
-                <span class="camp-chips"><span class="chip blue" data-dm="dm_done">status</span></span>
-              </div>
-              <div class="progress"><i style="width:100%"></i></div>
-              <div class="camp-nums"><span><span data-dm="sent_word">Sent</span> <b>30 000</b> / 30 000</span><span>$30</span></div>
-              <div class="camp-aud" data-dm-html="task_aud"><b>Audience</b> All members · Online first  then offline</div>
-              <div class="camp-actions"><button class="btn-mini " data-dm="dm_repeat">btn</button></div>
-            </div>
-            <div class="camp">
-              <div class="camp-head">
-                <div><div class="camp-title">giveaways hub</div><div class="camp-sub">discord.gg/ghub</div></div>
-                <span class="camp-chips"><span class="chip red" data-dm="dm_error">status</span></span>
-              </div>
-              <div class="progress"><i style="width:0%"></i></div>
-              <div class="camp-nums"><span><span data-dm="sent_word">Sent</span> <b>0</b> / 5 000</span><span>$5</span></div>
-              <div class="camp-aud" data-dm-html="task_aud"><b>Audience</b> All members · Online first  then offline</div>
-              <div class="camp-actions"><button class="btn-mini " data-dm="dm_repeat">btn</button></div>
-            </div>
-          </div>
+          <div class="dm-setup-tasks" id="dm-task-list"></div>
         </div>
       </div>
     </section>
@@ -351,21 +310,17 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
   </div>
 
   <!-- floating notifications -->
-  <button class="dm-nbell" id="dm-nbell" hidden aria-label="Notifications"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg><span class="dm-nbell-dot"></span></button>
+  <button class="dm-nbell" id="dm-nbell" hidden aria-label="Notifications"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0"/></svg></button>
   <div class="dm-notif" id="dm-notif">
     <div class="dm-notif-h"><h3 data-dm="notifications">Notifications</h3><button class="dm-btn ghost sm" id="dm-notif-close">✕</button></div>
-    <div class="dm-notif-list">
-      <div class="dm-nitem"><div class="dm-n-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div><div class="dm-n-body"><div class="dm-n-txt" data-dm-html="notif1">Broadcast: bot <b>Bot #3704</b> was kicked from «matching · chat · decor · art · guilds · games · giveaways · tags · emojis». It wasn't us — the broadcast continues, connecting a replacement.</div><button class="dm-btn ghost sm" data-dm="open_broadcasts" style="margin-top:8px">Go to the broadcast</button><div class="dm-n-time" data-dm="time1">2 minutes ago</div></div></div>
-      <div class="dm-nitem"><div class="dm-n-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div><div class="dm-n-body"><div class="dm-n-txt" data-dm-html="notif2">Broadcast: bot <b>Bot #3537</b> was kicked from «/admiring ♡ giveaways , social & guilds». It wasn't us — the broadcast continues, connecting a replacement.</div><button class="dm-btn ghost sm" data-dm="open_broadcasts" style="margin-top:8px">Go to the broadcast</button><div class="dm-n-time" data-dm="time2">An hour ago</div></div></div>
-      <div class="dm-nitem"><div class="dm-n-ic"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg></div><div class="dm-n-body"><div class="dm-n-txt" data-dm-html="notif3">Broadcast: bot <b>Bot #3539</b> was kicked from «/admiring ♡ giveaways , social & guilds». It wasn't us — the broadcast continues, connecting a replacement.</div><button class="dm-btn ghost sm" data-dm="open_broadcasts" style="margin-top:8px">Go to the broadcast</button><div class="dm-n-time" data-dm="time2">An hour ago</div></div></div>
-    </div>
+    <div class="dm-notif-list" id="dm-notif-list"><div class="dm-notif-empty" data-dm="no_notifs">No notifications yet.</div></div>
   </div>
   </main>
 </div>
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=56"></script>
-<script src="/order/dmall.js?v=46"></script>
+<script src="/order/dmall.js?v=47"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

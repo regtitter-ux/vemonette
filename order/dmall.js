@@ -62,6 +62,7 @@
       dmall.hidden = !dm;
       if (apiEl) apiEl.hidden = !api;
       if (api) loadApiDocs();
+      if (dm) { loadServers(); loadTasks(); }                 // refresh real servers + broadcasts on open
       if (dm && !dmServer) dmall.classList.add('picking');   // choose a server first
       if (bell) bell.hidden = !dm || dmall.classList.contains('picking');
       { const sb = $('#dm-selbar'); if (sb) sb.hidden = !dm || !dmServer || dmall.classList.contains('picking'); }
@@ -336,6 +337,7 @@
       const sb = $('#dm-launch-stop'); if (sb) sb.hidden = false;
       dmSetStatus('ok', 'Рассылка запущена ✓ ' + runId + (run.body.charged ? ' · списано $' + run.body.charged : ''));
       dmPollRun(runId);
+      loadTasks();
     } catch (e) { dmSetStatus('err', 'Сеть недоступна, попробуйте ещё раз'); }
     finally { if (go) go.disabled = false; }
   }
@@ -437,37 +439,58 @@
   const lToggle = $('#dm-launch-toggle'), lBody = $('#dm-launch-body');
   if (lToggle && lBody) lToggle.addEventListener('click', () => { const open = lBody.hidden; lBody.hidden = !open; lToggle.classList.toggle('open', open); });
 
-  /* ---- broadcast task cards: Active/Completed tabs + 10 per page + pager ---- */
+  /* ---- broadcast tasks: REAL runs from the operator (Active/Paused/Completed) ---- */
   const TASK_PAGE_SIZE = 10;
-  let taskPage = 1, taskFilter = 'active';
-  // Card status → group: completed/errored count as "done", the rest as "active".
-  const cardGroup = (card) => { const chip = card.querySelector('.chip'); const k = chip && chip.dataset.dm; return (k === 'dm_done' || k === 'dm_error') ? 'done' : (k === 'dm_paused' ? 'paused' : 'active'); };
-  function renderTaskPage() {
-    const box = $('.dm-setup-tasks'); if (!box) return;
-    const all = $$('.camp', box);
-    const active = all.filter((c) => cardGroup(c) === 'active');
-    const paused = all.filter((c) => cardGroup(c) === 'paused');
-    const done = all.filter((c) => cardGroup(c) === 'done');
-    const ca = $('#dm-tc-active'); if (ca) ca.textContent = active.length;
-    const cp = $('#dm-tc-paused'); if (cp) cp.textContent = paused.length;
-    const cd = $('#dm-tc-done'); if (cd) cd.textContent = done.length;
-    const shown = taskFilter === 'done' ? done : taskFilter === 'paused' ? paused : active;
+  let taskPage = 1, taskFilter = 'active', taskRuns = [];
+  function runGroup(s) { return (s === 'completed' || s === 'failed' || s === 'stopped') ? 'done' : (s === 'paused' ? 'paused' : 'active'); }
+  function runChip(s) {
+    return ({ running: ['green', 'dm_active'], queued: ['green', 'dm_active'], completed: ['blue', 'dm_done'], failed: ['red', 'dm_error'], stopped: ['amber', 'dm_paused'], paused: ['amber', 'dm_paused'] })[s] || ['green', 'dm_active'];
+  }
+  function runCard(run) {
+    const sent = Number(run.messages_sent || 0), lim = Number(run.message_limit || 0);
+    const pct = lim > 0 ? Math.min(100, Math.round((sent / lim) * 100)) : (run.status === 'completed' ? 100 : 0);
+    const ch = runChip(run.status);
+    const servers = Array.isArray(run.server_ids) ? run.server_ids.join(', ') : '';
+    const title = run.title || ('#' + String(run.id || '').slice(0, 8));
+    const stopBtn = (run.status === 'running' || run.status === 'queued')
+      ? '<div class="camp-actions"><button class="btn-mini on" data-run-stop="' + esc(run.id) + '">' + esc(dmT('dm_pause')) + '</button></div>' : '';
+    return '<div class="camp" data-run="' + esc(run.id) + '">' +
+      '<div class="camp-head"><div><div class="camp-title">' + esc(title) + '</div><div class="camp-sub">' + esc(servers) + '</div></div>' +
+      '<span class="camp-chips"><span class="chip ' + ch[0] + '" data-dm="' + ch[1] + '">status</span></span></div>' +
+      '<div class="progress"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="camp-nums"><span>' + esc(dmT('sent_word')) + ' <b>' + sent.toLocaleString() + '</b> / ' + lim.toLocaleString() + '</span></div>' +
+      stopBtn + '</div>';
+  }
+  function renderTasks() {
+    const box = $('#dm-task-list'); if (!box) return;
+    const buckets = { active: [], paused: [], done: [] };
+    (Array.isArray(taskRuns) ? taskRuns : []).forEach((r) => { if (r && r.id) buckets[runGroup(r.status)].push(r); });
+    const ca = $('#dm-tc-active'); if (ca) ca.textContent = buckets.active.length;
+    const cp = $('#dm-tc-paused'); if (cp) cp.textContent = buckets.paused.length;
+    const cd = $('#dm-tc-done'); if (cd) cd.textContent = buckets.done.length;
+    const shown = buckets[taskFilter] || buckets.active;
     const pages = Math.max(1, Math.ceil(shown.length / TASK_PAGE_SIZE));
     if (taskPage > pages) taskPage = pages;
-    all.forEach((c) => { c.hidden = true; });
-    shown.forEach((c, i) => { c.hidden = (Math.floor(i / TASK_PAGE_SIZE) + 1) !== taskPage; });
-    let pager = box.querySelector('#dm-tasks-pager');
-    if (pages <= 1) { if (pager) pager.remove(); return; }
-    if (!pager) { pager = document.createElement('div'); pager.id = 'dm-tasks-pager'; pager.className = 'dm-pager'; box.appendChild(pager); }
-    pager.innerHTML = '<button class="cp-nav" data-pg="' + (taskPage - 1) + '"' + (taskPage <= 1 ? ' disabled' : '') + '>‹</button><span class="cp-info">' + taskPage + ' / ' + pages + '</span><button class="cp-nav" data-pg="' + (taskPage + 1) + '"' + (taskPage >= pages ? ' disabled' : '') + '>›</button>';
-    pager.querySelectorAll('[data-pg]').forEach((b) => b.onclick = () => { const p = +b.dataset.pg; if (p >= 1 && p <= pages) { taskPage = p; renderTaskPage(); } });
+    const slice = shown.slice((taskPage - 1) * TASK_PAGE_SIZE, taskPage * TASK_PAGE_SIZE);
+    if (!slice.length) { box.innerHTML = '<div class="dm-sp-empty" data-dm="no_tasks">No broadcasts yet.</div>'; dmApplyLang(); return; }
+    let html = slice.map(runCard).join('');
+    if (pages > 1) html += '<div id="dm-tasks-pager" class="dm-pager"><button class="cp-nav" data-pg="' + (taskPage - 1) + '"' + (taskPage <= 1 ? ' disabled' : '') + '>‹</button><span class="cp-info">' + taskPage + ' / ' + pages + '</span><button class="cp-nav" data-pg="' + (taskPage + 1) + '"' + (taskPage >= pages ? ' disabled' : '') + '>›</button></div>';
+    box.innerHTML = html;
+    box.querySelectorAll('[data-pg]').forEach((b) => b.onclick = () => { const p = +b.dataset.pg; if (p >= 1 && p <= pages) { taskPage = p; renderTasks(); } });
+    box.querySelectorAll('[data-run-stop]').forEach((b) => b.onclick = async () => { b.disabled = true; await dmApi('/order/dmall/op/runs/' + encodeURIComponent(b.dataset.runStop) + '/stop', { method: 'POST' }); setTimeout(loadTasks, 900); });
+    dmApplyLang();
+  }
+  async function loadTasks() {
+    const r = await dmApi('/order/dmall/op/runs?limit=100');
+    taskRuns = (r.ok && r.body) ? (Array.isArray(r.body.runs) ? r.body.runs : (Array.isArray(r.body.data) ? r.body.data : [])) : [];
+    renderTasks();
   }
   $$('#dm-task-tabs button').forEach((b) => b.addEventListener('click', () => {
     taskFilter = b.dataset.dtaskt; taskPage = 1;
     $$('#dm-task-tabs button').forEach((x) => x.classList.toggle('active', x === b));
-    renderTaskPage();
+    renderTasks();
   }));
-  renderTaskPage();
+  renderTasks();
 
   /* ---- "Пример" — fill the content with a sample message (no embed) ---- */
   const EXAMPLE_MSG = '# 🎉 <@USER_ID> YOU WON 10x Yearly Nitro / 100k Robux / 100x Decors 🎉\n\n[**Join and Be Active In Chat to Claim!**]( https://discord.gg/your-link )\nNot Active = No Reward \nIt is mandatory to stay in the server';
@@ -659,7 +682,7 @@
       poolbox:"<b>115</b> free of 3 755 in the pool<div class=\"dm-poolsub\">7 busy · 3 633 invalid · 3 294 in quarantine</div>",
       msg_count:"Message count", how_many:"How many messages to send", bots_needed:"Bots needed: <b>2</b>",
       sum_total:"Total messages: 1 000", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Exclusions:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
-      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Log in with Discord so we can load your servers.", active_hint:"Active broadcasts: 1 — you can start another on a different server",
+      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Log in with Discord so we can load your servers.", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", active_hint:"Active broadcasts: 1 — you can start another on a different server",
       st_dm:"DM BROADCAST", bots_on_server:"Bots on server", dm_broadcast:"DM broadcast", running:"Running", sending:"Sending messages",
       dm_active:"Active", dm_paused:"Paused", dm_done:"Completed", dm_error:"Error", dm_tab_active:"Active", dm_tab_paused:"Paused", dm_tab_done:"Completed", sent_word:"Sent", dm_pause:"Pause", dm_resume:"Resume", dm_repeat:"Repeat with the same settings",
       note1:"From the server: 90 119 · queued 87 420", route_from:"From:", route_to:"To:", route_to1:"To #1:", route_to2:"To #2:", stop:"Stop",
@@ -709,7 +732,7 @@
       poolbox:"<b>115</b> свободных из 3 755 в пуле<div class=\"dm-poolsub\">7 занято · 3 633 инвалидных · 3 294 в карантине</div>",
       msg_count:"Количество сообщений", how_many:"Сколько сообщений отправить", bots_needed:"Ботов нужно: <b>2</b>",
       sum_total:"Суммарно сообщений: 1 000", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключения:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
-      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Войдите через Discord, чтобы мы подтянули ваши серверы.", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
+      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Войдите через Discord, чтобы мы подтянули ваши серверы.", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
       st_dm:"РАССЫЛКА В ЛС", bots_on_server:"Боты на сервере", dm_broadcast:"Рассылка в ЛС", running:"Идёт", sending:"Отправка сообщений",
       dm_active:"Активна", dm_paused:"Приостановлена", dm_done:"Завершена", dm_error:"Ошибка", dm_tab_active:"Активные", dm_tab_paused:"На паузе", dm_tab_done:"Завершённые", sent_word:"Отправлено", dm_pause:"Пауза", dm_resume:"Возобновить", dm_repeat:"Повторить с теми же настройками",
       note1:"С сервера: 90 119 · в очереди 87 420", route_from:"Откуда:", route_to:"Куда:", route_to1:"Куда №1:", route_to2:"Куда №2:", stop:"Стоп",
