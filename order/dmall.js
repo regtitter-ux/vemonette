@@ -118,14 +118,19 @@
     dmApplyLang();
   }
 
-  // Load the user's real admin servers from the API; fall back to the sample set.
+  // Load the broadcast operator's allowed servers (where its bot pool can send). Maps the
+  // operator shape {id,name,member_count,bots_on_server} to the card model. Falls back to
+  // the sample set when the operator isn't configured / unreachable.
   async function loadServers() {
-    try {
-      const base = window.__VEMONI_API_BASE__ || '';
-      let tok = ''; try { tok = localStorage.getItem('vemoni_tok') || ''; } catch (_) {}
-      const r = await fetch(base + '/order/servers', { credentials: 'include', headers: tok ? { Authorization: 'Bearer ' + tok } : {} });
-      if (r.ok) { const b = await r.json(); if (b && Array.isArray(b.servers) && b.servers.length) { renderServers(b.servers); return; } }
-    } catch (_) {}
+    const r = await dmApi('/order/dmall/op/servers?limit=200');
+    if (r.ok && r.body && Array.isArray(r.body.servers) && r.body.servers.length) {
+      renderServers(r.body.servers.map((s) => ({
+        id: String(s.id), name: s.name || String(s.id),
+        bot: true,                                   // an allowed server — the operator can send (auto-joins bots if needed)
+        online: (s.member_count != null ? s.member_count : (s.bots_on_server || 0))
+      })));
+      return;
+    }
     renderServers(DM_SERVERS);
   }
 
@@ -220,30 +225,128 @@
     b.addEventListener('click', () => { const inp = $('#dm-l-count'); if (inp) inp.value = b.dataset.amt; updateLaunchPrice(); });
   });
   { const lc = $('#dm-l-count'); if (lc) lc.addEventListener('input', updateLaunchPrice); }
-  /* ---- buy + create the broadcast job (backend charges the wallet, stores a PAID
-     job the external service pulls via /dmall/v1) ---- */
+  /* ---- DMALL operator wiring: helpers + the real launch flow ---- */
+  // Thin JSON fetch to OUR backend proxy (which injects the secret operator key). Never
+  // returns the operator key to the browser.
+  async function dmApi(path, opts) {
+    opts = opts || {};
+    const base = window.__VEMONI_API_BASE__ || '';
+    let tok = ''; try { tok = localStorage.getItem('vemoni_tok') || ''; } catch (_) {}
+    const headers = {}; if (tok) headers.Authorization = 'Bearer ' + tok;
+    const init = { method: opts.method || 'GET', credentials: 'include', headers };
+    if (opts.body !== undefined) { headers['Content-Type'] = 'application/json'; init.body = JSON.stringify(opts.body); }
+    if (opts.idem) headers['Idempotency-Key'] = opts.idem;
+    let r, d = null;
+    try { r = await fetch(base + path, init); } catch (_) { return { ok: false, status: 0, body: null }; }
+    try { d = await r.json(); } catch (_) {}
+    return { ok: r.ok, status: r.status, body: d };
+  }
+  function dmSetStatus(cls, msg) { const st = $('#dm-launch-status'); if (st) { st.hidden = false; st.className = 'dm-launch-status ' + cls; st.textContent = msg; } }
+  function dmParseColor(v) { v = String(v || '').trim().replace(/^#/, ''); if (/^[0-9a-f]{6}$/i.test(v)) return parseInt(v, 16); const n = parseInt(v, 10); return Number.isFinite(n) ? n : null; }
+  function dmMapPriority(p) { p = String(p || ''); return p === 'online_only' ? 'online_only' : p === 'offline_only' ? 'offline_only' : 'any'; }
+  function dmIdList(v) { return [...new Set(String(v || '').split(/[^\d]+/).filter((x) => /^\d{17,20}$/.test(x)))]; }
+  // Map the shell's collected state into the operator template payload (+ bot profile).
+  function dmBuildPayload(state, avatarRef) {
+    const f = state.fields || {};
+    const embeds = (state.embeds || []).map((e) => {
+      const em = {};
+      if (e.title) em.title = e.title;
+      if (e.url) em.url = e.url;
+      if (e.desc) em.description = e.desc;
+      const col = dmParseColor(e.color); if (col != null) em.color = col;
+      if (e.image) em.image = { url: e.image };
+      if (e.thumb) em.thumbnail = { url: e.thumb };
+      if (e.author) { em.author = { name: e.author }; if (e.authorurl) em.author.url = e.authorurl; if (e.authoricon) em.author.icon_url = e.authoricon; }
+      if (e.footer) { em.footer = { text: e.footer }; if (e.footericon) em.footer.icon_url = e.footericon; }
+      if (e.timestamp) em.timestamp = e.timestamp;
+      return em;
+    }).filter((em) => Object.keys(em).length);
+    const components = (state.embeds || []).filter((e) => e.btnlabel && e.btnurl).map((e) => ({ label: e.btnlabel, url: e.btnurl }));
+    const payload = { content: String(f.content || '') };
+    if (embeds.length) payload.embeds = embeds;
+    if (components.length) payload.components = components;
+    const bp = {};
+    if (f.setName && f.username) bp.username = f.username;
+    if (f.setAvatar) { if (avatarRef) bp.avatar = avatarRef; else if (f.avatarUrl) bp.avatar = f.avatarUrl; }
+    const out = { name: 'DMALL ' + new Date().toISOString().slice(0, 16).replace('T', ' '), payload };
+    if (Object.keys(bp).length) out.bot_profile = bp;
+    return out;
+  }
+  // Poll a run until it reaches a terminal state, streaming progress to the status line.
+  function dmPollRun(id) {
+    let stop = false;
+    async function tick() {
+      if (stop) return;
+      const r = await dmApi('/order/dmall/op/runs/' + encodeURIComponent(id));
+      if (r.ok && r.body && r.body.run) {
+        const run = r.body.run, live = r.body.live || {};
+        const sent = run.messages_sent || 0, lim = run.message_limit || 0;
+        const phase = live.phase_label || live.status_detail || run.worker_phase || '';
+        const label = { queued: 'в очереди', running: 'идёт', completed: 'завершено', failed: 'ошибка', stopped: 'остановлено' }[run.status] || run.status;
+        dmSetStatus(run.status === 'failed' ? 'err' : (['completed'].includes(run.status) ? 'ok' : 'pending'),
+          'Рассылка ' + id + ' · ' + label + ' · ' + sent + '/' + lim + (phase ? ' · ' + phase : ''));
+        if (['completed', 'failed', 'stopped'].includes(run.status)) { stop = true; dmActiveRun = null; const sb = $('#dm-launch-stop'); if (sb) sb.hidden = true; return; }
+      }
+      setTimeout(tick, 4000);
+    }
+    tick();
+  }
+  let dmActiveRun = null;
   async function launchBroadcast() {
-    const st = $('#dm-launch-status');
-    const setSt = (cls, msg) => { if (st) { st.hidden = false; st.className = 'dm-launch-status ' + cls; st.textContent = msg; } };
-    if (!dmServerId) { setSt('err', 'Сначала выберите сервер рассылки'); return; }
+    if (!dmServerId) { dmSetStatus('err', 'Сначала выберите сервер рассылки'); return; }
     const count = Math.floor(Number(($('#dm-l-count') || {}).value) || 0);
-    if (!count || count < 1) { setSt('err', 'Укажите количество сообщений'); return; }
-    const cfg = collectState();
-    cfg.target = { guildId: dmServerId, guildName: (typeof dmServer === 'string' ? dmServer : null) };
+    if (!count || count < 1) { dmSetStatus('err', 'Укажите количество сообщений'); return; }
+    const state = collectState();
+    if (!String(state.fields.content || '').trim() && !(state.embeds || []).length) { dmSetStatus('err', 'Добавьте текст или эмбед'); return; }
     const go = $('#dm-launch-go'); if (go) go.disabled = true;
-    setSt('pending', 'Оплата и создание задания…');
     try {
-      const base = window.__VEMONI_API_BASE__ || '';
-      const tok = localStorage.getItem('vemoni_tok') || '';
-      const r = await fetch(base + '/order/dmall/launch', { method: 'POST', credentials: 'include', headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { Authorization: 'Bearer ' + tok } : {}), body: JSON.stringify({ config: cfg }) });
-      const d = await r.json().catch(() => ({}));
-      if (r.ok && d.ok) setSt('ok', 'Задание создано ✓ ' + d.jobId + ' · списано $' + d.price + ' · баланс $' + d.balance);
-      else if (r.status === 402) setSt('err', 'Недостаточно средств: нужно $' + (d.price != null ? d.price : '?') + ', на балансе $' + (d.balance != null ? d.balance : '?'));
-      else if (r.status === 403) setSt('err', 'Нет доступа к DMALL');
-      else setSt('err', 'Ошибка: ' + (d.error || r.status));
-    } catch (e) { setSt('err', 'Сеть недоступна, попробуйте ещё раз'); }
+      dmSetStatus('pending', 'Подготовка…');
+      // 1. Upload a picked avatar file (data-URL) → operator ref.
+      let avatarRef = '';
+      const avEl = document.getElementById('dm-av-prev');
+      const avData = avEl && avEl.dataset ? avEl.dataset.url : '';
+      if (state.fields.setAvatar && avData && /^data:/.test(avData)) {
+        const ct = (avData.match(/^data:([^;]+)/) || [])[1] || 'image/png';
+        const up = await dmApi('/order/dmall/op/avatars', { method: 'POST', body: { data: avData.split(',')[1], content_type: ct } });
+        if (up.ok && up.body && (up.body.avatar || up.body.ref)) avatarRef = up.body.avatar || up.body.ref;
+      }
+      // 2. Create the operator template from the composed message.
+      dmSetStatus('pending', 'Создание шаблона…');
+      const tpl = await dmApi('/order/dmall/op/templates', { method: 'POST', body: dmBuildPayload(state, avatarRef) });
+      if (!tpl.ok || !tpl.body || !tpl.body.template) { dmSetStatus('err', 'Шаблон: ' + ((tpl.body && (tpl.body.message || tpl.body.error)) || tpl.status)); return; }
+      const templateId = tpl.body.template.id;
+      // 3. If the message uses {{LINK}}, the operator needs a destination link.
+      let destLink = '';
+      if (/\{\{LINK\}\}/.test(String(state.fields.content || ''))) {
+        destLink = (window.prompt('Сообщение содержит {{LINK}} — вставьте ссылку назначения (https://discord.gg/… или URL):') || '').trim();
+        if (!destLink) { dmSetStatus('err', 'Нужна ссылка назначения для {{LINK}}'); return; }
+      }
+      // 4. Create the run (the backend charges the wallet here).
+      dmSetStatus('pending', 'Запуск рассылки…');
+      const runBody = {
+        template_id: templateId,
+        server_ids: [dmServerId],
+        message_limit: count,
+        targeting: { audience: 'all', online_priority: dmMapPriority(state.fields.priority), exclude_ids: dmIdList(state.fields.excludeIds) },
+        options: { exclude_destination_duplicates: true }
+      };
+      if (state.fields.coolG) runBody.options.recency_cooldown_hours = (Math.max(0, parseInt(state.fields.coolGd || 0, 10)) * 24) + Math.max(0, parseInt(state.fields.coolGh || 0, 10));
+      if (destLink) runBody.destination_link = destLink;
+      const idem = 'dmall-' + dmServerId + '-' + Date.now();
+      const run = await dmApi('/order/dmall/op/runs', { method: 'POST', body: runBody, idem });
+      if (run.status === 402) { dmSetStatus('err', 'Недостаточно средств: нужно $' + (run.body && run.body.price != null ? run.body.price : '?') + ', баланс $' + (run.body && run.body.balance != null ? run.body.balance : '?')); return; }
+      if (run.status === 403) { dmSetStatus('err', 'Нет доступа к DMALL'); return; }
+      if (!run.ok || !run.body || !run.body.run) { dmSetStatus('err', 'Запуск: ' + ((run.body && (run.body.message || run.body.error)) || run.status)); return; }
+      const runId = run.body.run.id;
+      dmActiveRun = runId;
+      const sb = $('#dm-launch-stop'); if (sb) sb.hidden = false;
+      dmSetStatus('ok', 'Рассылка запущена ✓ ' + runId + (run.body.charged ? ' · списано $' + run.body.charged : ''));
+      dmPollRun(runId);
+    } catch (e) { dmSetStatus('err', 'Сеть недоступна, попробуйте ещё раз'); }
     finally { if (go) go.disabled = false; }
   }
+  // Stop button (revealed once a run is live).
+  { const sb = $('#dm-launch-stop'); if (sb) sb.addEventListener('click', async () => { if (!dmActiveRun) return; sb.disabled = true; const r = await dmApi('/order/dmall/op/runs/' + encodeURIComponent(dmActiveRun) + '/stop', { method: 'POST' }); sb.disabled = false; if (r.ok) dmSetStatus('pending', 'Остановка запрошена…'); }); }
   { const go = $('#dm-launch-go'); if (go) go.addEventListener('click', launchBroadcast); }
   updateLaunchPrice();
 
@@ -562,7 +665,7 @@
       poolbox:"<b>115</b> free of 3 755 in the pool<div class=\"dm-poolsub\">7 busy · 3 633 invalid · 3 294 in quarantine</div>",
       msg_count:"Message count", how_many:"How many messages to send", bots_needed:"Bots needed: <b>2</b>",
       sum_total:"Total messages: 1 000", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Exclusions:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
-      start_broadcast:"Start broadcast", active_hint:"Active broadcasts: 1 — you can start another on a different server",
+      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", active_hint:"Active broadcasts: 1 — you can start another on a different server",
       st_dm:"DM BROADCAST", bots_on_server:"Bots on server", dm_broadcast:"DM broadcast", running:"Running", sending:"Sending messages",
       dm_active:"Active", dm_paused:"Paused", dm_done:"Completed", dm_error:"Error", dm_tab_active:"Active", dm_tab_paused:"Paused", dm_tab_done:"Completed", sent_word:"Sent", dm_pause:"Pause", dm_resume:"Resume", dm_repeat:"Repeat with the same settings",
       note1:"From the server: 90 119 · queued 87 420", route_from:"From:", route_to:"To:", route_to1:"To #1:", route_to2:"To #2:", stop:"Stop",
@@ -612,7 +715,7 @@
       poolbox:"<b>115</b> свободных из 3 755 в пуле<div class=\"dm-poolsub\">7 занято · 3 633 инвалидных · 3 294 в карантине</div>",
       msg_count:"Количество сообщений", how_many:"Сколько сообщений отправить", bots_needed:"Ботов нужно: <b>2</b>",
       sum_total:"Суммарно сообщений: 1 000", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключения:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
-      start_broadcast:"Запустить рассылку", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
+      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
       st_dm:"РАССЫЛКА В ЛС", bots_on_server:"Боты на сервере", dm_broadcast:"Рассылка в ЛС", running:"Идёт", sending:"Отправка сообщений",
       dm_active:"Активна", dm_paused:"Приостановлена", dm_done:"Завершена", dm_error:"Ошибка", dm_tab_active:"Активные", dm_tab_paused:"На паузе", dm_tab_done:"Завершённые", sent_word:"Отправлено", dm_pause:"Пауза", dm_resume:"Возобновить", dm_repeat:"Повторить с теми же настройками",
       note1:"С сервера: 90 119 · в очереди 87 420", route_from:"Откуда:", route_to:"Куда:", route_to1:"Куда №1:", route_to2:"Куда №2:", stop:"Стоп",

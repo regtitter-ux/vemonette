@@ -292,6 +292,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
           <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_online">Online:</span> <b data-dm="no_prio">No priority</b></div>
         </div>
         <button class="dm-btn primary full" id="dm-launch-go" style="margin-top:16px"><span><span data-dm="start_broadcast">Start broadcast</span> <span data-dm="for_word">for</span> <span id="dm-l-price">$1</span></span></button>
+        <button class="dm-btn ghost full" id="dm-launch-stop" style="margin-top:8px" hidden data-dm="stop_broadcast">Stop broadcast</button>
         <div id="dm-launch-status" class="dm-launch-status" hidden></div>
               </div>
             </div>
@@ -364,7 +365,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=56"></script>
-<script src="/order/dmall.js?v=44"></script>
+<script src="/order/dmall.js?v=45"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>
