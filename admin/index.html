@@ -89,6 +89,7 @@
       <button data-tab="system" class="tab" data-owner-only data-i18n="tab_system">Система</button>
       <button data-tab="settings" class="tab" data-owner-only data-i18n="tab_settings">Настройки</button>
       <button data-tab="calibration" class="tab" data-owner-only data-i18n="tab_calib">Калибровка</button>
+      <button data-tab="stays" class="tab" data-i18n="tab_stays">Stays</button>
       <button data-tab="map" class="tab" data-owner-only data-i18n="tab_map">Map</button>
       <button data-tab="breeders" class="tab" data-botkeeper data-i18n="tab_breeders">Юзер-боты</button>
       <button data-tab="admins" class="tab" data-owner-only data-i18n="tab_admins">Админы</button>
@@ -424,6 +425,12 @@
       <div id="calib-servers" class="calib-servers"></div>
     </section>
 
+    <section class="pane" data-pane="stays" hidden>
+      <h1 data-i18n="stays_title">Stays — заказы заходов</h1>
+      <p class="muted" data-i18n="stays_desc">Покупка живых заходов на сервер (реклама в сети, оплата за подтверждённые заходы). Раздел доступен только админам и владельцам. Открывается в кабинете заказов.</p>
+      <a class="btn primary" id="stays-open" href="/order/?mode=stays" target="_blank" rel="noopener" data-i18n="stays_open">Открыть заказы Stays →</a>
+    </section>
+
     <section class="pane" data-pane="map" hidden data-owner-only>
       <h1 data-i18n="map_title">Map — маршруты трафика</h1>
       <p class="muted" data-i18n="map_subtitle">Свяжи свою ссылку (куда ведём участников) с серверами-источниками (откуда идёт трафик). Пока связка запущена, ссылка показывается как реклама на выбранных серверах, когда там нет других заказов, и статистически считает заходы. За каждый заход списывается с баланса. Счётчик заходов оценочный — возможна погрешность до 15%.</p>
@@ -482,7 +489,7 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=117"></script>
+<script src="/admin/admin.js?v=118"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

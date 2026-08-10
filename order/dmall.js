@@ -56,6 +56,8 @@
   $$('.dm-mode', modebar).forEach((btn) => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode;
+      // Stays (join-buying) and API are staff-only; the public only gets DMALL.
+      if ((mode === 'stays' || mode === 'api') && !window.__VEMONI_DM_STAFF__) return;
       const dm = mode === 'dmall', api = mode === 'api';
       $$('.dm-mode', modebar).forEach((b) => b.classList.toggle('active', b === btn));
       wrap.classList.toggle('dmall-on', dm || api);   // hide the Stays view for both non-Stays modes

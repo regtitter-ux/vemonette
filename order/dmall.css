@@ -35,7 +35,7 @@
 
 /* When DMALL is on: hide the Stays order content and widen the page for the console. */
 .wrap.dmall-on{ max-width:1200px; }
-.wrap.dmall-on > *:not(.dm-modebar):not(#dmall):not(#dmapi):not(.dm-nbell):not(.dm-notif){ display:none; }
+.wrap.dmall-on > *:not(.dm-modebar):not(#dmall):not(#dmapi):not(.dm-nbell):not(.dm-notif):not(#map-section){ display:none; }
 /* DMALL external-API docs */
 #dmapi{ width:100%; color:var(--dm-txt); }
 .dmapi-doc{ max-width:900px; }

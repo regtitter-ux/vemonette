@@ -409,7 +409,21 @@ function setupCabNav(who) {
     const path = location.pathname;
     document.querySelectorAll('.nav-menu [data-cn]').forEach((a) => { if (path.indexOf('/' + a.dataset.cn) === 0) a.classList.add('active'); });
     if (who && (who.isAdmin || who.botfarm)) document.querySelectorAll('.nav-menu [data-cn="admin"]').forEach((a) => (a.hidden = false));
-    if (who && (who.isAdmin || who.isOwner || who.dmall)) { const mb = document.getElementById('dm-modebar'); if (mb) mb.hidden = false; }
+    // Mode bar (Stays / DMALL / API): DMALL is public, so show the bar to every logged-in
+    // user. Stays (join-buying) and API are STAFF-only — hide those buttons for the public.
+    // Default view is DMALL for everyone (Stays only when staff deep-link with ?mode=stays).
+    {
+        const staff = Boolean(who && (who.isAdmin || who.isOwner));
+        window.__VEMONI_DM_STAFF__ = staff;
+        const mb = document.getElementById('dm-modebar');
+        if (mb) {
+            mb.hidden = false;
+            mb.querySelectorAll('.dm-mode[data-mode="stays"], .dm-mode[data-mode="api"]').forEach((btn) => { btn.hidden = !staff; });
+            const wantStays = staff && /[?#&]mode=stays\b/.test(location.href);
+            const target = mb.querySelector('.dm-mode[data-mode="' + (wantStays ? 'stays' : 'dmall') + '"]');
+            if (target) target.click();
+        }
+    }
     if (who) {
         const name = who.name || who.username || 'User', letter = (String(name).trim()[0] || 'U').toUpperCase();
         const nmAv = document.getElementById('nmAv'), nmName = document.getElementById('nmName'), nmUser = document.getElementById('nmUser');
