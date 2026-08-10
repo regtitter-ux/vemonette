@@ -467,3 +467,5 @@ a.dm-mlink:hover{ text-decoration:underline; }
   .dm-nbell{ right:14px; bottom:14px; }
   .dm-cool-row .dm-num{ width:58px; }
 }
+
+.dm-sp-empty{grid-column:1/-1;padding:34px 20px;text-align:center;color:var(--muted,#8b97ab);font-size:14px;background:var(--panel,#141b26);border:1px dashed var(--stroke-2,#2d3a4d);border-radius:14px}
