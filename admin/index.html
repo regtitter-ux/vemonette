@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Admin</title>
-  <link rel="stylesheet" href="/admin/admin.css?v=52" />
+  <link rel="stylesheet" href="/admin/admin.css?v=53" />
   <script>
     // Update this to your bot's public HTTPS URL (Railway domain or custom).
     // Everything under /admin/* is served from there.
@@ -90,7 +90,6 @@
       <button data-tab="settings" class="tab" data-owner-only data-i18n="tab_settings">Настройки</button>
       <button data-tab="calibration" class="tab" data-owner-only data-i18n="tab_calib">Калибровка</button>
       <button data-tab="stays" class="tab" data-i18n="tab_stays">Stays</button>
-      <button data-tab="map" class="tab" data-owner-only data-i18n="tab_map">Map</button>
       <button data-tab="breeders" class="tab" data-botkeeper data-i18n="tab_breeders">Юзер-боты</button>
       <button data-tab="admins" class="tab" data-owner-only data-i18n="tab_admins">Админы</button>
     </nav>
@@ -431,15 +430,6 @@
       <a class="btn primary" id="stays-open" href="/order/?mode=stays" target="_blank" rel="noopener" data-i18n="stays_open">Открыть заказы Stays →</a>
     </section>
 
-    <section class="pane" data-pane="map" hidden data-owner-only>
-      <h1 data-i18n="map_title">Map — маршруты трафика</h1>
-      <p class="muted" data-i18n="map_subtitle">Свяжи свою ссылку (куда ведём участников) с серверами-источниками (откуда идёт трафик). Пока связка запущена, ссылка показывается как реклама на выбранных серверах, когда там нет других заказов, и статистически считает заходы. За каждый заход списывается с баланса. Счётчик заходов оценочный — возможна погрешность до 15%.</p>
-      <div class="map-toolbar">
-        <div class="map-balance" id="map-balance"></div>
-        <button class="btn primary sm" id="map-add">＋ Новая связка</button>
-      </div>
-      <div id="map-list" class="map-list"></div>
-    </section>
   </main>
 </div>
 
@@ -489,7 +479,7 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=118"></script>
+<script src="/admin/admin.js?v=119"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

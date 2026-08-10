@@ -7,8 +7,8 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
-  <link rel="stylesheet" href="/order/order.css?v=39" />
-  <link rel="stylesheet" href="/order/dmall.css?v=32" />
+  <link rel="stylesheet" href="/order/order.css?v=40" />
+  <link rel="stylesheet" href="/order/dmall.css?v=33" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';
   </script>
@@ -200,16 +200,6 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
       <div id="camp-list"><div class="muted" data-i18n="loading">Загрузка…</div></div>
     </section>
 
-    <section class="card map-card-wrap" id="map-section">
-      <h2 data-i18n="map_h2">Map — маршруты трафика</h2>
-      <p class="muted" data-i18n="map_desc">Свяжи свою ссылку (куда ведём участников) с серверами-источниками (откуда идёт трафик). Пока связка запущена, ссылка показывается как реклама на выбранных серверах, когда там нет других заказов, и статистически считает заходы. За каждый заход списывается с баланса, а владельцу сервера-источника начисляется за предоставленный заход. Счётчик заходов оценочный — возможна погрешность до 15%.</p>
-      <div class="map-toolbar">
-        <div class="map-balance" id="map-balance"></div>
-        <button class="btn primary sm" id="map-add" data-i18n="map_add">＋ Новая связка</button>
-      </div>
-      <div id="map-list" class="map-list"></div>
-    </section>
-
     <section class="card mgr-card" id="mgr-card" hidden>
       <h2 data-i18n="mgr_h2">Менеджеры по продажам</h2>
       <p class="muted" id="mgr-desc"></p>
@@ -319,7 +309,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/order/order.js?v=57"></script>
+<script src="/order/order.js?v=58"></script>
 <script src="/order/dmall.js?v=49"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
