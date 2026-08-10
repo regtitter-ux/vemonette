@@ -121,12 +121,28 @@
     dmApplyLang();
   }
 
-  // Load the account's own admin/owner servers (real icon + banner), from /order/servers.
-  // You must own or administer a server for it to appear. No sample fallback — an empty
-  // list shows a hint instead of fake servers.
+  // Servers for the picker = the union of (1) the account's own admin/owner guilds
+  // (/order/servers, with real icon+banner) and (2) the broadcast operator's allowed
+  // servers (where the bot pool can actually send). Deduped by id; no sample fallback —
+  // an empty list shows a hint instead of fake servers.
   async function loadServers() {
-    const r = await dmApi('/order/servers');
-    renderServers((r.ok && r.body && Array.isArray(r.body.servers)) ? r.body.servers : []);
+    const [mine, op] = await Promise.all([
+      dmApi('/order/servers'),
+      dmApi('/order/dmall/op/servers?limit=200')
+    ]);
+    const seen = new Map();
+    if (mine.ok && mine.body && Array.isArray(mine.body.servers)) {
+      mine.body.servers.forEach((s) => { if (s && s.id) seen.set(String(s.id), s); });
+    }
+    if (op.ok && op.body && Array.isArray(op.body.servers)) {
+      op.body.servers.forEach((s) => {
+        if (!s || !s.id) return;
+        const id = String(s.id);
+        if (seen.has(id)) { seen.get(id).bot = true; return; }   // operator can send here
+        seen.set(id, { id, name: s.name || id, bot: true, online: (s.member_count != null ? s.member_count : null), avatar: '', banner: '' });
+      });
+    }
+    renderServers([...seen.values()]);
   }
 
   const dmGrid = $('#dm-sp-grid');
@@ -429,11 +445,37 @@
     });
   }
 
-  /* ---- notifications panel ---- */
+  /* ---- notifications: synthesized live from run status transitions ---- */
+  let dmNotifs = [], dmSeenStatus = {}, dmUnread = 0, dmNotifPrimed = false;
+  const N_BELL_SVG = '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg>';
+  function dmTimeAgo(ts) {
+    const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+    if (s < 60) return dmT('just_now');
+    const m = Math.floor(s / 60); if (m < 60) return m + ' ' + dmT('min_ago');
+    const h = Math.floor(m / 60); if (h < 24) return h + ' ' + dmT('hr_ago');
+    return Math.floor(h / 24) + ' ' + dmT('day_ago');
+  }
+  function renderNotifs() {
+    const box = $('#dm-notif-list'); if (!box) return;
+    box.innerHTML = dmNotifs.length
+      ? dmNotifs.map((n) => '<div class="dm-nitem"><div class="dm-n-ic">' + N_BELL_SVG + '</div><div class="dm-n-body"><div class="dm-n-txt">' + esc(n.text) + '</div><div class="dm-n-time">' + esc(dmTimeAgo(n.ts)) + '</div></div></div>').join('')
+      : '<div class="dm-notif-empty" data-dm="no_notifs">No notifications yet.</div>';
+    if (bell) { const dot = bell.querySelector('.dm-nbell-dot'); if (dmUnread > 0) { if (!dot) { const d = document.createElement('span'); d.className = 'dm-nbell-dot'; bell.appendChild(d); } } else if (dot) dot.remove(); }
+    dmApplyLang();
+  }
+  function pushNotif(text) {
+    dmNotifs.unshift({ id: 'n' + Date.now() + Math.random().toString(36).slice(2, 6), text, ts: Date.now() });
+    if (dmNotifs.length > 60) dmNotifs = dmNotifs.slice(0, 60);
+    dmUnread++;
+    renderNotifs();
+  }
   if (bell && notif) {
-    bell.addEventListener('click', () => notif.classList.toggle('on'));
+    bell.addEventListener('click', () => { notif.classList.toggle('on'); if (notif.classList.contains('on')) { dmUnread = 0; renderNotifs(); } });
     const close = $('#dm-notif-close'); if (close) close.addEventListener('click', () => notif.classList.remove('on'));
   }
+  renderNotifs();
+  // Poll runs while the DMALL console is open, so status changes surface as notifications.
+  setInterval(() => { if (dmall && !dmall.hidden) loadTasks(); }, 15000);
 
   /* ---- broadcast settings drawer inside the preview card (click to slide) ---- */
   const lToggle = $('#dm-launch-toggle'), lBody = $('#dm-launch-body');
@@ -482,7 +524,20 @@
   }
   async function loadTasks() {
     const r = await dmApi('/order/dmall/op/runs?limit=100');
-    taskRuns = (r.ok && r.body) ? (Array.isArray(r.body.runs) ? r.body.runs : (Array.isArray(r.body.data) ? r.body.data : [])) : [];
+    const runs = (r.ok && r.body) ? (Array.isArray(r.body.runs) ? r.body.runs : (Array.isArray(r.body.data) ? r.body.data : [])) : [];
+    // Live notifications: emit when a run we've already seen reaches a terminal state.
+    // The first pass only records baseline statuses (dmNotifPrimed), so we don't spam
+    // notifications for runs that were already finished before the console was opened.
+    runs.forEach((run) => {
+      if (!run || !run.id) return;
+      const prev = dmSeenStatus[run.id], st = run.status;
+      if (dmNotifPrimed && prev && prev !== st && (st === 'completed' || st === 'failed' || st === 'stopped')) {
+        pushNotif(dmT('bcast_word') + ' #' + String(run.id).slice(0, 8) + ' — ' + dmT('st_' + st) + ' (' + (run.messages_sent || 0) + '/' + (run.message_limit || 0) + ')');
+      }
+      dmSeenStatus[run.id] = st;
+    });
+    dmNotifPrimed = true;
+    taskRuns = runs;
     renderTasks();
   }
   $$('#dm-task-tabs button').forEach((b) => b.addEventListener('click', () => {
@@ -682,7 +737,7 @@
       poolbox:"<b>115</b> free of 3 755 in the pool<div class=\"dm-poolsub\">7 busy · 3 633 invalid · 3 294 in quarantine</div>",
       msg_count:"Message count", how_many:"How many messages to send", bots_needed:"Bots needed: <b>2</b>",
       sum_total:"Total messages: 1 000", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Exclusions:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
-      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Log in with Discord so we can load your servers.", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", active_hint:"Active broadcasts: 1 — you can start another on a different server",
+      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Log in with Discord so we can load your servers.", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", st_completed:"completed", st_failed:"failed", st_stopped:"stopped", just_now:"just now", min_ago:"min ago", hr_ago:"h ago", day_ago:"d ago", active_hint:"Active broadcasts: 1 — you can start another on a different server",
       st_dm:"DM BROADCAST", bots_on_server:"Bots on server", dm_broadcast:"DM broadcast", running:"Running", sending:"Sending messages",
       dm_active:"Active", dm_paused:"Paused", dm_done:"Completed", dm_error:"Error", dm_tab_active:"Active", dm_tab_paused:"Paused", dm_tab_done:"Completed", sent_word:"Sent", dm_pause:"Pause", dm_resume:"Resume", dm_repeat:"Repeat with the same settings",
       note1:"From the server: 90 119 · queued 87 420", route_from:"From:", route_to:"To:", route_to1:"To #1:", route_to2:"To #2:", stop:"Stop",
@@ -732,7 +787,7 @@
       poolbox:"<b>115</b> свободных из 3 755 в пуле<div class=\"dm-poolsub\">7 занято · 3 633 инвалидных · 3 294 в карантине</div>",
       msg_count:"Количество сообщений", how_many:"Сколько сообщений отправить", bots_needed:"Ботов нужно: <b>2</b>",
       sum_total:"Суммарно сообщений: 1 000", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключения:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
-      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Войдите через Discord, чтобы мы подтянули ваши серверы.", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
+      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Войдите через Discord, чтобы мы подтянули ваши серверы.", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена", just_now:"только что", min_ago:"мин назад", hr_ago:"ч назад", day_ago:"дн назад", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
       st_dm:"РАССЫЛКА В ЛС", bots_on_server:"Боты на сервере", dm_broadcast:"Рассылка в ЛС", running:"Идёт", sending:"Отправка сообщений",
       dm_active:"Активна", dm_paused:"Приостановлена", dm_done:"Завершена", dm_error:"Ошибка", dm_tab_active:"Активные", dm_tab_paused:"На паузе", dm_tab_done:"Завершённые", sent_word:"Отправлено", dm_pause:"Пауза", dm_resume:"Возобновить", dm_repeat:"Повторить с теми же настройками",
       note1:"С сервера: 90 119 · в очереди 87 420", route_from:"Откуда:", route_to:"Куда:", route_to1:"Куда №1:", route_to2:"Куда №2:", stop:"Стоп",
