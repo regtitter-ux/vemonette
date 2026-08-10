@@ -360,6 +360,11 @@ if (new URLSearchParams(location.search).get('login') === 'denied') {
 }
 const setAuthed = (v) => { try { v ? localStorage.setItem('vemoni_authed', '1') : localStorage.removeItem('vemoni_authed'); } catch (_) {} };
 $('#logout').addEventListener('click', async () => { await post('/logout'); setTok(''); setAuthed(false); location.reload(); });
+// Admin-panel embed (?embed=stays): show ONLY the Stays order view (no chrome). Applied
+// immediately so it never depends on auth/timing.
+const EMBED_STAYS = /[?#&]embed=stays/.test(location.href);
+if (EMBED_STAYS) document.documentElement.classList.add('embed-stays');
+
 async function checkAuth() { const { ok, body } = await get('/whoami'); return (ok && body?.authed === true) ? body : null; }
 function bannerFromAvatar(url) {
     const bn = document.getElementById('nmBanner'); if (!bn || !url) return;
@@ -385,8 +390,9 @@ function setupCabNav(who) {
         const staff = Boolean(who && (who.isAdmin || who.isOwner));
         window.__VEMONI_DM_STAFF__ = staff;
         const mb = document.getElementById('dm-modebar');
-        const embed = /[?#&]embed=stays/.test(location.href);
+        const embed = EMBED_STAYS;
         if (embed) {
+            window.__VEMONI_DM_STAFF__ = true;   // the admin panel that embeds this is staff-only
             document.documentElement.classList.add('embed-stays');
             const st = mb && mb.querySelector('.dm-mode[data-mode="stays"]');
             if (st) st.click();   // render the Stays order view only

@@ -136,6 +136,9 @@
   // in the background if/when it returns. Deduped by id; empty → hint + "connect Discord".
   async function loadServers() {
     const seen = new Map();
+    // Show the hint + "Connect Discord" button INSTANTLY (only while the grid is still
+    // empty), so a slow/hung /order/servers can never leave the picker blank.
+    { const grid = $('#dm-sp-grid'); if (grid && !grid.querySelector('.dm-sp-card')) renderServers([]); }
     const mine = await dmApi('/order/servers');
     if (mine.ok && mine.body && Array.isArray(mine.body.servers)) {
       mine.body.servers.forEach((s) => { if (s && s.id) seen.set(String(s.id), s); });
