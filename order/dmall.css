@@ -473,3 +473,10 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .dm-notif-empty{padding:22px 16px;text-align:center;color:var(--muted,#8b97ab);font-size:13.5px}
 
 .dm-sp-empty .dm-connect{margin-top:14px;display:inline-block}
+
+/* Staff-only "view as" tester bar */
+.dm-viewas{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; max-width:600px; margin:0 auto 20px; padding:10px 14px; background:var(--dm-card-2); border:1px solid var(--dm-line-2); border-radius:12px; }
+.dm-viewas-lbl{ color:var(--dm-mut); font-size:12.5px; font-weight:700; }
+.dm-viewas input{ flex:1; min-width:150px; background:var(--dm-inset); border:1px solid var(--dm-line-2); color:var(--dm-txt); font:inherit; font-size:13.5px; padding:8px 12px; border-radius:9px; }
+.dm-viewas input:focus{ outline:none; border-color:var(--dm-blurple); }
+.dm-viewas-cur{ color:var(--dm-green); font-size:12.5px; font-weight:700; }
