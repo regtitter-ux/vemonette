@@ -130,27 +130,29 @@
   }
 
   // Servers for the picker = the union of (1) the account's own admin/owner guilds
-  // (/order/servers, with real icon+banner) and (2) the broadcast operator's allowed
-  // servers (where the bot pool can actually send). Deduped by id; no sample fallback —
-  // an empty list shows a hint instead of fake servers.
+  // (/order/servers, fast, with real icon+banner) and (2) the broadcast operator's allowed
+  // servers. The operator call can hang up to ~25s (Cloudflare/timeout), so it must NEVER
+  // block the picker: render the account's own list immediately, then merge the operator's
+  // in the background if/when it returns. Deduped by id; empty → hint + "connect Discord".
   async function loadServers() {
-    const [mine, op] = await Promise.all([
-      dmApi('/order/servers'),
-      dmApi('/order/dmall/op/servers?limit=200')
-    ]);
     const seen = new Map();
+    const mine = await dmApi('/order/servers');
     if (mine.ok && mine.body && Array.isArray(mine.body.servers)) {
       mine.body.servers.forEach((s) => { if (s && s.id) seen.set(String(s.id), s); });
     }
-    if (op.ok && op.body && Array.isArray(op.body.servers)) {
+    renderServers([...seen.values()]);                 // instant — no waiting on the operator
+    dmApi('/order/dmall/op/servers?limit=200').then((op) => {
+      if (!(op.ok && op.body && Array.isArray(op.body.servers) && op.body.servers.length)) return;
+      let added = false;
       op.body.servers.forEach((s) => {
         if (!s || !s.id) return;
         const id = String(s.id);
-        if (seen.has(id)) { seen.get(id).bot = true; return; }   // operator can send here
+        if (seen.has(id)) { seen.get(id).bot = true; return; }
         seen.set(id, { id, name: s.name || id, bot: true, online: (s.member_count != null ? s.member_count : null), avatar: '', banner: '' });
+        added = true;
       });
-    }
-    renderServers([...seen.values()]);
+      if (added) renderServers([...seen.values()]);
+    }).catch(() => {});
   }
 
   const dmGrid = $('#dm-sp-grid');
