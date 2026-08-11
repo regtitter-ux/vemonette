@@ -118,15 +118,33 @@
 .dm-chat-head-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .dm-chat-author { font-weight: 600; font-size: 14px; color: var(--text, #e9edf5); }
 .dm-chat-time { font-size: 11px; color: var(--dim, #5f6b80); }
-.dm-chat-del {
+.dm-chat-del, .dm-chat-mute {
   margin-left: auto;
   background: transparent; border: none;
   color: var(--dim, #5f6b80); cursor: pointer;
   font-size: 13px; line-height: 1; padding: 2px 4px; border-radius: 6px;
   opacity: 0; transition: opacity .12s;
 }
-.dm-chat-msg:hover .dm-chat-del { opacity: 1; }
+.dm-chat-mute { margin-left: auto; }
+.dm-chat-mute + .dm-chat-del { margin-left: 4px; }   /* del sits right after mute, not pushed away */
+.dm-chat-mute svg { width: 15px; height: 15px; display: block; }
+.dm-chat-msg:hover .dm-chat-del, .dm-chat-msg:hover .dm-chat-mute { opacity: 1; }
 .dm-chat-del:hover { color: var(--red, #ed4245); background: rgba(237, 66, 69, .12); }
+.dm-chat-mute:hover { color: var(--amber, #f5b300); background: rgba(245, 179, 0, .12); }
+
+/* Staff mute menu. */
+.dm-mute-menu {
+  position: fixed; z-index: 1400;
+  min-width: 190px; padding: 6px;
+  background: var(--panel-2, #1b212c);
+  border: 1px solid var(--stroke-2, rgba(255, 255, 255, .13));
+  border-radius: 10px; box-shadow: 0 14px 40px rgba(0, 0, 0, .5);
+}
+.dm-mute-title { padding: 6px 10px 8px; font-size: 12px; font-weight: 700; color: var(--muted, #8a95a8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dm-mute-menu button { display: block; width: 100%; text-align: left; background: transparent; border: none; color: var(--text, #e9edf5); font: inherit; font-size: 13px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.dm-mute-menu button:hover { background: var(--panel, #151a23); }
+.dm-mute-unmute { color: var(--green, #57f287) !important; }
+.dm-mute-purge { color: var(--red, #ed4245) !important; border-top: 1px solid var(--stroke, rgba(255, 255, 255, .07)) !important; margin-top: 4px; border-radius: 0 0 8px 8px !important; }
 .dm-chat-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.4; margin-top: 1px; }
 .dm-chat-text .c-emoji { width: 20px; height: 20px; vertical-align: -4px; }
 /* Discord-style jumbo emoji: emoji-only messages get bigger, scaling down with count. */

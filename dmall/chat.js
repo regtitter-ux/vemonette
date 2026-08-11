@@ -18,10 +18,12 @@
   const TXT = {
     en: { title: 'Chat', empty: 'No messages yet. Say hi 👋', placeholder: 'Message…', login: 'Sign in to chat', reply_to: 'Replying to', cancel: 'cancel', del_confirm: 'Delete this message?', failed: 'Something went wrong', member: 'member', del: 'Delete', attach: 'Attach a file', too_big: 'File is too large', photo: 'Photo', video: 'Video', file: 'File',
       p_stickers: 'Stickers', p_emoji: 'Emoji', p_search: 'Search…', p_fav: 'Favorites', p_recent: 'Recent', p_favorite: 'Favorite', p_empty: 'Nothing found',
-      typing_one: '{name} is typing…', typing_many: 'Several users are typing…' },
+      typing_one: '{name} is typing…', typing_many: 'Several users are typing…',
+      mute: 'Mute', mute10m: '10 minutes', mute1h: '1 hour', mute1d: '1 day', mutePerm: 'Forever', unmute: 'Unmute', purge: 'Delete all messages', muted: 'User muted', unmuted: 'User unmuted', purged: 'Messages deleted', you_muted: 'You are muted and cannot post' },
     ru: { title: 'Чат', empty: 'Пока пусто. Поздоровайтесь 👋', placeholder: 'Сообщение…', login: 'Войдите, чтобы писать', reply_to: 'Ответ', cancel: 'отмена', del_confirm: 'Удалить сообщение?', failed: 'Что-то пошло не так', member: 'участник', del: 'Удалить', attach: 'Прикрепить файл', too_big: 'Файл слишком большой', photo: 'Фото', video: 'Видео', file: 'Файл',
       p_stickers: 'Стикеры', p_emoji: 'Эмодзи', p_search: 'Поиск…', p_fav: 'Избранное', p_recent: 'Недавние', p_favorite: 'В избранное', p_empty: 'Ничего не найдено',
-      typing_one: '{name} печатает…', typing_many: 'Несколько человек печатают…' },
+      typing_one: '{name} печатает…', typing_many: 'Несколько человек печатают…',
+      mute: 'Замьютить', mute10m: '10 минут', mute1h: '1 час', mute1d: '1 день', mutePerm: 'Навсегда', unmute: 'Снять мьют', purge: 'Удалить все сообщения', muted: 'Пользователь замьючен', unmuted: 'Мьют снят', purged: 'Сообщения удалены', you_muted: 'Вы в мьюте и не можете писать' },
   };
   const t = (k) => (TXT[lang()] && TXT[lang()][k]) || TXT.en[k] || k;
 
@@ -32,6 +34,7 @@
   const REPLY_ICO = '<svg class="dm-chat-reply-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7 4 12l5 5"/><path d="M4 12h9a5 5 0 0 1 5 5v1"/></svg>';
   const FILE_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></svg>';
   const CLOCK_ICO = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  const MUTE_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>';
 
   /* --------------------------- state --------------------------- */
   let messages = [], overlay = null, es = null, unread = false, replyTarget = null, sending = false, mounted = false;
@@ -109,6 +112,7 @@
   function msgHTML(m) {
     const mine = me.id && me.id === String(m.userId);
     const canDel = mine || me.staff;
+    const canMute = me.staff && String(m.userId) !== me.id;   // staff can mute others
     const reply = m.reply
       ? '<div class="dm-chat-reply">' + REPLY_ICO + '<span class="dm-chat-reply-name">@' + esc(m.reply.name || t('member')) + '</span> <span class="dm-chat-reply-snip">' + renderBody(m.reply.text) + '</span></div>'
       : '';
@@ -118,6 +122,7 @@
         '<div class="dm-chat-head-line">' +
           '<span class="dm-chat-author">' + esc(m.name || t('member')) + '</span>' +
           '<span class="dm-chat-time">' + esc(fmtTime(m.at)) + '</span>' +
+          (canMute ? '<button class="dm-chat-mute" data-mute="' + esc(m.userId) + '" data-mname="' + esc(m.name || '') + '" title="' + esc(t('mute')) + '">' + MUTE_ICO + '</button>' : '') +
           (canDel ? '<button class="dm-chat-del" data-del="' + esc(m.id) + '" title="' + esc(t('del')) + '">✕</button>' : '') +
         '</div>' + reply +
         '<div class="dm-chat-text' + emojiScaleClass(m.body) + '">' + renderBody(m.body) + '</div>' +
@@ -166,6 +171,11 @@
     const el = overlay && overlay.querySelector('.dm-chat-msg[data-msg="' + (window.CSS && CSS.escape ? CSS.escape(id) : id) + '"]');
     if (el) el.remove();
   }
+  function onDelUser(userId) {
+    const uid = String(userId);
+    messages = messages.filter((m) => String(m.userId) !== uid);
+    if (overlay) overlay.querySelectorAll('.dm-chat-msg[data-uid="' + (window.CSS && CSS.escape ? CSS.escape(uid) : uid) + '"]').forEach((el) => el.remove());
+  }
 
   /* --------------------------- realtime (SSE + poll fallback) --------------------------- */
   // Apply a fresh full list: append messages we don't have yet, drop ones that vanished.
@@ -202,6 +212,7 @@
         if (overlay) { renderList(); markSeen(); } else { recomputeUnread(); }
       } else if (d.type === 'add') { onAdd(d.message); }
       else if (d.type === 'del') { onDel(d.id); }
+      else if (d.type === 'delUser') { onDelUser(d.userId); }
       else if (d.type === 'typing') { onTyping(d.userId, d.name); }
     };
     es.onerror = () => startPoll();   // stream blocked/buffered (e.g. a proxy) → poll as fallback
@@ -253,7 +264,7 @@
     try {
       const reply = replyTarget ? { userId: replyTarget.userId, name: replyTarget.name, text: replyTarget.text } : null;
       const r = await api('/order/dmall/chat', { method: 'POST', body: { text, reply } });
-      if (!r.ok) { toast((r.body && r.body.error) || t('failed'), 'err'); return false; }
+      if (!r.ok) { toast(r.body && r.body.error === 'muted' ? t('you_muted') : ((r.body && r.body.error) || t('failed')), 'err'); return false; }
       return true;
     } finally { sending = false; }
   }
@@ -433,6 +444,31 @@
   }
   function clearComposer(input) { input.innerHTML = ''; refreshEmpty(input); }
 
+  /* --------------------------- mute menu (staff) --------------------------- */
+  function openMuteMenu(btn, targetId, name) {
+    document.querySelector('.dm-mute-menu')?.remove();
+    const menu = document.createElement('div');
+    menu.className = 'dm-mute-menu';
+    const opts = [{ m: 10, label: t('mute10m') }, { m: 60, label: t('mute1h') }, { m: 1440, label: t('mute1d') }, { m: 0, label: t('mutePerm') }];
+    menu.innerHTML = '<div class="dm-mute-title">' + esc(name || '') + '</div>' +
+      opts.map((o) => '<button type="button" data-min="' + o.m + '">' + esc(o.label) + '</button>').join('') +
+      '<button type="button" class="dm-mute-unmute" data-min="-1">' + esc(t('unmute')) + '</button>' +
+      '<button type="button" class="dm-mute-purge" data-purge="1">' + esc(t('purge')) + '</button>';
+    document.body.append(menu);
+    const r = btn.getBoundingClientRect();
+    menu.style.top = (r.bottom + 4) + 'px';
+    menu.style.left = Math.max(8, Math.min(r.left, innerWidth - menu.offsetWidth - 8)) + 'px';
+    menu.addEventListener('click', async (ev) => {
+      const purge = ev.target.closest('[data-purge]');
+      if (purge) { menu.remove(); const res = await api('/order/dmall/chat/purge', { method: 'POST', body: { userId: targetId } }); toast(res.ok ? t('purged') : t('failed'), res.ok ? 'ok' : 'err'); return; }
+      const b = ev.target.closest('[data-min]'); if (!b) return;
+      const min = Number(b.dataset.min); menu.remove();
+      if (min === -1) { const res = await api('/order/dmall/chat/unmute', { method: 'POST', body: { userId: targetId } }); toast(res.ok ? t('unmuted') : t('failed'), res.ok ? 'ok' : 'err'); }
+      else { const res = await api('/order/dmall/chat/mute', { method: 'POST', body: { userId: targetId, minutes: min } }); toast(res.ok ? t('muted') : t('failed'), res.ok ? 'ok' : 'err'); }
+    });
+    setTimeout(() => document.addEventListener('click', function off(ev) { if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener('click', off); } }), 0);
+  }
+
   /* --------------------------- lightbox --------------------------- */
   function openLightbox(src) {
     if (!src) return;
@@ -496,6 +532,8 @@
       const ep = e.target.closest('[data-ep-open]');
       if (ep) { e.preventDefault(); return picker.toggle(ep, ep.dataset.epOpen); }
       if (e.target.closest('[data-attach]')) { e.preventDefault(); return fileInput.click(); }
+      const mute = e.target.closest('[data-mute]');
+      if (mute) { e.stopPropagation(); return openMuteMenu(mute, mute.dataset.mute, mute.dataset.mname); }
       const del = e.target.closest('[data-del]');
       if (del) { e.stopPropagation(); if (!confirm(t('del_confirm'))) return; await api('/order/dmall/chat/' + encodeURIComponent(del.dataset.del), { method: 'DELETE' }); return; }
       const lb = e.target.closest('[data-lb]');
