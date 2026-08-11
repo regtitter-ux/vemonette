@@ -571,6 +571,14 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .dm-lot-del:hover{ background:#ed4245; }
 /* private badge (sits top-left; "yours" stays top-right) */
 .dm-lot-badge-priv{ background:rgba(148,163,184,.25); color:#cbd5e1; }
+/* broadcast-viability pre-check: spinner while checking; dimmed + red badge when unavailable */
+.dm-lot-checking{ pointer-events:none; }
+.dm-lot-checking::after{ content:""; position:absolute; inset:0; z-index:6; background:rgba(12,16,23,.55); border-radius:14px; }
+.dm-lot-checking::before{ content:""; position:absolute; z-index:7; top:50%; left:50%; width:26px; height:26px; margin:-13px 0 0 -13px; border:3px solid rgba(255,255,255,.22); border-top-color:var(--dm-blurple); border-radius:50%; animation:dmspin .7s linear infinite; }
+@keyframes dmspin{ to{ transform:rotate(360deg); } }
+.dm-lot-unavail{ opacity:.5; }
+.dm-lot-unavail:hover{ opacity:.68; }
+.dm-lot-badge-unavail{ background:rgba(237,66,69,.28); color:#ff9a9c; }
 /* owner "⋮" menu in the bottom-right corner + its popover (opens upward, inside the card) */
 .dm-lot-menu-btn{ position:absolute; z-index:4; bottom:8px; right:8px; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; background:rgba(0,0,0,.45); color:#cfd6e6; cursor:pointer; opacity:0; pointer-events:none; transition:background .15s,color .15s,opacity .15s; }
 .dm-lot-menu-btn svg{ width:15px; height:15px; display:block; }
