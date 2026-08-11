@@ -173,6 +173,9 @@
   padding: 7px 4px; max-height: 120px;
 }
 .dm-chat-input::placeholder { color: var(--dim, #5f6b80); }
+/* Kill the page-wide textarea focus ring/glow (order.css :focus-visible outline + :focus box-shadow). */
+.dm-chat-inputbar .dm-chat-input:focus,
+.dm-chat-inputbar .dm-chat-input:focus-visible { outline: none; box-shadow: none; }
 /* Tool icons inside the pill — transparent circles. */
 .dm-chat-tool {
   flex: none; width: 34px; height: 34px; padding: 0;
