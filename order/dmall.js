@@ -274,9 +274,8 @@
       return em;
     }).filter((em) => Object.keys(em).length);
     const components = (state.embeds || []).filter((e) => e.btnlabel && e.btnurl).map((e) => ({ label: e.btnlabel, url: e.btnurl }));
-    const payload = { content: String(f.content || '') };
-    if (embeds.length) payload.embeds = embeds;
-    if (components.length) payload.components = components;
+    // The operator requires embeds/components to be arrays (empty is fine), so always send them.
+    const payload = { content: String(f.content || ''), embeds: embeds, components: components };
     const bp = {};
     if (f.setName && f.username) bp.username = f.username;
     if (f.setAvatar) { if (avatarRef) bp.avatar = avatarRef; else if (f.avatarUrl) bp.avatar = f.avatarUrl; }
