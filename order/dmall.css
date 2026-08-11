@@ -26,17 +26,18 @@
 /* ---- left sidebar: DMALL · Cabinet · API ---- */
 main.wrap:has(> #dm-modebar:not([hidden])){ flex-direction:row; gap:20px; align-items:flex-start; }
 .dm-content{ display:flex; flex-direction:column; gap:28px; flex:1 1 auto; min-width:0; }
-.dm-side{ flex:0 0 194px; display:flex; flex-direction:column; gap:4px; position:sticky; top:82px; align-self:flex-start; padding:8px; background:var(--dm-card); border:1px solid var(--dm-line); border-radius:16px; }
+.dm-side{ flex:0 0 210px; display:flex; flex-direction:column; gap:4px; position:sticky; top:82px; align-self:flex-start; padding:16px 12px; background:var(--dm-card); border:1px solid var(--dm-line); border-radius:14px; }
 .dm-side[hidden]{ display:none; }
+/* Matches the admin sidebar tabs: text-only, muted, subtle blue-tinted active. */
 .dm-mode{
-  display:flex; align-items:center; gap:11px; width:100%; text-align:left;
+  width:100%; text-align:left;
   border:0; background:transparent; color:var(--dm-mut);
-  font:inherit; font-weight:700; font-size:14px;
-  padding:11px 13px; border-radius:11px; cursor:pointer; transition:.14s;
+  font:inherit; font-weight:600; font-size:14.5px;
+  padding:10px 12px; border-radius:8px; cursor:pointer; transition:background .15s,color .15s;
 }
-.dm-mode svg{ width:18px; height:18px; flex:0 0 auto; }
-.dm-mode:hover{ color:var(--dm-txt); background:rgba(255,255,255,.05); }
-.dm-mode.active{ background:var(--dm-blurple); color:#fff; }
+.dm-mode svg{ display:none; }
+.dm-mode:hover{ color:var(--dm-txt); background:rgba(255,255,255,.04); }
+.dm-mode.active{ background:rgba(34,168,240,.16); color:#44bbfc; }
 .dm-mode[hidden]{ display:none; }
 
 /* When DMALL/Cabinet/API is on: hide the Stays order content (now inside .dm-content) and widen. */
