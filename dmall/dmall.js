@@ -246,8 +246,12 @@
     el.hidden = false;
     clearTimeout(dmActToastT); dmActToastT = setTimeout(() => { el.hidden = true; }, 14000);
   }
-  // A broadcast didn't go through (funds refunded) → suggest picking another server.
-  function dmOfferAnotherServer() { dmActionToast(dmT('fail_notice'), dmT('other_offers'), dmOpenPicker); }
+  // A broadcast didn't go through (funds refunded) → suggest picking another server. Names the
+  // server it failed on (the user may have already navigated back to the catalog).
+  function dmOfferAnotherServer(serverName) {
+    const msg = serverName ? dmT('fail_notice_srv').replace('{srv}', serverName) : dmT('fail_notice');
+    dmActionToast(msg, dmT('other_offers'), dmOpenPicker);
+  }
   { const q = $('#dm-sp-q'); if (q) q.addEventListener('input', () => { const v = q.value.trim().toLowerCase(); $$('#dm-sp-grid .dm-lot-card').forEach((c) => { c.hidden = !!v && !(c.dataset.name || '').toLowerCase().includes(v); }); }); }
 
   async function dmDeleteLot(id) {
@@ -473,7 +477,7 @@
     return dmLang() === 'ru' ? (ru || en) : (en || ru);
   }
   // Poll a run until it reaches a terminal state, streaming progress to the status line.
-  function dmPollRun(id) {
+  function dmPollRun(id, serverName) {
     let stop = false;
     async function tick() {
       if (stop) return;
@@ -491,7 +495,10 @@
         if (['completed', 'failed', 'stopped'].includes(run.status)) {
           stop = true; dmActiveRun = null; const sb = $('#dm-launch-stop'); if (sb) sb.hidden = true;
           // Nothing delivered (failed / 0 sent) → funds were refunded; suggest another server.
-          if (run.status === 'failed' || sent === 0) dmOfferAnotherServer();
+          if (run.status === 'failed' || sent === 0) {
+            const nm = serverName || (run.servers && run.servers[0] && (run.servers[0].guild_name || run.servers[0].name)) || (run.server_names && run.server_names[0]) || '';
+            dmOfferAnotherServer(nm);
+          }
           return;
         }
       }
@@ -554,7 +561,7 @@
       const run = await dmApi('/order/dmall/op/runs', { method: 'POST', body: runBody, idem });
       if (run.status === 402) { dmSetStatus('err', dmT('l_need_funds') + ' $' + (run.body && run.body.price != null ? run.body.price : '?') + ' · ' + dmT('l_balance') + ' $' + (run.body && run.body.balance != null ? run.body.balance : '?')); return; }
       if (run.status === 403) { dmSetStatus('err', dmT('l_no_access')); return; }
-      if (!run.ok || !run.body || !run.body.run) { dmSetStatus('err', dmT('l_run_err') + ' ' + ((run.body && (run.body.message || run.body.error)) || run.status)); dmOfferAnotherServer(); return; }
+      if (!run.ok || !run.body || !run.body.run) { dmSetStatus('err', dmT('l_run_err') + ' ' + ((run.body && (run.body.message || run.body.error)) || run.status)); dmOfferAnotherServer(dmServer); return; }
       const runId = run.body.run.id;
       dmActiveRun = runId;
       const sb = $('#dm-launch-stop'); if (sb) sb.hidden = false;
@@ -565,7 +572,7 @@
         dmSetStatus('ok', dmT('l_scheduled') + ' ' + when + chargedTxt);
       } else {
         dmSetStatus('ok', dmT('l_started') + ' ' + runId + chargedTxt);
-        dmPollRun(runId);
+        dmPollRun(runId, dmServer);
       }
       loadTasks();
     } catch (e) { dmSetStatus('err', dmT('l_net_err')); }
@@ -778,7 +785,7 @@
         $$('#dm-task-tabs button').forEach((x) => x.classList.toggle('active', x.dataset.dtaskt === 'active'));
         renderTasks();
         notify(dmT('repeat_started') + ' #' + String(newId).slice(0, 8) + (r.body.charged ? ' · ' + dmT('l_charged') + ' $' + r.body.charged : ''), 'ok');
-        dmActiveRun = newId; dmPollRun(newId);
+        dmActiveRun = newId; dmPollRun(newId, (src.servers && src.servers[0] && src.servers[0].name) || '');
         setTimeout(loadTasks, 1500);   // reconcile with the operator's real list
       } catch (e) { b.disabled = false; notify(dmT('l_net_err'), 'err'); }
     });
@@ -1005,7 +1012,7 @@
       sum_total:"Total messages:", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Exclusions:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
       start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" / 1000 messages", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", lot_menu:"Menu", lot_edit:"Edit", lot_make_private:"Make private", lot_make_public:"Make public", lot_delete:"Delete", lot_private:"private", lot_edit_title:"Edit lot", lot_save:"Save", lot_saving:"Saving…", lot_now_private:"Lot is now private — only you can see it", lot_now_public:"Lot is now public", side_dmall:"DMALL", side_cabinet:"Cabinet", side_api:"API", cab_title:"Cabinet", cab_lead:"Your DMALL stats, order history and earnings.", cab_spent:"Spent", cab_sent:"Messages sent", cab_runs:"Broadcasts", cab_earn:"Earnings", cab_balance:"Balance", cab_orders:"Order history", cab_journal:"Earnings journal", cab_empty_orders:"No orders yet.", cab_empty_earn:"No earnings yet.", cab_st_active:"active", cab_st_settled:"settled", cab_refunded:"refunded", cab_delivered:"delivered", cab_lot_income:"lot income", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", why_incomplete:"Reason:", st_completed:"completed", st_failed:"failed", st_stopped:"stopped",
       rs_queued:"queued", rs_running:"running", rs_completed:"completed", rs_failed:"failed", rs_stopped:"stopped",
-      l_pick_server:"Choose a server to broadcast to first", l_count_req:"Enter the number of messages", l_need_content:"Add text or an embed", l_preparing:"Preparing…", l_creating_tpl:"Creating template…", l_tpl_err:"Template:", l_link_prompt:"The message contains {{LINK}} — paste the destination link (https://discord.gg/… or a URL):", l_link_req:"A destination link is required for {{LINK}}", l_launching:"Starting the broadcast…", l_need_funds:"Insufficient funds, need", l_balance:"balance", l_no_access:"No DMALL access", l_run_err:"Start:", l_started:"Broadcast started ✓", l_charged:"charged", l_net_err:"Network unavailable, please try again", l_stopping:"Stop requested…", sched_h:"Scheduled start", sched_now:"Immediately", sched_in:"In N minutes", sched_at:"At date/time", minutes_word:"minutes", sched_bad:"Pick a valid start time in the future", l_scheduled:"Broadcast scheduled for", settings_saved:"Settings saved", fail_notice:"The broadcast didn't go through — your funds were refunded. Try another server.", other_offers:"Other offers",
+      l_pick_server:"Choose a server to broadcast to first", l_count_req:"Enter the number of messages", l_need_content:"Add text or an embed", l_preparing:"Preparing…", l_creating_tpl:"Creating template…", l_tpl_err:"Template:", l_link_prompt:"The message contains {{LINK}} — paste the destination link (https://discord.gg/… or a URL):", l_link_req:"A destination link is required for {{LINK}}", l_launching:"Starting the broadcast…", l_need_funds:"Insufficient funds, need", l_balance:"balance", l_no_access:"No DMALL access", l_run_err:"Start:", l_started:"Broadcast started ✓", l_charged:"charged", l_net_err:"Network unavailable, please try again", l_stopping:"Stop requested…", sched_h:"Scheduled start", sched_now:"Immediately", sched_in:"In N minutes", sched_at:"At date/time", minutes_word:"minutes", sched_bad:"Pick a valid start time in the future", l_scheduled:"Broadcast scheduled for", settings_saved:"Settings saved", fail_notice:"The broadcast didn't go through — your funds were refunded. Try another server.", fail_notice_srv:"The broadcast to “{srv}” didn't go through — your funds were refunded. Try another server.", other_offers:"Other offers",
       ak_unset:"not set — click “Generate new”", ak_confirm:"Generate a new key? The old one stops working immediately — update it in the external service.", ak_fail:"Failed:", ak_net:"Network unavailable", ak_copied:"Copied ✓", ak_copy:"Copy",
       reason_queue:"recipient queue exhausted — the server has fewer reachable members than requested", reason_bots:"ran out of sending bots", reason_stalled:"sending stalled", reason_mutual:"no mutual server to DM these members", just_now:"just now", min_ago:"min ago", hr_ago:"h ago", day_ago:"d ago", active_hint:"Active broadcasts: 1 — you can start another on a different server",
       st_dm:"DM BROADCAST", bots_on_server:"Bots on server", dm_broadcast:"DM broadcast", running:"Running", sending:"Sending messages",
@@ -1059,7 +1066,7 @@
       sum_total:"Суммарно сообщений:", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключения:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
       start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" / 1000 сообщений", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для покупателей:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", lot_menu:"Меню", lot_edit:"Редактировать", lot_make_private:"Сделать приватным", lot_make_public:"Сделать публичным", lot_delete:"Удалить", lot_private:"приватный", lot_edit_title:"Редактировать лот", lot_save:"Сохранить", lot_saving:"Сохранение…", lot_now_private:"Лот теперь приватный — виден только вам", lot_now_public:"Лот теперь публичный", side_dmall:"DMALL", side_cabinet:"Кабинет", side_api:"API", cab_title:"Кабинет", cab_lead:"Ваша статистика DMALL, история заказов и начисления.", cab_spent:"Потрачено", cab_sent:"Сообщений отправлено", cab_runs:"Рассылок", cab_earn:"Начислено", cab_balance:"Баланс", cab_orders:"История заказов", cab_journal:"Журнал начислений", cab_empty_orders:"Пока нет заказов.", cab_empty_earn:"Пока нет начислений.", cab_st_active:"активен", cab_st_settled:"завершён", cab_refunded:"возврат", cab_delivered:"доставлено", cab_lot_income:"доход с лота", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", why_incomplete:"Причина:", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена",
       rs_queued:"в очереди", rs_running:"идёт", rs_completed:"завершено", rs_failed:"ошибка", rs_stopped:"остановлено",
-      l_pick_server:"Сначала выберите сервер рассылки", l_count_req:"Укажите количество сообщений", l_need_content:"Добавьте текст или эмбед", l_preparing:"Подготовка…", l_creating_tpl:"Создание шаблона…", l_tpl_err:"Шаблон:", l_link_prompt:"Сообщение содержит {{LINK}} — вставьте ссылку назначения (https://discord.gg/… или URL):", l_link_req:"Нужна ссылка назначения для {{LINK}}", l_launching:"Запуск рассылки…", l_need_funds:"Недостаточно средств, нужно", l_balance:"баланс", l_no_access:"Нет доступа к DMALL", l_run_err:"Запуск:", l_started:"Рассылка запущена ✓", l_charged:"списано", l_net_err:"Сеть недоступна, попробуйте ещё раз", l_stopping:"Остановка запрошена…", sched_h:"Отложенный старт", sched_now:"Сразу", sched_in:"Через N минут", sched_at:"В дату/время", minutes_word:"минут", sched_bad:"Выберите корректное время старта в будущем", l_scheduled:"Рассылка запланирована на", settings_saved:"Настройки сохранены", fail_notice:"Рассылка не сработала — средства возвращены. Попробуйте другой сервер.", other_offers:"Другие предложения",
+      l_pick_server:"Сначала выберите сервер рассылки", l_count_req:"Укажите количество сообщений", l_need_content:"Добавьте текст или эмбед", l_preparing:"Подготовка…", l_creating_tpl:"Создание шаблона…", l_tpl_err:"Шаблон:", l_link_prompt:"Сообщение содержит {{LINK}} — вставьте ссылку назначения (https://discord.gg/… или URL):", l_link_req:"Нужна ссылка назначения для {{LINK}}", l_launching:"Запуск рассылки…", l_need_funds:"Недостаточно средств, нужно", l_balance:"баланс", l_no_access:"Нет доступа к DMALL", l_run_err:"Запуск:", l_started:"Рассылка запущена ✓", l_charged:"списано", l_net_err:"Сеть недоступна, попробуйте ещё раз", l_stopping:"Остановка запрошена…", sched_h:"Отложенный старт", sched_now:"Сразу", sched_in:"Через N минут", sched_at:"В дату/время", minutes_word:"минут", sched_bad:"Выберите корректное время старта в будущем", l_scheduled:"Рассылка запланирована на", settings_saved:"Настройки сохранены", fail_notice:"Рассылка не сработала — средства возвращены. Попробуйте другой сервер.", fail_notice_srv:"Рассылка на сервере «{srv}» не сработала — средства возвращены. Попробуйте другой сервер.", other_offers:"Другие предложения",
       ak_unset:"не задан — нажмите «Сгенерировать новый»", ak_confirm:"Сгенерировать новый ключ? Старый перестанет работать сразу — обновите его во внешнем сервисе.", ak_fail:"Не удалось:", ak_net:"Сеть недоступна", ak_copied:"Скопировано ✓", ak_copy:"Копировать",
       reason_queue:"очередь получателей исчерпана — на сервере меньше доступных для ЛС людей, чем заказано", reason_bots:"закончились боты-отправители", reason_stalled:"отправка застопорилась", reason_mutual:"нет общего сервера, чтобы написать этим участникам", just_now:"только что", min_ago:"мин назад", hr_ago:"ч назад", day_ago:"дн назад", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
       st_dm:"РАССЫЛКА В ЛС", bots_on_server:"Боты на сервере", dm_broadcast:"Рассылка в ЛС", running:"Идёт", sending:"Отправка сообщений",
