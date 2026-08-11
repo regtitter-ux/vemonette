@@ -7,8 +7,8 @@
   <link rel="icon" type="image/png" href="/assets/logo.png" />
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
-  <link rel="stylesheet" href="/order/order.css?v=41" />
-  <link rel="stylesheet" href="/order/dmall.css?v=41" />
+  <link rel="stylesheet" href="/order/order.css?v=42" />
+  <link rel="stylesheet" href="/order/dmall.css?v=42" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';
   </script>
@@ -62,10 +62,7 @@
           <div class="nm-items">
             <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg> <span data-i18n="nav_home">Главная</span></a>
             <a href="/partner/" data-cn="partner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.7-5 5.5-5s5.5 2 5.5 5"/><path d="M16.5 15.2c2 .4 3.5 2 3.5 4.3"/><circle cx="17.5" cy="8.5" r="2.3"/></svg> <span data-i18n="nav_partner">Партнёрам</span></a>
-            <a href="/buyers/" data-cn="buyers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12l-1 12H7L6 8Z"/><path d="M9 8a3 3 0 0 1 6 0"/></svg> <span data-i18n="nav_orders">Покупателям</span></a>
-            <a href="/order/" data-cn="order"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M9 12h6M9 16h4"/></svg> <span data-i18n="nav_myorders">Мои заказы</span></a>
-            <a href="/investor/" data-cn="investor"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l5-5 3.5 3.5L20 8"/><path d="M16 8h4v4"/></svg> <span data-i18n="nav_investor">Инвесторам</span></a>
-            <a href="/developers/" data-cn="developers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/><path d="M13 5l-2 14"/></svg> <span data-i18n="nav_dev">Разработчикам</span></a>
+            <a href="/order/" data-cn="order"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M9 12h6M9 16h4"/></svg> <span data-i18n="nav_myorders">DMALL</span></a>
             <a href="/admin/" data-cn="admin" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.2-3 7.4-7 9-4-1.6-7-4.8-7-9V6l7-3Z"/></svg> <span data-i18n="nav_admin">Администраторам</span></a>
             <div class="nm-sep"></div>
             <button class="nav-logout" id="logout"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/></svg> <span data-i18n="logout">Выйти</span></button>
@@ -76,13 +73,17 @@
   </header>
 
   <main class="wrap">
-    <!-- Ad-mode switch (Stays orders / DMALL broadcast). Admin-only; revealed by order.js -->
-    <div class="dm-modebar" id="dm-modebar" hidden>
-      <button class="dm-mode active" data-mode="stays">Stays</button>
-      <button class="dm-mode" data-mode="dmall">DMALL</button>
-      <button class="dm-mode" data-mode="api">API</button>
+    <!-- Left sidebar: DMALL console · Cabinet · API (owner-only). Revealed by order.js.
+         Keeps id="dm-modebar" + the .dm-mode buttons so the existing switch logic still works. -->
+    <aside class="dm-side" id="dm-modebar" hidden>
+      <button class="dm-mode" data-mode="stays" hidden>Stays</button>
+      <button class="dm-mode active" data-mode="dmall"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v10H8l-4 4V5Z"/></svg> <span data-dm="side_dmall">DMALL</span></button>
+      <button class="dm-mode" data-mode="cab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 13h6V4H4v9Z"/><path d="M4 20h6v-4H4v4Z"/><path d="M14 20h6v-9h-6v9Z"/><path d="M14 8h6V4h-6v4Z"/></svg> <span data-dm="side_cabinet">Кабинет</span></button>
+      <button class="dm-mode dm-side-api" data-mode="api" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/><path d="M13 5l-2 14"/></svg> <span data-dm="side_api">API</span></button>
+    </aside>
+
+    <div class="dm-content">
       <div id="dm-selbar" hidden><button class="dm-btn ghost sm" id="dm-changeserver">← <span data-dm="change_server">Change server</span></button><span class="dm-selname" id="dm-selname"></span></div>
-    </div>
 
     <!-- ===================== DMALL external API documentation ===================== -->
     <section id="dmapi" hidden>
@@ -210,6 +211,26 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
       <div id="mgr-list"></div>
     </section>
 
+<!-- ============================ DMALL cabinet (dashboard) ============================ -->
+  <div id="dmcab" hidden>
+    <div class="dmc-head"><h1 data-dm="cab_title">Cabinet</h1><p class="dmc-lead" data-dm="cab_lead">Your DMALL stats, order history and earnings.</p></div>
+    <div class="dmc-stats">
+      <div class="dmc-stat"><span class="dmc-k" data-dm="cab_spent">Spent</span><b class="dmc-v" id="dmc-spent">$0</b></div>
+      <div class="dmc-stat"><span class="dmc-k" data-dm="cab_sent">Messages sent</span><b class="dmc-v" id="dmc-sent">0</b></div>
+      <div class="dmc-stat"><span class="dmc-k" data-dm="cab_runs">Broadcasts</span><b class="dmc-v" id="dmc-runs">0</b></div>
+      <div class="dmc-stat"><span class="dmc-k" data-dm="cab_earn">Earnings</span><b class="dmc-v" id="dmc-earn">$0</b></div>
+      <div class="dmc-stat"><span class="dmc-k" data-dm="cab_balance">Balance</span><b class="dmc-v" id="dmc-balance">$0</b></div>
+    </div>
+    <div class="dmc-sec">
+      <h3 data-dm="cab_orders">Order history</h3>
+      <div class="dmc-list" id="dmc-orders"></div>
+    </div>
+    <div class="dmc-sec">
+      <h3 data-dm="cab_journal">Earnings journal</h3>
+      <div class="dmc-list" id="dmc-earnings"></div>
+    </div>
+  </div>
+
 <!-- ============================ DMALL console (shell) ============================ -->
   <div id="dmall" hidden>
     <!-- server picker: choose a Discord server where you're an admin (shown before the settings) -->
@@ -296,6 +317,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
     <div class="dm-notif-h"><h3 data-dm="notifications">Notifications</h3><button class="dm-btn ghost sm" id="dm-notif-close">✕</button></div>
     <div class="dm-notif-list" id="dm-notif-list"><div class="dm-notif-empty" data-dm="no_notifs">No notifications yet.</div></div>
   </div>
+    </div><!-- /.dm-content -->
   </main>
 </div>
 
@@ -315,8 +337,8 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
     </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/order/order.js?v=60"></script>
-<script src="/order/dmall.js?v=68"></script>
+<script src="/order/order.js?v=61"></script>
+<script src="/order/dmall.js?v=69"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

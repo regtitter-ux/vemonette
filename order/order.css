@@ -284,5 +284,5 @@ h2{font-size:18px;margin-bottom:14px}
   .camp-title{font-size:14.5px}
 }
 /* Embedded Stays view (admin panel iframe): show only the order form + campaigns. */
-.embed-stays .topbar, .embed-stays .dm-modebar, .embed-stays #load-banner { display:none !important; }
+.embed-stays .topbar, .embed-stays #dm-modebar, .embed-stays #load-banner { display:none !important; }
 .embed-stays .wrap { padding-top: 14px; }

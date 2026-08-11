@@ -19,6 +19,7 @@
   /* ---- ad-mode switch: Stays (orders) vs DMALL (broadcast console) ---- */
   let dmServer = null, dmServerId = null, dmServerAv = '';   // the server the broadcast is configured for (from the picker)
   const apiEl = $('#dmapi');
+  const cabEl = $('#dmcab');
   let apiDocsLoaded = false;
   async function loadApiDocs() {
     if (apiDocsLoaded) return; apiDocsLoaded = true;
@@ -56,14 +57,16 @@
   $$('.dm-mode', modebar).forEach((btn) => {
     btn.addEventListener('click', () => {
       const mode = btn.dataset.mode;
-      // Stays (join-buying) and API are staff-only; the public only gets DMALL.
+      // Stays (join-buying) and API are staff-only; the public gets DMALL + Cabinet.
       if ((mode === 'stays' || mode === 'api') && !window.__VEMONI_DM_STAFF__) return;
-      const dm = mode === 'dmall', api = mode === 'api';
+      const dm = mode === 'dmall', api = mode === 'api', cab = mode === 'cab';
       $$('.dm-mode', modebar).forEach((b) => b.classList.toggle('active', b === btn));
-      wrap.classList.toggle('dmall-on', dm || api);   // hide the Stays view for both non-Stays modes
+      wrap.classList.toggle('dmall-on', dm || api || cab);   // hide the Stays view for all non-Stays modes
       dmall.hidden = !dm;
       if (apiEl) apiEl.hidden = !api;
+      if (cabEl) cabEl.hidden = !cab;
       if (api) loadApiDocs();
+      if (cab) loadCabinet();
       if (dm) { loadLots(); loadTasks(); }                 // refresh real servers + broadcasts on open
       if (dm && !dmServer) dmall.classList.add('picking');   // choose a server first
       if (bell) bell.hidden = !dm || dmall.classList.contains('picking');
@@ -131,6 +134,50 @@
   function dmEditLot(id) {
     const lot = (dmLots || []).find((l) => l && l.id === id);
     if (lot) openLotModal(lot);
+  }
+
+  /* ---- DMALL cabinet (dashboard): top stats + order history + earnings journal ---- */
+  function cabDate(ts) {
+    if (!ts) return '';
+    try { return new Date(ts).toLocaleString(dmLang() === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'short', timeStyle: 'short' }); } catch (_) { return ''; }
+  }
+  function cabAv(o) {
+    const nm = o.serverName || o.serverId || '?';
+    const letter = (String(nm).trim()[0] || '?').toUpperCase();
+    return o.icon
+      ? '<span class="dmc-av"><img src="' + esc(o.icon) + '" alt="" loading="lazy"/></span>'
+      : '<span class="dmc-av dmc-av-txt">' + esc(letter) + '</span>';
+  }
+  function cabOrderRow(o) {
+    const st = o.status === 'settled' ? dmT('cab_st_settled') : dmT('cab_st_active');
+    const refunded = (Number(o.refunded) || 0) > 0 ? ' · <span class="dmc-refund">' + dmT('cab_refunded') + ' $' + Number(o.refunded).toFixed(2) + '</span>' : '';
+    return '<div class="dmc-row"><div class="dmc-row-l">' + cabAv(o) +
+      '<div class="dmc-row-main"><div class="dmc-row-t">' + esc(o.serverName || o.serverId || '') + '</div>' +
+      '<div class="dmc-row-sub">' + esc(cabDate(o.createdAt)) + ' · ' + dmT('cab_delivered') + ' ' + (Number(o.delivered) || 0).toLocaleString() + ' / ' + (Number(o.count) || 0).toLocaleString() + '</div></div></div>' +
+      '<div class="dmc-row-r"><div class="dmc-amt">$' + (Number(o.net) || 0).toFixed(2) + '</div><div class="dmc-badge">' + esc(st) + refunded + '</div></div></div>';
+  }
+  function cabEarnRow(e) {
+    const sign = e.type === 'debit' ? '−' : '+';
+    const cls = e.type === 'debit' ? 'dmc-neg' : 'dmc-pos';
+    return '<div class="dmc-row"><div class="dmc-row-l"><div class="dmc-row-main"><div class="dmc-row-t">' + esc(e.serverName || e.guildId || '') + '</div>' +
+      '<div class="dmc-row-sub">' + esc(cabDate(e.ts)) + ' · ' + dmT('cab_lot_income') + '</div></div></div>' +
+      '<div class="dmc-row-r"><div class="dmc-amt ' + cls + '">' + sign + '$' + (Number(e.amount) || 0).toFixed(2) + '</div></div></div>';
+  }
+  async function loadCabinet() {
+    const r = await dmApi('/order/dmall/cabinet');
+    const d = (r.ok && r.body) ? r.body : { stats: {}, orders: [], earnings: [] };
+    const s = d.stats || {};
+    const setv = (id, v) => { const el = $(id); if (el) el.textContent = v; };
+    setv('#dmc-spent', '$' + (Number(s.spent) || 0).toFixed(2));
+    setv('#dmc-sent', (Number(s.sent) || 0).toLocaleString());
+    setv('#dmc-runs', (Number(s.runs) || 0).toLocaleString());
+    setv('#dmc-earn', '$' + (Number(s.earnings) || 0).toFixed(2));
+    setv('#dmc-balance', '$' + (Number(s.balance) || 0).toFixed(2));
+    const ob = $('#dmc-orders');
+    if (ob) { const rows = d.orders || []; ob.innerHTML = rows.length ? rows.map(cabOrderRow).join('') : '<div class="dmc-empty" data-dm="cab_empty_orders">No orders yet.</div>'; }
+    const eb = $('#dmc-earnings');
+    if (eb) { const rows = d.earnings || []; eb.innerHTML = rows.length ? rows.map(cabEarnRow).join('') : '<div class="dmc-empty" data-dm="cab_empty_earn">No earnings yet.</div>'; }
+    dmApplyLang();
   }
 
   function closeLotMenus() {
@@ -880,7 +927,7 @@
       poolbox:"<b>115</b> free of 3 755 in the pool<div class=\"dm-poolsub\">7 busy · 3 633 invalid · 3 294 in quarantine</div>",
       msg_count:"Message count", how_many:"How many messages to send", bots_needed:"Bots needed: <b>2</b>",
       sum_total:"Total messages:", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Exclusions:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
-      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" /1k", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", lot_menu:"Menu", lot_edit:"Edit", lot_make_private:"Make private", lot_make_public:"Make public", lot_delete:"Delete", lot_private:"private", lot_edit_title:"Edit lot", lot_save:"Save", lot_saving:"Saving…", lot_now_private:"Lot is now private — only you can see it", lot_now_public:"Lot is now public", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", why_incomplete:"Reason:", st_completed:"completed", st_failed:"failed", st_stopped:"stopped",
+      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" /1k", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", lot_menu:"Menu", lot_edit:"Edit", lot_make_private:"Make private", lot_make_public:"Make public", lot_delete:"Delete", lot_private:"private", lot_edit_title:"Edit lot", lot_save:"Save", lot_saving:"Saving…", lot_now_private:"Lot is now private — only you can see it", lot_now_public:"Lot is now public", side_dmall:"DMALL", side_cabinet:"Cabinet", side_api:"API", cab_title:"Cabinet", cab_lead:"Your DMALL stats, order history and earnings.", cab_spent:"Spent", cab_sent:"Messages sent", cab_runs:"Broadcasts", cab_earn:"Earnings", cab_balance:"Balance", cab_orders:"Order history", cab_journal:"Earnings journal", cab_empty_orders:"No orders yet.", cab_empty_earn:"No earnings yet.", cab_st_active:"active", cab_st_settled:"settled", cab_refunded:"refunded", cab_delivered:"delivered", cab_lot_income:"lot income", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", why_incomplete:"Reason:", st_completed:"completed", st_failed:"failed", st_stopped:"stopped",
       rs_queued:"queued", rs_running:"running", rs_completed:"completed", rs_failed:"failed", rs_stopped:"stopped",
       l_pick_server:"Choose a server to broadcast to first", l_count_req:"Enter the number of messages", l_need_content:"Add text or an embed", l_preparing:"Preparing…", l_creating_tpl:"Creating template…", l_tpl_err:"Template:", l_link_prompt:"The message contains {{LINK}} — paste the destination link (https://discord.gg/… or a URL):", l_link_req:"A destination link is required for {{LINK}}", l_launching:"Starting the broadcast…", l_need_funds:"Insufficient funds, need", l_balance:"balance", l_no_access:"No DMALL access", l_run_err:"Start:", l_started:"Broadcast started ✓", l_charged:"charged", l_net_err:"Network unavailable, please try again", l_stopping:"Stop requested…",
       ak_unset:"not set — click “Generate new”", ak_confirm:"Generate a new key? The old one stops working immediately — update it in the external service.", ak_fail:"Failed:", ak_net:"Network unavailable", ak_copied:"Copied ✓", ak_copy:"Copy",
@@ -934,7 +981,7 @@
       poolbox:"<b>115</b> свободных из 3 755 в пуле<div class=\"dm-poolsub\">7 занято · 3 633 инвалидных · 3 294 в карантине</div>",
       msg_count:"Количество сообщений", how_many:"Сколько сообщений отправить", bots_needed:"Ботов нужно: <b>2</b>",
       sum_total:"Суммарно сообщений:", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключения:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
-      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" /1к", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для покупателей:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", lot_menu:"Меню", lot_edit:"Редактировать", lot_make_private:"Сделать приватным", lot_make_public:"Сделать публичным", lot_delete:"Удалить", lot_private:"приватный", lot_edit_title:"Редактировать лот", lot_save:"Сохранить", lot_saving:"Сохранение…", lot_now_private:"Лот теперь приватный — виден только вам", lot_now_public:"Лот теперь публичный", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", why_incomplete:"Причина:", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена",
+      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" /1к", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для покупателей:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", lot_menu:"Меню", lot_edit:"Редактировать", lot_make_private:"Сделать приватным", lot_make_public:"Сделать публичным", lot_delete:"Удалить", lot_private:"приватный", lot_edit_title:"Редактировать лот", lot_save:"Сохранить", lot_saving:"Сохранение…", lot_now_private:"Лот теперь приватный — виден только вам", lot_now_public:"Лот теперь публичный", side_dmall:"DMALL", side_cabinet:"Кабинет", side_api:"API", cab_title:"Кабинет", cab_lead:"Ваша статистика DMALL, история заказов и начисления.", cab_spent:"Потрачено", cab_sent:"Сообщений отправлено", cab_runs:"Рассылок", cab_earn:"Начислено", cab_balance:"Баланс", cab_orders:"История заказов", cab_journal:"Журнал начислений", cab_empty_orders:"Пока нет заказов.", cab_empty_earn:"Пока нет начислений.", cab_st_active:"активен", cab_st_settled:"завершён", cab_refunded:"возврат", cab_delivered:"доставлено", cab_lot_income:"доход с лота", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", why_incomplete:"Причина:", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена",
       rs_queued:"в очереди", rs_running:"идёт", rs_completed:"завершено", rs_failed:"ошибка", rs_stopped:"остановлено",
       l_pick_server:"Сначала выберите сервер рассылки", l_count_req:"Укажите количество сообщений", l_need_content:"Добавьте текст или эмбед", l_preparing:"Подготовка…", l_creating_tpl:"Создание шаблона…", l_tpl_err:"Шаблон:", l_link_prompt:"Сообщение содержит {{LINK}} — вставьте ссылку назначения (https://discord.gg/… или URL):", l_link_req:"Нужна ссылка назначения для {{LINK}}", l_launching:"Запуск рассылки…", l_need_funds:"Недостаточно средств, нужно", l_balance:"баланс", l_no_access:"Нет доступа к DMALL", l_run_err:"Запуск:", l_started:"Рассылка запущена ✓", l_charged:"списано", l_net_err:"Сеть недоступна, попробуйте ещё раз", l_stopping:"Остановка запрошена…",
       ak_unset:"не задан — нажмите «Сгенерировать новый»", ak_confirm:"Сгенерировать новый ключ? Старый перестанет работать сразу — обновите его во внешнем сервисе.", ak_fail:"Не удалось:", ak_net:"Сеть недоступна", ak_copied:"Скопировано ✓", ak_copy:"Копировать",

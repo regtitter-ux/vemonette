@@ -23,19 +23,61 @@
   --dm-purple:#b18cff;
 }
 
-/* ---- ad-mode switch (Stays / DMALL) — shown to admins on the Orders page ---- */
-.dm-modebar{ display:flex; gap:8px; align-items:center; }
+/* ---- left sidebar: DMALL · Cabinet · API ---- */
+main.wrap:has(> #dm-modebar:not([hidden])){ flex-direction:row; gap:20px; align-items:flex-start; }
+.dm-content{ display:flex; flex-direction:column; gap:28px; flex:1 1 auto; min-width:0; }
+.dm-side{ flex:0 0 194px; display:flex; flex-direction:column; gap:4px; position:sticky; top:82px; align-self:flex-start; padding:8px; background:var(--dm-card); border:1px solid var(--dm-line); border-radius:16px; }
+.dm-side[hidden]{ display:none; }
 .dm-mode{
-  border:1px solid var(--dm-line-2); background:transparent; color:var(--dm-mut);
-  font:inherit; font-weight:800; font-size:13px; letter-spacing:.02em;
-  padding:8px 20px; border-radius:999px; cursor:pointer; transition:.15s;
+  display:flex; align-items:center; gap:11px; width:100%; text-align:left;
+  border:0; background:transparent; color:var(--dm-mut);
+  font:inherit; font-weight:700; font-size:14px;
+  padding:11px 13px; border-radius:11px; cursor:pointer; transition:.14s;
 }
+.dm-mode svg{ width:18px; height:18px; flex:0 0 auto; }
 .dm-mode:hover{ color:var(--dm-txt); background:rgba(255,255,255,.05); }
-.dm-mode.active{ background:var(--dm-blurple); border-color:var(--dm-blurple); color:#fff; }
+.dm-mode.active{ background:var(--dm-blurple); color:#fff; }
+.dm-mode[hidden]{ display:none; }
 
-/* When DMALL is on: hide the Stays order content and widen the page for the console. */
+/* When DMALL/Cabinet/API is on: hide the Stays order content (now inside .dm-content) and widen. */
 .wrap.dmall-on{ max-width:1200px; }
-.wrap.dmall-on > *:not(.dm-modebar):not(#dmall):not(#dmapi):not(.dm-nbell):not(.dm-notif){ display:none; }
+.wrap.dmall-on .dm-content > *:not(#dm-selbar):not(#dmall):not(#dmapi):not(#dmcab):not(.dm-nbell):not(.dm-notif){ display:none; }
+
+/* ---- DMALL cabinet (dashboard) ---- */
+#dmcab{ width:100%; color:var(--dm-txt); }
+.dmc-head h1{ font-size:26px; margin:0 0 4px; }
+.dmc-lead{ color:var(--dm-mut); margin:0 0 20px; font-size:14px; }
+.dmc-stats{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:26px; }
+.dmc-stat{ background:var(--dm-card); border:1px solid var(--dm-line); border-radius:14px; padding:15px 16px; display:flex; flex-direction:column; gap:6px; }
+.dmc-k{ color:var(--dm-mut); font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.03em; }
+.dmc-v{ font-size:22px; font-weight:800; }
+.dmc-sec{ margin-bottom:26px; }
+.dmc-sec h3{ font-size:15px; margin:0 0 12px; }
+.dmc-list{ display:flex; flex-direction:column; gap:8px; }
+.dmc-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--dm-card); border:1px solid var(--dm-line); border-radius:12px; padding:11px 14px; }
+.dmc-row-l{ display:flex; align-items:center; gap:11px; min-width:0; }
+.dmc-row-main{ min-width:0; }
+.dmc-row-t{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:340px; }
+.dmc-row-sub{ color:var(--dm-mut); font-size:12.5px; margin-top:2px; }
+.dmc-row-r{ text-align:right; flex:0 0 auto; }
+.dmc-amt{ font-weight:800; }
+.dmc-amt.dmc-pos{ color:#57f287; }
+.dmc-amt.dmc-neg{ color:#ff6b6e; }
+.dmc-badge{ font-size:11.5px; color:var(--dm-mut); margin-top:3px; }
+.dmc-refund{ color:#57f287; }
+.dmc-av{ width:32px; height:32px; border-radius:50%; flex:0 0 auto; overflow:hidden; display:inline-flex; align-items:center; justify-content:center; background:#3a4256; }
+.dmc-av img{ width:100%; height:100%; object-fit:cover; display:block; }
+.dmc-av-txt{ font-size:13px; font-weight:700; color:#cfd6e6; }
+.dmc-empty{ color:var(--dm-mut); font-size:14px; padding:8px 2px; }
+
+/* ---- mobile: sidebar becomes a horizontal scroll bar on top ---- */
+@media (max-width:760px){
+  main.wrap:has(> #dm-modebar:not([hidden])){ flex-direction:column; gap:16px; }
+  .dm-side{ position:static; flex-direction:row; width:100%; flex:0 0 auto; overflow-x:auto; gap:6px; padding:6px; }
+  .dm-side .dm-mode{ width:auto; white-space:nowrap; padding:9px 14px; }
+  .dmc-head h1{ font-size:22px; }
+  .dmc-row-t{ max-width:180px; }
+}
 /* DMALL external-API docs */
 #dmapi{ width:100%; color:var(--dm-txt); }
 .dmapi-doc{ max-width:900px; }
