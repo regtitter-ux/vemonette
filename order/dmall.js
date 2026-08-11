@@ -103,7 +103,7 @@
     ) : '';
     const mem = l.memberCount ? (l.memberCount + ' <span data-dm="members_word">members</span> · ') : '';
     return '<button class="dm-sp-card dm-lot-card" data-lot="' + esc(l.id) + '" data-server="' + esc(l.serverId) + '" data-name="' + esc(name) + '" data-price="' + Number(l.userPricePer1k || 0) + '" data-mine="' + (l.mine ? '1' : '') + '">' +
-      '<div class="dm-sp-banner" style="background:linear-gradient(120deg,#3a3f6b,#20242e)"><div class="dm-sp-scrim"></div><div class="dm-sp-title">' + esc(name) + '</div>' + badges + '</div>' +
+      '<div class="dm-sp-banner" style="background:linear-gradient(120deg,#3a3f6b,#20242e)"><div class="dm-sp-scrim"></div><div class="dm-sp-topline"><div class="dm-sp-title">' + esc(name) + '</div>' + (badges ? '<div class="dm-sp-badges">' + badges + '</div>' : '') + '</div></div>' +
       '<div class="dm-sp-body"><div class="dm-sp-av" style="background:#3a4256">' + esc(av) + '</div>' +
         '<div class="dm-sp-foot"><span class="dm-sp-online">' + mem + '$' + Number(l.userPricePer1k || 0).toFixed(2) + '<span data-dm="per1k">&nbsp;/1k</span></span></div>' +
       '</div>' + menu + '</button>';

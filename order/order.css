@@ -154,11 +154,11 @@ h2{font-size:18px;margin-bottom:14px}
 
 @media (max-width:560px){.wrap{padding:20px 14px 50px}.card{padding:18px}}
 
-.bal-pill{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(180deg,rgba(91,141,239,.12),rgba(91,141,239,.05));border:1px solid rgba(91,141,239,.30);border-radius:999px;padding:5px 6px 5px 15px;font-weight:800}
-.bal-pill .muted{font-weight:600;font-size:12px;letter-spacing:.01em}
-.bal-pill b{color:var(--text);font-size:14.5px}
-.wallet-plus{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border-radius:50%;background:var(--blue);border:0;color:#fff;font-size:16px;line-height:1;font-weight:700;transition:background .15s,transform .08s}
-.wallet-plus:hover{background:var(--blue-2)}
+.bal-pill{display:inline-flex;align-items:center;gap:9px;background:transparent;border:1px solid var(--stroke-2);border-radius:999px;padding:4px 4px 4px 14px;font-weight:700}
+.bal-pill .muted{font-weight:500;font-size:12px}
+.bal-pill b{color:var(--text);font-size:14px;font-weight:700}
+.wallet-plus{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border-radius:50%;background:rgba(91,141,239,.16);border:0;color:var(--blue-2);font-size:15px;line-height:1;font-weight:700;transition:background .15s,color .15s,transform .08s}
+.wallet-plus:hover{background:rgba(91,141,239,.32);color:#fff}
 .wallet-plus:active{transform:scale(.94)}
 .pay-box{margin-top:14px;background:var(--panel-2);border:1px solid var(--stroke-2);border-radius:12px;padding:14px}
 
