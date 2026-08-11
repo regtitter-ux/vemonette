@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/dmall/order.css?v=48" />
-  <link rel="stylesheet" href="/dmall/dmall.css?v=50" />
+  <link rel="stylesheet" href="/dmall/dmall.css?v=51" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';
   </script>
@@ -287,6 +287,17 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
         <div class="dm-field"><label class="dm-label" data-dm="how_many">How many messages to send</label><input class="dm-input" id="dm-l-count" data-save="count" value="1000" />
           <div class="dm-quick"><button data-amt="100">100</button><button data-amt="500">500</button><button data-amt="1000">1 000</button><button data-amt="5000">5 000</button><button data-amt="10000">10 000</button></div>
         </div>
+        <div class="dm-divide"><h3 data-dm="sched_h">Scheduled start</h3></div>
+        <div class="dm-field">
+          <div class="dm-seg" id="dm-sched-seg">
+            <button type="button" class="dm-seg-btn active" data-sched="now" data-dm="sched_now">Immediately</button>
+            <button type="button" class="dm-seg-btn" data-sched="in" data-dm="sched_in">In N minutes</button>
+            <button type="button" class="dm-seg-btn" data-sched="at" data-dm="sched_at">At date/time</button>
+          </div>
+          <div class="dm-sched-extra" id="dm-sched-in" hidden><input class="dm-input dm-num" id="dm-sched-mins" type="number" min="1" step="1" value="30" /> <span data-dm="minutes_word">minutes</span></div>
+          <div class="dm-sched-extra" id="dm-sched-at" hidden><input class="dm-input" id="dm-sched-dt" type="datetime-local" /></div>
+        </div>
+
         <div class="dm-summary">
           <div class="dm-sum-top"><span data-dm="sum_total">Total messages:</span> <b id="dm-sum-count">1000</b></div>
           <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_server">Server:</span> <b id="dm-sum-server">—</b></div>
@@ -339,7 +350,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
 
 <div id="toast" class="toast" hidden></div>
 <script src="/dmall/order.js?v=61"></script>
-<script src="/dmall/dmall.js?v=73"></script>
+<script src="/dmall/dmall.js?v=74"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

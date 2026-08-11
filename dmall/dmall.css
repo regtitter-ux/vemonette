@@ -332,6 +332,14 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .dm-quick{ display:flex; flex-wrap:wrap; gap:8px; margin-top:9px; }
 .dm-quick button{ background:var(--dm-inset); border:1px solid var(--dm-line-2); color:var(--dm-txt); font:inherit; font-size:13px; font-weight:600; padding:7px 14px; border-radius:8px; cursor:pointer; }
 .dm-quick button:hover{ border-color:var(--dm-blurple); color:#cfe4ff; }
+/* scheduled-start segmented control */
+.dm-seg{ display:inline-flex; flex-wrap:wrap; gap:4px; padding:4px; background:var(--dm-inset); border:1px solid var(--dm-line); border-radius:10px; }
+.dm-seg-btn{ border:0; background:transparent; color:var(--dm-mut); font:inherit; font-size:13px; font-weight:600; padding:7px 14px; border-radius:8px; cursor:pointer; transition:background .15s,color .15s; }
+.dm-seg-btn:hover{ color:var(--dm-txt); }
+.dm-seg-btn.active{ background:var(--dm-blurple); color:#fff; }
+.dm-sched-extra{ margin-top:11px; display:flex; align-items:center; gap:8px; color:var(--dm-mut); font-size:13px; }
+.dm-sched-extra input[type=number]{ width:90px; }
+.dm-sched-extra input[type=datetime-local]{ max-width:250px; }
 
 /* launch summary box */
 .dm-summary{ background:rgba(91,141,239,.08); border:1px solid rgba(91,141,239,.2); border-radius:12px; padding:15px 17px; margin-top:16px; }
