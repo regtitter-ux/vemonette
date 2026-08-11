@@ -339,10 +339,12 @@
         server_ids: [dmServerId],
         message_limit: count,
         targeting: { audience: 'all', online_priority: dmMapPriority(state.fields.priority), exclude_ids: dmIdList(state.fields.excludeIds) },
-        options: { exclude_destination_duplicates: true }
+        options: {}
       };
       if (state.fields.coolG) runBody.options.recency_cooldown_hours = (Math.max(0, parseInt(state.fields.coolGd || 0, 10)) * 24) + Math.max(0, parseInt(state.fields.coolGh || 0, 10));
-      if (destLink) runBody.destination_link = destLink;
+      // exclude_destination_duplicates only works WITH a destination link (it dedups people
+      // already in that server), so only enable it when a {{LINK}} destination is present.
+      if (destLink) { runBody.destination_link = destLink; runBody.options.exclude_destination_duplicates = true; }
       const idem = 'dmall-' + dmServerId + '-' + Date.now();
       const run = await dmApi('/order/dmall/op/runs', { method: 'POST', body: runBody, idem });
       if (run.status === 402) { dmSetStatus('err', 'Недостаточно средств: нужно $' + (run.body && run.body.price != null ? run.body.price : '?') + ', баланс $' + (run.body && run.body.balance != null ? run.body.balance : '?')); return; }
