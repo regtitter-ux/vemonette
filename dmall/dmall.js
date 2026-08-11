@@ -214,17 +214,16 @@
   document.addEventListener('click', (e) => { if (!e.target.closest('.dm-lot-menu, .dm-lot-menu-btn')) closeLotMenus(); });
 
   const dmGrid = $('#dm-sp-grid');
-  // Quick pre-check: can a broadcast actually run on this server right now? Viable if the operator
-  // already has bots on it, or can join more (pool + free slots + oauth). Never blocks on our own
-  // infra failing (returns true when the check itself can't be completed).
+  // Quick pre-check: can a broadcast actually deliver on this server right now? Viability tracks
+  // the operator's RESIDENT bots (bots_on_server > 0). The pool's `can_join_more` is misleading —
+  // on servers that block/kick new bots the join never sticks, so bots_on_server stays 0 and
+  // broadcasts fail (exactly what happened on GIFLAND). Never blocks on our own infra failing
+  // (returns true when the check itself can't be completed).
   async function dmCheckServer(gid) {
     if (!gid) return true;
     const r = await dmApi('/order/dmall/op/servers/' + encodeURIComponent(gid) + '/bots-pool');
     if (!r.ok || !r.body || r.body.success === false) return true;
-    const d = r.body;
-    const onServer = Number(d.bots_on_server) || 0;
-    const canJoin = !!d.oauth_configured && !!d.can_join_more && (Number(d.bots_available_in_pool) || 0) > 0 && (Number(d.slots_remaining) || 0) > 0;
-    return onServer > 0 || canJoin;
+    return (Number(r.body.bots_on_server) || 0) > 0;
   }
   function dmSelectServer(card) {
     dmServer = card.dataset.name || '';
