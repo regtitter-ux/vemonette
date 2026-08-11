@@ -1,8 +1,10 @@
 /**
- * DMALL public chat — ported from vibecheckbot's chat, adapted to the vemoni stack
- * (plain script, buyer session, SSE). One shared room, Discord-style (newest at the
- * bottom). Click a message to reply (ping + snippet). Realtime via SSE; an unread dot
- * lights on the topbar button when a new message arrives while the window is closed.
+ * DMALL public chat — ported from vibecheckbot (chat + emoji/sticker picker + uploads),
+ * adapted to the vemoni stack (plain script, buyer session, SSE). One shared room,
+ * Discord-style (newest at the bottom). Click a message to reply (ping + snippet).
+ * Custom emoji + stickers come from the servers our bots are on. Attachments
+ * (image/video/file) + Ctrl+V paste, with NO VIP/boost gate. Realtime via SSE; an
+ * unread dot lights the topbar button when a message arrives while the window is closed.
  * Desktop: docked panel on the right. Mobile: full-screen sheet.
  */
 (function () {
@@ -14,14 +16,20 @@
 
   const lang = () => { try { const l = localStorage.getItem('vemoni_lang'); if (l === 'en' || l === 'ru') return l; } catch (_) {} return (navigator.language || '').startsWith('en') ? 'en' : 'ru'; };
   const TXT = {
-    en: { title: 'Chat', empty: 'No messages yet. Say hi 👋', placeholder: 'Message…', login: 'Sign in to chat', reply_to: 'Replying to', cancel: 'cancel', del_confirm: 'Delete this message?', failed: 'Something went wrong', member: 'member', del: 'Delete' },
-    ru: { title: 'Чат', empty: 'Пока пусто. Поздоровайтесь 👋', placeholder: 'Сообщение…', login: 'Войдите, чтобы писать', reply_to: 'Ответ', cancel: 'отмена', del_confirm: 'Удалить сообщение?', failed: 'Что-то пошло не так', member: 'участник', del: 'Удалить' },
+    en: { title: 'Chat', empty: 'No messages yet. Say hi 👋', placeholder: 'Message…', login: 'Sign in to chat', reply_to: 'Replying to', cancel: 'cancel', del_confirm: 'Delete this message?', failed: 'Something went wrong', member: 'member', del: 'Delete', attach: 'Attach a file', too_big: 'File is too large', photo: 'Photo', video: 'Video', file: 'File',
+      p_stickers: 'Stickers', p_emoji: 'Emoji', p_search: 'Search…', p_fav: 'Favorites', p_recent: 'Recent', p_favorite: 'Favorite', p_empty: 'Nothing found' },
+    ru: { title: 'Чат', empty: 'Пока пусто. Поздоровайтесь 👋', placeholder: 'Сообщение…', login: 'Войдите, чтобы писать', reply_to: 'Ответ', cancel: 'отмена', del_confirm: 'Удалить сообщение?', failed: 'Что-то пошло не так', member: 'участник', del: 'Удалить', attach: 'Прикрепить файл', too_big: 'Файл слишком большой', photo: 'Фото', video: 'Видео', file: 'Файл',
+      p_stickers: 'Стикеры', p_emoji: 'Эмодзи', p_search: 'Поиск…', p_fav: 'Избранное', p_recent: 'Недавние', p_favorite: 'В избранное', p_empty: 'Ничего не найдено' },
   };
   const t = (k) => (TXT[lang()] && TXT[lang()][k]) || TXT.en[k] || k;
 
   const SEND_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 5 16 12 9 19"/></svg>';
+  const CLIP_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.6 1.6 0 0 1-2.3-2.3l7.8-7.8"/></svg>';
+  const STICKER_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h6l7-7V7a3 3 0 0 0-3-3Z"/><path d="M13 20v-4a3 3 0 0 1 3-3h4"/></svg>';
+  const EMOJI_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/><path d="M8.5 14.5a4 4 0 0 0 7 0"/></svg>';
   const REPLY_ICO = '<svg class="dm-chat-reply-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7 4 12l5 5"/><path d="M4 12h9a5 5 0 0 1 5 5v1"/></svg>';
-  const EMOJIS = ['😀', '😂', '😊', '😍', '😎', '🤔', '😅', '😉', '🙌', '👍', '👎', '🔥', '💯', '🎉', '❤️', '👀', '🙏', '💪', '✅', '❌', '⚡', '💰', '🚀', '😭', '😡', '🤝', '👋', '💬', '⭐', '🥳', '😴', '🤷'];
+  const FILE_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8Z"/><path d="M14 3v5h5"/></svg>';
+  const CLOCK_ICO = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
 
   /* --------------------------- state --------------------------- */
   let messages = [], overlay = null, es = null, unread = false, replyTarget = null, sending = false, mounted = false;
@@ -39,16 +47,38 @@
     try { d = await r.json(); } catch (_) {}
     return { ok: r.ok, status: r.status, body: d };
   }
+  const toast = (msg, kind) => { if (window.toast) window.toast(msg, kind || 'ok'); };
 
-  /* --------------------------- render helpers --------------------------- */
-  // Text → HTML: custom Discord emoji <:name:id> → image; pings <@id> → @name.
+  /* --------------------------- render body --------------------------- */
+  // Sticker / attachment / custom-emoji / mention rendering (from vibecheckbot renderChatBody).
   function renderBody(text) {
-    return esc(String(text == null ? '' : text))
+    const s = String(text == null ? '' : text);
+    const att = s.match(/^\[\[(img|vid|file):(\/uploads\/[0-9a-f]{16}\.[a-z0-9]{1,8})(?:\|([^\]]*))?\]\]$/);
+    if (att) {
+      const kind = att[1], url = base() + att[2];
+      if (kind === 'img') return '<img class="dm-chat-att-img" data-lb="' + esc(url) + '" src="' + esc(url) + '" alt="" loading="lazy">';
+      if (kind === 'vid') return '<video class="dm-chat-att-vid" src="' + esc(url) + '" controls preload="metadata"></video>';
+      let fname = t('file'); try { fname = decodeURIComponent(att[3] || '') || t('file'); } catch (_) {}
+      return '<a class="dm-chat-att-file" href="' + esc(url) + '" download="' + esc(fname) + '">' + FILE_ICO + '<span>' + esc(fname) + '</span></a>';
+    }
+    const st = s.match(/^\[\[sticker:(\d{5,25}):(\d)\]\]$/);
+    if (st) {
+      const url = CDN + '/stickers/' + st[1] + '.' + (st[2] === '4' ? 'gif' : 'png') + '?size=160';
+      return '<img class="dm-chat-sticker" src="' + esc(url) + '" alt="sticker" loading="lazy" onerror="this.remove()">';
+    }
+    return esc(s)
       .replace(/&lt;(a?):(\w{2,32}):(\d{5,25})&gt;/g, (m, a, name, id) =>
-        '<img class="c-emoji" src="' + CDN + '/emojis/' + id + '.' + (a ? 'gif' : 'png') + '?size=44" alt=":' + esc(name) + ':" onerror="this.replaceWith(\':' + esc(name) + ':\')">')
+        '<img class="c-emoji" src="' + CDN + '/emojis/' + id + '.' + (a ? 'gif' : 'png') + '?size=44" alt=":' + esc(name) + ':" title=":' + esc(name) + ':" onerror="this.replaceWith(\':' + esc(name) + ':\')">')
       .replace(/&lt;@(\d{17,20})&gt;/g, () => '<span class="dm-chat-mention">@' + t('member') + '</span>');
   }
-  const snippet = (s) => String(s == null ? '' : s).replace(/<a?:(\w{2,32}):\d{5,25}>/g, ':$1:').replace(/\s+/g, ' ').trim();
+  const snippet = (s) => {
+    const v = String(s == null ? '' : s);
+    if (/^\[\[sticker:/.test(v)) return t('p_stickers');
+    if (/^\[\[img:/.test(v)) return t('photo');
+    if (/^\[\[vid:/.test(v)) return t('video');
+    if (/^\[\[file:/.test(v)) return t('file');
+    return v.replace(/<a?:(\w{2,32}):\d{5,25}>/g, ':$1:').replace(/\s+/g, ' ').trim();
+  };
   const fmtTime = (at) => { try { return new Date(at).toLocaleString(lang() === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'short', timeStyle: 'short' }); } catch (_) { return ''; } };
 
   function avatarHTML(m) {
@@ -56,7 +86,6 @@
     const letter = (String(m.name || '?').trim()[0] || '?').toUpperCase();
     return '<span class="dm-chat-av"><span class="dm-chat-av-txt">' + esc(letter) + '</span></span>';
   }
-
   function msgHTML(m) {
     const mine = me.id && me.id === String(m.userId);
     const canDel = mine || me.staff;
@@ -70,8 +99,7 @@
           '<span class="dm-chat-author">' + esc(m.name || t('member')) + '</span>' +
           '<span class="dm-chat-time">' + esc(fmtTime(m.at)) + '</span>' +
           (canDel ? '<button class="dm-chat-del" data-del="' + esc(m.id) + '" title="' + esc(t('del')) + '">✕</button>' : '') +
-        '</div>' +
-        reply +
+        '</div>' + reply +
         '<div class="dm-chat-text">' + renderBody(m.body) + '</div>' +
       '</div>' +
     '</div>';
@@ -92,7 +120,7 @@
   }
 
   /* --------------------------- feed --------------------------- */
-  const nearBottom = (list) => list.scrollHeight - list.scrollTop - list.clientHeight < 80;
+  const nearBottom = (list) => list.scrollHeight - list.scrollTop - list.clientHeight < 100;
   function renderList() {
     const list = overlay && $('.dm-chat-list', overlay); if (!list) return;
     list.innerHTML = messages.length ? messages.map(msgHTML).join('') : '<div class="dm-chat-empty">' + esc(t('empty')) + '</div>';
@@ -131,7 +159,6 @@
       } else if (d.type === 'add') { onAdd(d.message); }
       else if (d.type === 'del') { onDel(d.id); }
     };
-    // EventSource auto-reconnects; silent errors are fine.
   }
 
   /* --------------------------- reply --------------------------- */
@@ -152,38 +179,157 @@
     try {
       const reply = replyTarget ? { userId: replyTarget.userId, name: replyTarget.name, text: replyTarget.text } : null;
       const r = await api('/order/dmall/chat', { method: 'POST', body: { text, reply } });
-      if (!r.ok) { if (window.toast) window.toast((r.body && r.body.error) || t('failed'), 'err'); return false; }
+      if (!r.ok) { toast((r.body && r.body.error) || t('failed'), 'err'); return false; }
       return true;
     } finally { sending = false; }
   }
 
-  /* --------------------------- emoji palette --------------------------- */
-  function toggleEmoji(btn, input) {
-    const open = document.querySelector('.dm-chat-emoji-pop');
-    if (open) { open.remove(); return; }
-    const pop = document.createElement('div');
-    pop.className = 'dm-chat-emoji-pop';
-    pop.innerHTML = EMOJIS.map((e) => '<button type="button" data-e="' + e + '">' + e + '</button>').join('');
-    document.body.appendChild(pop);
-    const r = btn.getBoundingClientRect();
-    pop.style.left = Math.max(8, Math.min(r.left, innerWidth - pop.offsetWidth - 8)) + 'px';
-    pop.style.top = (r.top - pop.offsetHeight - 6) + 'px';
-    pop.addEventListener('mousedown', (ev) => {
-      const b = ev.target.closest('[data-e]'); if (!b) return;
-      ev.preventDefault();
-      const s = input.selectionStart || input.value.length;
-      input.value = input.value.slice(0, s) + b.dataset.e + input.value.slice(input.selectionEnd || s);
-      input.focus(); autosize(input); pop.remove();
-    });
-    setTimeout(() => document.addEventListener('click', function off(ev) {
-      if (!pop.contains(ev.target) && ev.target !== btn) { pop.remove(); document.removeEventListener('click', off); }
-    }), 0);
+  // Upload a file (image/video/file) then post it as an attachment message. No VIP gate.
+  async function uploadAndSend(file) {
+    if (!file) return;
+    if (file.size > 25 * 1024 * 1024) return toast(t('too_big'), 'err');
+    let dataUrl;
+    try { dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); }); }
+    catch (_) { return toast(t('failed'), 'err'); }
+    const r = await api('/order/dmall/chat/upload', { method: 'POST', body: { dataUrl, name: file.name } });
+    if (!r.ok || !r.body || !r.body.url) { toast((r.body && r.body.error) || t('failed'), 'err'); return; }
+    const up = r.body;
+    const token = up.kind === 'image' ? '[[img:' + up.url + ']]'
+      : up.kind === 'video' ? '[[vid:' + up.url + ']]'
+      : '[[file:' + up.url + '|' + encodeURIComponent(up.name || t('file')) + ']]';
+    if (await sendText(token)) setReply(null);
   }
 
+  /* ===================== emoji / sticker picker (ported) ===================== */
+  const RECENT_MAX = 24, FAV_MAX = 100;
+  const readLS = (k) => { try { return JSON.parse(localStorage.getItem(k) || '[]'); } catch (_) { return []; } };
+  const writeLS = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+  const favKey = (type) => 'dmep.fav.' + type, recentKey = (type) => 'dmep.recent.' + type;
+  const minItem = (type, it) => type === 'emoji' ? { id: it.id, name: it.name, animated: !!it.animated } : { id: it.id, name: it.name, format: Number(it.format) };
+  const itemUrl = (type, it) => it.url || (type === 'emoji' ? CDN + '/emojis/' + it.id + '.' + (it.animated ? 'gif' : 'png') + '?size=48' : CDN + '/stickers/' + it.id + '.' + (it.format === 4 ? 'gif' : 'png'));
+  const isFav = (type, id) => readLS(favKey(type)).some((x) => x.id === id);
+  function toggleFav(type, it) { const arr = readLS(favKey(type)); const i = arr.findIndex((x) => x.id === it.id); if (i >= 0) arr.splice(i, 1); else arr.unshift(minItem(type, it)); writeLS(favKey(type), arr.slice(0, FAV_MAX)); }
+  function pushRecent(type, it) { const arr = readLS(recentKey(type)).filter((x) => x.id !== it.id); arr.unshift(minItem(type, it)); writeLS(recentKey(type), arr.slice(0, RECENT_MAX)); }
+
+  let catCache = null;
+  async function getCatalog() {
+    if (catCache) return catCache;
+    try { const d = (await api('/order/dmall/chat/catalog')).body || {}; if ((d.emojis && d.emojis.length) || (d.stickers && d.stickers.length)) catCache = d; return d; }
+    catch (_) { return catCache || { emojis: [], stickers: [] }; }
+  }
+
+  function createPicker(opts) {
+    const el = document.createElement('div');
+    el.className = 'dm-ep';
+    el.hidden = true;
+    el.innerHTML =
+      '<div class="dm-ep-tabs">' +
+        '<button class="dm-ep-tab" type="button" data-tab="sticker">' + esc(t('p_stickers')) + '</button>' +
+        '<button class="dm-ep-tab" type="button" data-tab="emoji">' + esc(t('p_emoji')) + '</button>' +
+      '</div>' +
+      '<div class="dm-ep-search"><input data-q type="text" placeholder="' + esc(t('p_search')) + '" spellcheck="false"></div>' +
+      '<div class="dm-ep-body"><div class="dm-ep-rail" data-rail></div><div class="dm-ep-grid" data-grid></div></div>';
+    document.body.append(el);
+    const gridEl = $('[data-grid]', el), railEl = $('[data-rail]', el), qEl = $('[data-q]', el);
+    let tab = 'emoji', catalog = null, query = '', io = null;
+
+    const itemFromBtn = (b) => b.classList.contains('dm-ep-emoji') ? { id: b.dataset.id, name: b.dataset.name, animated: b.dataset.animated === '1' } : { id: b.dataset.id, name: b.dataset.name, format: Number(b.dataset.format) };
+    const initials = (label) => { const s = String(label || '').replace(/[^\p{L}\p{N}]+/gu, ' ').trim(); return esc((s ? s.slice(0, 2) : '#').toUpperCase()); };
+    const serverIcon = (g) => '<span class="dm-ep-ini">' + initials(g.label) + '</span>' + (g.icon ? '<img src="' + esc(g.icon) + '" alt="" loading="lazy" onerror="this.remove()">' : '');
+
+    function buildGroups() {
+      const q = query.toLowerCase();
+      const flt = (items) => q ? items.filter((i) => (i.name || '').toLowerCase().includes(q)) : items;
+      const groups = [];
+      const fav = flt(readLS(favKey(tab))); if (fav.length) groups.push({ kind: 'fav', label: t('p_fav'), items: fav });
+      const recent = flt(readLS(recentKey(tab))); if (recent.length) groups.push({ kind: 'recent', label: t('p_recent'), items: recent });
+      for (const g of (tab === 'emoji' ? catalog.emojis : catalog.stickers) || []) { const items = flt(g.items); if (items.length) groups.push({ kind: 'server', label: g.guildName, icon: g.guildIcon, items }); }
+      return groups;
+    }
+    function itemHTML(it) {
+      const cls = tab === 'emoji' ? 'dm-ep-emoji' : 'dm-ep-sticker';
+      const extra = tab === 'emoji' ? 'data-animated="' + (it.animated ? 1 : 0) + '"' : 'data-format="' + it.format + '"';
+      const title = tab === 'emoji' ? ':' + esc(it.name) + ':' : esc(it.name);
+      const faved = isFav(tab, it.id) ? ' faved' : '';
+      return '<button class="' + cls + faved + '" type="button" data-id="' + it.id + '" data-name="' + esc(it.name) + '" ' + extra + ' title="' + title + '">' +
+        '<img data-src="' + esc(itemUrl(tab, it)) + '" alt="" loading="lazy">' +
+        '<span class="dm-ep-star" data-fav title="' + esc(t('p_favorite')) + '">★</span></button>';
+    }
+    function railBtn(g, i) { const inner = g.kind === 'fav' ? '★' : g.kind === 'recent' ? CLOCK_ICO : serverIcon(g); return '<button class="dm-ep-server dm-ep-rail-' + g.kind + '" type="button" data-jump="' + i + '" title="' + esc(g.label) + '">' + inner + '</button>'; }
+    function groupHTML(g, i) {
+      const head = g.kind === 'server' ? '<span class="dm-ep-head-ico">' + serverIcon(g) + '</span><span>' + esc(g.label) + '</span>' : '<span>' + esc(g.label) + '</span>';
+      return '<div class="dm-ep-group" data-group="' + i + '"><div class="dm-ep-group-head dm-ep-head-' + g.kind + '">' + head + '</div><div class="dm-ep-items">' + g.items.map(itemHTML).join('') + '</div></div>';
+    }
+    function loadGroupImages(group) { for (const img of group.querySelectorAll('img[data-src]')) { img.src = img.dataset.src; img.removeAttribute('data-src'); } }
+    function observeGroups() {
+      if (io) io.disconnect();
+      io = new IntersectionObserver((entries) => { for (const e of entries) { if (!e.isIntersecting) continue; loadGroupImages(e.target); io.unobserve(e.target); } }, { root: gridEl, rootMargin: '300px 0px' });
+      gridEl.querySelectorAll('.dm-ep-group').forEach((g) => io.observe(g));
+    }
+    function render() {
+      if (!catalog) return;
+      el.querySelectorAll('.dm-ep-tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+      const sc = gridEl.scrollTop;
+      const groups = buildGroups();
+      railEl.innerHTML = groups.map(railBtn).join('');
+      gridEl.innerHTML = groups.length ? groups.map(groupHTML).join('') : '<div class="dm-ep-empty">' + esc(t('p_empty')) + '</div>';
+      gridEl.scrollTop = sc;
+      observeGroups();
+    }
+    el.addEventListener('click', (e) => {
+      const tb = e.target.closest('.dm-ep-tab');
+      if (tb) { tab = tb.dataset.tab; query = ''; qEl.value = ''; render(); gridEl.scrollTop = 0; return; }
+      const jump = e.target.closest('[data-jump]');
+      if (jump) { const target = gridEl.querySelector('.dm-ep-group[data-group="' + jump.dataset.jump + '"]'); if (target) { loadGroupImages(target); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); } return; }
+      const star = e.target.closest('[data-fav]');
+      if (star) { e.stopPropagation(); const b = star.closest('.dm-ep-emoji, .dm-ep-sticker'); if (b) { toggleFav(tab, itemFromBtn(b)); render(); } return; }
+      const btn = e.target.closest('.dm-ep-emoji, .dm-ep-sticker');
+      if (btn) { const it = itemFromBtn(btn); pushRecent(tab, it); if (tab === 'emoji') { opts.onEmoji && opts.onEmoji(it); } else { opts.onSticker && opts.onSticker(it); close(); } }
+    });
+    el.addEventListener('contextmenu', (e) => { const b = e.target.closest('.dm-ep-emoji, .dm-ep-sticker'); if (!b) return; e.preventDefault(); toggleFav(tab, itemFromBtn(b)); render(); });
+    qEl.addEventListener('input', (e) => { query = e.target.value.trim(); render(); gridEl.scrollTop = 0; });
+
+    function place(anchor) {
+      const r = anchor.getBoundingClientRect();
+      const pw = el.offsetWidth || 340, ph = el.offsetHeight || 400;
+      let left = Math.min(r.right - pw, innerWidth - pw - 8); if (left < 8) left = 8;
+      let top = r.top - ph - 8; if (top < 8) top = Math.min(r.bottom + 8, innerHeight - ph - 8);
+      el.style.left = left + 'px'; el.style.top = top + 'px';
+    }
+    async function openTab(anchor, which) { tab = which || 'emoji'; query = ''; catalog = await getCatalog(); render(); qEl.value = ''; gridEl.scrollTop = 0; place(anchor); el.hidden = false; }
+    function close() { el.hidden = true; }
+    function toggle(anchor, which) { if (!el.hidden && tab === which) close(); else openTab(anchor, which); }
+    addEventListener('pointerdown', (e) => { if (el.hidden) return; if (el.contains(e.target) || e.target.closest('[data-ep-open]')) return; close(); });
+    return { toggle, close, el, destroy: () => { if (io) io.disconnect(); el.remove(); } };
+  }
+
+  /* --------------------------- textarea caret insert --------------------------- */
+  function insertAtCaret(input, str) {
+    const s = input.selectionStart == null ? input.value.length : input.selectionStart;
+    const e = input.selectionEnd == null ? s : input.selectionEnd;
+    input.value = input.value.slice(0, s) + str + input.value.slice(e);
+    const pos = s + str.length; input.selectionStart = input.selectionEnd = pos;
+    input.focus(); autosize(input);
+  }
   function autosize(el) { el.style.height = 'auto'; el.style.height = Math.min(120, el.scrollHeight) + 'px'; }
+
+  /* --------------------------- lightbox --------------------------- */
+  function openLightbox(src) {
+    if (!src) return;
+    document.querySelector('.dm-chat-lb')?.remove();
+    const lb = document.createElement('div');
+    lb.className = 'dm-chat-lb';
+    lb.innerHTML = '<img class="dm-chat-lb-img" src="' + esc(src) + '" alt=""><button class="dm-chat-lb-close" type="button" aria-label="close">✕</button>';
+    document.body.append(lb);
+    const kill = () => { lb.remove(); document.removeEventListener('keydown', onKey); };
+    const onKey = (e) => { if (e.key === 'Escape') kill(); };
+    lb.addEventListener('click', (e) => { if (!e.target.closest('.dm-chat-lb-img')) kill(); });
+    document.addEventListener('keydown', onKey);
+  }
 
   /* --------------------------- window --------------------------- */
   const isDesktop = () => matchMedia('(min-width: 721px)').matches;
+  let picker = null;
 
   function open() {
     if (overlay) return;
@@ -197,9 +343,12 @@
         '<div class="dm-chat-replybar" hidden>' + esc(t('reply_to')) + ' <b data-reply-name></b><button type="button" data-reply-cancel>' + esc(t('cancel')) + '</button></div>' +
         (me.authed
           ? '<form class="dm-chat-form">' +
+              '<input type="file" data-file multiple hidden>' +
               '<div class="dm-chat-inputbar">' +
-                '<button type="button" class="dm-chat-emoji-btn" data-emoji title="emoji">😊</button>' +
+                '<button type="button" class="dm-chat-tool" data-attach title="' + esc(t('attach')) + '">' + CLIP_ICO + '</button>' +
                 '<textarea class="dm-chat-input" rows="1" placeholder="' + esc(t('placeholder')) + '"></textarea>' +
+                '<button type="button" class="dm-chat-tool" data-ep-open="sticker" title="' + esc(t('p_stickers')) + '">' + STICKER_ICO + '</button>' +
+                '<button type="button" class="dm-chat-tool" data-ep-open="emoji" title="' + esc(t('p_emoji')) + '">' + EMOJI_ICO + '</button>' +
               '</div>' +
               '<button type="submit" class="dm-chat-send">' + SEND_ICO + '</button>' +
             '</form>'
@@ -212,30 +361,41 @@
 
     const input = $('.dm-chat-input', overlay);
     const form = $('.dm-chat-form', overlay);
+    const fileInput = $('[data-file]', overlay);
+
+    picker = createPicker({
+      onEmoji: (em) => { if (input) insertAtCaret(input, '<' + (em.animated ? 'a' : '') + ':' + em.name + ':' + em.id + '>'); },
+      onSticker: async (stk) => { if (await sendText('[[sticker:' + stk.id + ':' + stk.format + ']]')) setReply(null); },
+    });
 
     overlay.addEventListener('click', async (e) => {
-      // Backdrop (mobile) or close button.
       if (e.target === overlay || e.target.closest('[data-close]')) return close();
       if (e.target.closest('[data-reply-cancel]')) return setReply(null);
-      const emoji = e.target.closest('[data-emoji]');
-      if (emoji) { e.preventDefault(); return toggleEmoji(emoji, input); }
+      const ep = e.target.closest('[data-ep-open]');
+      if (ep) { e.preventDefault(); return picker.toggle(ep, ep.dataset.epOpen); }
+      if (e.target.closest('[data-attach]')) { e.preventDefault(); return fileInput.click(); }
       const del = e.target.closest('[data-del]');
-      if (del) {
-        e.stopPropagation();
-        if (!confirm(t('del_confirm'))) return;
-        await api('/order/dmall/chat/' + encodeURIComponent(del.dataset.del), { method: 'DELETE' });
-        return;
-      }
-      // Click a message (not a link/button) → reply.
-      if (e.target.closest('a, button, img, .dm-chat-input')) return;
+      if (del) { e.stopPropagation(); if (!confirm(t('del_confirm'))) return; await api('/order/dmall/chat/' + encodeURIComponent(del.dataset.del), { method: 'DELETE' }); return; }
+      const lb = e.target.closest('[data-lb]');
+      if (lb) return openLightbox(lb.getAttribute('data-lb'));
+      if (e.target.closest('a, button, img, video, .dm-chat-input')) return;
       const row = e.target.closest('.dm-chat-msg');
       if (row) setReply({ userId: row.dataset.uid, name: row.dataset.name, text: row.dataset.snip });
     });
 
+    if (fileInput) fileInput.addEventListener('change', async () => { const files = [...fileInput.files]; fileInput.value = ''; for (const f of files) await uploadAndSend(f); });
+
     if (input) {
       input.addEventListener('input', () => autosize(input));
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
+      // Ctrl+V of a file/screenshot → upload it (no VIP gate).
+      input.addEventListener('paste', (e) => {
+        const dt = e.clipboardData; if (!dt) return;
+        const files = [...(dt.files || [])];
+        if (!files.length && dt.items) for (const it of dt.items) if (it.kind === 'file') { const f = it.getAsFile(); if (f) files.push(f); }
+        if (!files.length) return;
+        e.preventDefault();
+        (async () => { for (const f of files) await uploadAndSend(f); })();
       });
       input.focus();
     }
@@ -248,7 +408,7 @@
   }
 
   function close() {
-    document.querySelector('.dm-chat-emoji-pop')?.remove();
+    if (picker) { picker.destroy(); picker = null; }
     if (overlay) overlay.remove();
     overlay = null;
     replyTarget = null;
@@ -257,16 +417,11 @@
   /* --------------------------- mount --------------------------- */
   async function mount() {
     if (mounted) return; mounted = true;
-    // Who am I? (id + staff) — decides "mine"/delete rights and login state.
     const w = await api('/order/whoami');
-    if (w.ok && w.body && w.body.authed) {
-      me = { id: String(w.body.userId || ''), staff: !!(w.body.isOwner || w.body.isAdmin), authed: true };
-    }
+    if (w.ok && w.body && w.body.authed) me = { id: String(w.body.userId || ''), staff: !!(w.body.isOwner || w.body.isAdmin), authed: true };
     paintDot();
     connect();
-    document.addEventListener('click', (e) => {
-      if (e.target.closest('[data-dm-chat-open]')) { e.preventDefault(); open(); }
-    });
+    document.addEventListener('click', (e) => { if (e.target.closest('[data-dm-chat-open]')) { e.preventDefault(); open(); } });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
