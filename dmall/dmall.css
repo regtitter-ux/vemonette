@@ -643,4 +643,8 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .dm-at-x{ flex:0 0 auto; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; background:transparent; border:0; color:var(--dm-mut); cursor:pointer; border-radius:8px; }
 .dm-at-x:hover{ background:rgba(255,255,255,.06); color:var(--dm-txt); }
 .dm-at-x svg{ width:14px; height:14px; display:block; }
+.dm-at-copy{ flex:0 0 auto; width:30px; height:30px; display:inline-flex; align-items:center; justify-content:center; background:rgba(255,255,255,.05); border:1px solid var(--dm-line-2); color:var(--dm-mut); cursor:pointer; border-radius:8px; transition:background .15s,color .15s,border-color .15s; }
+.dm-at-copy:hover{ background:rgba(91,141,239,.16); border-color:var(--dm-blurple); color:#cfe4ff; }
+.dm-at-copy svg{ width:15px; height:15px; display:block; }
+.dm-at-copy.ok{ background:rgba(87,242,135,.18); border-color:rgba(87,242,135,.4); color:#57f287; }
 @media (max-width:560px){ .dm-act-toast{ left:12px; right:12px; transform:none; max-width:none; flex-wrap:wrap; } .dm-at-msg{ max-width:none; } .dm-at-btn{ flex:1 1 auto; } }
