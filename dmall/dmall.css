@@ -625,3 +625,14 @@ a.dm-mlink:hover{ text-decoration:underline; }
 }
 
 .dm-run-reason{ margin-top:6px; font-size:12px; color:var(--dm-mut); line-height:1.45; }
+
+/* actionable toast: message + one action button (e.g. broadcast failed → "Other offers") */
+.dm-act-toast{ position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:80; display:flex; align-items:center; gap:12px; max-width:calc(100vw - 32px); background:var(--dm-card-2); border:1px solid var(--dm-line-2); border-radius:12px; box-shadow:0 18px 44px -18px rgba(0,0,0,.8); padding:12px 12px 12px 16px; }
+.dm-act-toast[hidden]{ display:none; }
+.dm-at-msg{ color:var(--dm-txt); font-size:13.5px; line-height:1.4; max-width:400px; }
+.dm-at-btn{ flex:0 0 auto; background:var(--dm-blurple); color:#fff; border:0; border-radius:8px; font:inherit; font-weight:700; font-size:13px; padding:8px 14px; cursor:pointer; white-space:nowrap; transition:filter .15s; }
+.dm-at-btn:hover{ filter:brightness(1.08); }
+.dm-at-x{ flex:0 0 auto; width:26px; height:26px; display:inline-flex; align-items:center; justify-content:center; background:transparent; border:0; color:var(--dm-mut); cursor:pointer; border-radius:8px; }
+.dm-at-x:hover{ background:rgba(255,255,255,.06); color:var(--dm-txt); }
+.dm-at-x svg{ width:14px; height:14px; display:block; }
+@media (max-width:560px){ .dm-act-toast{ left:12px; right:12px; transform:none; max-width:none; flex-wrap:wrap; } .dm-at-msg{ max-width:none; } .dm-at-btn{ flex:1 1 auto; } }
