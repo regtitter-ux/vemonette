@@ -892,7 +892,7 @@
   const DM_TXT = {
     en: {
       tab_templates:"Setup", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats", for_word:"for",
-      pick_a:"Choose a", pick_b:"server", search_ph:"Search…", online_members:"Members online:", members_word:"members", invite_caps:"INVITE", change_server:"Change server",
+      pick_a:"Choose a", pick_b:"server", pick_sub:"Pick a server to broadcast to, or add your own.", search_ph:"Search…", online_members:"Members online:", members_word:"members", invite_caps:"INVITE", change_server:"Change server",
       new_tpl:"Configure message", example:"Example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
       fields:"Fields", add_field:"＋ Add field", inline:"Inline", field_name:"Field name", field_value:"Field value",
       embeds_h:"Embeds", add_embed:"＋ Add Embed", embed_n:"Embed", sec_author:"Author", sec_body:"Body", sec_images:"Images", sec_footer:"Footer",
@@ -946,7 +946,7 @@
     },
     ru: {
       tab_templates:"Setup", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика", for_word:"за",
-      pick_a:"Выберите", pick_b:"сервер", search_ph:"Поиск…", online_members:"Участников в сети:", members_word:"участников", invite_caps:"ПРИГЛАСИТЬ", change_server:"Сменить сервер",
+      pick_a:"Выберите", pick_b:"сервер", pick_sub:"Выберите сервер для рассылки или добавьте свой.", search_ph:"Поиск…", online_members:"Участников в сети:", members_word:"участников", invite_caps:"ПРИГЛАСИТЬ", change_server:"Сменить сервер",
       new_tpl:"Настроить сообщение", example:"Пример", f_name:"Название", recipient:"Получатель:", link_lbl:"Ссылка:", embed_h:"Эмбед",
       fields:"Поля", add_field:"＋ Добавить поле", inline:"В строку", field_name:"Название поля", field_value:"Значение поля",
       embeds_h:"Эмбеды", add_embed:"＋ Добавить эмбед", embed_n:"Эмбед", sec_author:"Автор", sec_body:"Основное", sec_images:"Изображения", sec_footer:"Подвал",
