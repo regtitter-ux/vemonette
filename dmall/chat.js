@@ -214,8 +214,14 @@
   let catCache = null;
   async function getCatalog() {
     if (catCache) return catCache;
-    try { const d = (await api('/order/dmall/chat/catalog')).body || {}; if ((d.emojis && d.emojis.length) || (d.stickers && d.stickers.length)) catCache = d; return d; }
-    catch (_) { return catCache || { emojis: [], stickers: [] }; }
+    // Public route → plain fetch WITHOUT credentials. (Sending credentials against a
+    // wildcard-CORS response makes the browser drop it — that was the "nothing found" bug.)
+    try {
+      const r = await fetch(base() + '/order/dmall/chat/catalog');
+      const d = await r.json();
+      if ((d.emojis && d.emojis.length) || (d.stickers && d.stickers.length)) catCache = d;
+      return d;
+    } catch (_) { return catCache || { emojis: [], stickers: [] }; }
   }
 
   function createPicker(opts) {
@@ -296,7 +302,15 @@
       let top = r.top - ph - 8; if (top < 8) top = Math.min(r.bottom + 8, innerHeight - ph - 8);
       el.style.left = left + 'px'; el.style.top = top + 'px';
     }
-    async function openTab(anchor, which) { tab = which || 'emoji'; query = ''; catalog = await getCatalog(); render(); qEl.value = ''; gridEl.scrollTop = 0; place(anchor); el.hidden = false; }
+    async function openTab(anchor, which) {
+      tab = which || 'emoji'; query = ''; qEl.value = '';
+      el.querySelectorAll('.dm-ep-tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
+      // Show the picker immediately; if the catalog isn't loaded yet, show a loading spinner.
+      if (!catalog) { railEl.innerHTML = ''; gridEl.innerHTML = '<div class="dm-ep-loading"><span class="dm-ep-spinner"></span></div>'; }
+      place(anchor); el.hidden = false;
+      catalog = await getCatalog();
+      render(); gridEl.scrollTop = 0; place(anchor);
+    }
     function close() { el.hidden = true; }
     function toggle(anchor, which) { if (!el.hidden && tab === which) close(); else openTab(anchor, which); }
     addEventListener('pointerdown', (e) => { if (el.hidden) return; if (el.contains(e.target) || e.target.closest('[data-ep-open]')) return; close(); });

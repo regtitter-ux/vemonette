@@ -162,7 +162,7 @@
   display: flex; align-items: center; gap: 2px;
   background: var(--inset, #0e131b);
   border: 1px solid var(--stroke, rgba(255, 255, 255, .07));
-  border-radius: 22px;
+  border-radius: 10px;
   padding: 3px 5px;
 }
 .dm-chat-input {
@@ -179,7 +179,7 @@
 /* Tool icons inside the pill — transparent circles. */
 .dm-chat-tool {
   flex: none; width: 34px; height: 34px; padding: 0;
-  border-radius: 50%; background: transparent; border: none;
+  border-radius: 8px; background: transparent; border: none;
   color: var(--muted, #8a95a8); cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
 }
@@ -187,7 +187,7 @@
 .dm-chat-tool:hover { background: rgba(128, 128, 128, .16); color: var(--text, #e9edf5); }
 .dm-chat-send {
   flex: none; width: 40px; height: 40px; padding: 0;
-  border-radius: 50%; border: none; background: var(--blue, #5b8def); color: #fff;
+  border-radius: 8px; border: none; background: var(--blue, #5b8def); color: #fff;
   cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
 }
 .dm-chat-send:hover { filter: brightness(1.08); }
@@ -250,6 +250,9 @@
 .dm-ep-star:hover { transform: scale(1.2); color: var(--amber, #f5b300); }
 .faved .dm-ep-star { opacity: 1; color: var(--amber, #f5b300); }
 .dm-ep-empty { color: var(--muted, #8a95a8); text-align: center; padding: 30px 10px; }
+.dm-ep-loading { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 10px; }
+.dm-ep-spinner { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--stroke-2, rgba(255, 255, 255, .13)); border-top-color: var(--blue, #5b8def); animation: dm-ep-spin .8s linear infinite; }
+@keyframes dm-ep-spin { to { transform: rotate(360deg); } }
 
 /* Mobile tweaks. */
 @media (max-width: 720px) {
