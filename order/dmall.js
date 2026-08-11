@@ -474,7 +474,7 @@
     bell.addEventListener('click', () => { notif.classList.toggle('on'); if (notif.classList.contains('on')) { dmUnread = 0; renderNotifs(); } });
     const close = $('#dm-notif-close'); if (close) close.addEventListener('click', () => notif.classList.remove('on'));
   }
-  renderNotifs();
+  // renderNotifs() moved to boot (needs DM_TXT initialized first)
   // Poll runs while the DMALL console is open, so status changes surface as notifications.
   setInterval(() => { if (dmall && !dmall.hidden) loadTasks(); }, 15000);
 
@@ -546,7 +546,7 @@
     $$('#dm-task-tabs button').forEach((x) => x.classList.toggle('active', x === b));
     renderTasks();
   }));
-  renderTasks();
+  // renderTasks() moved to boot (needs DM_TXT initialized first)
 
   /* ---- "Пример" — fill the content with a sample message (no embed) ---- */
   const EXAMPLE_MSG = '# 🎉 <@USER_ID> YOU WON 10x Yearly Nitro / 100k Robux / 100x Decors 🎉\n\n[**Join and Be Active In Chat to Claim!**]( https://discord.gg/your-link )\nNot Active = No Reward \nIt is mandatory to stay in the server';
@@ -823,6 +823,8 @@
   if (tplPanel) { tplPanel.addEventListener('input', () => saveState()); tplPanel.addEventListener('change', () => saveState()); }
 
   restoreState();
+  renderNotifs();
+  renderTasks();
   toggleAddEmbed();
   updatePreview();
   loadLots();
