@@ -505,6 +505,21 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .dm-lot-badge{ position:absolute; z-index:2; top:10px; right:12px; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; background:rgba(87,242,135,.2); color:#57f287; padding:3px 8px; border-radius:999px; }
 .dm-lot-del{ position:absolute; z-index:3; top:8px; left:10px; width:22px; height:22px; display:grid; place-items:center; border-radius:50%; background:rgba(0,0,0,.45); color:#fff; font-size:12px; cursor:pointer; }
 .dm-lot-del:hover{ background:#ed4245; }
+/* private badge (sits top-left; "yours" stays top-right) */
+.dm-lot-badge-priv{ right:auto; left:12px; background:rgba(148,163,184,.25); color:#cbd5e1; }
+/* owner "⋮" menu in the bottom-right corner + its popover (opens upward, inside the card) */
+.dm-lot-menu-btn{ position:absolute; z-index:4; bottom:8px; right:8px; width:26px; height:26px; display:grid; place-items:center; border-radius:50%; background:rgba(0,0,0,.42); color:#cfd6e6; font-size:16px; line-height:1; cursor:pointer; transition:background .15s,color .15s; }
+.dm-lot-menu-btn:hover, .dm-lot-menu-btn.on{ background:rgba(88,101,242,.9); color:#fff; }
+.dm-lot-menu{ position:absolute; z-index:5; right:8px; bottom:34px; min-width:172px; background:#1c2029; border:1px solid var(--dm-line); border-radius:12px; box-shadow:0 12px 30px rgba(0,0,0,.5); padding:5px; display:none; flex-direction:column; }
+.dm-lot-menu.open{ display:flex; }
+@media (hover:hover){ .dm-lot-menu-btn:hover + .dm-lot-menu, .dm-lot-menu:hover{ display:flex; } }
+.dm-lot-mi{ padding:9px 12px; border-radius:8px; font-size:13px; color:#cfd6e6; cursor:pointer; white-space:nowrap; }
+.dm-lot-mi:hover{ background:rgba(255,255,255,.06); }
+.dm-lot-mi-del{ color:#ff6b6e; }
+.dm-lot-mi-del:hover{ background:rgba(237,66,69,.15); }
+/* edit mode: server is fixed, hide the add-bot helper */
+.dm-modal-overlay.editing .dm-lot-hint, .dm-modal-overlay.editing #dm-lot-invite{ display:none; }
+.dm-input.dm-ro{ opacity:.65; cursor:not-allowed; }
 .dm-lot-card .dm-sp-online{ font-weight:700; color:var(--dm-txt); }
 
 .dm-modal-overlay{ position:fixed; inset:0; z-index:120; background:rgba(6,9,14,.72); display:flex; align-items:center; justify-content:center; padding:20px; -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }

@@ -86,14 +86,24 @@
   function lotCard(l) {
     const name = l.serverName || l.serverId;
     const av = (String(name).trim()[0] || '?').toUpperCase();
-    const mine = l.mine ? '<span class="dm-lot-badge" data-dm="lot_mine">yours</span>' : '';
-    const del = l.mine ? '<span class="dm-lot-del" data-lot-del="' + esc(l.id) + '" title="Remove">✕</span>' : '';
+    const badges = (l.mine ? '<span class="dm-lot-badge" data-dm="lot_mine">yours</span>' : '')
+      + (l.private ? '<span class="dm-lot-badge dm-lot-badge-priv" data-dm="lot_private">private</span>' : '');
+    // Owner-only "⋮" menu (bottom-right): edit · make private/public · delete.
+    const priv = l.private ? '1' : '';
+    const menu = l.mine ? (
+      '<span class="dm-lot-menu-btn" data-lot-menu="' + esc(l.id) + '" role="button" tabindex="0" title="' + esc(dmT('lot_menu')) + '">⋮</span>' +
+      '<span class="dm-lot-menu" data-lot-menu-for="' + esc(l.id) + '">' +
+        '<span class="dm-lot-mi" data-lot-edit="' + esc(l.id) + '" data-dm="lot_edit">Edit</span>' +
+        '<span class="dm-lot-mi" data-lot-priv="' + esc(l.id) + '" data-priv="' + priv + '" data-dm="' + (l.private ? 'lot_make_public' : 'lot_make_private') + '">' + (l.private ? 'Make public' : 'Make private') + '</span>' +
+        '<span class="dm-lot-mi dm-lot-mi-del" data-lot-del="' + esc(l.id) + '" data-dm="lot_delete">Delete</span>' +
+      '</span>'
+    ) : '';
     const mem = l.memberCount ? (l.memberCount + ' <span data-dm="members_word">members</span> · ') : '';
     return '<button class="dm-sp-card dm-lot-card" data-lot="' + esc(l.id) + '" data-server="' + esc(l.serverId) + '" data-name="' + esc(name) + '" data-price="' + Number(l.userPricePer1k || 0) + '" data-mine="' + (l.mine ? '1' : '') + '">' +
-      '<div class="dm-sp-banner" style="background:linear-gradient(120deg,#3a3f6b,#20242e)"><div class="dm-sp-scrim"></div><div class="dm-sp-title">' + esc(name) + '</div>' + mine + del + '</div>' +
+      '<div class="dm-sp-banner" style="background:linear-gradient(120deg,#3a3f6b,#20242e)"><div class="dm-sp-scrim"></div><div class="dm-sp-title">' + esc(name) + '</div>' + badges + '</div>' +
       '<div class="dm-sp-body"><div class="dm-sp-av" style="background:#3a4256">' + esc(av) + '</div>' +
         '<div class="dm-sp-foot"><span class="dm-sp-online">' + mem + '$' + Number(l.userPricePer1k || 0).toFixed(2) + '<span data-dm="per1k">&nbsp;/1k</span></span></div>' +
-      '</div></button>';
+      '</div>' + menu + '</button>';
   }
   function plusCell() {
     return '<button class="dm-sp-card dm-sp-add" id="dm-sp-add"><div class="dm-sp-add-inner"><span class="dm-sp-plus">＋</span><span data-dm="lot_add">Add a server</span></div></button>';
@@ -103,17 +113,50 @@
     g.innerHTML = plusCell() + (Array.isArray(lots) ? lots : []).map(lotCard).join('');
     dmApplyLang();
   }
+  let dmLots = [];
   async function loadLots() {
     const g = $('#dm-sp-grid'); if (g && !g.querySelector('.dm-sp-card')) renderLots([]);   // show "+" instantly
     const r = await dmApi('/order/dmall/lots');
     if (r.ok && r.body && r.body.serviceFeePer1k != null) dmServiceFee = Number(r.body.serviceFeePer1k) || 1;
-    renderLots((r.ok && r.body && Array.isArray(r.body.lots)) ? r.body.lots : []);
+    dmLots = (r.ok && r.body && Array.isArray(r.body.lots)) ? r.body.lots : [];
+    renderLots(dmLots);
   }
+  // Toggle a lot's privacy (private = visible only to its owner).
+  async function dmSetLotPrivate(id, makePrivate) {
+    const r = await dmApi('/order/dmall/lot', { method: 'POST', body: { id: id, private: !!makePrivate } });
+    if (r.ok) { if (window.toast) window.toast(dmT(makePrivate ? 'lot_now_private' : 'lot_now_public'), 'ok'); loadLots(); }
+    else if (window.toast) window.toast(dmT('lot_fail'), 'err');
+  }
+  // Open the modal in edit mode for one of the caller's lots.
+  function dmEditLot(id) {
+    const lot = (dmLots || []).find((l) => l && l.id === id);
+    if (lot) openLotModal(lot);
+  }
+
+  function closeLotMenus() {
+    $$('#dm-sp-grid .dm-lot-menu.open').forEach((m) => m.classList.remove('open'));
+    $$('#dm-sp-grid .dm-lot-menu-btn.on').forEach((b) => b.classList.remove('on'));
+  }
+  function toggleLotMenu(id) {
+    const menu = document.querySelector('.dm-lot-menu[data-lot-menu-for="' + id + '"]');
+    const btn = document.querySelector('.dm-lot-menu-btn[data-lot-menu="' + id + '"]');
+    const willOpen = menu && !menu.classList.contains('open');
+    closeLotMenus();
+    if (willOpen) { menu.classList.add('open'); if (btn) btn.classList.add('on'); }
+  }
+  // Close any open lot menu when clicking elsewhere.
+  document.addEventListener('click', (e) => { if (!e.target.closest('.dm-lot-menu, .dm-lot-menu-btn')) closeLotMenus(); });
 
   const dmGrid = $('#dm-sp-grid');
   if (dmGrid) dmGrid.addEventListener('click', (e) => {
+    const menuBtn = e.target.closest('[data-lot-menu]');
+    if (menuBtn) { e.preventDefault(); e.stopPropagation(); toggleLotMenu(menuBtn.dataset.lotMenu); return; }
+    const edit = e.target.closest('[data-lot-edit]');
+    if (edit) { e.preventDefault(); e.stopPropagation(); closeLotMenus(); dmEditLot(edit.dataset.lotEdit); return; }
+    const privItem = e.target.closest('[data-lot-priv]');
+    if (privItem) { e.preventDefault(); e.stopPropagation(); closeLotMenus(); dmSetLotPrivate(privItem.dataset.lotPriv, privItem.dataset.priv !== '1'); return; }
     const del = e.target.closest('[data-lot-del]');
-    if (del) { e.preventDefault(); e.stopPropagation(); dmDeleteLot(del.dataset.lotDel); return; }
+    if (del) { e.preventDefault(); e.stopPropagation(); closeLotMenus(); dmDeleteLot(del.dataset.lotDel); return; }
     if (e.target.closest('#dm-sp-add')) { openLotModal(); return; }
     const card = e.target.closest('.dm-lot-card'); if (!card) return;
     dmServer = card.dataset.name || '';
@@ -148,10 +191,28 @@
       + ' <span class="dm-mut">($' + price.toFixed(2) + ' ' + dmT('lot_foot_yours') + ' + $' + dmServiceFee.toFixed(2) + ' ' + dmT('lot_foot_service') + ')</span>'
       + '<div class="dm-lot-note">' + dmT('lot_foot_note').replace('{fee}', '$' + dmServiceFee.toFixed(2)) + '</div>';
   }
-  function openLotModal() {
+  let dmEditLotId = null;
+  function openLotModal(lot) {
     if (!lotModal) return;
+    dmEditLotId = lot ? lot.id : null;
     const inv = $('#dm-lot-invite'); if (inv) inv.href = BOT_INVITE;
     const st = $('#dm-lot-status'); if (st) { st.hidden = true; st.textContent = ''; }
+    const si = $('#dm-lot-server'), pi = $('#dm-lot-price');
+    const h2 = lotModal.querySelector('h2'), go = $('#dm-lot-create');
+    if (lot) {
+      // Edit mode: server is fixed (the lot's identity); only the price changes.
+      if (si) { si.value = lot.serverId || ''; si.readOnly = true; si.classList.add('dm-ro'); }
+      if (pi) pi.value = Number(lot.pricePer1k || 0);
+      if (h2) h2.setAttribute('data-dm', 'lot_edit_title');
+      if (go) go.setAttribute('data-dm', 'lot_save');
+      lotModal.classList.add('editing');
+    } else {
+      if (si) { si.value = ''; si.readOnly = false; si.classList.remove('dm-ro'); }
+      if (pi) pi.value = 0;
+      if (h2) h2.setAttribute('data-dm', 'lot_title');
+      if (go) go.setAttribute('data-dm', 'lot_create');
+      lotModal.classList.remove('editing');
+    }
     lotFoot(); lotModal.hidden = false; dmApplyLang();
   }
   function closeLotModal() { if (lotModal) lotModal.hidden = true; }
@@ -162,6 +223,15 @@
       const sid = ((($('#dm-lot-server') || {}).value) || '').trim();
       const price = Math.max(0, Number(($('#dm-lot-price') || {}).value) || 0);
       const st = $('#dm-lot-status'); const setSt = (cls, m) => { if (st) { st.hidden = false; st.className = 'dm-lot-status ' + cls; st.textContent = m; } };
+      // Edit mode → just update the price (no server change, no bot re-check).
+      if (dmEditLotId) {
+        go.disabled = true; setSt('pending', dmT('lot_saving'));
+        const r = await dmApi('/order/dmall/lot', { method: 'POST', body: { id: dmEditLotId, pricePer1k: price } });
+        go.disabled = false;
+        if (r.ok && r.body && r.body.lot) { closeLotModal(); loadLots(); }
+        else setSt('err', (r.body && r.body.error) || dmT('lot_fail'));
+        return;
+      }
       if (!/^\d{17,20}$/.test(sid)) { setSt('err', dmT('lot_bad_id')); return; }
       go.disabled = true; setSt('pending', dmT('lot_checking'));
       const r = await dmApi('/order/dmall/lot', { method: 'POST', body: { serverId: sid, pricePer1k: price } });
@@ -810,7 +880,7 @@
       poolbox:"<b>115</b> free of 3 755 in the pool<div class=\"dm-poolsub\">7 busy · 3 633 invalid · 3 294 in quarantine</div>",
       msg_count:"Message count", how_many:"How many messages to send", bots_needed:"Bots needed: <b>2</b>",
       sum_total:"Total messages:", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Exclusions:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
-      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" /1k", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", why_incomplete:"Reason:", st_completed:"completed", st_failed:"failed", st_stopped:"stopped",
+      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" /1k", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", lot_menu:"Menu", lot_edit:"Edit", lot_make_private:"Make private", lot_make_public:"Make public", lot_delete:"Delete", lot_private:"private", lot_edit_title:"Edit lot", lot_save:"Save", lot_saving:"Saving…", lot_now_private:"Lot is now private — only you can see it", lot_now_public:"Lot is now public", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", why_incomplete:"Reason:", st_completed:"completed", st_failed:"failed", st_stopped:"stopped",
       rs_queued:"queued", rs_running:"running", rs_completed:"completed", rs_failed:"failed", rs_stopped:"stopped",
       l_pick_server:"Choose a server to broadcast to first", l_count_req:"Enter the number of messages", l_need_content:"Add text or an embed", l_preparing:"Preparing…", l_creating_tpl:"Creating template…", l_tpl_err:"Template:", l_link_prompt:"The message contains {{LINK}} — paste the destination link (https://discord.gg/… or a URL):", l_link_req:"A destination link is required for {{LINK}}", l_launching:"Starting the broadcast…", l_need_funds:"Insufficient funds, need", l_balance:"balance", l_no_access:"No DMALL access", l_run_err:"Start:", l_started:"Broadcast started ✓", l_charged:"charged", l_net_err:"Network unavailable, please try again", l_stopping:"Stop requested…",
       ak_unset:"not set — click “Generate new”", ak_confirm:"Generate a new key? The old one stops working immediately — update it in the external service.", ak_fail:"Failed:", ak_net:"Network unavailable", ak_copied:"Copied ✓", ak_copy:"Copy",
@@ -864,7 +934,7 @@
       poolbox:"<b>115</b> свободных из 3 755 в пуле<div class=\"dm-poolsub\">7 занято · 3 633 инвалидных · 3 294 в карантине</div>",
       msg_count:"Количество сообщений", how_many:"Сколько сообщений отправить", bots_needed:"Ботов нужно: <b>2</b>",
       sum_total:"Суммарно сообщений:", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключения:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
-      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" /1к", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для покупателей:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", why_incomplete:"Причина:", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена",
+      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" /1к", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для покупателей:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", lot_menu:"Меню", lot_edit:"Редактировать", lot_make_private:"Сделать приватным", lot_make_public:"Сделать публичным", lot_delete:"Удалить", lot_private:"приватный", lot_edit_title:"Редактировать лот", lot_save:"Сохранить", lot_saving:"Сохранение…", lot_now_private:"Лот теперь приватный — виден только вам", lot_now_public:"Лот теперь публичный", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", why_incomplete:"Причина:", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена",
       rs_queued:"в очереди", rs_running:"идёт", rs_completed:"завершено", rs_failed:"ошибка", rs_stopped:"остановлено",
       l_pick_server:"Сначала выберите сервер рассылки", l_count_req:"Укажите количество сообщений", l_need_content:"Добавьте текст или эмбед", l_preparing:"Подготовка…", l_creating_tpl:"Создание шаблона…", l_tpl_err:"Шаблон:", l_link_prompt:"Сообщение содержит {{LINK}} — вставьте ссылку назначения (https://discord.gg/… или URL):", l_link_req:"Нужна ссылка назначения для {{LINK}}", l_launching:"Запуск рассылки…", l_need_funds:"Недостаточно средств, нужно", l_balance:"баланс", l_no_access:"Нет доступа к DMALL", l_run_err:"Запуск:", l_started:"Рассылка запущена ✓", l_charged:"списано", l_net_err:"Сеть недоступна, попробуйте ещё раз", l_stopping:"Остановка запрошена…",
       ak_unset:"не задан — нажмите «Сгенерировать новый»", ak_confirm:"Сгенерировать новый ключ? Старый перестанет работать сразу — обновите его во внешнем сервисе.", ak_fail:"Не удалось:", ak_net:"Сеть недоступна", ak_copied:"Скопировано ✓", ak_copy:"Копировать",
