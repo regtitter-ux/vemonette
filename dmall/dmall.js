@@ -947,7 +947,7 @@
   const DM_TXT = {
     en: {
       tab_templates:"Setup", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats", for_word:"for",
-      pick_a:"Choose a", pick_b:"server", pick_sub:"Pick a server to broadcast to, or add your own.", search_ph:"Search…", online_members:"Members online:", members_word:"members", runs_done_word:"broadcasts", delivered_word:"messages delivered", invite_caps:"INVITE", change_server:"Change server",
+      pick_a:"Choose a", pick_b:"server", pick_sub:"Pick a server to broadcast to, or add your own.", search_ph:"Search…", online_members:"Members online:", members_word:"members", runs_done_word:"dmall", delivered_word:"messages delivered", invite_caps:"INVITE", change_server:"Change server",
       new_tpl:"Configure message", example:"Example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
       fields:"Fields", add_field:"＋ Add field", inline:"Inline", field_name:"Field name", field_value:"Field value",
       embeds_h:"Embeds", add_embed:"＋ Add Embed", embed_n:"Embed", sec_author:"Author", sec_body:"Body", sec_images:"Images", sec_footer:"Footer",
