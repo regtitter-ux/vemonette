@@ -129,6 +129,18 @@
 .dm-chat-del:hover { color: var(--red, #ed4245); background: rgba(237, 66, 69, .12); }
 .dm-chat-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.4; margin-top: 1px; }
 .dm-chat-text .c-emoji { width: 20px; height: 20px; vertical-align: -4px; }
+/* Discord-style jumbo emoji: emoji-only messages get bigger, scaling down with count. */
+.dm-chat-text.emoji-only { line-height: 1.15; }
+.dm-chat-text.emoji-only.e1 { font-size: 44px; }
+.dm-chat-text.emoji-only.e1 .c-emoji { width: 44px; height: 44px; vertical-align: -8px; }
+.dm-chat-text.emoji-only.e2 { font-size: 36px; }
+.dm-chat-text.emoji-only.e2 .c-emoji { width: 36px; height: 36px; vertical-align: -7px; }
+.dm-chat-text.emoji-only.e3 { font-size: 30px; }
+.dm-chat-text.emoji-only.e3 .c-emoji { width: 30px; height: 30px; vertical-align: -6px; }
+.dm-chat-text.emoji-only.e4 { font-size: 26px; }
+.dm-chat-text.emoji-only.e4 .c-emoji { width: 26px; height: 26px; vertical-align: -5px; }
+.dm-chat-text.emoji-only.e5 { font-size: 22px; }
+.dm-chat-text.emoji-only.e5 .c-emoji { width: 22px; height: 22px; vertical-align: -5px; }
 .dm-chat-mention { color: var(--blue, #5b8def); font-weight: 600; background: color-mix(in srgb, var(--blue, #5b8def) 16%, transparent); border-radius: 4px; padding: 0 3px; }
 
 /* Reply preview above a message's text. */
@@ -174,13 +186,20 @@
   padding: 7px 4px; max-height: 120px; overflow-y: auto;
   white-space: pre-wrap; overflow-wrap: anywhere; cursor: text;
 }
-.dm-chat-input.empty:before { content: attr(data-placeholder); color: var(--dim, #5f6b80); pointer-events: none; }
+/* Placeholder shows only when empty AND not focused → the caret sits at the very start,
+   the hint disappears on focus and returns on blur if still empty. */
+.dm-chat-input.empty:not(:focus):before { content: attr(data-placeholder); color: var(--dim, #5f6b80); pointer-events: none; }
 .dm-chat-input .ce-emoji { width: 22px; height: 22px; object-fit: contain; vertical-align: -5px; margin: 0 1px; }
 /* Kill the page-wide focus ring/glow (order.css :focus-visible outline + :focus box-shadow). */
 .dm-chat-inputbar .dm-chat-input:focus,
 .dm-chat-inputbar .dm-chat-input:focus-visible { outline: none; box-shadow: none; }
-/* "X is typing…" line above the input. */
-.dm-chat-typing { flex: none; padding: 2px 16px 4px; font-size: 12px; color: var(--muted, #8a95a8); font-style: italic; }
+/* "X is typing…" line above the input, with animated dots. */
+.dm-chat-typing { flex: none; padding: 2px 16px 4px; font-size: 12px; color: var(--muted, #8a95a8); font-style: italic; display: flex; align-items: center; }
+.dm-typing-dots { display: inline-flex; gap: 2px; margin-left: 4px; }
+.dm-typing-dots i { width: 3px; height: 3px; border-radius: 50%; background: currentColor; opacity: .3; animation: dm-typing 1s infinite; }
+.dm-typing-dots i:nth-child(2) { animation-delay: .15s; }
+.dm-typing-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes dm-typing { 0%, 60%, 100% { opacity: .25; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }
 /* Tool icons inside the pill — transparent circles. */
 .dm-chat-tool {
   flex: none; width: 34px; height: 34px; padding: 0;

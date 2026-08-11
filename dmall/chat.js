@@ -83,6 +83,24 @@
   };
   const fmtTime = (at) => { try { return new Date(at).toLocaleString(lang() === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'short', timeStyle: 'short' }); } catch (_) { return ''; } };
 
+  // Discord-style "jumbo" emoji: when a message is ONLY emoji (custom or unicode) with no other
+  // text, enlarge them — bigger the fewer there are, back to normal past ~30 or when mixed with text.
+  function emojiScaleClass(text) {
+    const s = String(text == null ? '' : text);
+    if (/^\[\[/.test(s)) return '';   // attachment/sticker message — not emoji-only text
+    let count = 0;
+    let rest = s.replace(/<a?:\w{2,32}:\d{5,25}>/g, () => { count++; return ''; });   // custom emoji
+    try { rest = rest.replace(/\p{Extended_Pictographic}(️|‍\p{Extended_Pictographic})*/gu, () => { count++; return ''; }); } catch (_) {}   // unicode emoji
+    rest = rest.replace(/[\s‍️]/g, '');   // ignore whitespace / joiners / variation selectors
+    if (!count || rest.length) return '';   // has other text → normal inline size
+    if (count === 1) return ' emoji-only e1';
+    if (count <= 3) return ' emoji-only e2';
+    if (count <= 6) return ' emoji-only e3';
+    if (count <= 15) return ' emoji-only e4';
+    if (count <= 30) return ' emoji-only e5';
+    return '';
+  }
+
   function avatarHTML(m) {
     if (m.avatar) return '<span class="dm-chat-av"><img src="' + esc(m.avatar) + '" alt="" loading="lazy" onerror="this.remove()"></span>';
     const letter = (String(m.name || '?').trim()[0] || '?').toUpperCase();
@@ -102,7 +120,7 @@
           '<span class="dm-chat-time">' + esc(fmtTime(m.at)) + '</span>' +
           (canDel ? '<button class="dm-chat-del" data-del="' + esc(m.id) + '" title="' + esc(t('del')) + '">✕</button>' : '') +
         '</div>' + reply +
-        '<div class="dm-chat-text">' + renderBody(m.body) + '</div>' +
+        '<div class="dm-chat-text' + emojiScaleClass(m.body) + '">' + renderBody(m.body) + '</div>' +
       '</div>' +
     '</div>';
   }
@@ -163,14 +181,20 @@
   }
   let pollT = null;
   async function pollOnce() {
-    try { const r = await fetch(base() + '/order/dmall/chat/list'); const d = await r.json(); if (d && Array.isArray(d.messages)) applyList(d.messages); } catch (_) {}
+    try {
+      const r = await fetch(base() + '/order/dmall/chat/list');
+      const d = await r.json();
+      if (d && Array.isArray(d.messages)) applyList(d.messages);
+      if (d && Array.isArray(d.typers)) d.typers.forEach((tp) => onTyping(tp.userId, tp.name));   // "typing…" even when SSE is buffered
+    } catch (_) {}
   }
-  function startPoll() { if (pollT) return; pollT = setInterval(pollOnce, 5000); }
-  function stopPoll() { if (pollT) { clearInterval(pollT); pollT = null; } }
+  // Poll runs ALWAYS (not just as an SSE fallback) so messages + the typing indicator update in
+  // near-real-time regardless of proxy SSE buffering. SSE stays for instant delivery.
+  function startPoll() { if (pollT) return; pollT = setInterval(pollOnce, 4000); }
   function connect() {
     if (es) return;
-    try { es = new EventSource(base() + '/order/dmall/chat/stream'); } catch (_) { return startPoll(); }
-    es.onopen = () => stopPoll();   // stream is live → no need to poll
+    startPoll();
+    try { es = new EventSource(base() + '/order/dmall/chat/stream'); } catch (_) { return; }
     es.onmessage = (e) => {
       let d; try { d = JSON.parse(e.data); } catch (_) { return; }
       if (d.type === 'init') {
@@ -205,9 +229,10 @@
     const el = overlay && $('[data-typing]', overlay); if (!el) return;
     const now = Date.now();
     const names = Object.values(typers).filter((x) => x.until > now).map((x) => x.name);
-    if (!names.length) { el.hidden = true; el.textContent = ''; return; }
+    if (!names.length) { el.hidden = true; el.innerHTML = ''; return; }
     el.hidden = false;
-    el.textContent = names.length === 1 ? t('typing_one').replace('{name}', names[0]) : t('typing_many');
+    const label = names.length === 1 ? t('typing_one').replace('{name}', names[0]) : t('typing_many');
+    el.innerHTML = esc(label.replace(/[.…]+$/, '')) + '<span class="dm-typing-dots"><i></i><i></i><i></i></span>';
   }
 
   /* --------------------------- reply --------------------------- */
