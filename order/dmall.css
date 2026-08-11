@@ -525,3 +525,5 @@ a.dm-mlink:hover{ text-decoration:underline; }
   .dm-modal h2{ font-size:17px; }
   .dm-sp-grid{ gap:12px; }
 }
+
+.dm-run-reason{ margin-top:6px; font-size:12px; color:var(--dm-mut); line-height:1.45; }
