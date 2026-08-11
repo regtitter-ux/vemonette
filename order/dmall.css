@@ -507,3 +507,21 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .dm-lot-status.pending{ color:var(--dm-mut); }
 .dm-lot-status.err{ color:#ed4245; }
 .dm-btn.full{ width:100%; margin-top:14px; }
+
+/* ---- Mobile: DMALL lots + create-lot modal ---- */
+@media (max-width:600px){
+  .dm-modal-overlay{ padding:12px; }
+  .dm-modal{ padding:20px 16px; max-width:100%; }
+  .dm-sp-head{ font-size:clamp(17px,5.5vw,22px); margin-bottom:16px; }
+  .dm-sp-search{ margin-bottom:18px; }
+  .dm-sp-add .dm-sp-add-inner{ min-height:96px; }
+  .dm-sp-plus{ font-size:30px; }
+  .dm-lot-card .dm-sp-banner{ height:80px; }
+  .dm-lot-foot, .dm-lot-note, .dm-lot-hint{ font-size:12.5px; }
+  .dm-field .dm-input{ font-size:16px; }   /* avoid iOS zoom on focus */
+  .dm-lot-modal input, #dm-lot-server, #dm-lot-price{ font-size:16px; }
+}
+@media (max-width:380px){
+  .dm-modal h2{ font-size:17px; }
+  .dm-sp-grid{ gap:12px; }
+}

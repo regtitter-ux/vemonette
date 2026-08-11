@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/order/order.css?v=41" />
-  <link rel="stylesheet" href="/order/dmall.css?v=36" />
+  <link rel="stylesheet" href="/order/dmall.css?v=37" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';
   </script>
@@ -219,20 +219,6 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
       <div class="dm-sp-grid" id="dm-sp-grid"></div>
     </div>
 
-    <!-- Create-lot modal: add your server + price per 1000 messages -->
-    <div id="dm-lot-modal" class="dm-modal-overlay" hidden>
-      <div class="dm-modal">
-        <button class="dm-modal-close" id="dm-lot-close" aria-label="Close">✕</button>
-        <h2 data-dm="lot_title">Добавить сервер</h2>
-        <p class="dm-lot-hint" data-dm="lot_desc">Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.</p>
-        <a class="dm-btn ghost sm dm-lot-invite" id="dm-lot-invite" href="#" target="_blank" rel="noopener" data-dm="lot_invite">＋ Добавить бота на сервер</a>
-        <div class="dm-field"><label class="dm-label" data-dm="lot_server">ID сервера</label><input class="dm-input" id="dm-lot-server" type="text" inputmode="numeric" autocomplete="off" placeholder="123456789012345678" /></div>
-        <div class="dm-field"><label class="dm-label" data-dm="lot_price">Ваша цена за 1000 сообщений, $</label><input class="dm-input" id="dm-lot-price" type="number" min="0" step="0.5" value="0" /></div>
-        <div class="dm-lot-foot" id="dm-lot-foot"></div>
-        <div class="dm-lot-status" id="dm-lot-status" hidden></div>
-        <button class="dm-btn primary full" id="dm-lot-create" data-dm="lot_create">Проверить и создать</button>
-      </div>
-    </div>
 
     <!-- ============ Templates ============ -->
     <section class="dm-panel active" data-dpanel="templates">
@@ -313,9 +299,24 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
   </main>
 </div>
 
+    <!-- Create-lot modal: add your server + price per 1000 messages -->
+    <div id="dm-lot-modal" class="dm-modal-overlay" hidden>
+      <div class="dm-modal">
+        <button class="dm-modal-close" id="dm-lot-close" aria-label="Close">✕</button>
+        <h2 data-dm="lot_title">Добавить сервер</h2>
+        <p class="dm-lot-hint" data-dm="lot_desc">Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.</p>
+        <a class="dm-btn ghost sm dm-lot-invite" id="dm-lot-invite" href="#" target="_blank" rel="noopener" data-dm="lot_invite">＋ Добавить бота на сервер</a>
+        <div class="dm-field"><label class="dm-label" data-dm="lot_server">ID сервера</label><input class="dm-input" id="dm-lot-server" type="text" inputmode="numeric" autocomplete="off" placeholder="123456789012345678" /></div>
+        <div class="dm-field"><label class="dm-label" data-dm="lot_price">Ваша цена за 1000 сообщений, $</label><input class="dm-input" id="dm-lot-price" type="number" min="0" step="0.5" value="0" /></div>
+        <div class="dm-lot-foot" id="dm-lot-foot"></div>
+        <div class="dm-lot-status" id="dm-lot-status" hidden></div>
+        <button class="dm-btn primary full" id="dm-lot-create" data-dm="lot_create">Проверить и создать</button>
+      </div>
+    </div>
+
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=60"></script>
-<script src="/order/dmall.js?v=55"></script>
+<script src="/order/dmall.js?v=56"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

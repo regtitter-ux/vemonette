@@ -812,6 +812,7 @@
   }
   $$('.lang-switch button').forEach((b) => b.addEventListener('click', () => setTimeout(dmApplyLang, 0)));
   dmApplyLang();
+  setTimeout(dmApplyLang, 250);   // belt-and-suspenders: re-translate once the DOM is settled
 
   // Delegated so dynamically-added embed field rows also drive the live preview.
   document.addEventListener('input', (e) => { if (e.target.matches('[data-preview]') || e.target.closest('.dm-field-row')) updatePreview(); });
