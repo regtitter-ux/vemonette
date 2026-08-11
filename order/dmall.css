@@ -5,16 +5,16 @@
    =========================================================================== */
 
 :root{
-  --dm-bg:#12151c;
-  --dm-card:#1c212b;
-  --dm-card-2:#171b23;
-  --dm-inset:#0f1218;
+  --dm-bg:#0c1017;
+  --dm-card:#151a23;
+  --dm-card-2:#1b212c;
+  --dm-inset:#0e131b;
   --dm-line:rgba(255,255,255,.07);
-  --dm-line-2:rgba(255,255,255,.12);
-  --dm-txt:#e7ecf4;
-  --dm-mut:#8a97ac;
+  --dm-line-2:rgba(255,255,255,.13);
+  --dm-txt:#e9edf5;
+  --dm-mut:#8a95a8;
   --dm-dim:#5f6b80;
-  --dm-blurple:#5865f2;
+  --dm-blurple:#5b8def;
   --dm-green:#57f287;
   --dm-red:#ed4245;
   --dm-amber:#fee75c;
@@ -40,7 +40,7 @@ main.wrap:has(> #dm-modebar:not([hidden])){ display:contents; }
 }
 .dm-mode svg{ display:none; }
 .dm-mode:hover{ color:var(--dm-txt); background:rgba(255,255,255,.04); }
-.dm-mode.active{ background:rgba(34,168,240,.16); color:#44bbfc; }
+.dm-mode.active{ background:rgba(91,141,239,.15); color:#9cb8f7; }
 .dm-mode[hidden]{ display:none; }
 
 /* When DMALL/Cabinet/API is on: hide the Stays order content (now inside .dm-content) and widen. */
@@ -124,9 +124,9 @@ main.wrap:has(> #dm-modebar:not([hidden])){ display:contents; }
 .dm-sp-search input{ width:100%; background:var(--dm-inset); border:1px solid var(--dm-line-2); color:var(--dm-txt); font:inherit; font-size:15px; padding:13px 16px 13px 44px; border-radius:12px; }
 .dm-sp-search input:focus{ outline:none; border-color:var(--dm-blurple); }
 .dm-sp-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:16px; }
-.dm-sp-card{ text-align:left; background:var(--dm-card); border:1px solid var(--dm-line); border-radius:14px; overflow:hidden; cursor:pointer; padding:0; display:flex; flex-direction:column; transition:border-color .15s,transform .08s; font:inherit; }
-.dm-sp-card:hover{ border-color:var(--dm-line-2); }
-.dm-sp-card:active{ transform:translateY(1px); }
+.dm-sp-card{ text-align:left; background:var(--dm-card); border:1px solid var(--dm-line); border-radius:14px; overflow:hidden; cursor:pointer; padding:0; display:flex; flex-direction:column; transition:border-color .15s,transform .12s,box-shadow .15s; font:inherit; }
+.dm-sp-card:hover{ border-color:rgba(91,141,239,.4); transform:translateY(-2px); box-shadow:0 12px 26px -16px rgba(0,0,0,.7); }
+.dm-sp-card:active{ transform:translateY(0); }
 .dm-sp-banner{ height:118px; position:relative; overflow:hidden; }
 .dm-sp-banner-blur{ position:absolute; inset:-20%; background-size:cover; background-position:center; filter:blur(9px); transform:scale(0.9); }
 .dm-sp-scrim{ position:absolute; inset:0; z-index:0; background:linear-gradient(180deg,rgba(0,0,0,.5),rgba(0,0,0,0) 58%); pointer-events:none; }

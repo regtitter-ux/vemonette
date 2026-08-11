@@ -1,6 +1,6 @@
 :root{
-  --bg:#0b0f17; --panel:#141b26; --panel-2:#1a2331; --stroke:#232d3d; --stroke-2:#2d3a4d;
-  --text:#e7ecf6; --muted:#8b97ab; --blue:#22a8f0; --blue-2:#5cc3ff; --green:#57f287;
+  --bg:#0c1017; --panel:#151a23; --panel-2:#1b212c; --stroke:rgba(255,255,255,.07); --stroke-2:rgba(255,255,255,.13);
+  --text:#e9edf5; --muted:#8a95a8; --blue:#5b8def; --blue-2:#7ba6f5; --green:#57f287;
   --red:#ed4245; --amber:#f5b300; --radius:16px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -36,7 +36,7 @@ b{color:#fff}
 .err{color:var(--red);font-size:13.5px}
 
 /* App */
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:14px 16px;border-bottom:1px solid var(--stroke);position:sticky;top:0;background:rgba(11,15,23,.8);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:5}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:14px 16px;border-bottom:1px solid var(--stroke);position:sticky;top:0;background:rgba(12,16,23,.82);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);z-index:5}
 .brand-sm{display:flex;align-items:center;gap:8px;font-weight:700;font-size:24px;color:var(--text);text-decoration:none}
 .brand-sm img{width:32px;height:32px;border-radius:50%;display:block;flex:none}
 .top-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}
@@ -154,9 +154,12 @@ h2{font-size:18px;margin-bottom:14px}
 
 @media (max-width:560px){.wrap{padding:20px 14px 50px}.card{padding:18px}}
 
-.bal-pill{display:inline-flex;align-items:center;gap:8px;background:var(--panel-2);border:1px solid var(--stroke-2);border-radius:999px;padding:5px 8px 5px 14px;font-weight:800}
-.bal-pill .muted{font-weight:600}
-.wallet-plus{padding:2px 9px;font-size:15px;line-height:1;font-weight:800}
+.bal-pill{display:inline-flex;align-items:center;gap:9px;background:linear-gradient(180deg,rgba(91,141,239,.12),rgba(91,141,239,.05));border:1px solid rgba(91,141,239,.30);border-radius:999px;padding:5px 6px 5px 15px;font-weight:800}
+.bal-pill .muted{font-weight:600;font-size:12px;letter-spacing:.01em}
+.bal-pill b{color:var(--text);font-size:14.5px}
+.wallet-plus{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;padding:0;border-radius:50%;background:var(--blue);border:0;color:#fff;font-size:16px;line-height:1;font-weight:700;transition:background .15s,transform .08s}
+.wallet-plus:hover{background:var(--blue-2)}
+.wallet-plus:active{transform:scale(.94)}
 .pay-box{margin-top:14px;background:var(--panel-2);border:1px solid var(--stroke-2);border-radius:12px;padding:14px}
 
 .camp-ret{margin-top:6px}
