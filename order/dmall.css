@@ -166,7 +166,7 @@ main.wrap:has(> #dm-modebar:not([hidden])){ display:contents; }
 .dm-tab:hover{ color:var(--dm-txt); border-color:rgba(255,255,255,.22); }
 .dm-tab.active{ color:#cfe4ff; border-color:var(--dm-blurple); background:rgba(91,141,239,.16); }
 .dm-tab .dm-ico{ width:16px; height:16px; opacity:.9; }
-.dm-tab .dm-badge{ background:var(--dm-blurple); color:#fff; font-size:11px; font-weight:800; min-width:18px; height:18px; padding:0 5px; border-radius:999px; display:inline-grid; place-items:center; }
+.dm-tab .dm-badge{ background:var(--dm-blurple); color:#fff; font-size:11px; font-weight:800; min-width:18px; height:18px; padding:0 5px; border-radius:8px; display:inline-grid; place-items:center; }
 
 .dm-panel{ display:none; }
 .dm-panel.active{ display:block; }
@@ -254,7 +254,7 @@ main.wrap:has(> #dm-modebar:not([hidden])){ display:contents; }
 .dm-toggle-row .dm-tr-sub{ color:var(--dm-mut); font-size:12px; line-height:1.45; margin-top:3px; }
 .dm-sw{ position:relative; width:44px; height:25px; flex:none; }
 .dm-sw input{ opacity:0; width:0; height:0; }
-.dm-sw .dm-sw-t{ position:absolute; inset:0; background:#3a3f4b; border-radius:999px; transition:.2s; }
+.dm-sw .dm-sw-t{ position:absolute; inset:0; background:#3a3f4b; border-radius:8px; transition:.2s; }
 .dm-sw .dm-sw-t::before{ content:""; position:absolute; width:19px; height:19px; left:3px; top:3px; border-radius:50%; background:#fff; transition:.2s; }
 .dm-sw input:checked + .dm-sw-t{ background:var(--dm-blurple); }
 .dm-sw input:checked + .dm-sw-t::before{ transform:translateX(19px); }
@@ -316,7 +316,7 @@ a.dm-mlink:hover{ text-decoration:underline; }
 
 /* ---- Боты: pool stats ---- */
 .dm-pool{ display:flex; flex-wrap:wrap; gap:9px; }
-.dm-pill{ display:inline-flex; align-items:center; gap:6px; background:var(--dm-inset); border:1px solid var(--dm-line-2); border-radius:999px; padding:8px 15px; font-size:13.5px; font-weight:600; color:var(--dm-txt); }
+.dm-pill{ display:inline-flex; align-items:center; gap:6px; background:var(--dm-inset); border:1px solid var(--dm-line-2); border-radius:8px; padding:8px 15px; font-size:13.5px; font-weight:600; color:var(--dm-txt); }
 .dm-pill b{ font-weight:800; }
 .dm-pill.g b{ color:var(--dm-green); }
 .dm-pill.r b{ color:var(--dm-red); }
@@ -368,8 +368,8 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .dm-minibox .dm-mb-v.b{ color:#7d8cff; }
 .dm-prog-lbl{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:12.5px; color:var(--dm-mut); margin:12px 0 6px; }
 .dm-prog-lbl b{ color:var(--dm-txt); }
-.dm-prog{ height:10px; background:var(--bg); border:1px solid var(--stroke-2); border-radius:999px; overflow:hidden; margin:14px 0 8px; }
-.dm-prog > span{ display:block; height:100%; border-radius:999px; background:linear-gradient(90deg,var(--blue),var(--blue-2)); }
+.dm-prog{ height:10px; background:var(--bg); border:1px solid var(--stroke-2); border-radius:8px; overflow:hidden; margin:14px 0 8px; }
+.dm-prog > span{ display:block; height:100%; border-radius:8px; background:linear-gradient(90deg,var(--blue),var(--blue-2)); }
 .dm-task-note{ color:var(--dm-mut); font-size:12px; margin:8px 0; }
 .dm-route{ display:flex; align-items:center; flex-wrap:wrap; gap:8px; background:var(--dm-card-2); border:1px solid var(--dm-line); border-radius:10px; padding:10px 12px; font-size:12.5px; margin:8px 0; }
 .dm-route .dm-r-from,.dm-route .dm-r-to{ display:flex; align-items:center; gap:6px; min-width:0; }
@@ -555,7 +555,7 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .dm-sp-plus{ display:inline-flex; align-items:center; justify-content:center; color:var(--dm-blurple); }
 .dm-sp-plus svg{ width:30px; height:30px; display:block; }
 .dm-lot-card .dm-sp-banner{ height:96px; }
-.dm-lot-badge{ font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; background:rgba(87,242,135,.2); color:#57f287; padding:3px 8px; border-radius:999px; white-space:nowrap; }
+.dm-lot-badge{ font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; background:rgba(87,242,135,.2); color:#57f287; padding:3px 8px; border-radius:8px; white-space:nowrap; }
 .dm-lot-del{ position:absolute; z-index:3; top:8px; left:10px; width:22px; height:22px; display:grid; place-items:center; border-radius:50%; background:rgba(0,0,0,.45); color:#fff; font-size:12px; cursor:pointer; }
 .dm-lot-del:hover{ background:#ed4245; }
 /* private badge (sits top-left; "yours" stays top-right) */
