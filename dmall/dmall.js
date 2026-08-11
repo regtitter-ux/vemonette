@@ -101,7 +101,10 @@
         '<span class="dm-lot-mi dm-lot-mi-del" data-lot-del="' + esc(l.id) + '" data-dm="lot_delete">Delete</span>' +
       '</span>'
     ) : '';
-    const mem = l.memberCount ? (Number(l.memberCount).toLocaleString() + ' <span data-dm="members_word">members</span> · ') : '';
+    // Members and the price are each an unbreakable unit; the price wraps to its own line as a
+    // WHOLE ("$5.00 / 1000 messages") instead of splitting mid-phrase when the card is narrow.
+    const memPart = l.memberCount ? '<span class="dm-sp-mem">' + Number(l.memberCount).toLocaleString() + ' <span data-dm="members_word">members</span> ·</span>' : '';
+    const pricePart = '<span class="dm-sp-price">$' + Number(l.userPricePer1k || 0).toFixed(2) + '<span data-dm="per1k"> / 1000 messages</span></span>';
     // Real server icon/banner when available; letter tile / gradient otherwise.
     const bannerStyle = l.banner ? "background-image:url('" + esc(l.banner) + "');background-size:cover;background-position:center" : 'background:linear-gradient(120deg,#3a3f6b,#20242e)';
     const avInner = l.icon ? '<img src="' + esc(l.icon) + '" alt="" loading="lazy">' : esc(av);
@@ -114,7 +117,7 @@
     return '<button class="dm-sp-card dm-lot-card" data-lot="' + esc(l.id) + '" data-server="' + esc(l.serverId) + '" data-name="' + esc(name) + '" data-price="' + Number(l.userPricePer1k || 0) + '" data-mine="' + (l.mine ? '1' : '') + '">' +
       '<div class="dm-sp-banner" style="' + bannerStyle + '"><div class="dm-sp-scrim"></div><div class="dm-sp-topline"><div class="dm-sp-title">' + esc(name) + '</div>' + (badges ? '<div class="dm-sp-badges">' + badges + '</div>' : '') + '</div></div>' +
       '<div class="dm-sp-body"><div class="dm-sp-av"' + avStyle + '>' + avInner + '</div>' +
-        '<div class="dm-sp-foot"><span class="dm-sp-online">' + mem + '$' + Number(l.userPricePer1k || 0).toFixed(2) + '<span data-dm="per1k"> / 1000 messages</span></span></div>' +
+        '<div class="dm-sp-foot"><span class="dm-sp-online">' + memPart + pricePart + '</span></div>' +
         statsHtml +
       '</div>' + menu + '</button>';
   }

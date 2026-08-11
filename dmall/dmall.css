@@ -588,7 +588,8 @@ a.dm-mlink:hover{ text-decoration:underline; }
 /* edit mode: server is fixed, hide the add-bot helper */
 .dm-modal-overlay.editing .dm-lot-hint, .dm-modal-overlay.editing #dm-lot-invite{ display:none; }
 .dm-input.dm-ro{ opacity:.65; cursor:not-allowed; }
-.dm-lot-card .dm-sp-online{ font-weight:700; color:var(--dm-txt); }
+.dm-lot-card .dm-sp-online{ font-weight:700; color:var(--dm-txt); display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 6px; }
+.dm-sp-mem, .dm-sp-price{ white-space:nowrap; }
 
 .dm-modal-overlay{ position:fixed; inset:0; z-index:120; background:rgba(6,9,14,.72); display:flex; align-items:center; justify-content:center; padding:20px; -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
 .dm-modal-overlay[hidden]{ display:none; }
