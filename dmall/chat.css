@@ -257,7 +257,8 @@
 .dm-ep-server:has(img) .dm-ep-ini, .dm-ep-head-ico:has(img) .dm-ep-ini { display: none; }
 .dm-ep-rail-fav, .dm-ep-rail-recent { border-radius: 12px; color: var(--amber, #f5b300); }
 .dm-ep-rail-recent { color: var(--muted, #8a95a8); }
-.dm-ep-grid { flex: 1; min-width: 0; overflow-y: auto; padding: 6px 8px 10px; scrollbar-width: thin; }
+.dm-ep-grid { flex: 1; min-width: 0; overflow-y: auto; padding: 6px 8px 10px; scrollbar-width: none; -ms-overflow-style: none; }
+.dm-ep-grid::-webkit-scrollbar { display: none; }
 .dm-ep-group-head { display: flex; align-items: center; gap: 6px; padding: 6px 2px 5px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--muted, #8a95a8); }
 .dm-ep-group + .dm-ep-group .dm-ep-group-head { margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--stroke, rgba(255, 255, 255, .07)); }
 .dm-ep-head-ico { position: relative; width: 16px; height: 16px; flex: none; border-radius: 50%; overflow: hidden; background: var(--inset, #0e131b); display: inline-flex; align-items: center; justify-content: center; font-size: 8px; }
