@@ -94,7 +94,7 @@
     // Owner-only "⋮" menu (bottom-right): edit · make private/public · delete.
     const priv = l.private ? '1' : '';
     const menu = l.mine ? (
-      '<span class="dm-lot-menu-btn" data-lot-menu="' + esc(l.id) + '" role="button" tabindex="0" title="' + esc(dmT('lot_menu')) + '">⋮</span>' +
+      '<span class="dm-lot-menu-btn" data-lot-menu="' + esc(l.id) + '" role="button" tabindex="0" title="' + esc(dmT('lot_menu')) + '"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg></span>' +
       '<span class="dm-lot-menu" data-lot-menu-for="' + esc(l.id) + '">' +
         '<span class="dm-lot-mi" data-lot-edit="' + esc(l.id) + '" data-dm="lot_edit">Edit</span>' +
         '<span class="dm-lot-mi" data-lot-priv="' + esc(l.id) + '" data-priv="' + priv + '" data-dm="' + (l.private ? 'lot_make_public' : 'lot_make_private') + '">' + (l.private ? 'Make public' : 'Make private') + '</span>' +
@@ -109,7 +109,7 @@
       '</div>' + menu + '</button>';
   }
   function plusCell() {
-    return '<button class="dm-sp-card dm-sp-add" id="dm-sp-add"><div class="dm-sp-add-inner"><span class="dm-sp-plus">＋</span><span data-dm="lot_add">Add a server</span></div></button>';
+    return '<button class="dm-sp-card dm-sp-add" id="dm-sp-add"><div class="dm-sp-add-inner"><span class="dm-sp-plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span data-dm="lot_add">Add a server</span></div></button>';
   }
   function renderLots(lots) {
     const g = $('#dm-sp-grid'); if (!g) return;
