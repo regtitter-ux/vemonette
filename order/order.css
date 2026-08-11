@@ -14,6 +14,11 @@ a{color:var(--blue-2)}
 .muted{color:var(--muted)}
 .sm{font-size:12.5px}
 b{color:#fff}
+::selection{background:rgba(91,141,239,.35);color:#fff}
+/* Accessibility: a clear keyboard-focus ring in the accent colour (mouse clicks unaffected). */
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+/* Consistent focus feedback on inputs: accent border + a soft accent glow. */
+input:focus,textarea:focus,select:focus{box-shadow:0 0 0 3px rgba(91,141,239,.16)}
 
 .btn{border:none;border-radius:10px;padding:11px 16px;font-weight:700;font-size:14px;font-family:inherit;cursor:pointer;transition:background .15s,transform .05s}
 .btn.primary{background:var(--blue);color:#06121c}
@@ -103,7 +108,7 @@ h2{font-size:18px;margin-bottom:14px}
 .limit-label{margin-bottom:-2px}
 .chip{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:700;background:rgba(255,255,255,.06);color:var(--muted);white-space:nowrap}
 .chip.green{background:rgba(87,242,135,.14);color:var(--green)}
-.chip.blue{background:rgba(34,168,240,.14);color:var(--blue-2)}
+.chip.blue{background:rgba(91,141,239,.14);color:var(--blue-2)}
 .chip.amber{background:rgba(245,179,0,.16);color:var(--amber)}
 .chip.red{background:rgba(237,66,69,.14);color:var(--red)}
 .chip.pin{background:rgba(245,179,0,.18);color:var(--amber)}
@@ -129,11 +134,11 @@ h2{font-size:18px;margin-bottom:14px}
 .srv-bulk .srv-all{padding:6px 13px;font-size:12px}
 .srv-row{display:flex;align-items:center;gap:10px}
 .srv-ic{width:24px;height:24px;border-radius:50%;flex:none;object-fit:cover;background:rgba(255,255,255,.06)}
-.srv-ic-fb{display:inline-flex;align-items:center;justify-content:center;background:rgba(34,168,240,.16);color:var(--blue-2);font-weight:800;font-size:11px}
+.srv-ic-fb{display:inline-flex;align-items:center;justify-content:center;background:rgba(91,141,239,.16);color:var(--blue-2);font-weight:800;font-size:11px}
 .srv-name{flex:1;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .srv-count{color:var(--muted);font-size:12.5px}
 .srv-extra{color:var(--amber,#f5b300)}
-.srv-bot{flex:none;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--blue-2,#22a8f0);background:rgba(34,168,240,.14);border-radius:5px;padding:2px 6px}
+.srv-bot{flex:none;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--blue-2,#22a8f0);background:rgba(91,141,239,.14);border-radius:5px;padding:2px 6px}
 .srv-pager{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:8px;padding-top:8px;border-top:1px solid var(--stroke-2)}
 .srv-pager .btn-mini{min-width:34px;justify-content:center;font-size:15px;line-height:1;padding:4px 10px}
 .srv-pager .btn-mini[disabled]{opacity:.35;cursor:default;pointer-events:none}
@@ -189,7 +194,7 @@ h2{font-size:18px;margin-bottom:14px}
 .nm-items a:hover,.nm-items .nav-logout:hover{background:rgba(255,255,255,.06)}
 .nm-items a svg,.nm-items .nav-logout svg{width:18px;height:18px;flex:none;color:var(--muted)}
 .nm-items a:hover svg{color:var(--text)}
-.nm-items a.active{color:var(--blue-2);background:rgba(34,168,240,.14)}
+.nm-items a.active{color:var(--blue-2);background:rgba(91,141,239,.14)}
 .nm-items a.active svg{color:var(--blue-2)}
 .nm-sep{height:1px;background:var(--stroke);margin:6px 8px}
 .nm-items .nav-logout,.nm-items .nav-logout svg{color:#ff9a9c}
