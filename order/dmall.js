@@ -528,7 +528,7 @@
       ? '<div class="dm-run-reason">' + esc(dmT('why_incomplete')) + ' ' + esc(dmReason(run)) + '</div>' : '';
     // Finished runs get a "Repeat" button → re-launches the same broadcast (same settings).
     const repeatBtn = done
-      ? '<div class="camp-actions"><button class="btn-mini" data-run-repeat="' + esc(run.id) + '" title="' + esc(dmT('dm_repeat')) + '">↻ ' + esc(dmT('repeat_run')) + '</button></div>' : '';
+      ? '<div class="camp-actions dm-actions-right"><button class="btn-mini" data-run-repeat="' + esc(run.id) + '" title="' + esc(dmT('dm_repeat')) + '">↻ ' + esc(dmT('repeat_run')) + '</button></div>' : '';
     return '<div class="camp" data-run="' + esc(run.id) + '">' +
       '<div class="camp-head"><div><div class="camp-title">' + esc(title) + '</div><div class="camp-sub">' + esc(servers) + '</div></div>' +
       '<span class="camp-chips"><span class="chip ' + ch[0] + '" data-dm="' + ch[1] + '">status</span></span></div>' +
