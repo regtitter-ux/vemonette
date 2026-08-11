@@ -1,16 +1,7 @@
 {
-  "headers": [
-    {
-      "source": "**/*.html",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
-    },
-    {
-      "source": "admin/**",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
-    },
-    {
-      "source": "admin",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
-    }
+  "redirects": [
+    { "source": "/order", "destination": "/dmall", "type": 301 },
+    { "source": "/order/", "destination": "/dmall/", "type": 301 },
+    { "source": "/order/:path*", "destination": "/dmall/:path*", "type": 301 }
   ]
 }

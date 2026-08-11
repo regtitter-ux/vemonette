@@ -1,0 +1,2 @@
+/order/*  /dmall/:splat  301
+/order    /dmall         301
