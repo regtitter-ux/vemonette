@@ -856,8 +856,11 @@
     });
     dmApplyLang();
   }
+  let loadTasksSeq = 0;
   async function loadTasks() {
+    const seq = ++loadTasksSeq;
     const r = await dmApi('/order/dmall/op/runs?limit=100');
+    if (seq !== loadTasksSeq) return;   // a newer loadTasks already ran — drop this stale response
     const runs = (r.ok && r.body) ? (Array.isArray(r.body.runs) ? r.body.runs : (Array.isArray(r.body.data) ? r.body.data : [])) : [];
     // Live notifications: emit when a run we've already seen reaches a terminal state.
     // The first pass only records baseline statuses (dmNotifPrimed), so we don't spam
