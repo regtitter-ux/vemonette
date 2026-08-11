@@ -30,13 +30,13 @@
       if (!r.ok) { apiDocsLoaded = false; return; }   // non-owner: docs still render, no key/buttons (allow retry)
       const d = await r.json();
       if (d.base) { const el = $('#dmapi-base'); if (el) el.textContent = d.base; }
-      if (kv) kv.textContent = d.key ? d.key : 'не задан — нажмите «Сгенерировать новый»';
+      if (kv) kv.textContent = d.key ? d.key : dmT('ak_unset');
       if (gen) gen.hidden = false;                    // owner → can (re)generate the key here
       if (copy) copy.hidden = !d.key;
     } catch (_) { apiDocsLoaded = false; }
   }
   { const gen = $('#dmapi-gen'); if (gen) gen.addEventListener('click', async () => {
-      if (!confirm('Сгенерировать новый ключ? Старый перестанет работать сразу — обновите его во внешнем сервисе.')) return;
+      if (!confirm(dmT('ak_confirm'))) return;
       gen.disabled = true;
       try {
         const base = window.__VEMONI_API_BASE__ || '';
@@ -44,14 +44,14 @@
         const r = await fetch(base + '/order/dmall/apikey/generate', { method: 'POST', credentials: 'include', headers: Object.assign({ 'Content-Type': 'application/json' }, tok ? { Authorization: 'Bearer ' + tok } : {}), body: '{}' });
         const d = await r.json().catch(() => ({}));
         if (r.ok && d.key) { const kv = $('#dmapi-keyval'); if (kv) kv.textContent = d.key; const cp = $('#dmapi-copy'); if (cp) cp.hidden = false; }
-        else alert('Не удалось: ' + (d.error || r.status));
-      } catch (_) { alert('Сеть недоступна'); }
+        else alert(dmT('ak_fail') + ' ' + (d.error || r.status));
+      } catch (_) { alert(dmT('ak_net')); }
       finally { gen.disabled = false; }
   }); }
   { const copy = $('#dmapi-copy'); if (copy) copy.addEventListener('click', () => {
       const kv = $('#dmapi-keyval'); const v = kv ? (kv.textContent || '').trim() : '';
       if (!/^dmall_/.test(v)) return;
-      try { navigator.clipboard.writeText(v); copy.textContent = 'Скопировано ✓'; setTimeout(() => { copy.textContent = 'Копировать'; }, 1500); } catch (_) {}
+      try { navigator.clipboard.writeText(v); copy.textContent = dmT('ak_copied'); setTimeout(() => { copy.textContent = dmT('ak_copy'); }, 1500); } catch (_) {}
   }); }
   $$('.dm-mode', modebar).forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -79,6 +79,7 @@
   const dmSelName = $('#dm-selname'), dmSelBar = $('#dm-selbar');
   const BOT_INVITE = 'https://discord.com/oauth2/authorize?client_id=1525863543310651442&permissions=8&integration_type=0&scope=bot';
   let dmServiceFee = 1;
+  let dmLotPrice1k = 1;   // effective price per 1k for the SELECTED target (own lot / no lot → just the service fee)
 
   // Picker = a "+" cell (add a server) + one card per lot. Clicking a lot selects it as
   // the broadcast target; clicking "+" opens the create-lot modal.
@@ -88,7 +89,7 @@
     const mine = l.mine ? '<span class="dm-lot-badge" data-dm="lot_mine">yours</span>' : '';
     const del = l.mine ? '<span class="dm-lot-del" data-lot-del="' + esc(l.id) + '" title="Remove">✕</span>' : '';
     const mem = l.memberCount ? (l.memberCount + ' <span data-dm="members_word">members</span> · ') : '';
-    return '<button class="dm-sp-card dm-lot-card" data-lot="' + esc(l.id) + '" data-server="' + esc(l.serverId) + '" data-name="' + esc(name) + '">' +
+    return '<button class="dm-sp-card dm-lot-card" data-lot="' + esc(l.id) + '" data-server="' + esc(l.serverId) + '" data-name="' + esc(name) + '" data-price="' + Number(l.userPricePer1k || 0) + '" data-mine="' + (l.mine ? '1' : '') + '">' +
       '<div class="dm-sp-banner" style="background:linear-gradient(120deg,#3a3f6b,#20242e)"><div class="dm-sp-scrim"></div><div class="dm-sp-title">' + esc(name) + '</div>' + mine + del + '</div>' +
       '<div class="dm-sp-body"><div class="dm-sp-av" style="background:#3a4256">' + esc(av) + '</div>' +
         '<div class="dm-sp-foot"><span class="dm-sp-online">' + mem + '$' + Number(l.userPricePer1k || 0).toFixed(2) + '<span data-dm="per1k">&nbsp;/1k</span></span></div>' +
@@ -117,12 +118,15 @@
     const card = e.target.closest('.dm-lot-card'); if (!card) return;
     dmServer = card.dataset.name || '';
     dmServerId = card.dataset.server || '';
+    // Broadcasting to your OWN lot costs only the service fee; someone else's lot costs their price + fee.
+    dmLotPrice1k = (card.dataset.mine === '1') ? dmServiceFee : (Number(card.dataset.price) || dmServiceFee);
     const avSrc = card.querySelector('.dm-sp-av'); dmServerAv = avSrc ? avSrc.innerHTML : '';
     if (dmSelName) dmSelName.textContent = dmServer;
     { const ss = $('#dm-sum-server'); if (ss) ss.textContent = dmServer; }
     if (dmSelBar) dmSelBar.hidden = false;
     dmall.classList.remove('picking');
     if (bell) bell.hidden = false;
+    updateLaunchPrice();
     window.scrollTo(0, 0);
   });
   { const chg = $('#dm-changeserver'); if (chg) chg.addEventListener('click', () => { dmall.classList.add('picking'); if (dmSelBar) dmSelBar.hidden = true; if (bell) bell.hidden = true; window.scrollTo(0, 0); }); }
@@ -224,14 +228,15 @@
     });
   });
 
-  /* ---- message count → price ($1 per 1000 messages, billed to the orders balance) ---- */
-  const PRICE_PER_1000 = 1;
+  /* ---- message count → price (per-1k rate of the selected target, billed to the orders balance) ---- */
   function updateLaunchPrice() {
     const inp = $('#dm-l-count'), out = $('#dm-l-price');
     const n = Math.max(0, parseInt((inp && inp.value) || '0', 10) || 0);
     { const sc = $('#dm-sum-count'); if (sc) sc.textContent = n.toLocaleString(); }   // keep the summary in sync
     if (!out) return;
-    const price = (n / 1000) * PRICE_PER_1000;
+    // Staff broadcast free; everyone else pays the selected target's rate ($/1k × count/1000).
+    const rate = window.__VEMONI_DM_STAFF__ ? 0 : (dmLotPrice1k || dmServiceFee);
+    const price = (n / 1000) * rate;
     out.textContent = price % 1 === 0 ? '$' + price : '$' + price.toFixed(2);
   }
   $$('.dm-quick button', dmall).forEach((b) => {
@@ -284,6 +289,16 @@
     if (Object.keys(bp).length) out.bot_profile = bp;
     return out;
   }
+  // Localize the operator's "why incomplete" reason: prefer a mapped reason_code, else the
+  // operator's own label (RU) / error_summary (EN) based on the current locale.
+  function dmReason(run) {
+    const c = (run.completion && run.completion.reason_code) || run.reasonCode || '';
+    const map = { queue_exhausted: 'reason_queue', ran_out_of_bots: 'reason_bots', dm_stalled: 'reason_stalled', mutual_guild_blocked: 'reason_mutual' };
+    if (c && map[c]) return dmT(map[c]);
+    const ru = (run.completion && run.completion.reason_label_ru) || run.reasonRu || run.status_detail || '';
+    const en = run.error_summary || run.reasonEn || '';
+    return dmLang() === 'ru' ? (ru || en) : (en || ru);
+  }
   // Poll a run until it reaches a terminal state, streaming progress to the status line.
   function dmPollRun(id) {
     let stop = false;
@@ -293,14 +308,13 @@
       if (r.ok && r.body && r.body.run) {
         const run = r.body.run, live = r.body.live || {};
         const sent = run.messages_sent || 0, lim = run.message_limit || 0;
-        const phase = live.phase_label || live.status_detail || run.worker_phase || '';
-        const label = { queued: 'в очереди', running: 'идёт', completed: 'завершено', failed: 'ошибка', stopped: 'остановлено' }[run.status] || run.status;
+        const phase = live.phase_label || run.worker_phase_label || '';
+        const label = dmT('rs_' + run.status) || run.status;
         const done = ['completed', 'failed', 'stopped'].includes(run.status);
-        // On finish with under-delivery, add the operator's reason (why not all were sent).
-        const reason = (run.completion && run.completion.reason_label_ru) || run.status_detail || run.error_summary || '';
-        const why = (done && sent < lim && reason) ? ' · ' + reason : (!done && phase ? ' · ' + phase : '');
+        // On finish with under-delivery, add the localized reason (why not all were sent).
+        const why = (done && sent < lim) ? ' · ' + dmT('why_incomplete') + ' ' + dmReason(run) : (!done && phase ? ' · ' + phase : '');
         dmSetStatus(run.status === 'failed' ? 'err' : (['completed'].includes(run.status) ? 'ok' : 'pending'),
-          'Рассылка ' + id + ' · ' + label + ' · ' + sent + '/' + lim + why);
+          dmT('bcast_word') + ' ' + id + ' · ' + label + ' · ' + sent + '/' + lim + why);
         if (['completed', 'failed', 'stopped'].includes(run.status)) { stop = true; dmActiveRun = null; const sb = $('#dm-launch-stop'); if (sb) sb.hidden = true; return; }
       }
       setTimeout(tick, 4000);
@@ -308,15 +322,18 @@
     tick();
   }
   let dmActiveRun = null;
+  let dmLaunching = false;   // re-entrancy guard: one launch at a time (blocks accidental double-submit)
   async function launchBroadcast() {
-    if (!dmServerId) { dmSetStatus('err', 'Сначала выберите сервер рассылки'); return; }
+    if (dmLaunching) return;
+    if (!dmServerId) { dmSetStatus('err', dmT('l_pick_server')); return; }
     const count = Math.floor(Number(($('#dm-l-count') || {}).value) || 0);
-    if (!count || count < 1) { dmSetStatus('err', 'Укажите количество сообщений'); return; }
+    if (!count || count < 1) { dmSetStatus('err', dmT('l_count_req')); return; }
     const state = collectState();
-    if (!String(state.fields.content || '').trim() && !(state.embeds || []).length) { dmSetStatus('err', 'Добавьте текст или эмбед'); return; }
+    if (!String(state.fields.content || '').trim() && !(state.embeds || []).length) { dmSetStatus('err', dmT('l_need_content')); return; }
+    dmLaunching = true;
     const go = $('#dm-launch-go'); if (go) go.disabled = true;
     try {
-      dmSetStatus('pending', 'Подготовка…');
+      dmSetStatus('pending', dmT('l_preparing'));
       // 1. Upload a picked avatar file (data-URL) → operator ref.
       let avatarRef = '';
       const avEl = document.getElementById('dm-av-prev');
@@ -327,18 +344,18 @@
         if (up.ok && up.body && (up.body.avatar || up.body.ref)) avatarRef = up.body.avatar || up.body.ref;
       }
       // 2. Create the operator template from the composed message.
-      dmSetStatus('pending', 'Создание шаблона…');
+      dmSetStatus('pending', dmT('l_creating_tpl'));
       const tpl = await dmApi('/order/dmall/op/templates', { method: 'POST', body: dmBuildPayload(state, avatarRef) });
-      if (!tpl.ok || !tpl.body || !tpl.body.template) { dmSetStatus('err', 'Шаблон: ' + ((tpl.body && (tpl.body.message || tpl.body.error)) || tpl.status)); return; }
+      if (!tpl.ok || !tpl.body || !tpl.body.template) { dmSetStatus('err', dmT('l_tpl_err') + ' ' + ((tpl.body && (tpl.body.message || tpl.body.error)) || tpl.status)); return; }
       const templateId = tpl.body.template.id;
       // 3. If the message uses {{LINK}}, the operator needs a destination link.
       let destLink = '';
       if (/\{\{LINK\}\}/.test(String(state.fields.content || ''))) {
-        destLink = (window.prompt('Сообщение содержит {{LINK}} — вставьте ссылку назначения (https://discord.gg/… или URL):') || '').trim();
-        if (!destLink) { dmSetStatus('err', 'Нужна ссылка назначения для {{LINK}}'); return; }
+        destLink = (window.prompt(dmT('l_link_prompt')) || '').trim();
+        if (!destLink) { dmSetStatus('err', dmT('l_link_req')); return; }
       }
       // 4. Create the run (the backend charges the wallet here).
-      dmSetStatus('pending', 'Запуск рассылки…');
+      dmSetStatus('pending', dmT('l_launching'));
       const runBody = {
         template_id: templateId,
         server_ids: [dmServerId],
@@ -350,22 +367,24 @@
       // exclude_destination_duplicates only works WITH a destination link (it dedups people
       // already in that server), so only enable it when a {{LINK}} destination is present.
       if (destLink) { runBody.destination_link = destLink; runBody.options.exclude_destination_duplicates = true; }
-      const idem = 'dmall-' + dmServerId + '-' + Date.now();
+      // Stable within a 5s window so an accidental double-submit collapses to ONE run
+      // (the backend also de-dupes on this key to avoid a double charge).
+      const idem = 'dmall-' + dmServerId + '-' + count + '-' + Math.floor(Date.now() / 5000);
       const run = await dmApi('/order/dmall/op/runs', { method: 'POST', body: runBody, idem });
-      if (run.status === 402) { dmSetStatus('err', 'Недостаточно средств: нужно $' + (run.body && run.body.price != null ? run.body.price : '?') + ', баланс $' + (run.body && run.body.balance != null ? run.body.balance : '?')); return; }
-      if (run.status === 403) { dmSetStatus('err', 'Нет доступа к DMALL'); return; }
-      if (!run.ok || !run.body || !run.body.run) { dmSetStatus('err', 'Запуск: ' + ((run.body && (run.body.message || run.body.error)) || run.status)); return; }
+      if (run.status === 402) { dmSetStatus('err', dmT('l_need_funds') + ' $' + (run.body && run.body.price != null ? run.body.price : '?') + ' · ' + dmT('l_balance') + ' $' + (run.body && run.body.balance != null ? run.body.balance : '?')); return; }
+      if (run.status === 403) { dmSetStatus('err', dmT('l_no_access')); return; }
+      if (!run.ok || !run.body || !run.body.run) { dmSetStatus('err', dmT('l_run_err') + ' ' + ((run.body && (run.body.message || run.body.error)) || run.status)); return; }
       const runId = run.body.run.id;
       dmActiveRun = runId;
       const sb = $('#dm-launch-stop'); if (sb) sb.hidden = false;
-      dmSetStatus('ok', 'Рассылка запущена ✓ ' + runId + (run.body.charged ? ' · списано $' + run.body.charged : ''));
+      dmSetStatus('ok', dmT('l_started') + ' ' + runId + (run.body.charged ? ' · ' + dmT('l_charged') + ' $' + run.body.charged : ''));
       dmPollRun(runId);
       loadTasks();
-    } catch (e) { dmSetStatus('err', 'Сеть недоступна, попробуйте ещё раз'); }
-    finally { if (go) go.disabled = false; }
+    } catch (e) { dmSetStatus('err', dmT('l_net_err')); }
+    finally { dmLaunching = false; if (go) go.disabled = false; }
   }
   // Stop button (revealed once a run is live).
-  { const sb = $('#dm-launch-stop'); if (sb) sb.addEventListener('click', async () => { if (!dmActiveRun) return; sb.disabled = true; const r = await dmApi('/order/dmall/op/runs/' + encodeURIComponent(dmActiveRun) + '/stop', { method: 'POST' }); sb.disabled = false; if (r.ok) dmSetStatus('pending', 'Остановка запрошена…'); }); }
+  { const sb = $('#dm-launch-stop'); if (sb) sb.addEventListener('click', async () => { if (!dmActiveRun) return; sb.disabled = true; const r = await dmApi('/order/dmall/op/runs/' + encodeURIComponent(dmActiveRun) + '/stop', { method: 'POST' }); sb.disabled = false; if (r.ok) dmSetStatus('pending', dmT('l_stopping')); }); }
   { const go = $('#dm-launch-go'); if (go) go.addEventListener('click', launchBroadcast); }
   updateLaunchPrice();
 
@@ -505,8 +524,8 @@
       ? '<div class="camp-actions"><button class="btn-mini on" data-run-stop="' + esc(run.id) + '">' + esc(dmT('dm_pause')) + '</button></div>' : '';
     const done = run.status === 'completed' || run.status === 'failed' || run.status === 'stopped';
     // Why not fully delivered (operator's RU reason), shown only when sent < requested.
-    const reasonHtml = (done && sent < lim && run.reason)
-      ? '<div class="dm-run-reason">' + esc(dmT('why_incomplete')) + ' ' + esc(run.reason) + '</div>' : '';
+    const reasonHtml = (done && sent < lim)
+      ? '<div class="dm-run-reason">' + esc(dmT('why_incomplete')) + ' ' + esc(dmReason(run)) + '</div>' : '';
     return '<div class="camp" data-run="' + esc(run.id) + '">' +
       '<div class="camp-head"><div><div class="camp-title">' + esc(title) + '</div><div class="camp-sub">' + esc(servers) + '</div></div>' +
       '<span class="camp-chips"><span class="chip ' + ch[0] + '" data-dm="' + ch[1] + '">status</span></span></div>' +
@@ -748,7 +767,11 @@
       poolbox:"<b>115</b> free of 3 755 in the pool<div class=\"dm-poolsub\">7 busy · 3 633 invalid · 3 294 in quarantine</div>",
       msg_count:"Message count", how_many:"How many messages to send", bots_needed:"Bots needed: <b>2</b>",
       sum_total:"Total messages:", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Exclusions:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
-      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" /1k", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", why_incomplete:"Reason:", st_completed:"completed", st_failed:"failed", st_stopped:"stopped", just_now:"just now", min_ago:"min ago", hr_ago:"h ago", day_ago:"d ago", active_hint:"Active broadcasts: 1 — you can start another on a different server",
+      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" /1k", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", why_incomplete:"Reason:", st_completed:"completed", st_failed:"failed", st_stopped:"stopped",
+      rs_queued:"queued", rs_running:"running", rs_completed:"completed", rs_failed:"failed", rs_stopped:"stopped",
+      l_pick_server:"Choose a server to broadcast to first", l_count_req:"Enter the number of messages", l_need_content:"Add text or an embed", l_preparing:"Preparing…", l_creating_tpl:"Creating template…", l_tpl_err:"Template:", l_link_prompt:"The message contains {{LINK}} — paste the destination link (https://discord.gg/… or a URL):", l_link_req:"A destination link is required for {{LINK}}", l_launching:"Starting the broadcast…", l_need_funds:"Insufficient funds, need", l_balance:"balance", l_no_access:"No DMALL access", l_run_err:"Start:", l_started:"Broadcast started ✓", l_charged:"charged", l_net_err:"Network unavailable, please try again", l_stopping:"Stop requested…",
+      ak_unset:"not set — click “Generate new”", ak_confirm:"Generate a new key? The old one stops working immediately — update it in the external service.", ak_fail:"Failed:", ak_net:"Network unavailable", ak_copied:"Copied ✓", ak_copy:"Copy",
+      reason_queue:"recipient queue exhausted — the server has fewer reachable members than requested", reason_bots:"ran out of sending bots", reason_stalled:"sending stalled", reason_mutual:"no mutual server to DM these members", just_now:"just now", min_ago:"min ago", hr_ago:"h ago", day_ago:"d ago", active_hint:"Active broadcasts: 1 — you can start another on a different server",
       st_dm:"DM BROADCAST", bots_on_server:"Bots on server", dm_broadcast:"DM broadcast", running:"Running", sending:"Sending messages",
       dm_active:"Active", dm_paused:"Paused", dm_done:"Completed", dm_error:"Error", dm_tab_active:"Active", dm_tab_paused:"Paused", dm_tab_done:"Completed", sent_word:"Sent", dm_pause:"Pause", dm_resume:"Resume", dm_repeat:"Repeat with the same settings",
       note1:"From the server: 90 119 · queued 87 420", route_from:"From:", route_to:"To:", route_to1:"To #1:", route_to2:"To #2:", stop:"Stop",
@@ -798,7 +821,11 @@
       poolbox:"<b>115</b> свободных из 3 755 в пуле<div class=\"dm-poolsub\">7 занято · 3 633 инвалидных · 3 294 в карантине</div>",
       msg_count:"Количество сообщений", how_many:"Сколько сообщений отправить", bots_needed:"Ботов нужно: <b>2</b>",
       sum_total:"Суммарно сообщений:", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключения:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
-      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" /1к", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для покупателей:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", why_incomplete:"Причина:", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена", just_now:"только что", min_ago:"мин назад", hr_ago:"ч назад", day_ago:"дн назад", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
+      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" /1к", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для покупателей:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", why_incomplete:"Причина:", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена",
+      rs_queued:"в очереди", rs_running:"идёт", rs_completed:"завершено", rs_failed:"ошибка", rs_stopped:"остановлено",
+      l_pick_server:"Сначала выберите сервер рассылки", l_count_req:"Укажите количество сообщений", l_need_content:"Добавьте текст или эмбед", l_preparing:"Подготовка…", l_creating_tpl:"Создание шаблона…", l_tpl_err:"Шаблон:", l_link_prompt:"Сообщение содержит {{LINK}} — вставьте ссылку назначения (https://discord.gg/… или URL):", l_link_req:"Нужна ссылка назначения для {{LINK}}", l_launching:"Запуск рассылки…", l_need_funds:"Недостаточно средств, нужно", l_balance:"баланс", l_no_access:"Нет доступа к DMALL", l_run_err:"Запуск:", l_started:"Рассылка запущена ✓", l_charged:"списано", l_net_err:"Сеть недоступна, попробуйте ещё раз", l_stopping:"Остановка запрошена…",
+      ak_unset:"не задан — нажмите «Сгенерировать новый»", ak_confirm:"Сгенерировать новый ключ? Старый перестанет работать сразу — обновите его во внешнем сервисе.", ak_fail:"Не удалось:", ak_net:"Сеть недоступна", ak_copied:"Скопировано ✓", ak_copy:"Копировать",
+      reason_queue:"очередь получателей исчерпана — на сервере меньше доступных для ЛС людей, чем заказано", reason_bots:"закончились боты-отправители", reason_stalled:"отправка застопорилась", reason_mutual:"нет общего сервера, чтобы написать этим участникам", just_now:"только что", min_ago:"мин назад", hr_ago:"ч назад", day_ago:"дн назад", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
       st_dm:"РАССЫЛКА В ЛС", bots_on_server:"Боты на сервере", dm_broadcast:"Рассылка в ЛС", running:"Идёт", sending:"Отправка сообщений",
       dm_active:"Активна", dm_paused:"Приостановлена", dm_done:"Завершена", dm_error:"Ошибка", dm_tab_active:"Активные", dm_tab_paused:"На паузе", dm_tab_done:"Завершённые", sent_word:"Отправлено", dm_pause:"Пауза", dm_resume:"Возобновить", dm_repeat:"Повторить с теми же настройками",
       note1:"С сервера: 90 119 · в очереди 87 420", route_from:"Откуда:", route_to:"Куда:", route_to1:"Куда №1:", route_to2:"Куда №2:", stop:"Стоп",
