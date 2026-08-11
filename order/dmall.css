@@ -480,3 +480,30 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .dm-viewas input{ flex:1; min-width:150px; background:var(--dm-inset); border:1px solid var(--dm-line-2); color:var(--dm-txt); font:inherit; font-size:13.5px; padding:8px 12px; border-radius:9px; }
 .dm-viewas input:focus{ outline:none; border-color:var(--dm-blurple); }
 .dm-viewas-cur{ color:var(--dm-green); font-size:12.5px; font-weight:700; }
+
+/* ---- DMALL lots: "+" add cell, lot card extras, create-lot modal ---- */
+.dm-mut{ color:var(--dm-mut); }
+.dm-sp-add{ align-items:stretch; }
+.dm-sp-add .dm-sp-add-inner{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; min-height:150px; color:var(--dm-mut); border:2px dashed var(--dm-line-2); border-radius:14px; margin:0; font-weight:700; font-size:14px; transition:.15s; }
+.dm-sp-add:hover .dm-sp-add-inner{ color:var(--dm-txt); border-color:var(--dm-blurple); background:rgba(88,101,242,.06); }
+.dm-sp-plus{ font-size:34px; line-height:1; color:var(--dm-blurple); }
+.dm-lot-card .dm-sp-banner{ height:96px; }
+.dm-lot-badge{ position:absolute; z-index:2; top:10px; right:12px; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; background:rgba(87,242,135,.2); color:#57f287; padding:3px 8px; border-radius:999px; }
+.dm-lot-del{ position:absolute; z-index:3; top:8px; left:10px; width:22px; height:22px; display:grid; place-items:center; border-radius:50%; background:rgba(0,0,0,.45); color:#fff; font-size:12px; cursor:pointer; }
+.dm-lot-del:hover{ background:#ed4245; }
+.dm-lot-card .dm-sp-online{ font-weight:700; color:var(--dm-txt); }
+
+.dm-modal-overlay{ position:fixed; inset:0; z-index:120; background:rgba(6,9,14,.72); display:flex; align-items:center; justify-content:center; padding:20px; -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+.dm-modal-overlay[hidden]{ display:none; }
+.dm-modal{ position:relative; width:100%; max-width:460px; background:var(--dm-card); border:1px solid var(--dm-line-2); border-radius:16px; padding:24px 22px; box-shadow:0 30px 80px -30px rgba(0,0,0,.85); }
+.dm-modal h2{ margin:0 0 6px; font-size:19px; }
+.dm-modal-close{ position:absolute; top:12px; right:14px; border:none; background:transparent; color:var(--dm-mut); font-size:18px; cursor:pointer; }
+.dm-modal-close:hover{ color:var(--dm-txt); }
+.dm-lot-hint{ color:var(--dm-mut); font-size:13px; line-height:1.5; margin:0 0 14px; }
+.dm-lot-invite{ display:inline-block; margin-bottom:16px; }
+.dm-lot-foot{ margin:8px 0 4px; font-size:13.5px; color:var(--dm-txt); }
+.dm-lot-note{ margin-top:8px; color:var(--dm-mut); font-size:12.5px; line-height:1.5; }
+.dm-lot-status{ margin:10px 0; font-size:13px; }
+.dm-lot-status.pending{ color:var(--dm-mut); }
+.dm-lot-status.err{ color:#ed4245; }
+.dm-btn.full{ width:100%; margin-top:14px; }

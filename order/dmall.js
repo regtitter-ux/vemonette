@@ -18,7 +18,6 @@
 
   /* ---- ad-mode switch: Stays (orders) vs DMALL (broadcast console) ---- */
   let dmServer = null, dmServerId = null, dmServerAv = '';   // the server the broadcast is configured for (from the picker)
-  let dmViewAs = '';   // staff-only: test DMALL as another account (loads THEIR servers by id)
   const apiEl = $('#dmapi');
   let apiDocsLoaded = false;
   async function loadApiDocs() {
@@ -65,8 +64,7 @@
       dmall.hidden = !dm;
       if (apiEl) apiEl.hidden = !api;
       if (api) loadApiDocs();
-      if (dm) { const va = $('#dm-viewas'); if (va) va.hidden = !window.__VEMONI_DM_STAFF__; }   // staff-only tester
-      if (dm) { loadServers(); loadTasks(); }                 // refresh real servers + broadcasts on open
+      if (dm) { loadLots(); loadTasks(); }                 // refresh real servers + broadcasts on open
       if (dm && !dmServer) dmall.classList.add('picking');   // choose a server first
       if (bell) bell.hidden = !dm || dmall.classList.contains('picking');
       { const sb = $('#dm-selbar'); if (sb) sb.hidden = !dm || !dmServer || dmall.classList.contains('picking'); }
@@ -79,101 +77,46 @@
      Real avatar/banner URLs render when present (from the API later); otherwise
      a colour/gradient + letter placeholder is used. */
   const dmSelName = $('#dm-selname'), dmSelBar = $('#dm-selbar');
-  const DM_SERVERS = [
-    { name: 'Zombix Online Official', bot: true, online: 14, avatar: '', banner: '', avBg: '#3a2a24', bannerBg: 'linear-gradient(120deg,#c25b1e,#2a211c)' },
-    { name: 'Memory', bot: true, online: 9, avatar: '', banner: '', avBg: '#6b5560', bannerBg: 'linear-gradient(120deg,#7a5b6b,#2b2430)' },
-    { name: 'inoue', bot: false, avatar: '', banner: '', avBg: '#4a4640', bannerBg: 'linear-gradient(120deg,#b9b2ac,#3a3733)' },
-    { name: '💗 🦋 kissing her ♡ ask2dm', bot: true, online: 27, avatar: '', banner: '', icon: '💗', avBg: '#7a3f55', bannerBg: 'linear-gradient(120deg,#8a4a63,#2a1e26)' },
-    { name: 'inoue collabs', bot: false, avatar: '', banner: '', avBg: '#3a4256', bannerBg: 'linear-gradient(120deg,#3f4a63,#20242e)' },
-    { name: 'matching 🍒 chat · decor · art · g…', bot: true, online: 41, avatar: '', banner: '', icon: '🍒', avBg: '#4a4a4a', bannerBg: 'linear-gradient(120deg,#6b6b6b,#232323)' }
-  ];
   const BOT_INVITE = 'https://discord.com/oauth2/authorize?client_id=1525863543310651442&permissions=8&integration_type=0&scope=bot';
-  function serverCard(sv) {
-    let banner, bannerInner = '';
-    if (sv.avatar) {
-      // Always use an enlarged, blurred copy of the avatar as the backdrop
-      // (even when the server has its own banner).
-      banner = 'background:' + (sv.avBg || '#20242e');
-      bannerInner = "<div class=\"dm-sp-banner-blur\" style=\"background-image:url('" + esc(sv.avatar) + "')\"></div>";
-    } else if (sv.banner) {
-      banner = "background-image:url('" + esc(sv.banner) + "');background-size:cover;background-position:center";
-    } else {
-      banner = 'background:' + (sv.bannerBg || 'linear-gradient(120deg,#3a3f4b,#20242e)');
-    }
-    const av = sv.avatar ? '<img alt="" src="' + esc(sv.avatar) + '">' : esc(sv.icon || (sv.name.trim()[0] || '?'));
-    const memIco = '<svg class="dm-sp-mico" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#23a55a"/><path class="p" d="M12 6.1a2.95 2.95 0 1 0 0 5.9 2.95 2.95 0 0 0 0-5.9Zm0 7.05c-2.72 0-5.45 1.32-5.45 3.42V18.1h10.9v-1.53c0-2.1-2.73-3.42-5.45-3.42Z"/></svg>';
-    const foot = sv.bot
-      ? '<span class="dm-sp-online">' + memIco + ' ' + (sv.online != null ? sv.online : '') + ' <span data-dm="members_word">members</span></span>'
-      : '<span class="dm-sp-invite" data-dm="invite_caps">INVITE</span>';
-    return '<button class="dm-sp-card" data-bot="' + (sv.bot ? 1 : 0) + '" data-id="' + esc(sv.id || '') + '" data-name="' + esc(sv.name) + '">' +
-      '<div class="dm-sp-banner" style="' + banner + '">' + bannerInner +
-        '<div class="dm-sp-scrim"></div>' +
-        '<div class="dm-sp-title">' + esc(sv.name) + '</div>' +
-      '</div>' +
-      '<div class="dm-sp-body">' +
-        '<div class="dm-sp-av" style="background:' + (sv.avBg || '#3a4256') + '">' + av + '</div>' +
-        '<div class="dm-sp-foot">' + foot + '</div>' +
+  let dmServiceFee = 1;
+
+  // Picker = a "+" cell (add a server) + one card per lot. Clicking a lot selects it as
+  // the broadcast target; clicking "+" opens the create-lot modal.
+  function lotCard(l) {
+    const name = l.serverName || l.serverId;
+    const av = (String(name).trim()[0] || '?').toUpperCase();
+    const mine = l.mine ? '<span class="dm-lot-badge" data-dm="lot_mine">yours</span>' : '';
+    const del = l.mine ? '<span class="dm-lot-del" data-lot-del="' + esc(l.id) + '" title="Remove">✕</span>' : '';
+    const mem = l.memberCount ? (l.memberCount + ' <span data-dm="members_word">members</span> · ') : '';
+    return '<button class="dm-sp-card dm-lot-card" data-lot="' + esc(l.id) + '" data-server="' + esc(l.serverId) + '" data-name="' + esc(name) + '">' +
+      '<div class="dm-sp-banner" style="background:linear-gradient(120deg,#3a3f6b,#20242e)"><div class="dm-sp-scrim"></div><div class="dm-sp-title">' + esc(name) + '</div>' + mine + del + '</div>' +
+      '<div class="dm-sp-body"><div class="dm-sp-av" style="background:#3a4256">' + esc(av) + '</div>' +
+        '<div class="dm-sp-foot"><span class="dm-sp-online">' + mem + '$' + Number(l.userPricePer1k || 0).toFixed(2) + '<span data-dm="per1k">&nbsp;/1k</span></span></div>' +
       '</div></button>';
   }
-  function renderServers(list) {
+  function plusCell() {
+    return '<button class="dm-sp-card dm-sp-add" id="dm-sp-add"><div class="dm-sp-add-inner"><span class="dm-sp-plus">＋</span><span data-dm="lot_add">Add a server</span></div></button>';
+  }
+  function renderLots(lots) {
     const g = $('#dm-sp-grid'); if (!g) return;
-    // Servers that already have the bot come first.
-    const arr = (Array.isArray(list) ? list : []).slice().sort((a, b) => (b.bot ? 1 : 0) - (a.bot ? 1 : 0) || ((b.online || 0) - (a.online || 0)));
-    if (arr.length) {
-      g.innerHTML = arr.map(serverCard).join('');
-    } else if (dmViewAs) {
-      // "View as" a specific account that has no captured servers — Discord won't give us
-      // its guild list unless THAT account logged in via Discord OAuth (Connect Discord).
-      g.innerHTML = '<div class="dm-sp-empty"><div>' + esc(dmT('viewas_empty') + ' ' + dmViewAs + '. ' + dmT('viewas_empty2')) + '</div></div>';
-    } else {
-      // No servers yet — the account's Discord guild list is captured via OAuth. Offer a
-      // one-click "connect Discord" (identify+guilds) so gate/code logins can load theirs.
-      const base = window.__VEMONI_API_BASE__ || '';
-      g.innerHTML = '<div class="dm-sp-empty"><div data-dm="no_admin_servers">You have no servers where you are an owner or admin. Connect Discord so we can load your servers.</div>'
-        + '<a class="dm-btn primary dm-connect" href="' + base + '/order/oauth/login"><span data-dm="connect_discord">Connect Discord</span></a></div>';
-    }
+    g.innerHTML = plusCell() + (Array.isArray(lots) ? lots : []).map(lotCard).join('');
     dmApplyLang();
   }
-
-  // Servers for the picker = the union of (1) the account's own admin/owner guilds
-  // (/order/servers, fast, with real icon+banner) and (2) the broadcast operator's allowed
-  // servers. The operator call can hang up to ~25s (Cloudflare/timeout), so it must NEVER
-  // block the picker: render the account's own list immediately, then merge the operator's
-  // in the background if/when it returns. Deduped by id; empty → hint + "connect Discord".
-  async function loadServers() {
-    const seen = new Map();
-    // Show the hint + "Connect Discord" button INSTANTLY (only while the grid is still
-    // empty), so a slow/hung /order/servers can never leave the picker blank.
-    { const grid = $('#dm-sp-grid'); if (grid && !grid.querySelector('.dm-sp-card')) renderServers([]); }
-    const mine = await dmApi('/order/servers' + (dmViewAs ? '?as=' + encodeURIComponent(dmViewAs) : ''));
-    if (mine.ok && mine.body && Array.isArray(mine.body.servers)) {
-      mine.body.servers.forEach((s) => { if (s && s.id) seen.set(String(s.id), s); });
-    }
-    renderServers([...seen.values()]);                 // instant — no waiting on the operator
-    dmApi('/order/dmall/op/servers?limit=200').then((op) => {
-      if (!(op.ok && op.body && Array.isArray(op.body.servers) && op.body.servers.length)) return;
-      let added = false;
-      op.body.servers.forEach((s) => {
-        if (!s || !s.id) return;
-        const id = String(s.id);
-        if (seen.has(id)) { seen.get(id).bot = true; return; }
-        seen.set(id, { id, name: s.name || id, bot: true, online: (s.member_count != null ? s.member_count : null), avatar: '', banner: '' });
-        added = true;
-      });
-      if (added) renderServers([...seen.values()]);
-    }).catch(() => {});
+  async function loadLots() {
+    const g = $('#dm-sp-grid'); if (g && !g.querySelector('.dm-sp-card')) renderLots([]);   // show "+" instantly
+    const r = await dmApi('/order/dmall/lots');
+    if (r.ok && r.body && r.body.serviceFeePer1k != null) dmServiceFee = Number(r.body.serviceFeePer1k) || 1;
+    renderLots((r.ok && r.body && Array.isArray(r.body.lots)) ? r.body.lots : []);
   }
 
   const dmGrid = $('#dm-sp-grid');
   if (dmGrid) dmGrid.addEventListener('click', (e) => {
-    const card = e.target.closest('.dm-sp-card'); if (!card) return;
-    if (card.dataset.bot === '0') {   // bot not on the server yet → invite it
-      const id = card.dataset.id;
-      window.open(BOT_INVITE + (id ? '&guild_id=' + encodeURIComponent(id) + '&disable_guild_select=true' : ''), '_blank', 'noopener');
-      return;
-    }
+    const del = e.target.closest('[data-lot-del]');
+    if (del) { e.preventDefault(); e.stopPropagation(); dmDeleteLot(del.dataset.lotDel); return; }
+    if (e.target.closest('#dm-sp-add')) { openLotModal(); return; }
+    const card = e.target.closest('.dm-lot-card'); if (!card) return;
     dmServer = card.dataset.name || '';
-    dmServerId = card.dataset.id || '';   // used automatically as the broadcast's target guild
+    dmServerId = card.dataset.server || '';
     const avSrc = card.querySelector('.dm-sp-av'); dmServerAv = avSrc ? avSrc.innerHTML : '';
     if (dmSelName) dmSelName.textContent = dmServer;
     { const ss = $('#dm-sum-server'); if (ss) ss.textContent = dmServer; }
@@ -183,30 +126,45 @@
     window.scrollTo(0, 0);
   });
   { const chg = $('#dm-changeserver'); if (chg) chg.addEventListener('click', () => { dmall.classList.add('picking'); if (dmSelBar) dmSelBar.hidden = true; if (bell) bell.hidden = true; window.scrollTo(0, 0); }); }
-  { const q = $('#dm-sp-q'); if (q) q.addEventListener('input', () => { const v = q.value.trim().toLowerCase(); $$('#dm-sp-grid .dm-sp-card').forEach((c) => { c.hidden = !!v && !(c.dataset.name || '').toLowerCase().includes(v); }); }); }
+  { const q = $('#dm-sp-q'); if (q) q.addEventListener('input', () => { const v = q.value.trim().toLowerCase(); $$('#dm-sp-grid .dm-lot-card').forEach((c) => { c.hidden = !!v && !(c.dataset.name || '').toLowerCase().includes(v); }); }); }
 
-  /* ---- staff-only "view as": load ANOTHER account's servers for DMALL testing ---- */
-  function renderViewAs() {
-    const cur = $('#dm-viewas-cur'), clr = $('#dm-viewas-clear');
-    if (cur) { cur.hidden = !dmViewAs; if (dmViewAs) cur.textContent = dmT('viewas_now') + ' ' + dmViewAs; }
-    if (clr) clr.hidden = !dmViewAs;
-    dmApplyLang();
+  async function dmDeleteLot(id) {
+    if (!confirm(dmT('lot_del_confirm'))) return;
+    const r = await dmApi('/order/dmall/lot', { method: 'DELETE', body: { id } });
+    if (r.ok) loadLots();
   }
-  function applyViewAs() {
-    const inp = $('#dm-viewas-id'); const id = (inp && inp.value || '').trim();
-    if (!/^\d{17,20}$/.test(id)) { alert(dmT('viewas_bad')); return; }
-    dmViewAs = id; renderViewAs();
-    dmServer = null; dmServerId = null;                 // reset any picked server for the new account
-    if (dmSelBar) dmSelBar.hidden = true;
-    dmall.classList.add('picking');
-    loadServers();
+
+  /* ---- create-lot modal: add a server (id + price per 1000 messages) ---- */
+  const lotModal = $('#dm-lot-modal');
+  function lotFoot() {
+    const foot = $('#dm-lot-foot'); if (!foot) return;
+    const price = Math.max(0, Number(($('#dm-lot-price') || {}).value) || 0);
+    const total = (price + dmServiceFee).toFixed(2);
+    foot.innerHTML = dmT('lot_foot_total') + ' <b>$' + total + '</b>' + dmT('lot_foot_per1k')
+      + ' <span class="dm-mut">($' + price.toFixed(2) + ' ' + dmT('lot_foot_yours') + ' + $' + dmServiceFee.toFixed(2) + ' ' + dmT('lot_foot_service') + ')</span>'
+      + '<div class="dm-lot-note">' + dmT('lot_foot_note').replace('{fee}', '$' + dmServiceFee.toFixed(2)) + '</div>';
   }
-  { const go = $('#dm-viewas-go'); if (go) go.addEventListener('click', applyViewAs); }
-  { const inp = $('#dm-viewas-id'); if (inp) inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyViewAs(); }); }
-  { const clr = $('#dm-viewas-clear'); if (clr) clr.addEventListener('click', () => {
-      dmViewAs = ''; const inp = $('#dm-viewas-id'); if (inp) inp.value = '';
-      renderViewAs(); dmServer = null; dmServerId = null; if (dmSelBar) dmSelBar.hidden = true;
-      dmall.classList.add('picking'); loadServers();
+  function openLotModal() {
+    if (!lotModal) return;
+    const inv = $('#dm-lot-invite'); if (inv) inv.href = BOT_INVITE;
+    const st = $('#dm-lot-status'); if (st) { st.hidden = true; st.textContent = ''; }
+    lotFoot(); lotModal.hidden = false; dmApplyLang();
+  }
+  function closeLotModal() { if (lotModal) lotModal.hidden = true; }
+  { const c = $('#dm-lot-close'); if (c) c.addEventListener('click', closeLotModal); }
+  if (lotModal) lotModal.addEventListener('click', (e) => { if (e.target === lotModal) closeLotModal(); });
+  { const p = $('#dm-lot-price'); if (p) p.addEventListener('input', lotFoot); }
+  { const go = $('#dm-lot-create'); if (go) go.addEventListener('click', async () => {
+      const sid = ((($('#dm-lot-server') || {}).value) || '').trim();
+      const price = Math.max(0, Number(($('#dm-lot-price') || {}).value) || 0);
+      const st = $('#dm-lot-status'); const setSt = (cls, m) => { if (st) { st.hidden = false; st.className = 'dm-lot-status ' + cls; st.textContent = m; } };
+      if (!/^\d{17,20}$/.test(sid)) { setSt('err', dmT('lot_bad_id')); return; }
+      go.disabled = true; setSt('pending', dmT('lot_checking'));
+      const r = await dmApi('/order/dmall/lot', { method: 'POST', body: { serverId: sid, pricePer1k: price } });
+      go.disabled = false;
+      if (r.ok && r.body && r.body.lot) { closeLotModal(); const si = $('#dm-lot-server'); if (si) si.value = ''; loadLots(); }
+      else if (r.body && r.body.error === 'bot-not-on-server') setSt('err', dmT('lot_no_bot'));
+      else setSt('err', (r.body && r.body.error) || dmT('lot_fail'));
     }); }
 
   /* ---- DMALL tab switch ---- */
@@ -780,7 +738,7 @@
       poolbox:"<b>115</b> free of 3 755 in the pool<div class=\"dm-poolsub\">7 busy · 3 633 invalid · 3 294 in quarantine</div>",
       msg_count:"Message count", how_many:"How many messages to send", bots_needed:"Bots needed: <b>2</b>",
       sum_total:"Total messages: 1 000", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Exclusions:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
-      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", st_completed:"completed", st_failed:"failed", st_stopped:"stopped", just_now:"just now", min_ago:"min ago", hr_ago:"h ago", day_ago:"d ago", active_hint:"Active broadcasts: 1 — you can start another on a different server",
+      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" /1k", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", st_completed:"completed", st_failed:"failed", st_stopped:"stopped", just_now:"just now", min_ago:"min ago", hr_ago:"h ago", day_ago:"d ago", active_hint:"Active broadcasts: 1 — you can start another on a different server",
       st_dm:"DM BROADCAST", bots_on_server:"Bots on server", dm_broadcast:"DM broadcast", running:"Running", sending:"Sending messages",
       dm_active:"Active", dm_paused:"Paused", dm_done:"Completed", dm_error:"Error", dm_tab_active:"Active", dm_tab_paused:"Paused", dm_tab_done:"Completed", sent_word:"Sent", dm_pause:"Pause", dm_resume:"Resume", dm_repeat:"Repeat with the same settings",
       note1:"From the server: 90 119 · queued 87 420", route_from:"From:", route_to:"To:", route_to1:"To #1:", route_to2:"To #2:", stop:"Stop",
@@ -830,7 +788,7 @@
       poolbox:"<b>115</b> свободных из 3 755 в пуле<div class=\"dm-poolsub\">7 занято · 3 633 инвалидных · 3 294 в карантине</div>",
       msg_count:"Количество сообщений", how_many:"Сколько сообщений отправить", bots_needed:"Ботов нужно: <b>2</b>",
       sum_total:"Суммарно сообщений: 1 000", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключения:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
-      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена", just_now:"только что", min_ago:"мин назад", hr_ago:"ч назад", day_ago:"дн назад", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
+      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" /1к", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для юзеров:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена", just_now:"только что", min_ago:"мин назад", hr_ago:"ч назад", day_ago:"дн назад", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
       st_dm:"РАССЫЛКА В ЛС", bots_on_server:"Боты на сервере", dm_broadcast:"Рассылка в ЛС", running:"Идёт", sending:"Отправка сообщений",
       dm_active:"Активна", dm_paused:"Приостановлена", dm_done:"Завершена", dm_error:"Ошибка", dm_tab_active:"Активные", dm_tab_paused:"На паузе", dm_tab_done:"Завершённые", sent_word:"Отправлено", dm_pause:"Пауза", dm_resume:"Возобновить", dm_repeat:"Повторить с теми же настройками",
       note1:"С сервера: 90 119 · в очереди 87 420", route_from:"Откуда:", route_to:"Куда:", route_to1:"Куда №1:", route_to2:"Куда №2:", stop:"Стоп",
@@ -866,5 +824,5 @@
   restoreState();
   toggleAddEmbed();
   updatePreview();
-  loadServers();
+  loadLots();
 })();
