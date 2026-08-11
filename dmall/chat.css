@@ -1,0 +1,218 @@
+/* ------------------------------------------------------------------ */
+/* DMALL public chat — ported from vibecheckbot. Desktop: docked panel  */
+/* on the right; mobile: full-screen sheet. Newest message at the bottom.*/
+/* ------------------------------------------------------------------ */
+
+/* Topbar button (sits before the balance pill), with an unread dot. */
+.dm-chat-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 34px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--stroke-2, rgba(255, 255, 255, .13));
+  border-radius: 8px;
+  color: var(--text, #e9edf5);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .08s;
+}
+.dm-chat-btn:hover { background: rgba(255, 255, 255, .05); border-color: var(--blue, #5b8def); }
+.dm-chat-btn:active { transform: scale(.97); }
+.dm-chat-btn svg { width: 18px; height: 18px; display: block; }
+.dm-chat-dot {
+  display: none;
+  position: absolute;
+  top: -3px; right: -3px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--red, #ed4245);
+  border: 2px solid var(--bg, #0c1017);
+}
+.dm-chat-dot.on { display: block; }
+
+/* Overlay + panel */
+.dm-chat-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  background: rgba(0, 0, 0, .55);
+}
+.dm-chat-box {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--panel, #151a23);
+  color: var(--text, #e9edf5);
+  overflow: hidden;
+}
+
+/* Desktop: dock to the right, no dimming, panel floats. */
+@media (min-width: 721px) {
+  .dm-chat-modal.dm-chat-docked {
+    background: transparent;
+    pointer-events: none;
+    justify-content: flex-end;
+  }
+  .dm-chat-docked .dm-chat-box {
+    pointer-events: auto;
+    position: fixed;
+    top: 66px; right: 14px; bottom: 14px;
+    width: 360px; height: auto;
+    border: 1px solid var(--stroke-2, rgba(255, 255, 255, .13));
+    border-radius: 14px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .5);
+  }
+}
+
+.dm-chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--stroke, rgba(255, 255, 255, .07));
+  font-weight: 700;
+  flex: none;
+}
+.dm-chat-close {
+  background: transparent;
+  border: none;
+  color: var(--muted, #8a95a8);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  width: 30px; height: 30px;
+  border-radius: 8px;
+}
+.dm-chat-close:hover { background: rgba(255, 255, 255, .06); color: var(--text, #e9edf5); }
+
+.dm-chat-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dm-chat-empty { margin: auto; color: var(--muted, #8a95a8); font-size: 13px; text-align: center; padding: 24px; }
+
+/* A message: avatar column + name/time/text. Whole row clickable = reply. */
+.dm-chat-msg {
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.dm-chat-msg:hover { background: rgba(255, 255, 255, .04); }
+.dm-chat-av { flex: none; width: 38px; height: 38px; margin-top: 2px; border-radius: 50%; overflow: hidden; background: var(--panel-2, #1b212c); display: block; }
+.dm-chat-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.dm-chat-av-txt { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; font-weight: 700; font-size: 16px; color: var(--muted, #8a95a8); line-height: 1; }
+.dm-chat-body { flex: 1; min-width: 0; }
+.dm-chat-head-line { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.dm-chat-author { font-weight: 600; font-size: 14px; color: var(--text, #e9edf5); }
+.dm-chat-time { font-size: 11px; color: var(--dim, #5f6b80); }
+.dm-chat-del {
+  margin-left: auto;
+  background: transparent; border: none;
+  color: var(--dim, #5f6b80); cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 2px 4px; border-radius: 6px;
+  opacity: 0; transition: opacity .12s;
+}
+.dm-chat-msg:hover .dm-chat-del { opacity: 1; }
+.dm-chat-del:hover { color: var(--red, #ed4245); background: rgba(237, 66, 69, .12); }
+.dm-chat-text { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; line-height: 1.4; margin-top: 1px; }
+.dm-chat-text .c-emoji { width: 20px; height: 20px; vertical-align: -4px; }
+.dm-chat-mention { color: var(--blue, #5b8def); font-weight: 600; background: color-mix(in srgb, var(--blue, #5b8def) 16%, transparent); border-radius: 4px; padding: 0 3px; }
+
+/* Reply preview above a message's text. */
+.dm-chat-reply {
+  display: flex; align-items: baseline; gap: 5px;
+  margin: 1px 0 3px; padding: 2px 0 2px 8px;
+  border-left: 3px solid var(--stroke-2, rgba(255, 255, 255, .13));
+  font-size: 12px; line-height: 1.3; opacity: .9;
+}
+.dm-chat-reply-ico { width: 13px; height: 13px; flex: none; color: var(--muted, #8a95a8); transform: translateY(2px); }
+.dm-chat-reply-name { color: var(--blue, #5b8def); font-weight: 600; flex: none; }
+.dm-chat-reply-snip { color: var(--muted, #8a95a8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* "Replying to @name" bar above the input. */
+.dm-chat-replybar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px;
+  border-top: 1px solid var(--stroke, rgba(255, 255, 255, .07));
+  font-size: 13px; color: var(--muted, #8a95a8);
+  flex: none;
+}
+.dm-chat-replybar b { color: var(--text, #e9edf5); }
+.dm-chat-replybar button { margin-left: auto; background: transparent; border: none; color: var(--muted, #8a95a8); cursor: pointer; font-size: 12px; }
+.dm-chat-replybar button:hover { color: var(--text, #e9edf5); }
+
+/* Input row: pill with emoji button + textarea, round send button. */
+.dm-chat-form { display: flex; align-items: flex-end; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--stroke, rgba(255, 255, 255, .07)); flex: none; }
+.dm-chat-inputbar {
+  flex: 1; min-width: 0;
+  display: flex; align-items: flex-end; gap: 2px;
+  background: var(--inset, #0e131b);
+  border: 1px solid transparent;
+  border-radius: 20px;
+  padding: 2px 6px;
+}
+.dm-chat-inputbar:focus-within { border-color: var(--blue, #5b8def); }
+.dm-chat-input {
+  flex: 1; min-width: 0;
+  background: transparent; border: none; outline: none; resize: none;
+  color: var(--text, #e9edf5);
+  font: inherit; font-size: 14px; line-height: 1.4;
+  padding: 8px 4px; max-height: 120px;
+}
+.dm-chat-input::placeholder { color: var(--dim, #5f6b80); }
+.dm-chat-emoji-btn {
+  flex: none; width: 32px; height: 32px; padding: 0;
+  border-radius: 50%; background: transparent; border: none;
+  color: var(--muted, #8a95a8); font-size: 17px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.dm-chat-emoji-btn:hover { background: rgba(128, 128, 128, .16); color: var(--text, #e9edf5); }
+.dm-chat-send {
+  flex: none; width: 40px; height: 40px; padding: 0;
+  border-radius: 50%; border: none; background: var(--blue, #5b8def); color: #fff;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+}
+.dm-chat-send:hover { filter: brightness(1.08); }
+.dm-chat-send svg { width: 20px; height: 20px; }
+.dm-chat-login { display: block; text-align: center; padding: 14px; color: var(--blue, #5b8def); text-decoration: none; border-top: 1px solid var(--stroke, rgba(255, 255, 255, .07)); }
+
+/* Simple emoji palette popover. */
+.dm-chat-emoji-pop {
+  position: absolute;
+  z-index: 1300;
+  background: var(--panel-2, #1b212c);
+  border: 1px solid var(--stroke-2, rgba(255, 255, 255, .13));
+  border-radius: 12px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .45);
+  padding: 8px;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 2px;
+  width: 296px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.dm-chat-emoji-pop button {
+  background: transparent; border: none; cursor: pointer;
+  font-size: 20px; line-height: 1; padding: 5px; border-radius: 8px;
+}
+.dm-chat-emoji-pop button:hover { background: rgba(255, 255, 255, .08); }
+
+/* Mobile: full-screen sheet, slightly bigger send target. */
+@media (max-width: 720px) {
+  .dm-chat-msg { padding: 7px 6px; }
+  .dm-chat-emoji-pop { width: min(92vw, 296px); }
+}

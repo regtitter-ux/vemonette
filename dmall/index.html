@@ -9,6 +9,7 @@
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/dmall/order.css?v=48" />
   <link rel="stylesheet" href="/dmall/dmall.css?v=59" />
+  <link rel="stylesheet" href="/dmall/chat.css?v=1" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';
   </script>
@@ -50,6 +51,7 @@
   <header class="topbar">
     <a class="brand-sm" href="/"><img src="/assets/logo.png" alt="Vemoni" /><span>Vemoni</span></a>
     <div class="top-right">
+      <button class="dm-chat-btn" data-dm-chat-open title="Chat" aria-label="Chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5Z"/></svg><span class="dm-chat-dot" data-dm-chat-dot aria-hidden="true"></span></button>
       <button class="bal-pill" id="wallet-topup" title="Пополнить баланс" aria-label="Пополнить баланс"><b id="wallet-balance">$0.00</b><span class="wallet-plus" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></button>
       <div class="lang-switch" id="langSwitchApp"><button data-lang="ru">RU</button><button data-lang="en">EN</button></div>
       <div class="cab-menu">
@@ -352,6 +354,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
 <div id="toast" class="toast" hidden></div>
 <script src="/dmall/order.js?v=61"></script>
 <script src="/dmall/dmall.js?v=95"></script>
+<script src="/dmall/chat.js?v=1"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>
