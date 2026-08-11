@@ -159,13 +159,12 @@ h2{font-size:18px;margin-bottom:14px}
 
 @media (max-width:560px){.wrap{padding:20px 14px 50px}.card{padding:18px}}
 
-.bal-pill{display:inline-flex;align-items:center;gap:9px;background:transparent;border:1px solid var(--stroke-2);border-radius:999px;padding:4px 4px 4px 14px;font-weight:700}
-.bal-pill .muted{font-weight:500;font-size:12px}
+.bal-pill{display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--stroke-2);border-radius:999px;padding:6px 12px;font-weight:700;font-family:inherit;cursor:pointer;transition:background .15s,border-color .15s,transform .08s}
+.bal-pill:hover{background:rgba(255,255,255,.05);border-color:var(--blue)}
+.bal-pill:active{transform:scale(.98)}
 .bal-pill b{color:var(--text);font-size:14px;font-weight:700}
-.wallet-plus{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border-radius:50%;background:rgba(91,141,239,.16);border:0;color:var(--blue-2);transition:background .15s,color .15s,transform .08s}
-.wallet-plus svg{width:13px;height:13px;display:block}
-.wallet-plus:hover{background:rgba(91,141,239,.32);color:#fff}
-.wallet-plus:active{transform:scale(.94)}
+.wallet-plus{display:inline-flex;align-items:center;justify-content:center;color:var(--blue-2)}
+.wallet-plus svg{width:14px;height:14px;display:block}
 .pay-box{margin-top:14px;background:var(--panel-2);border:1px solid var(--stroke-2);border-radius:12px;padding:14px}
 
 .camp-ret{margin-top:6px}
@@ -259,7 +258,7 @@ h2{font-size:18px;margin-bottom:14px}
   .topbar{gap:12px;padding:12px 14px}
   .brand-sm{font-size:20px}
   .brand-sm img{width:28px;height:28px}
-  .bal-pill{padding:5px 8px 5px 12px;font-size:14px}
+  .bal-pill{padding:6px 11px;font-size:13.5px}
   /* account dropdown never exceeds the viewport, scrolls if tall */
   .nav-menu{width:min(100vw - 20px,262px);max-height:82vh;overflow-y:auto}
   .nm-items a,.nm-items .nav-logout{min-height:44px}
