@@ -526,12 +526,15 @@
     // Why not fully delivered (operator's RU reason), shown only when sent < requested.
     const reasonHtml = (done && sent < lim)
       ? '<div class="dm-run-reason">' + esc(dmT('why_incomplete')) + ' ' + esc(dmReason(run)) + '</div>' : '';
+    // Finished runs get a "Repeat" button → re-launches the same broadcast (same settings).
+    const repeatBtn = done
+      ? '<div class="camp-actions"><button class="btn-mini" data-run-repeat="' + esc(run.id) + '" title="' + esc(dmT('dm_repeat')) + '">↻ ' + esc(dmT('repeat_run')) + '</button></div>' : '';
     return '<div class="camp" data-run="' + esc(run.id) + '">' +
       '<div class="camp-head"><div><div class="camp-title">' + esc(title) + '</div><div class="camp-sub">' + esc(servers) + '</div></div>' +
       '<span class="camp-chips"><span class="chip ' + ch[0] + '" data-dm="' + ch[1] + '">status</span></span></div>' +
       '<div class="progress"><i style="width:' + pct + '%"></i></div>' +
       '<div class="camp-nums"><span>' + esc(dmT('sent_word')) + ' <b>' + sent.toLocaleString() + '</b> / ' + lim.toLocaleString() + '</span></div>' +
-      reasonHtml + stopBtn + '</div>';
+      reasonHtml + stopBtn + repeatBtn + '</div>';
   }
   function renderTasks() {
     const box = $('#dm-task-list'); if (!box) return;
@@ -550,6 +553,19 @@
     box.innerHTML = html;
     box.querySelectorAll('[data-pg]').forEach((b) => b.onclick = () => { const p = +b.dataset.pg; if (p >= 1 && p <= pages) { taskPage = p; renderTasks(); } });
     box.querySelectorAll('[data-run-stop]').forEach((b) => b.onclick = async () => { b.disabled = true; await dmApi('/order/dmall/op/runs/' + encodeURIComponent(b.dataset.runStop) + '/stop', { method: 'POST' }); setTimeout(loadTasks, 900); });
+    box.querySelectorAll('[data-run-repeat]').forEach((b) => b.onclick = async () => {
+      b.disabled = true;
+      const r = await dmApi('/order/dmall/op/runs/' + encodeURIComponent(b.dataset.runRepeat) + '/repeat', { method: 'POST' });
+      if (r.status === 402) { b.disabled = false; pushNotif(dmT('l_need_funds') + ' $' + (r.body && r.body.price != null ? r.body.price : '?') + ' · ' + dmT('l_balance') + ' $' + (r.body && r.body.balance != null ? r.body.balance : '?')); return; }
+      if (!r.ok || !r.body || !r.body.run) { b.disabled = false; pushNotif((r.body && r.body.error === 'no-stored-settings') ? dmT('repeat_unavail') : (dmT('l_run_err') + ' ' + ((r.body && (r.body.message || r.body.error)) || r.status))); return; }
+      const newId = r.body.run.id;
+      pushNotif(dmT('repeat_started') + ' #' + String(newId).slice(0, 8) + (r.body.charged ? ' · ' + dmT('l_charged') + ' $' + r.body.charged : ''));
+      dmActiveRun = newId; dmPollRun(newId);
+      // Jump to the Active tab so the new run is visible, then refresh.
+      taskFilter = 'active'; taskPage = 1;
+      $$('#dm-task-tabs button').forEach((x) => x.classList.toggle('active', x.dataset.dtaskt === 'active'));
+      setTimeout(loadTasks, 900);
+    });
     dmApplyLang();
   }
   async function loadTasks() {
@@ -773,7 +789,7 @@
       ak_unset:"not set — click “Generate new”", ak_confirm:"Generate a new key? The old one stops working immediately — update it in the external service.", ak_fail:"Failed:", ak_net:"Network unavailable", ak_copied:"Copied ✓", ak_copy:"Copy",
       reason_queue:"recipient queue exhausted — the server has fewer reachable members than requested", reason_bots:"ran out of sending bots", reason_stalled:"sending stalled", reason_mutual:"no mutual server to DM these members", just_now:"just now", min_ago:"min ago", hr_ago:"h ago", day_ago:"d ago", active_hint:"Active broadcasts: 1 — you can start another on a different server",
       st_dm:"DM BROADCAST", bots_on_server:"Bots on server", dm_broadcast:"DM broadcast", running:"Running", sending:"Sending messages",
-      dm_active:"Active", dm_paused:"Paused", dm_done:"Completed", dm_error:"Error", dm_tab_active:"Active", dm_tab_paused:"Paused", dm_tab_done:"Completed", sent_word:"Sent", dm_pause:"Pause", dm_resume:"Resume", dm_repeat:"Repeat with the same settings",
+      dm_active:"Active", dm_paused:"Paused", dm_done:"Completed", dm_error:"Error", dm_tab_active:"Active", dm_tab_paused:"Paused", dm_tab_done:"Completed", sent_word:"Sent", dm_pause:"Pause", dm_resume:"Resume", dm_repeat:"Repeat with the same settings", repeat_run:"Repeat", repeat_unavail:"Settings for this broadcast aren't available to repeat", repeat_started:"Repeat started:",
       note1:"From the server: 90 119 · queued 87 420", route_from:"From:", route_to:"To:", route_to1:"To #1:", route_to2:"To #2:", stop:"Stop",
       st_err:"ERROR", bots_k:"Bots", done:"Done", note3:"From the server: 90 115 · queued 87 416", msg_short:"Msg.", retry:"Retry", st_stop:"STOPPED",
       err1:"Failed to add bots to the server: no permissions or wrong oauth_channel_id. Check bot-add permissions and OAuth.",
@@ -827,7 +843,7 @@
       ak_unset:"не задан — нажмите «Сгенерировать новый»", ak_confirm:"Сгенерировать новый ключ? Старый перестанет работать сразу — обновите его во внешнем сервисе.", ak_fail:"Не удалось:", ak_net:"Сеть недоступна", ak_copied:"Скопировано ✓", ak_copy:"Копировать",
       reason_queue:"очередь получателей исчерпана — на сервере меньше доступных для ЛС людей, чем заказано", reason_bots:"закончились боты-отправители", reason_stalled:"отправка застопорилась", reason_mutual:"нет общего сервера, чтобы написать этим участникам", just_now:"только что", min_ago:"мин назад", hr_ago:"ч назад", day_ago:"дн назад", active_hint:"Активных рассылок: 1 — можно запустить ещё на другой сервер",
       st_dm:"РАССЫЛКА В ЛС", bots_on_server:"Боты на сервере", dm_broadcast:"Рассылка в ЛС", running:"Идёт", sending:"Отправка сообщений",
-      dm_active:"Активна", dm_paused:"Приостановлена", dm_done:"Завершена", dm_error:"Ошибка", dm_tab_active:"Активные", dm_tab_paused:"На паузе", dm_tab_done:"Завершённые", sent_word:"Отправлено", dm_pause:"Пауза", dm_resume:"Возобновить", dm_repeat:"Повторить с теми же настройками",
+      dm_active:"Активна", dm_paused:"Приостановлена", dm_done:"Завершена", dm_error:"Ошибка", dm_tab_active:"Активные", dm_tab_paused:"На паузе", dm_tab_done:"Завершённые", sent_word:"Отправлено", dm_pause:"Пауза", dm_resume:"Возобновить", dm_repeat:"Повторить с теми же настройками", repeat_run:"Повторить", repeat_unavail:"Настройки этой рассылки недоступны для повтора", repeat_started:"Повтор запущен:",
       note1:"С сервера: 90 119 · в очереди 87 420", route_from:"Откуда:", route_to:"Куда:", route_to1:"Куда №1:", route_to2:"Куда №2:", stop:"Стоп",
       st_err:"ОШИБКА", bots_k:"Боты", done:"Готово", note3:"С сервера: 90 115 · в очереди 87 416", msg_short:"Сообщ.", retry:"Повторить", st_stop:"ОСТАНОВЛЕНА",
       err1:"Не удалось добавить ботов на сервер: нет прав или неверный oauth_channel_id. Проверьте права на добавление ботов и OAuth.",
