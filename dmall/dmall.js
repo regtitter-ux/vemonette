@@ -284,6 +284,7 @@
     dmall.classList.remove('picking');
     if (bell) bell.hidden = false;
     updateLaunchPrice();
+    taskPage = 1; renderTasks();   // re-scope the Active/Paused/Completed tabs to the newly picked server
     window.scrollTo(0, 0);
   }
   if (dmGrid) dmGrid.addEventListener('click', async (e) => {
@@ -853,7 +854,16 @@
     const box = $('#dm-task-list'); if (!box) return;
     const buckets = { active: [], paused: [], done: [] };
     const seenRun = new Set();   // de-dupe by run id (optimistic + reconciled cards could coexist briefly)
-    (Array.isArray(taskRuns) ? taskRuns : []).forEach((r) => { if (r && r.id && !seenRun.has(r.id)) { seenRun.add(r.id); buckets[runGroup(r.status)].push(r); } });
+    // Orders are per-server: this panel only ever shows while a server is selected, so scope the
+    // tabs (Active/Paused/Completed) strictly to that server — a run created for another server
+    // never leaks in (no more confusing cross-server orders).
+    const curSrv = String(dmServerId || '');
+    const runSrv = (r) => String((Array.isArray(r.server_ids) && r.server_ids[0]) || (Array.isArray(r.servers) && r.servers[0] && r.servers[0].id) || '');
+    (Array.isArray(taskRuns) ? taskRuns : []).forEach((r) => {
+      if (!r || !r.id || seenRun.has(r.id)) return;
+      if (curSrv && runSrv(r) !== curSrv) return;   // strictly this server's orders only
+      seenRun.add(r.id); buckets[runGroup(r.status)].push(r);
+    });
     const ca = $('#dm-tc-active'); if (ca) ca.textContent = buckets.active.length;
     const cp = $('#dm-tc-paused'); if (cp) cp.textContent = buckets.paused.length;
     const cd = $('#dm-tc-done'); if (cd) cd.textContent = buckets.done.length;
