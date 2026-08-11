@@ -514,11 +514,29 @@
   function runChip(s) {
     return ({ running: ['green', 'dm_active'], queued: ['green', 'dm_active'], completed: ['blue', 'dm_done'], failed: ['red', 'dm_error'], stopped: ['amber', 'dm_paused'], paused: ['amber', 'dm_paused'] })[s] || ['green', 'dm_active'];
   }
+  // A round server avatar (icon) or a letter tile when there's no icon.
+  function dmSrvAv(s) {
+    const nm = s.name || s.id || '?';
+    const letter = (String(nm).trim()[0] || '?').toUpperCase();
+    return s.icon
+      ? '<span class="dm-flow-av"><img src="' + esc(s.icon) + '" alt="" loading="lazy"/></span>'
+      : '<span class="dm-flow-av dm-flow-av-txt">' + esc(letter) + '</span>';
+  }
+  // The "from → to" row: source server(s) with avatar + name, then the destination server
+  // (name + invite, no avatar — our bot isn't there so we can't fetch its icon).
+  function dmFlowRow(run) {
+    const src = (Array.isArray(run.servers) && run.servers.length)
+      ? run.servers
+      : (Array.isArray(run.server_ids) ? run.server_ids.map((id) => ({ id: id, name: '', icon: null })) : []);
+    const from = src.map((s) => '<span class="dm-flow-srv" title="' + esc(s.name || s.id) + '">' + dmSrvAv(s) + '<span class="dm-flow-name">' + esc(s.name || s.id) + '</span></span>').join('<span class="dm-flow-plus">+</span>');
+    const d = run.destination;
+    const to = d ? '<span class="dm-flow-arrow">→</span><span class="dm-flow-srv dm-flow-dest" title="' + esc((d.name || '') + ' ' + (d.url || '')) + '"><span class="dm-flow-name">' + esc(d.name || d.url || '') + '</span>' + (d.url ? '<span class="dm-flow-link">' + esc(String(d.url).replace(/^https?:\/\//, '')) + '</span>' : '') + '</span>' : '';
+    return (from || to) ? '<div class="dm-flow">' + from + to + '</div>' : '';
+  }
   function runCard(run) {
     const sent = Number(run.messages_sent || 0), lim = Number(run.message_limit || 0);
     const pct = lim > 0 ? Math.min(100, Math.round((sent / lim) * 100)) : (run.status === 'completed' ? 100 : 0);
     const ch = runChip(run.status);
-    const servers = Array.isArray(run.server_ids) ? run.server_ids.join(', ') : '';
     const title = run.title || ('#' + String(run.id || '').slice(0, 8));
     const stopBtn = (run.status === 'running' || run.status === 'queued')
       ? '<div class="camp-actions"><button class="btn-mini on" data-run-stop="' + esc(run.id) + '">' + esc(dmT('dm_pause')) + '</button></div>' : '';
@@ -530,7 +548,7 @@
     const repeatBtn = done
       ? '<div class="camp-actions dm-actions-right"><button class="btn-mini" data-run-repeat="' + esc(run.id) + '" title="' + esc(dmT('dm_repeat')) + '">↻ ' + esc(dmT('repeat_run')) + '</button></div>' : '';
     return '<div class="camp" data-run="' + esc(run.id) + '">' +
-      '<div class="camp-head"><div><div class="camp-title">' + esc(title) + '</div><div class="camp-sub">' + esc(servers) + '</div></div>' +
+      '<div class="camp-head"><div class="camp-headmain"><div class="camp-title">' + esc(title) + '</div>' + dmFlowRow(run) + '</div>' +
       '<span class="camp-chips"><span class="chip ' + ch[0] + '" data-dm="' + ch[1] + '">status</span></span></div>' +
       '<div class="progress"><i style="width:' + pct + '%"></i></div>' +
       '<div class="camp-nums"><span>' + esc(dmT('sent_word')) + ' <b>' + sent.toLocaleString() + '</b> / ' + lim.toLocaleString() + '</span></div>' +
@@ -565,7 +583,7 @@
         const newId = r.body.run.id;
         // Show the new run in "Active" IMMEDIATELY (optimistic), copying the source run's numbers.
         const src = (taskRuns || []).find((x) => x && x.id === srcId) || {};
-        taskRuns = [{ id: newId, status: 'queued', messages_sent: 0, message_limit: src.message_limit || 0, server_ids: src.server_ids || [], title: src.title }].concat(taskRuns || []);
+        taskRuns = [{ id: newId, status: 'queued', messages_sent: 0, message_limit: src.message_limit || 0, server_ids: src.server_ids || [], servers: src.servers || [], destination: src.destination || null, title: src.title }].concat(taskRuns || []);
         dmSeenStatus[newId] = 'queued';
         taskFilter = 'active'; taskPage = 1;
         $$('#dm-task-tabs button').forEach((x) => x.classList.toggle('active', x.dataset.dtaskt === 'active'));
