@@ -17,9 +17,11 @@
   const lang = () => { try { const l = localStorage.getItem('vemoni_lang'); if (l === 'en' || l === 'ru') return l; } catch (_) {} return (navigator.language || '').startsWith('en') ? 'en' : 'ru'; };
   const TXT = {
     en: { title: 'Chat', empty: 'No messages yet. Say hi 👋', placeholder: 'Message…', login: 'Sign in to chat', reply_to: 'Replying to', cancel: 'cancel', del_confirm: 'Delete this message?', failed: 'Something went wrong', member: 'member', del: 'Delete', attach: 'Attach a file', too_big: 'File is too large', photo: 'Photo', video: 'Video', file: 'File',
-      p_stickers: 'Stickers', p_emoji: 'Emoji', p_search: 'Search…', p_fav: 'Favorites', p_recent: 'Recent', p_favorite: 'Favorite', p_empty: 'Nothing found' },
+      p_stickers: 'Stickers', p_emoji: 'Emoji', p_search: 'Search…', p_fav: 'Favorites', p_recent: 'Recent', p_favorite: 'Favorite', p_empty: 'Nothing found',
+      typing_one: '{name} is typing…', typing_many: 'Several users are typing…' },
     ru: { title: 'Чат', empty: 'Пока пусто. Поздоровайтесь 👋', placeholder: 'Сообщение…', login: 'Войдите, чтобы писать', reply_to: 'Ответ', cancel: 'отмена', del_confirm: 'Удалить сообщение?', failed: 'Что-то пошло не так', member: 'участник', del: 'Удалить', attach: 'Прикрепить файл', too_big: 'Файл слишком большой', photo: 'Фото', video: 'Видео', file: 'Файл',
-      p_stickers: 'Стикеры', p_emoji: 'Эмодзи', p_search: 'Поиск…', p_fav: 'Избранное', p_recent: 'Недавние', p_favorite: 'В избранное', p_empty: 'Ничего не найдено' },
+      p_stickers: 'Стикеры', p_emoji: 'Эмодзи', p_search: 'Поиск…', p_fav: 'Избранное', p_recent: 'Недавние', p_favorite: 'В избранное', p_empty: 'Ничего не найдено',
+      typing_one: '{name} печатает…', typing_many: 'Несколько человек печатают…' },
   };
   const t = (k) => (TXT[lang()] && TXT[lang()][k]) || TXT.en[k] || k;
 
@@ -147,18 +149,65 @@
     if (el) el.remove();
   }
 
-  /* --------------------------- SSE --------------------------- */
+  /* --------------------------- realtime (SSE + poll fallback) --------------------------- */
+  // Apply a fresh full list: append messages we don't have yet, drop ones that vanished.
+  function applyList(list) {
+    if (!Array.isArray(list)) return;
+    const have = new Set(messages.map((m) => m.id));
+    for (const m of list) if (m && m.id && !have.has(m.id)) onAdd(m);
+    // Reflect deletions made elsewhere (only when the window is open).
+    if (overlay) {
+      const ids = new Set(list.map((m) => m && m.id));
+      for (const m of messages.slice()) if (!ids.has(m.id)) onDel(m.id);
+    }
+  }
+  let pollT = null;
+  async function pollOnce() {
+    try { const r = await fetch(base() + '/order/dmall/chat/list'); const d = await r.json(); if (d && Array.isArray(d.messages)) applyList(d.messages); } catch (_) {}
+  }
+  function startPoll() { if (pollT) return; pollT = setInterval(pollOnce, 5000); }
+  function stopPoll() { if (pollT) { clearInterval(pollT); pollT = null; } }
   function connect() {
     if (es) return;
-    try { es = new EventSource(base() + '/order/dmall/chat/stream'); } catch (_) { return; }
+    try { es = new EventSource(base() + '/order/dmall/chat/stream'); } catch (_) { return startPoll(); }
+    es.onopen = () => stopPoll();   // stream is live → no need to poll
     es.onmessage = (e) => {
       let d; try { d = JSON.parse(e.data); } catch (_) { return; }
       if (d.type === 'init') {
-        messages = Array.isArray(d.messages) ? d.messages : [];
+        applyList(Array.isArray(d.messages) ? d.messages : []);
         if (overlay) { renderList(); markSeen(); } else { recomputeUnread(); }
       } else if (d.type === 'add') { onAdd(d.message); }
       else if (d.type === 'del') { onDel(d.id); }
+      else if (d.type === 'typing') { onTyping(d.userId, d.name); }
     };
+    es.onerror = () => startPoll();   // stream blocked/buffered (e.g. a proxy) → poll as fallback
+    // Whenever the tab becomes visible again, pull once immediately — never wait for a refresh.
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) pollOnce(); });
+    window.addEventListener('focus', pollOnce);
+  }
+
+  /* --------------------------- typing indicator --------------------------- */
+  const typers = {};   // userId → { name, until }
+  let lastTypingSent = 0, typingTimer = null;
+  function emitTyping() {
+    const now = Date.now();
+    if (now - lastTypingSent < 2500) return;   // throttle: at most once per 2.5s while typing
+    lastTypingSent = now;
+    api('/order/dmall/chat/typing', { method: 'POST', body: {} });
+  }
+  function onTyping(userId, name) {
+    if (!userId || String(userId) === me.id) return;
+    typers[userId] = { name: name || t('member'), until: Date.now() + 4000 };
+    renderTyping();
+    if (!typingTimer) typingTimer = setInterval(() => { const before = Object.keys(typers).length; const now = Date.now(); for (const id in typers) if (typers[id].until <= now) delete typers[id]; if (Object.keys(typers).length !== before) renderTyping(); if (!Object.keys(typers).length) { clearInterval(typingTimer); typingTimer = null; } }, 1000);
+  }
+  function renderTyping() {
+    const el = overlay && $('[data-typing]', overlay); if (!el) return;
+    const now = Date.now();
+    const names = Object.values(typers).filter((x) => x.until > now).map((x) => x.name);
+    if (!names.length) { el.hidden = true; el.textContent = ''; return; }
+    el.hidden = false;
+    el.textContent = names.length === 1 ? t('typing_one').replace('{name}', names[0]) : t('typing_many');
   }
 
   /* --------------------------- reply --------------------------- */
@@ -317,15 +366,47 @@
     return { toggle, close, el, destroy: () => { if (io) io.disconnect(); el.remove(); } };
   }
 
-  /* --------------------------- textarea caret insert --------------------------- */
-  function insertAtCaret(input, str) {
-    const s = input.selectionStart == null ? input.value.length : input.selectionStart;
-    const e = input.selectionEnd == null ? s : input.selectionEnd;
-    input.value = input.value.slice(0, s) + str + input.value.slice(e);
-    const pos = s + str.length; input.selectionStart = input.selectionEnd = pos;
-    input.focus(); autosize(input);
+  /* --------------------------- rich composer (contenteditable) --------------------------- */
+  // The input is a contenteditable so custom emoji render as inline images (like Discord),
+  // not as their <:name:id> token text. On send we serialize the DOM back to tokens.
+  function isEmptyComposer(el) { return !el.textContent.trim() && !el.querySelector('img'); }
+  function refreshEmpty(el) { el.classList.toggle('empty', isEmptyComposer(el)); }
+  function emojiChip(em) {
+    const img = document.createElement('img');
+    img.className = 'ce-emoji';
+    img.src = CDN + '/emojis/' + em.id + '.' + (em.animated ? 'gif' : 'png') + '?size=44';
+    img.alt = ':' + em.name + ':';
+    img.dataset.token = '<' + (em.animated ? 'a' : '') + ':' + em.name + ':' + em.id + '>';
+    return img;
   }
-  function autosize(el) { el.style.height = 'auto'; el.style.height = Math.min(120, el.scrollHeight) + 'px'; }
+  function insertNodeAtCaret(input, node) {
+    input.focus();
+    const sel = window.getSelection();
+    let range;
+    if (sel && sel.rangeCount && input.contains(sel.anchorNode)) { range = sel.getRangeAt(0); range.deleteContents(); }
+    else { range = document.createRange(); range.selectNodeContents(input); range.collapse(false); }
+    range.insertNode(node);
+    range.setStartAfter(node); range.collapse(true);
+    sel.removeAllRanges(); sel.addRange(range);
+    refreshEmpty(input);
+  }
+  function insertTextAtCaret(input, text) { insertNodeAtCaret(input, document.createTextNode(text)); }
+  // Serialize the composer DOM → message text: text nodes as-is, emoji imgs → token, <br>/<div> → newline.
+  function readComposer(input) {
+    let out = '';
+    const walk = (node) => {
+      for (const n of node.childNodes) {
+        if (n.nodeType === 3) out += n.nodeValue;
+        else if (n.nodeName === 'IMG') out += n.dataset.token || '';
+        else if (n.nodeName === 'BR') out += '\n';
+        else if (n.nodeName === 'DIV' || n.nodeName === 'P') { if (out && !out.endsWith('\n')) out += '\n'; walk(n); }
+        else walk(n);
+      }
+    };
+    walk(input);
+    return out;
+  }
+  function clearComposer(input) { input.innerHTML = ''; refreshEmpty(input); }
 
   /* --------------------------- lightbox --------------------------- */
   function openLightbox(src) {
@@ -354,13 +435,14 @@
       '<div class="dm-chat-box">' +
         '<div class="dm-chat-head"><b>' + esc(t('title')) + '</b><button class="dm-chat-close" type="button" data-close aria-label="close">✕</button></div>' +
         '<div class="dm-chat-list"></div>' +
+        '<div class="dm-chat-typing" data-typing hidden></div>' +
         '<div class="dm-chat-replybar" hidden>' + esc(t('reply_to')) + ' <b data-reply-name></b><button type="button" data-reply-cancel>' + esc(t('cancel')) + '</button></div>' +
         (me.authed
           ? '<form class="dm-chat-form">' +
               '<input type="file" data-file multiple hidden>' +
               '<div class="dm-chat-inputbar">' +
                 '<button type="button" class="dm-chat-tool" data-attach title="' + esc(t('attach')) + '">' + CLIP_ICO + '</button>' +
-                '<textarea class="dm-chat-input" rows="1" placeholder="' + esc(t('placeholder')) + '"></textarea>' +
+                '<div class="dm-chat-input empty" contenteditable="true" role="textbox" data-placeholder="' + esc(t('placeholder')) + '"></div>' +
                 '<button type="button" class="dm-chat-tool" data-ep-open="sticker" title="' + esc(t('p_stickers')) + '">' + STICKER_ICO + '</button>' +
                 '<button type="button" class="dm-chat-tool" data-ep-open="emoji" title="' + esc(t('p_emoji')) + '">' + EMOJI_ICO + '</button>' +
               '</div>' +
@@ -372,13 +454,14 @@
 
     renderList();
     markSeen();
+    renderTyping();
 
     const input = $('.dm-chat-input', overlay);
     const form = $('.dm-chat-form', overlay);
     const fileInput = $('[data-file]', overlay);
 
     picker = createPicker({
-      onEmoji: (em) => { if (input) insertAtCaret(input, '<' + (em.animated ? 'a' : '') + ':' + em.name + ':' + em.id + '>'); },
+      onEmoji: (em) => { if (input) insertNodeAtCaret(input, emojiChip(em)); },
       onSticker: async (stk) => { if (await sendText('[[sticker:' + stk.id + ':' + stk.format + ']]')) setReply(null); },
     });
 
@@ -400,24 +483,27 @@
     if (fileInput) fileInput.addEventListener('change', async () => { const files = [...fileInput.files]; fileInput.value = ''; for (const f of files) await uploadAndSend(f); });
 
     if (input) {
-      input.addEventListener('input', () => autosize(input));
-      input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); } });
-      // Ctrl+V of a file/screenshot → upload it (no VIP gate).
+      input.addEventListener('input', () => { refreshEmpty(input); if (!isEmptyComposer(input)) emitTyping(); });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+        else if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); insertNodeAtCaret(input, document.createElement('br')); }
+      });
+      // Paste: files/screenshots → upload (no VIP gate); plain text → insert as text (strip rich HTML).
       input.addEventListener('paste', (e) => {
         const dt = e.clipboardData; if (!dt) return;
         const files = [...(dt.files || [])];
         if (!files.length && dt.items) for (const it of dt.items) if (it.kind === 'file') { const f = it.getAsFile(); if (f) files.push(f); }
-        if (!files.length) return;
+        if (files.length) { e.preventDefault(); (async () => { for (const f of files) await uploadAndSend(f); })(); return; }
         e.preventDefault();
-        (async () => { for (const f of files) await uploadAndSend(f); })();
+        insertTextAtCaret(input, dt.getData('text/plain') || '');
       });
       input.focus();
     }
     if (form) form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const text = (input.value || '').trim();
+      const text = readComposer(input).trim();
       if (!text) return;
-      if (await sendText(text)) { input.value = ''; autosize(input); setReply(null); }
+      if (await sendText(text)) { clearComposer(input); setReply(null); }
     });
   }
 

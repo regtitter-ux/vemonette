@@ -165,17 +165,22 @@
   border-radius: 10px;
   padding: 3px 5px;
 }
+/* contenteditable composer — custom emoji render as inline images (not token text). */
 .dm-chat-input {
   flex: 1; min-width: 0;
-  background: transparent; border: none; outline: none; resize: none;
+  background: transparent; border: none; outline: none;
   color: var(--text, #e9edf5);
-  font: inherit; font-size: 14px; line-height: 1.4;
-  padding: 7px 4px; max-height: 120px;
+  font: inherit; font-size: 14px; line-height: 1.5;
+  padding: 7px 4px; max-height: 120px; overflow-y: auto;
+  white-space: pre-wrap; overflow-wrap: anywhere; cursor: text;
 }
-.dm-chat-input::placeholder { color: var(--dim, #5f6b80); }
-/* Kill the page-wide textarea focus ring/glow (order.css :focus-visible outline + :focus box-shadow). */
+.dm-chat-input.empty:before { content: attr(data-placeholder); color: var(--dim, #5f6b80); pointer-events: none; }
+.dm-chat-input .ce-emoji { width: 22px; height: 22px; object-fit: contain; vertical-align: -5px; margin: 0 1px; }
+/* Kill the page-wide focus ring/glow (order.css :focus-visible outline + :focus box-shadow). */
 .dm-chat-inputbar .dm-chat-input:focus,
 .dm-chat-inputbar .dm-chat-input:focus-visible { outline: none; box-shadow: none; }
+/* "X is typing…" line above the input. */
+.dm-chat-typing { flex: none; padding: 2px 16px 4px; font-size: 12px; color: var(--muted, #8a95a8); font-style: italic; }
 /* Tool icons inside the pill — transparent circles. */
 .dm-chat-tool {
   flex: none; width: 34px; height: 34px; padding: 0;
