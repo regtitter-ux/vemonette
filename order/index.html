@@ -266,7 +266,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
           <div class="dm-quick"><button data-amt="100">100</button><button data-amt="500">500</button><button data-amt="1000">1 000</button><button data-amt="5000">5 000</button><button data-amt="10000">10 000</button></div>
         </div>
         <div class="dm-summary">
-          <div class="dm-sum-top" data-dm="sum_total">Total messages: 1 000</div>
+          <div class="dm-sum-top"><span data-dm="sum_total">Total messages:</span> <b id="dm-sum-count">1000</b></div>
           <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_server">Server:</span> <b id="dm-sum-server">—</b></div>
           <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_exclude">Member exclusion:</span> <b data-dm="not_set">not set</b></div>
           <div class="dm-sum-row"><span class="dm-sum-key" data-dm="sum_aud">Audience:</span> <b data-dm="aud_all">All members</b></div>
@@ -316,7 +316,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
 
 <div id="toast" class="toast" hidden></div>
 <script src="/order/order.js?v=60"></script>
-<script src="/order/dmall.js?v=60"></script>
+<script src="/order/dmall.js?v=61"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>
