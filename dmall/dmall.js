@@ -141,6 +141,8 @@
     const r = await dmApi('/order/dmall/lots');
     if (r.ok && r.body && r.body.serviceFeePer1k != null) dmServiceFee = Number(r.body.serviceFeePer1k) || 1;
     dmLots = (r.ok && r.body && Array.isArray(r.body.lots)) ? r.body.lots : [];
+    // Seed the shared availability status carried per lot (false = a check found it unavailable).
+    dmLots.forEach((l) => dmApplyAvail(l.serverId, l.available));
     renderLots(dmLots);
   }
   // Toggle a lot's privacy (private = visible only to its owner).
@@ -182,6 +184,22 @@
       '<div class="dmc-row-sub">' + esc(cabDate(e.ts)) + ' · ' + dmT('cab_lot_income') + '</div></div></div>' +
       '<div class="dmc-row-r"><div class="dmc-amt ' + cls + '">' + sign + '$' + (Number(e.amount) || 0).toFixed(2) + '</div></div></div>';
   }
+  // Cabinet history/journal: 10 rows per page with prev/next (reuses the tasks pager styles).
+  const DMC_PAGE = 10;
+  let dmcOrders = [], dmcEarn = [], dmcOrdersPage = 1, dmcEarnPage = 1;
+  function dmcRenderPaged(el, rows, rowFn, page, emptyDm) {
+    if (!el) return;
+    if (!rows.length) { el.innerHTML = '<div class="dmc-empty" data-dm="' + emptyDm + '">—</div>'; return; }
+    const pages = Math.max(1, Math.ceil(rows.length / DMC_PAGE));
+    const p = Math.min(Math.max(1, page), pages);
+    let html = rows.slice((p - 1) * DMC_PAGE, p * DMC_PAGE).map(rowFn).join('');
+    if (pages > 1) html += '<div class="dm-pager"><button class="cp-nav" data-pg="' + (p - 1) + '"' + (p <= 1 ? ' disabled' : '') + '>‹</button><span class="cp-info">' + p + ' / ' + pages + '</span><button class="cp-nav" data-pg="' + (p + 1) + '"' + (p >= pages ? ' disabled' : '') + '>›</button></div>';
+    el.innerHTML = html;
+  }
+  function renderCabOrders() { dmcRenderPaged($('#dmc-orders'), dmcOrders, cabOrderRow, dmcOrdersPage, 'cab_empty_orders'); dmApplyLang(); }
+  function renderCabEarn() { dmcRenderPaged($('#dmc-earnings'), dmcEarn, cabEarnRow, dmcEarnPage, 'cab_empty_earn'); dmApplyLang(); }
+  { const ob = $('#dmc-orders'); if (ob) ob.addEventListener('click', (e) => { const b = e.target.closest('[data-pg]'); if (b) { const n = +b.dataset.pg; if (n >= 1) { dmcOrdersPage = n; renderCabOrders(); } } }); }
+  { const eb = $('#dmc-earnings'); if (eb) eb.addEventListener('click', (e) => { const b = e.target.closest('[data-pg]'); if (b) { const n = +b.dataset.pg; if (n >= 1) { dmcEarnPage = n; renderCabEarn(); } } }); }
   async function loadCabinet() {
     const r = await dmApi('/order/dmall/cabinet');
     const d = (r.ok && r.body) ? r.body : { stats: {}, orders: [], earnings: [] };
@@ -192,11 +210,8 @@
     setv('#dmc-runs', (Number(s.runs) || 0).toLocaleString());
     setv('#dmc-earn', '$' + (Number(s.earnings) || 0).toFixed(2));
     setv('#dmc-balance', '$' + (Number(s.balance) || 0).toFixed(2));
-    const ob = $('#dmc-orders');
-    if (ob) { const rows = d.orders || []; ob.innerHTML = rows.length ? rows.map(cabOrderRow).join('') : '<div class="dmc-empty" data-dm="cab_empty_orders">No orders yet.</div>'; }
-    const eb = $('#dmc-earnings');
-    if (eb) { const rows = d.earnings || []; eb.innerHTML = rows.length ? rows.map(cabEarnRow).join('') : '<div class="dmc-empty" data-dm="cab_empty_earn">No earnings yet.</div>'; }
-    dmApplyLang();
+    dmcOrders = d.orders || []; dmcEarn = d.earnings || []; dmcOrdersPage = 1; dmcEarnPage = 1;
+    renderCabOrders(); renderCabEarn();
   }
 
   function closeLotMenus() {
@@ -221,9 +236,25 @@
   // (returns true when the check itself can't be completed).
   async function dmCheckServer(gid) {
     if (!gid) return true;
-    const r = await dmApi('/order/dmall/op/servers/' + encodeURIComponent(gid) + '/bots-pool');
-    if (!r.ok || !r.body || r.body.success === false) return true;
-    return (Number(r.body.bots_on_server) || 0) > 0;
+    // Runs the check server-side: it stores the result and broadcasts any change to ALL users.
+    const r = await dmApi('/order/dmall/server-check', { method: 'POST', body: { gid } });
+    if (!r.ok || !r.body) return true;   // couldn't check → don't block
+    return r.body.available !== false;
+  }
+  // Apply a shared availability signal to the local set (+ re-render the picker if it's open).
+  function dmApplyAvail(gid, available) { const g = String(gid || ''); if (available === false) dmUnavail.add(g); else dmUnavail.delete(g); }
+  function dmRenderIfPicking() { if (dmall.classList.contains('picking')) renderLots(dmLots); }
+  function dmApplyStatusMap(map) { if (!map) return; Object.entries(map).forEach(([g, a]) => dmApplyAvail(g, a)); dmRenderIfPicking(); }
+  // Live status: subscribe to the shared availability stream so a change (available ⇄ unavailable)
+  // made by anyone shows up here instantly; fall back to polling if the stream can't connect.
+  let dmPollT;
+  function dmStatusPoll() { if (dmPollT) return; dmPollT = setInterval(async () => { try { const r = await dmApi('/order/dmall/statuses'); if (r.ok && r.body && r.body.statuses) dmApplyStatusMap(r.body.statuses); } catch (_) {} }, 15000); }
+  function dmStatusStream() {
+    const base = window.__VEMONI_API_BASE__ || '';
+    let es; try { es = new EventSource(base + '/order/dmall/status-stream'); } catch (_) { dmStatusPoll(); return; }
+    es.addEventListener('snapshot', (e) => { try { dmApplyStatusMap(JSON.parse(e.data)); } catch (_) {} });
+    es.onmessage = (e) => { try { const d = JSON.parse(e.data); if (d && d.gid !== undefined) { dmApplyAvail(d.gid, d.available); dmRenderIfPicking(); } } catch (_) {} };
+    es.onerror = () => { dmStatusPoll(); };   // stream down → poll (EventSource also auto-reconnects)
   }
   function dmSelectServer(card) {
     dmServer = card.dataset.name || '';
@@ -1151,5 +1182,6 @@
     const dmBtn = modebar.querySelector('.dm-mode[data-mode="dmall"]');
     if (dmBtn && dmall.hidden) dmBtn.click(); else loadLots();
   } else { loadLots(); }
+  dmStatusStream();   // live shared server-availability updates
   dmReady = true;   // from here on, user edits show the "settings saved" toast
 })();
