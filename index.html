@@ -21,13 +21,13 @@
     <div class="nav-inner">
       <a class="brand" href="#top">
         <img class="brand-mark" src="assets/logo.png" alt="Vemoni logo" />
-        <span class="brand-name">DMALL</span>
+        <span class="brand-name">Vemoni</span>
       </a>
       <nav class="nav-links">
         <a href="#what" data-i18n="nav_what">What it is</a>
         <a href="#how" data-i18n="nav_how">How it works</a>
         <a href="#numbers" data-i18n="nav_numbers">Numbers</a>
-        <a href="#sell" data-i18n="nav_sell">Sell your server</a>
+        <a href="#sell" data-i18n="nav_sell">For DMALL sellers</a>
         <a href="#faq" data-i18n="nav_faq">FAQ</a>
       </nav>
       <div class="nav-actions">
@@ -82,20 +82,9 @@
           </div>
         </div>
 
-        <!-- Hero visual: a broadcast delivering -->
-        <div class="bcast" aria-hidden="true">
-          <div class="bcast-card">
-            <div class="bcast-head">
-              <span class="bcast-av"><img src="assets/logo.png" alt="" /></span>
-              <div class="bcast-h-txt"><b>Broadcast</b><span data-i18n="bc_live">live · sending</span></div>
-              <span class="bcast-chip" data-i18n="bc_active">Active</span>
-            </div>
-            <div class="bcast-msg">🎉 <b data-i18n="bc_msg_h">You're invited!</b><br /><span data-i18n="bc_msg_p">Join the drop and grab your role → discord.gg/vemoni</span></div>
-            <div class="bcast-bar"><i id="bcastBar"></i></div>
-            <div class="bcast-foot"><span data-i18n="bc_delivered">Delivered</span> <b><span id="bcastNum">0</span> / 1 000</b></div>
-          </div>
-          <div class="bcast-dm bcast-dm-1">✅ <span data-i18n="bc_dm">Delivered</span></div>
-          <div class="bcast-dm bcast-dm-2">✅ <span data-i18n="bc_dm">Delivered</span></div>
+        <!-- Hero visual: rotating globe — broadcasts fly out to catalog servers -->
+        <div class="viz" id="viz" aria-hidden="true">
+          <canvas id="flow"></canvas>
         </div>
       </div>
     </section>
@@ -107,8 +96,8 @@
         <p data-i18n="what_p1">
           DMALL is a marketplace for Discord broadcasts. Buyers send a message straight to the
           members of a chosen server; server owners list their community as a lot and earn on
-          every delivery. Custom emoji, stickers and attachments are all supported — with buyer
-          protection built in: you pay per delivered message, and anything undelivered comes back.
+          every delivery. Custom emoji, text formatting and attachments are all supported — with
+          buyer protection built in: you pay only for delivered messages.
         </p>
       </div>
     </section>
@@ -123,7 +112,7 @@
         <div class="step">
           <span class="step-n">1</span>
           <h3 data-i18n="step1_h3">Pick a server</h3>
-          <p data-i18n="step1_p">Choose a community from the catalog. Every card is pre-checked so you only enter servers where broadcasts can actually deliver.</p>
+          <p data-i18n="step1_p">Choose a community from the catalog. Every card is pre-checked — an order can only be placed on servers where broadcasts actually deliver.</p>
         </div>
         <div class="step">
           <span class="step-n">2</span>
@@ -133,7 +122,7 @@
         <div class="step">
           <span class="step-n">3</span>
           <h3 data-i18n="step3_h3">Launch — pay per delivered</h3>
-          <p data-i18n="step3_p">Messages go out from a managed bot pool. You're charged per 1000 delivered; whatever doesn't land is refunded automatically.</p>
+          <p data-i18n="step3_p">Once the order is placed, the broadcast runs with your settings.</p>
         </div>
       </div>
     </section>
@@ -145,15 +134,15 @@
           <h2 data-i18n="num_h2">The numbers</h2>
           <p data-i18n="num_p">Transparent pricing, delivery-based billing, buyer protection. The essentials in one place.</p>
           <ul class="checks">
-            <li data-i18n="check1">Billed <b>per 1000 delivered</b> messages — not per attempt</li>
-            <li data-i18n="check2">Undelivered messages are <b>refunded automatically</b></li>
-            <li data-i18n="check3">Emoji, stickers &amp; attachments included</li>
+            <li data-i18n="check1">A large catalog at low prices</li>
+            <li data-i18n="check2">Pay only for delivered messages</li>
+            <li data-i18n="check3">The broadcast bots and the sending service are provided by us</li>
           </ul>
         </div>
         <div class="pay-figures">
           <div class="figure-big"><span class="fx" data-count="1000000" data-suffix="+">0+</span><span data-i18n="fig_big_label">messages delivered</span></div>
           <div class="figure-row">
-            <div class="figure"><span data-count="500" data-suffix="+">0+</span><span data-i18n="fig1_label">servers in the catalog</span></div>
+            <div class="figure"><span data-count="500" data-suffix="+" data-reach>0+</span><span data-i18n="fig1_label">live broadcast recipients</span></div>
             <div class="figure"><span data-count="1000" data-suffix="+">0+</span><span data-i18n="fig2_label">happy buyers</span></div>
           </div>
         </div>
@@ -191,7 +180,7 @@
       <div class="faq">
         <details class="faq-item">
           <summary data-i18n="faq_q1">How am I charged?</summary>
-          <p data-i18n="faq_a1">Per 1000 delivered messages. You top up your wallet, launch a broadcast, and once it settles anything undelivered is refunded — you only pay for what actually landed.</p>
+          <p data-i18n="faq_a1">Top up your balance on the site via LTC, place an order, and pay only for delivered messages.</p>
         </details>
         <details class="faq-item">
           <summary data-i18n="faq_q2">What can a message contain?</summary>
@@ -227,7 +216,7 @@
   <footer class="footer">
     <div class="brand">
       <img class="brand-mark" src="assets/logo.png" alt="Vemoni logo" />
-      <span class="brand-name">DMALL</span>
+      <span class="brand-name">Vemoni</span>
     </div>
     <nav class="footer-links">
       <a href="/privacy/" data-i18n="footer_privacy">Privacy Policy</a>
@@ -237,6 +226,6 @@
     <div class="footer-copy">© 2026 Vemoni. <span data-i18n="footer_rights">All rights reserved.</span></div>
   </footer>
 
-  <script src="home.js?v=1" defer></script>
+  <script src="home.js?v=2" defer></script>
 </body>
 </html>
