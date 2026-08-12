@@ -41,8 +41,19 @@
     { name: 'Server', color: '#22d3ee', letter: 'S' },
   ];
   let FEED = SERVERS;
-  (async function loadFeed() {
-    try { const r = await fetch(base + '/feed'); if (r.ok) { const d = await r.json(); if (Array.isArray(d.servers) && d.servers.length) { FEED = d.servers; window.dispatchEvent(new Event('vemoni:feed')); } } } catch (_) {}
+  const GLOBE_PAL = ['#39c5bb', '#e63b7a', '#a855f7', '#d1004b', '#5865f2', '#22d3ee', '#8b5cf6', '#f59e0b', '#57f287', '#f472b6', '#5b8def', '#f0902f'];
+  (async function loadCatalog() {
+    // The globe mirrors the real DMALL catalog (public lots) with each server's live icon.
+    try {
+      const r = await fetch(base + '/order/dmall/catalog');
+      if (r.ok) {
+        const d = await r.json();
+        if (Array.isArray(d.servers) && d.servers.length) {
+          FEED = d.servers.map((s, i) => ({ name: s.name, id: s.id, img: s.icon || null, color: GLOBE_PAL[i % GLOBE_PAL.length], letter: (String(s.name || '?').trim()[0] || '?').toUpperCase() }));
+          window.dispatchEvent(new Event('vemoni:feed'));
+        }
+      }
+    } catch (_) {}
   })();
 
   /* ---------- Hero globe: broadcasts (letters) fly out to catalog servers ----------
