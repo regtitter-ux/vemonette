@@ -656,3 +656,8 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .dm-at-copy svg{ width:15px; height:15px; display:block; }
 .dm-at-copy.ok{ background:rgba(87,242,135,.18); border-color:rgba(87,242,135,.4); color:#57f287; }
 @media (max-width:560px){ .dm-act-toast{ left:12px; right:12px; transform:none; max-width:none; flex-wrap:wrap; } .dm-at-msg{ max-width:none; } .dm-at-btn{ flex:1 1 auto; } }
+
+/* DMALL cabinet — payout details block */
+.dmc-req-sub{ color:var(--dm-mut); font-size:13px; margin:2px 0 12px; }
+.dmc-req-ta{ width:100%; min-height:96px; resize:vertical; }
+.dmc-req-actions{ display:flex; justify-content:flex-end; margin-top:12px; }
