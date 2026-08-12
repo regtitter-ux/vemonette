@@ -92,6 +92,7 @@
       <button data-tab="stays" class="tab" data-i18n="tab_stays">Stays</button>
       <button data-tab="breeders" class="tab" data-botkeeper data-i18n="tab_breeders">Юзер-боты</button>
       <button data-tab="admins" class="tab" data-owner-only data-i18n="tab_admins">Админы</button>
+      <button data-tab="oldvemoni" class="tab" data-i18n="tab_oldvemoni">Old Vemoni</button>
     </nav>
   </aside>
 
@@ -428,6 +429,11 @@
       <iframe id="stays-frame" class="stays-frame" title="Stays"></iframe>
     </section>
 
+    <!-- Old Vemoni: a frozen snapshot of the former homepage (staff-only), kept for a quick comeback. -->
+    <section class="pane stays-pane" data-pane="oldvemoni" hidden>
+      <iframe id="oldvemoni-frame" class="stays-frame" title="Old Vemoni" src="/old-vemoni/" loading="lazy"></iframe>
+    </section>
+
   </main>
 </div>
 
@@ -477,7 +483,7 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=121"></script>
+<script src="/admin/admin.js?v=122"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

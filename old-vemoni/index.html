@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vemoni — verification that pays your community (a short guide)</title>
+  <link rel="icon" type="image/png" href="/assets/logo.png" />
+  <link rel="apple-touch-icon" href="/assets/logo.png" />
+  <meta name="description" content="A short, factual guide to Vemoni: personal verification bots for large Discord servers, with an optional layer that pays $5 per 100 verified joins. $50k+ already paid out." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.discordapp.com" crossorigin />
+  <!-- Load fonts without blocking first paint; drop the unused 900 weight -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" /></noscript>
+  <link rel="stylesheet" href="styles.css?v=32" />
+  <script>window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';</script>
+  <script>try{if(localStorage.getItem('vemoni_authed'))document.documentElement.classList.add('pre-auth')}catch(e){}</script>
+</head>
+<body>
+
+  <header class="nav">
+    <div class="nav-inner">
+      <a class="brand" href="#top">
+        <img class="brand-mark" src="/assets/logo.png" alt="Vemoni logo" />
+        <span class="brand-name">Vemoni</span>
+      </a>
+      <nav class="nav-links">
+        <a href="#what" data-i18n="nav_what">What it is</a>
+        <a href="#how" data-i18n="nav_how">How it works</a>
+        <a href="#numbers" data-i18n="nav_numbers">Numbers</a>
+        <a href="#faq" data-i18n="nav_faq">FAQ</a>
+        <a href="#connect" data-i18n="nav_contact">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="https://discord.com/oauth2/authorize?client_id=1522609323090509905&amp;permissions=8&amp;integration_type=0&amp;scope=bot" target="_blank" rel="noopener" class="nav-invite" data-i18n="invite_bot">Invite Bot</a>
+        <div class="lang-switch" id="langSwitch">
+          <button data-lang="en">EN</button>
+          <button data-lang="ru">RU</button>
+        </div>
+        <a href="/partner/" class="nav-login">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true"><path d="M20.317 4.369A19.79 19.79 0 0 0 15.885 3c-.196.35-.42.82-.577 1.19a18.27 18.27 0 0 0-5.487 0A12.6 12.6 0 0 0 9.24 3a19.74 19.74 0 0 0-4.434 1.369C1.61 9.046.73 13.605 1.17 18.1a19.9 19.9 0 0 0 6.073 3.058c.49-.667.927-1.376 1.302-2.122-.716-.269-1.4-.6-2.045-.99.171-.125.34-.255.5-.39a14.2 14.2 0 0 0 12.198 0c.164.14.332.27.5.39-.647.39-1.332.722-2.049.99.375.746.81 1.454 1.3 2.122a19.85 19.85 0 0 0 6.076-3.058c.5-5.177-.838-9.694-3.508-13.731ZM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.955 2.42-2.157 2.42Zm7.96 0c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.946 2.42-2.157 2.42Z"/></svg>
+          <span data-i18n="nav_login">Login with Discord</span>
+        </a>
+        <div class="nav-user" id="navUser" hidden>
+          <button class="nav-av" id="navAv" aria-label="Account"></button>
+          <div class="nav-menu" id="navMenu" hidden>
+            <div class="nm-head">
+              <div class="nm-banner" id="nmBanner"></div>
+              <div class="nm-id">
+                <div class="nm-av" id="nmAv"></div>
+                <div class="nm-txt"><b id="nmName">User</b><span id="nmUser"></span></div>
+              </div>
+            </div>
+            <div class="nm-items">
+              <a href="/">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+                <span data-i18n="menu_home">Home</span>
+              </a>
+              <a href="/partner/">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 20c0-3 2.7-5 5.5-5s5.5 2 5.5 5"/><path d="M16.5 15.2c2 .4 3.5 2 3.5 4.3"/><circle cx="17.5" cy="8.5" r="2.3"/></svg>
+                <span data-i18n="menu_partner">For partners</span>
+              </a>
+              <a href="/dmall/">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1Z"/><path d="M8 6H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-2"/><path d="M9 12h6M9 16h4"/></svg>
+                <span data-i18n="menu_myorders">DMALL</span>
+              </a>
+              <a href="/admin/" data-admin>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.2-3 7.4-7 9-4-1.6-7-4.8-7-9V6l7-3Z"/></svg>
+                <span data-i18n="menu_admin">For admins</span>
+              </a>
+              <div class="nm-sep"></div>
+              <a href="#" class="nav-logout" id="navLogout">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/></svg>
+                <span data-i18n="menu_logout">Log out</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <h1 data-i18n="hero_h1">
+            Verification for which<br />
+            <span class="grad">you get paid</span>
+          </h1>
+          <p class="hero-sub" data-i18n="hero_sub">
+            This is a short, factual overview of what Vemoni does, how it works, and the
+            numbers behind it.
+          </p>
+          <div class="hero-cta">
+            <a href="#what" class="btn btn-ghost" data-i18n="hero_cta">Start reading ↓</a>
+          </div>
+        </div>
+        <div class="viz" id="viz" aria-hidden="true">
+          <canvas id="flow"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- WHAT IT IS -->
+    <section id="what" class="intro-section wave-band">
+      <div class="section-head">
+        <h2 data-i18n="what_h2">What Vemoni is</h2>
+      </div>
+      <div class="intro-body">
+        <p data-i18n="what_p1">
+          Vemoni is a network of verification bots for large Discord servers: members get full access to servers — channels with insider info, VIP content, private chats, or just exclusive roles in a click — and you get paid for successful verifications.
+        </p>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section id="how" class="how-section">
+      <div class="section-head">
+        <h2 data-i18n="how_h2">How it works</h2>
+        <p data-i18n="how_sub">Three steps — then it runs itself.</p>
+      </div>
+
+      <div class="steps">
+        <div class="step">
+          <span class="step-n">1</span>
+          <h3 data-i18n="step1_h3">Your bot is set up</h3>
+          <p data-i18n="step1_p">We build and host a verification bot styled for your server. Free, about 10 minutes, nothing to maintain.</p>
+        </div>
+        <div class="step">
+          <span class="step-n">2</span>
+          <h3 data-i18n="step2_h3">Members verify as usual</h3>
+          <p data-i18n="step2_p">One click, a jump to the sponsor's server, one more click — and they get the verified role.</p>
+        </div>
+        <div class="step">
+          <span class="step-n">3</span>
+          <h3 data-i18n="step3_h3">You earn, automatically</h3>
+          <p data-i18n="step3_p">$5 per 100 verified joins. At $10 the bot files a payout to your details — you don't lift a finger.</p>
+        </div>
+      </div>
+
+      <p class="how-note" data-i18n="how_note">Here's both sides, running live:</p>
+
+      <div class="sim-grid">
+        <!-- SIM 1: user verification -->
+        <figure class="sim-card">
+          <figcaption class="sim-cap">
+            <span class="sim-badge" data-i18n="sim1_badge">What members see</span>
+            <h3 data-i18n="sim1_h3">Passing verification</h3>
+            <p data-i18n="sim1_p">A member clicks, sees a short message, confirms — and gets access.</p>
+          </figcaption>
+
+          <div class="device" id="simVerify" data-step="0">
+            <div class="dsc">
+              <div class="dsc-bar"><span class="hash">#</span> verify</div>
+              <div class="dsc-body">
+                <div class="dsc-feed">
+                  <div class="dsc-row">
+                    <div class="dsc-av bot"><img src="/assets/logo.png" alt="" /></div>
+                    <div class="dsc-content">
+                      <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span><span class="dsc-time">Today at 17:29</span></div>
+                      <div class="embed">
+                        <div class="embed-author"><span class="embed-ic"><img src="/assets/logo.png" alt="" /></span> Vemoni</div>
+                        <div class="embed-title">Get verified!</div>
+                        <div class="embed-desc">To gain full access to the server, you must complete verification. Click the button below.</div>
+                        <button class="dsc-btn" id="verifBtn">🔐 Start Verification</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="eph-slot">
+                    <div class="eph eph-ad">
+                      <div class="dsc-row">
+                        <div class="dsc-av bot"><img src="/assets/logo.png" alt="" /></div>
+                        <div class="dsc-content">
+                          <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span></div>
+                          <div class="eph-body">To verify, join the server <span class="link">discord.gg/vemoni</span> — then click the button again.</div>
+                          <div class="eph-note">Only you can see this · <span class="eph-dismiss">Dismiss message</span></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="eph eph-ok">
+                      <div class="dsc-row">
+                        <div class="dsc-av bot"><img src="/assets/logo.png" alt="" /></div>
+                        <div class="dsc-content">
+                          <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span></div>
+                          <div class="eph-body">✅ <b>Success!</b> You now have the <span class="role-chip">Verified</span> role.</div>
+                          <div class="eph-note">Only you can see this · <span class="eph-dismiss">Dismiss message</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <span class="cursor" id="cursor1"></span>
+              </div>
+            </div>
+          </div>
+        </figure>
+
+        <!-- SIM 2: admin create + balance -->
+        <figure class="sim-card">
+          <figcaption class="sim-cap">
+            <span class="sim-badge alt" data-i18n="sim2_badge">What you control</span>
+            <h3 data-i18n="sim2_h3">Post <code>/verify</code> &amp; check balance</h3>
+            <p data-i18n="sim2_p">Drop the verification card once, then watch the balance with <code>/bal</code>.</p>
+          </figcaption>
+
+          <div class="device" id="simAdmin" data-step="0">
+            <div class="dsc">
+              <div class="dsc-bar"><span class="hash">#</span> welcome</div>
+              <div class="dsc-body">
+                <!-- scene A: posting the card -->
+                <div class="scene scene-post">
+                  <div class="dsc-row">
+                    <div class="dsc-av bot"><img src="/assets/logo.png" alt="" /></div>
+                    <div class="dsc-content">
+                      <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span><span class="dsc-time">Today at 17:31</span></div>
+                      <div class="embed">
+                        <div class="embed-author"><span class="embed-ic"><img src="/assets/logo.png" alt="" /></span> Vemoni</div>
+                        <div class="embed-title">Get verified!</div>
+                        <div class="embed-desc">Click the button to unlock the server.</div>
+                        <button class="dsc-btn">🔐 Start Verification</button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="eph eph-created">
+                    <div class="dsc-row">
+                      <div class="dsc-av bot"><img src="/assets/logo.png" alt="" /></div>
+                      <div class="dsc-content">
+                        <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span></div>
+                        <div class="eph-body">✅ Verification card created — grants <span class="mention">@Member</span></div>
+                        <div class="eph-note">Only you can see this · <span class="eph-dismiss">Dismiss message</span></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- scene B: checking balance -->
+                <div class="scene scene-bal">
+                  <div class="dsc-row">
+                    <div class="dsc-av bot"><img src="/assets/logo.png" alt="" /></div>
+                    <div class="dsc-content">
+                      <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span><span class="dsc-time">Today at 17:32</span></div>
+                      <div class="embed embed-green">
+                        <div class="embed-title">Your balance</div>
+                        <div class="bal-field"><span class="bal-k">Balance</span><span class="bal-v" id="balValue">$9.00</span></div>
+                        <div class="bal-field"><span class="bal-k">Payment details</span><span class="bal-v muted">USDT ERC20 · 0x9f…8f2a</span></div>
+                        <div class="dsc-actions">
+                          <button class="dsc-btn ghost">Edit details</button>
+                          <button class="dsc-btn ghost">History</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- scene C: DM with the bot (withdrawal completed) -->
+                <div class="scene scene-dm">
+                  <div class="dsc-row">
+                    <div class="dsc-av bot"><img src="/assets/logo.png" alt="" /></div>
+                    <div class="dsc-content">
+                      <div class="dsc-head"><span class="dsc-user">Verification</span><span class="tag-bot">BOT</span><span class="dsc-time">Today at 17:45</span></div>
+                      <div class="dm-text">✅ Your withdrawal of <b>$10.00</b> has been completed</div>
+                      <div class="wallet-shot">
+                        <div class="ws-top">
+                          <span class="ws-check">✓</span>
+                          <div><div class="ws-title">Transfer completed</div><div class="ws-sub">Crypto Wallet</div></div>
+                          <span class="ws-badge">Success</span>
+                        </div>
+                        <div class="ws-amount">−10.00 USDT</div>
+                        <div class="ws-rows">
+                          <div class="ws-row"><span>To</span><span>0x9f…8f2a</span></div>
+                          <div class="ws-row"><span>Network</span><span>Ethereum (ERC20)</span></div>
+                          <div class="ws-row"><span>Hash</span><span>0x3c…a91d</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- DM notification toast -->
+                <div class="dm-toast" id="dmToast">
+                  <div class="dsc-av bot sm2"><img src="/assets/logo.png" alt="" /></div>
+                  <div class="dt-body">
+                    <div class="dt-head"><span class="dt-name">Verification</span><span class="dt-now">now</span></div>
+                    <div class="dt-msg">✅ Your withdrawal of $10.00 has been completed</div>
+                  </div>
+                </div>
+
+                <span class="cursor" id="cursorAdmin"></span>
+              </div>
+
+              <div class="composer">
+                <span class="cmd-chip" id="cmdChip">/verify</span>
+                <span class="cmd-opt" id="cmdOpt">role: <span class="mention">@Member</span></span>
+                <span class="composer-caret"></span>
+              </div>
+            </div>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- NUMBERS -->
+    <section id="numbers" class="pay-section wave-band">
+      <div class="pay-inner">
+        <div class="pay-copy">
+          <h2 data-i18n="num_h2">The numbers</h2>
+          <p data-i18n="num_p">Flat rate, transparent counting, direct payouts. The facts that matter, in one place.</p>
+          <ul class="checks">
+            <li data-i18n="check1"><b>$5</b> per 100 successful checks</li>
+            <li data-i18n="check2">Payout is filed automatically the moment you reach <b>$10</b></li>
+            <li data-i18n="check4">Auto-payouts in LTC</li>
+          </ul>
+        </div>
+        <div class="pay-figures">
+          <div class="figure-big"><span class="fx" data-count="50000" data-prefix="$" data-suffix="+">$0</span><span data-i18n="fig_big_label">paid to partners so far</span></div>
+          <div class="figure-row">
+            <div class="figure"><span data-count="1000000" data-suffix="+">0+</span><span data-i18n="fig1_label">joins sold</span></div>
+            <div class="figure"><span data-count="1000" data-suffix="+">0+</span><span data-i18n="fig2_label">happy buyers</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVER FEED -->
+    <section id="servers" class="feed-section">
+      <div class="section-head">
+        <h2 data-i18n="servers_h2">Communities already earning with us</h2>
+      </div>
+      <div class="marquee" id="marquee">
+        <div class="marquee-row"><div class="marquee-track" id="rowTop"><!-- injected --></div></div>
+        <div class="marquee-row"><div class="marquee-track reverse" id="rowBottom"><!-- injected --></div></div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="faq-section wave-band">
+      <div class="section-head">
+        <h2 data-i18n="faq_h2">Questions partners usually ask</h2>
+      </div>
+      <div class="faq">
+        <details class="faq-item">
+          <summary data-i18n="faq_q1">Will this bother my members?</summary>
+          <p data-i18n="faq_a1">No. It's the familiar two-click verification, with a native ad integration inside the check.</p>
+        </details>
+        <details class="faq-item">
+          <summary data-i18n="faq_q2">How are clicks counted?</summary>
+          <p data-i18n="faq_a2">Only fully completed verifications count — where the user saw the ad and received the verified role.</p>
+        </details>
+        <details class="faq-item">
+          <summary data-i18n="faq_q3">When and how am I paid?</summary>
+          <p data-i18n="faq_a3">Automatically. The moment your balance reaches $10, a payout request is created and sent to your details.</p>
+        </details>
+        <details class="faq-item">
+          <summary data-i18n="faq_q4">What do I actually have to do?</summary>
+          <p data-i18n="faq_a4">After adding the bot, use the /verify (role) command. The bot handles verification, sponsors, counting and payouts on its own.</p>
+        </details>
+      </div>
+    </section>
+
+    <!-- CONNECT (soft close) -->
+    <section id="connect" class="connect-section">
+      <div class="connect-box">
+        <h2 data-i18n="connect_h2">Still have questions?</h2>
+        <p data-i18n="connect_p">Reach out to us on Discord<br />Ask anything: setup, timing, edge cases.</p>
+        <div class="connect-actions">
+        <a href="https://discord.gg/vemoni" target="_blank" rel="noopener" class="btn-discord">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.317 4.369A19.79 19.79 0 0 0 15.885 3c-.196.35-.42.82-.577 1.19a18.27 18.27 0 0 0-5.487 0A12.6 12.6 0 0 0 9.24 3a19.74 19.74 0 0 0-4.434 1.369C1.61 9.046.73 13.605 1.17 18.1a19.9 19.9 0 0 0 6.073 3.058c.49-.667.927-1.376 1.302-2.122-.716-.269-1.4-.6-2.045-.99.171-.125.34-.255.5-.39a14.2 14.2 0 0 0 12.198 0c.164.14.332.27.5.39-.647.39-1.332.722-2.049.99.375.746.81 1.454 1.3 2.122a19.85 19.85 0 0 0 6.076-3.058c.5-5.177-.838-9.694-3.508-13.731ZM8.02 15.331c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.955 2.42-2.157 2.42Zm7.96 0c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.096 2.157 2.42 0 1.335-.946 2.42-2.157 2.42Z"/></svg>
+          <span data-i18n="connect_btn">Support Server</span>
+        </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="brand">
+      <img class="brand-mark" src="/assets/logo.png" alt="Vemoni logo" />
+      <span class="brand-name">Vemoni</span>
+    </div>
+    <nav class="footer-links">
+      <a href="/privacy/" data-i18n="footer_privacy">Privacy Policy</a>
+      <a href="/terms/" data-i18n="footer_terms">Terms of Service</a>
+      <a href="https://discord.gg/vemoni" target="_blank" rel="noopener" data-i18n="footer_support">Support</a>
+    </nav>
+    <div class="footer-copy">© 2026 Vemoni. <span data-i18n="footer_rights">All rights reserved.</span></div>
+  </footer>
+
+  <script src="script.js?v=72" defer></script>
+</body>
+</html>
