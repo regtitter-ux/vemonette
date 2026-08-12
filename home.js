@@ -177,7 +177,7 @@
     nav_what: 'О сервисе', nav_how: 'Как это работает', nav_numbers: 'Цифры', nav_sell: 'Для продавцов DMALL', nav_faq: 'Вопросы',
     open_dmall: 'Открыть DMALL', nav_login: 'Войти через Discord',
     menu_home: 'Главная', menu_myorders: 'DMALL', menu_partner: 'Партнёрам', menu_admin: 'Администраторам', menu_logout: 'Выйти',
-    hero_h1: 'Рассылки в Discord,<br /><span class="grad">которые доходят до людей</span>',
+    hero_h1: 'Теперь DMall<br /><span class="grad">доступен каждому</span>',
     hero_sub: 'DMALL — это маркетплейс рассылок: выберите сервер, напишите сообщение и достучитесь до его участников в личку. Платите только за доставленное.',
     hero_cta: 'Открыть DMALL →', hero_cta2: 'Как это работает ↓',
     bc_live: 'в эфире · отправка', bc_active: 'Активна', bc_msg_h: 'Вас приглашают!', bc_msg_p: 'Забирайте роль и участвуйте → discord.gg/vemoni',
