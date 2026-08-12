@@ -21,8 +21,10 @@
   }, { threshold: 0.5 });
   // The "live recipients" figure = total members across the catalog's servers. Fetch it first
   // (public), set the target, then start observing so the count-up runs to the real number.
+  // "Live recipients all-time" = a 4M all-time base + the current live catalog reach.
+  const REACH_BASE = 4000000;
   fetch(base + '/order/dmall/reach').then((r) => (r.ok ? r.json() : null)).then((d) => {
-    if (d && d.recipients > 0) { const el = document.querySelector('[data-reach]'); if (el) el.dataset.count = d.recipients; }
+    if (d && d.recipients > 0) { const el = document.querySelector('[data-reach]'); if (el) el.dataset.count = REACH_BASE + d.recipients; }
   }).catch(() => {}).finally(() => {
     document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
   });
@@ -203,7 +205,7 @@
     check1: 'Большой ассортимент и низкие цены',
     check2: 'Оплата только за доставленные сообщения',
     check3: 'Боты для рассылок и сама услуга рассылки предоставляется сервисом',
-    fig_big_label: 'сообщений доставлено', fig1_label: 'живых получателей рассылок', fig2_label: 'довольных покупателей',
+    fig_big_label: 'сообщений доставлено за всё время', fig1_label: 'живых получателей рассылок за всё время', fig2_label: 'выполненных заказов за всё время',
     sell_h2: 'Есть сервер? Выставьте его и зарабатывайте', sell_sub: 'Превратите сообщество в лот — вы задаёте цену и зарабатываете на каждой доставке.',
     sell1_h3: 'Добавьте бота', sell1_p: 'Пригласите нашего бота на сервер с админ-правами — он подключит сообщество к DMALL за пару минут.',
     sell2_h3: 'Задайте цену', sell2_p: 'Создайте лот и укажите цену за 1000 сообщений. Сделайте его публичным для всех или приватным.',
