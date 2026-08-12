@@ -124,7 +124,11 @@
           for (let k = 1; k < tr.length; k++) { const a = k / tr.length; ctx.globalAlpha = a * 0.8; ctx.lineWidth = 0.5 + 2.4 * a; ctx.strokeStyle = col; ctx.beginPath(); ctx.moveTo(tr[k - 1][0], tr[k - 1][1]); ctx.lineTo(tr[k][0], tr[k][1]); ctx.stroke(); }
           ctx.globalAlpha = 1;
           const gg = ctx.createRadialGradient(p[0], p[1], 0, p[0], p[1], 7); gg.addColorStop(0, col); gg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(p[0], p[1], 7, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 1.8, 0, 7); ctx.fill();
-          if (v[2] > 0.15) { ctx.save(); ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3); ctx.globalCompositeOperation = 'source-over'; envelope(p[0], p[1] - 14, 13, col); ctx.restore(); ctx.globalAlpha = 1; }
+          if (v[2] > 0.15) { ctx.save(); ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3); ctx.globalCompositeOperation = 'source-over';
+            // Buyer -> hub carries money ($); hub -> server carries the broadcast (envelope).
+            if (pt.kind === 'in') { ctx.font = '800 18px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText('$', p[0], p[1] - 13); }
+            else envelope(p[0], p[1] - 14, 13, col);
+            ctx.restore(); ctx.globalAlpha = 1; }
         } else { pt.trail.length = 0; }
       }
       ctx.restore(); ctx.globalAlpha = 1;
