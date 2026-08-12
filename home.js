@@ -69,7 +69,7 @@
     const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
     const cs = getComputedStyle(document.documentElement);
     const cvv = (v, f) => { const x = cs.getPropertyValue(v).trim(); return x || f; };
-    const GREEN = cvv('--green', '#57f287'), BUY = '#86b6ff';
+    const GREEN = cvv('--green', '#57f287'), BUY = '#86b6ff', CYAN = '#8fdfff';
     const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = '/assets/logo.png';
     const buyerImg = new Image(); let buyerImgOk = false; buyerImg.onload = () => { buyerImgOk = true; }; buyerImg.src = '/assets/suit.png';
     const secureImg = new Image(); let secureImgOk = false; secureImg.onload = () => { secureImgOk = true; }; secureImg.src = '/assets/secure.png';
@@ -80,7 +80,7 @@
     (function () { const g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < NDOTS; i++) { const y = 1 - 2 * (i + 0.5) / NDOTS; const rr = Math.sqrt(1 - y * y); const th = g * i; dots.push([Math.cos(th) * rr, y, Math.sin(th) * rr]); } })();
     const ll = (la, lo) => { la = la * Math.PI / 180; lo = lo * Math.PI / 180; return [Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)]; };
 
-    const PARTNERS = [], CENTERS = [], BUYERS = [];
+    const PARTNERS = [], CENTERS = [], BUYERS = [], USERS = [];
     const dist2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
     const nearest = (p, arr) => { let bi = 0, bd = Infinity; arr.forEach((n, i) => { const d = dist2(p, n.p); if (d < bd) { bd = d; bi = i; } }); return arr[bi]; };
     function fibSphere(n) { const pts = [], g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < n; i++) { const y = 1 - 2 * (i + 0.5) / n; const rr = Math.sqrt(Math.max(0, 1 - y * y)); const th = g * i; pts.push([Math.cos(th) * rr, y, Math.sin(th) * rr]); } return pts; }
@@ -93,6 +93,7 @@
       pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || iconUrl(s.id, s.icon); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null, letter: (s.letter || (s.name || '?').trim()[0] || '?').toUpperCase() }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
       cPos.forEach((p) => CENTERS.push({ p }));
       bPos.forEach((p) => BUYERS.push({ p, center: null }));
+      USERS.length = 0; fibSphere(70).forEach((p) => USERS.push({ p }));   // members scattered over the planet
       BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
     }
 
@@ -101,6 +102,9 @@
     const PARTS = [], FLOATS = [];
     function spawn() { if (!BUYERS.length || !CENTERS.length) return; const bn = BUYERS[(Math.random() * BUYERS.length) | 0], c = bn.center; if (!c) return; PARTS.push({ kind: 'in', a: bn.p, b: c.p, ctr: c, t: 0, sp: 0.008 + Math.random() * 0.005, trail: [] }); }
     function fanOut(c) { if (!PARTNERS.length) return; const k = Math.random() < 0.3 ? 2 + ((Math.random() * 3) | 0) : 1; for (let n = 0; n < k; n++) { const pn = PARTNERS[(Math.random() * PARTNERS.length) | 0]; PARTS.push({ kind: 'out', a: c.p, b: pn.p, t: 0, sp: 0.009 + Math.random() * 0.006, trail: [] }); } }
+    const nearestK = (p, arr, k) => arr.map((n) => [n, dist2(p, n.p)]).sort((a, b) => a[1] - b[1]).slice(0, k).map((x) => x[0]);
+    // A request reached a server → deliver to a cluster of its nearby members (letters to users).
+    function deliverToUsers(sp) { if (!USERS.length) return; const near = nearestK(sp, USERS, 12); const k = 3 + ((Math.random() * 4) | 0); for (let n = 0; n < k && PARTS.length < 48; n++) { const u = near[(Math.random() * near.length) | 0]; PARTS.push({ kind: 'deliver', a: sp, b: u.p, t: 0, sp: 0.013 + Math.random() * 0.008, trail: [] }); } }
 
     function rot(v) { const cyw = Math.cos(rotY), syw = Math.sin(rotY); const x = v[0] * cyw + v[2] * syw, z1 = -v[0] * syw + v[2] * cyw, y = v[1]; const cp = Math.cos(rotX), sp = Math.sin(rotX); return [x, y * cp - z1 * sp, y * sp + z1 * cp]; }
     const proj = (v) => [cx + v[0] * R, cy - v[1] * R, v[2]];
@@ -126,11 +130,19 @@
 
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
       for (let i = PARTS.length - 1; i >= 0; i--) { const pt = PARTS[i]; pt.t += pt.sp;
-        const col = pt.kind === 'in' ? BUY : GREEN;
-        const seg = [pt.a, ctrlR(pt.a, pt.b, 1.26), pt.b];
-        if (pt.t >= 1) { if (pt.kind === 'in') fanOut(pt.ctr); else { FLOATS.push({ p: pt.b, t: 0 }); if (FLOATS.length > 40) FLOATS.shift(); } PARTS.splice(i, 1); continue; }
+        const col = pt.kind === 'in' ? BUY : pt.kind === 'out' ? GREEN : CYAN;
+        const lift = pt.kind === 'deliver' ? 1.12 : 1.26;
+        const seg = [pt.a, ctrlR(pt.a, pt.b, lift), pt.b];
+        if (pt.t >= 1) {
+          if (pt.kind === 'in') fanOut(pt.ctr);
+          else if (pt.kind === 'out') { FLOATS.push({ p: pt.b, t: 0 }); deliverToUsers(pt.b); }   // server reached → fan letters to its users
+          else FLOATS.push({ p: pt.b, t: 0 });                                                     // a user received the letter
+          if (FLOATS.length > 60) FLOATS.shift();
+          PARTS.splice(i, 1); continue;
+        }
         const v = rot(bez(seg[0], seg[1], seg[2], pt.t)), p = proj(v);
         if (pt.kind === 'out') drawArc(pt.a, pt.b, GREEN, 0.1, 1.26);
+        else if (pt.kind === 'deliver') drawArc(pt.a, pt.b, CYAN, 0.07, 1.12);
         if (v[2] > -0.05) {
           pt.trail.push([p[0], p[1]]); if (pt.trail.length > 9) pt.trail.shift();
           const tr = pt.trail; ctx.lineCap = 'round';
@@ -140,6 +152,7 @@
           if (v[2] > 0.15) { ctx.save(); ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3); ctx.globalCompositeOperation = 'source-over';
             // Buyer -> hub carries money ($); hub -> server carries the broadcast (envelope).
             if (pt.kind === 'in') { ctx.font = '800 18px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText('$', p[0], p[1] - 13); }
+            else if (pt.kind === 'deliver') envelope(p[0], p[1] - 9, 9, col);
             else envelope(p[0], p[1] - 14, 13, col);
             ctx.restore(); ctx.globalAlpha = 1; }
         } else { pt.trail.length = 0; }
@@ -147,11 +160,12 @@
       ctx.restore(); ctx.globalAlpha = 1;
 
       const all = [];
-      BUYERS.forEach((n) => all.push({ n, kind: 'b' })); PARTNERS.forEach((n) => all.push({ n, kind: 'p' })); CENTERS.forEach((n) => all.push({ n, kind: 'c' }));
+      USERS.forEach((n) => all.push({ n, kind: 'u' })); BUYERS.forEach((n) => all.push({ n, kind: 'b' })); PARTNERS.forEach((n) => all.push({ n, kind: 'p' })); CENTERS.forEach((n) => all.push({ n, kind: 'c' }));
       all.forEach((it) => { it.v = rot(it.n.p); it.p = proj(it.v); it.n._sx = it.p[0]; it.n._sy = it.p[1]; it.n._dep = it.v[2]; });
       all.sort((a, b) => a.v[2] - b.v[2]);
       for (const it of all) { const n = it.n, p = it.p, dep = it.v[2]; if (dep < -0.2) continue; const fade = dep > 0 ? 1 : 0.32;
-        if (it.kind === 'b') { const rr = 8; ctx.globalAlpha = fade; if (buyerImgOk) { const s = rr * 2.64; ctx.drawImage(buyerImg, p[0] - s / 2, p[1] - s / 2, s, s); } else { ctx.fillStyle = BUY; ctx.beginPath(); ctx.arc(p[0], p[1] - rr * 0.26, rr * 0.32, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(p[0], p[1] + rr * 0.6, rr * 0.56, Math.PI, 2 * Math.PI); ctx.fill(); } ctx.globalAlpha = 1; }
+        if (it.kind === 'u') { const rr = 3.4; ctx.globalAlpha = (dep > 0 ? 0.9 : 0.26); ctx.fillStyle = '#bcd6ff'; ctx.beginPath(); ctx.arc(p[0], p[1] - rr * 0.5, rr * 0.44, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(p[0], p[1] + rr * 0.55, rr * 0.72, Math.PI, 2 * Math.PI); ctx.fill(); ctx.globalAlpha = 1; }
+        else if (it.kind === 'b') { const rr = 8; ctx.globalAlpha = fade; if (buyerImgOk) { const s = rr * 2.64; ctx.drawImage(buyerImg, p[0] - s / 2, p[1] - s / 2, s, s); } else { ctx.fillStyle = BUY; ctx.beginPath(); ctx.arc(p[0], p[1] - rr * 0.26, rr * 0.32, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(p[0], p[1] + rr * 0.6, rr * 0.56, Math.PI, 2 * Math.PI); ctx.fill(); } ctx.globalAlpha = 1; }
         else if (it.kind === 'p') { const rr = 13; ctx.globalAlpha = fade; if (n.img) { ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.fillStyle = '#0e1a2c'; ctx.fillRect(p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore(); } else { ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = n.color; ctx.fill(); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 ' + Math.round(rr * 1.15) + 'px Roboto,system-ui,sans-serif'; ctx.fillText(n.letter || '?', p[0], p[1] + 0.5); } ctx.globalAlpha = 1; }
         else { const rr = 11, s = rr * 2.2; ctx.globalAlpha = fade; if (secureImgOk) ctx.drawImage(secureImg, p[0] - s / 2, p[1] - s / 2, s, s); else if (logoOk) ctx.drawImage(logo, p[0] - s / 2, p[1] - s / 2, s, s); ctx.globalAlpha = 1; }
       }
