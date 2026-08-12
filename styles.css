@@ -457,3 +457,30 @@ section[id] { scroll-margin-top: 82px; }
   .connect-box p { font-size: 15px; }
   .btn-discord { width: 100%; justify-content: center; }
 }
+
+/* ============ DMALL landing: hero broadcast visual ============ */
+.bcast { position: relative; display: flex; align-items: center; justify-content: center; min-height: 300px; }
+.bcast-card {
+  width: min(420px, 100%);
+  background: var(--panel); border: 1px solid var(--stroke-2);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 18px 18px 16px; position: relative; z-index: 2;
+}
+.bcast-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.bcast-av { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex: none; background: var(--panel-2); display: flex; align-items: center; justify-content: center; }
+.bcast-av img { width: 26px; height: 26px; }
+.bcast-h-txt { display: flex; flex-direction: column; line-height: 1.25; }
+.bcast-h-txt b { color: var(--text); font-size: 15px; }
+.bcast-h-txt span { color: var(--muted); font-size: 12px; }
+.bcast-chip { margin-left: auto; font-size: 12px; font-weight: 700; color: var(--green); background: rgba(87, 242, 135, .12); border-radius: 8px; padding: 4px 9px; }
+.bcast-msg { background: var(--panel-2); border: 1px solid var(--stroke); border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 14px; line-height: 1.5; }
+.bcast-msg b { color: var(--text); }
+.bcast-bar { height: 8px; border-radius: 6px; background: var(--panel-2); overflow: hidden; margin: 14px 0 8px; }
+.bcast-bar i { display: block; height: 100%; width: 0; border-radius: 6px; background: linear-gradient(90deg, var(--blue-3), var(--blue-2)); transition: width .1s linear; }
+.bcast-foot { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-size: 13px; }
+.bcast-foot b { color: var(--text); }
+.bcast-dm { position: absolute; z-index: 1; font-size: 12px; font-weight: 600; color: var(--green); background: var(--panel); border: 1px solid var(--stroke-2); border-radius: 10px; padding: 7px 12px; box-shadow: var(--shadow); animation: bcastPop 4s ease-in-out infinite; }
+.bcast-dm-1 { top: 8%; right: -6%; animation-delay: .6s; }
+.bcast-dm-2 { bottom: 10%; left: -6%; animation-delay: 1.8s; }
+@keyframes bcastPop { 0%, 100% { opacity: 0; transform: translateY(8px) scale(.96); } 12%, 60% { opacity: 1; transform: translateY(0) scale(1); } }
+@media (max-width: 860px) { .bcast-dm { display: none; } }
