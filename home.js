@@ -92,33 +92,50 @@
       let x = c[0] + rx / len * s, y = c[1] + ry / len * s, z = c[2] + rz / len * s;
       const L = Math.hypot(x, y, z) || 1; return [x / L, y / L, z / L];
     }
-    // Members placed on ~60 land anchors that trace the real continents (rough world map),
-    // each weighted by population density, so the dot cloud reads as Earth's landmasses.
-    // [lat, lon, weight]. Sparse interiors (Sahara, Siberia) get few/no anchors on purpose.
-    const LAND = [
-      // North America
-      [63, -150, .3], [58, -125, .4], [54, -110, .4], [50, -97, .4], [45, -75, 1.0], [41, -74, 1.4],
-      [40, -88, 1.0], [39, -105, .7], [37, -120, 1.1], [29, -98, .8], [25, -100, 1.0], [19, -99, 1.2], [15, -90, .7], [28, -81, .7],
-      // South America
-      [8, -66, .8], [4, -74, .9], [-3, -60, .6], [-8, -48, .8], [-12, -47, .7], [-23, -46, 1.4], [-30, -60, .7], [-34, -58, 1.0], [-16, -68, .6], [-33, -71, .7], [-40, -72, .3],
-      // Europe
-      [55, -3, 1.1], [48, 2, 1.2], [40, -4, 1.0], [43, 12, 1.0], [52, 9, 1.4], [50, 20, 1.0], [60, 16, .5], [47, 28, .9], [55, 37, 1.0], [50, 31, .8],
-      // Africa
-      [33, -6, .6], [30, 31, 1.2], [15, 6, .5], [9, 8, 1.6], [6, 3, .8], [-1, 37, .9], [9, 39, 1.0], [-4, 15, .6], [-6, 35, .6], [-26, 28, 1.0], [-33, 19, .5],
-      // Asia
-      [39, 35, 1.0], [33, 44, .8], [30, 53, .9], [24, 47, .5], [28, 77, 2.6], [19, 73, 1.9], [13, 78, 1.7], [23, 90, 1.6], [31, 71, 1.2],
-      [39, 116, 1.9], [31, 121, 2.4], [23, 113, 1.7], [30, 104, 1.5], [45, 84, .5], [56, 60, .5], [55, 83, .4], [62, 100, .3], [55, 128, .4],
-      [14, 101, 1.2], [11, 107, 1.0], [-6, 107, 1.7], [-3, 120, .7], [14, 121, 1.1], [36, 138, 1.6], [37, 127, .9],
-      // Oceania
-      [-33, 151, .6], [-37, 145, .5], [-32, 116, .3], [-41, 175, .3],
+    // Rough continent outlines as [lat, lon] rings (a simplified world map). Members are sampled
+    // INSIDE these polygons, so the dot cloud takes on Earth's landmass shapes; the same rings are
+    // stroked as a thin border. `w` weights population; `cities` seeds a few dense cores.
+    const CONTINENTS = [
+      { w: 9, cities: 2, poly: [[70, -158], [71, -128], [68, -95], [74, -80], [60, -64], [47, -53], [45, -66], [40, -74], [31, -81], [25, -97], [18, -95], [13, -87], [8, -78], [17, -97], [24, -110], [36, -122], [49, -125], [60, -140], [70, -158]] },   // North America
+      { w: 6, cities: 2, poly: [[12, -71], [10, -61], [4, -51], [-3, -44], [-9, -35], [-23, -41], [-34, -53], [-45, -66], [-53, -70], [-46, -74], [-30, -71], [-18, -70], [-5, -81], [2, -79], [8, -77], [12, -71]] },   // South America
+      { w: 12, cities: 3, poly: [[60, 5], [62, 26], [59, 31], [50, 40], [45, 40], [41, 29], [40, 19], [36, 15], [43, 6], [44, -2], [48, -5], [51, -6], [58, -5], [60, 5]] },   // Europe
+      { w: 17, cities: 3, poly: [[37, 10], [33, -6], [21, -17], [14, -17], [5, -8], [4, 9], [-6, 12], [-17, 12], [-29, 17], [-34, 19], [-34, 27], [-25, 33], [-15, 40], [-2, 42], [11, 51], [12, 44], [16, 39], [24, 37], [31, 32], [33, 22], [37, 10]] },   // Africa
+      { w: 40, cities: 6, poly: [[68, 45], [73, 75], [73, 110], [70, 140], [62, 150], [52, 142], [45, 135], [38, 128], [35, 120], [22, 110], [10, 104], [8, 98], [15, 89], [22, 90], [20, 73], [24, 66], [26, 56], [30, 48], [38, 47], [43, 50], [50, 50], [58, 58], [66, 58], [68, 45]] },   // Asia
+      { w: 3, cities: 2, poly: [[6, 95], [2, 100], [-6, 105], [-9, 116], [-8, 126], [-1, 131], [6, 126], [3, 110], [6, 95]] },   // SE Asia / Indonesia
+      { w: 1, cities: 1, poly: [[-11, 132], [-13, 142], [-20, 149], [-28, 153], [-37, 149], [-38, 140], [-35, 138], [-32, 116], [-22, 114], [-14, 126], [-11, 132]] },   // Australia
     ];
+    const inPoly = (lon, lat, poly) => { let inside = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const yi = poly[i][0], xi = poly[i][1], yj = poly[j][0], xj = poly[j][1]; if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / ((yj - yi) || 1e-9) + xi)) inside = !inside; } return inside; };
+    const bboxOf = (poly) => { let a = 90, b = -90, c = 180, d = -180; for (const [la, lo] of poly) { if (la < a) a = la; if (la > b) b = la; if (lo < c) c = lo; if (lo > d) d = lo; } return { sMin: Math.sin(a * Math.PI / 180), sMax: Math.sin(b * Math.PI / 180), loMin: c, loMax: d }; };
+    // A random lat/lon inside a polygon (area-correct latitude so high-lat land isn't over-dense).
+    function randInPoly(poly, bb) { for (let t = 0; t < 60; t++) { const la = Math.asin(bb.sMin + Math.random() * (bb.sMax - bb.sMin)) * 180 / Math.PI, lo = bb.loMin + Math.random() * (bb.loMax - bb.loMin); if (inPoly(lo, la, poly)) return ll(la, lo); } return null; }
     function clusteredUsers(total) {
-      const tw = LAND.reduce((a, l) => a + l[2], 0), pts = [];
-      for (const l of LAND) {
-        const c = ll(l[0], l[1]), n = Math.max(1, Math.round(total * l[2] / tw));
-        for (let i = 0; i < n; i++) pts.push(nearPoint(c, 0.045 + Math.random() * 0.03));
+      const tw = CONTINENTS.reduce((a, c) => a + c.w, 0), pts = [];
+      for (const cont of CONTINENTS) {
+        const bb = bboxOf(cont.poly), n = Math.max(6, Math.round(total * cont.w / tw)), cities = [];
+        for (let k = 0; k < cont.cities; k++) { const cc = randInPoly(cont.poly, bb); if (cc) cities.push(cc); }
+        for (let i = 0; i < n; i++) {
+          if (cities.length && Math.random() < 0.32) pts.push(nearPoint(cities[(Math.random() * cities.length) | 0], 0.045));   // dense city
+          else { const q = randInPoly(cont.poly, bb); if (q) pts.push(q); }   // fills the continent shape
+        }
       }
       return pts;
+    }
+    // Thin continent borders: subdivide each edge along the sphere, stroke the front-facing parts.
+    function drawBorders() {
+      ctx.save(); ctx.lineWidth = 1.1; ctx.strokeStyle = 'rgba(150,205,255,0.42)'; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath();
+      for (const cont of CONTINENTS) {
+        const poly = cont.poly, P = poly.length; let prev = null;
+        for (let i = 0; i <= P; i++) {
+          const a = poly[i % P], b = poly[(i + 1) % P], S = 6;
+          for (let s = 0; s < (i < P ? S : 1); s++) {
+            const f = s / S, la = a[0] + (b[0] - a[0]) * f, lo = a[1] + (b[1] - a[1]) * f, v = rot(ll(la, lo)), p = proj(v), front = v[2] > -0.02;
+            if (prev && prev.f && front) { ctx.moveTo(prev.p[0], prev.p[1]); ctx.lineTo(p[0], p[1]); }
+            prev = { p, f: front };
+          }
+        }
+        prev = null;
+      }
+      ctx.stroke(); ctx.restore();
     }
     function buildNodes() {
       PARTNERS.length = CENTERS.length = BUYERS.length = 0;
@@ -129,7 +146,7 @@
       pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || iconUrl(s.id, s.icon); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null, letter: (s.letter || (s.name || '?').trim()[0] || '?').toUpperCase() }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
       cPos.forEach((p) => CENTERS.push({ p }));
       bPos.forEach((p) => BUYERS.push({ p, center: null }));
-      if (!USERS.length) clusteredUsers(800).forEach((p) => USERS.push({ p }));   // members clustered into continents/cities (built once)
+      if (!USERS.length) clusteredUsers(700).forEach((p) => USERS.push({ p }));   // members clustered into continents/cities (built once)
       BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
     }
 
@@ -138,9 +155,10 @@
     const PARTS = [], FLOATS = [];
     function spawn() { if (!BUYERS.length || !CENTERS.length) return; const bn = BUYERS[(Math.random() * BUYERS.length) | 0], c = bn.center; if (!c) return; PARTS.push({ kind: 'in', a: bn.p, b: c.p, ctr: c, t: 0, sp: 0.008 + Math.random() * 0.005, trail: [] }); }
     function fanOut(c) { if (!PARTNERS.length) return; const k = Math.random() < 0.3 ? 2 + ((Math.random() * 3) | 0) : 1; for (let n = 0; n < k; n++) { const pn = PARTNERS[(Math.random() * PARTNERS.length) | 0]; PARTS.push({ kind: 'out', a: c.p, b: pn.p, t: 0, sp: 0.009 + Math.random() * 0.006, trail: [] }); } }
-    const nearestK = (p, arr, k) => arr.map((n) => [n, dist2(p, n.p)]).sort((a, b) => a[1] - b[1]).slice(0, k).map((x) => x[0]);
-    // A request reached a server → deliver to a cluster of its nearby members (letters to users).
-    function deliverToUsers(sp) { if (!USERS.length) return; const near = nearestK(sp, USERS, 12); const k = 3 + ((Math.random() * 4) | 0); for (let n = 0; n < k && PARTS.length < 48; n++) { const u = near[(Math.random() * near.length) | 0]; PARTS.push({ kind: 'deliver', a: sp, b: u.p, t: 0, sp: 0.013 + Math.random() * 0.008, trail: [] }); } }
+    // A request reaching a server fans a letter out to EVERY member — one bright, brief burst
+    // (rendered as batched dots so "to everyone" stays cheap). Capped so bursts can't pile up.
+    const BURSTS = [];
+    function startBurst(o) { if (BURSTS.length >= 2 || !USERS.length) return; const segs = USERS.map((u) => [o, ctrlR(o, u.p, 1.1), u.p]); BURSTS.push({ segs, t: 0, sp: 0.015 + Math.random() * 0.006 }); }
 
     function rot(v) { const cyw = Math.cos(rotY), syw = Math.sin(rotY); const x = v[0] * cyw + v[2] * syw, z1 = -v[0] * syw + v[2] * cyw, y = v[1]; const cp = Math.cos(rotX), sp = Math.sin(rotX); return [x, y * cp - z1 * sp, y * sp + z1 * cp]; }
     const proj = (v) => [cx + v[0] * R, cy - v[1] * R, v[2]];
@@ -173,23 +191,20 @@
         ctx.globalAlpha = 0.95; ctx.beginPath(); for (const p of uf) { ctx.moveTo(p[0] + 2.4, p[1]); ctx.arc(p[0], p[1], 2.4, 0, 7); } ctx.fill();
         ctx.globalAlpha = 0.3; ctx.beginPath(); for (const p of ub) { ctx.moveTo(p[0] + 1.6, p[1]); ctx.arc(p[0], p[1], 1.6, 0, 7); } ctx.fill();
         ctx.globalAlpha = 1; }
+      drawBorders();   // thin continent outlines over the member dots
       ctx.save(); ctx.lineCap = 'round'; BUYERS.forEach((b) => { if (b.center) drawArc(b.p, b.center.p, BUY, 0.13, 1.26); }); ctx.restore(); ctx.globalAlpha = 1;
 
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
       for (let i = PARTS.length - 1; i >= 0; i--) { const pt = PARTS[i]; pt.t += pt.sp;
-        const col = pt.kind === 'in' ? BUY : pt.kind === 'out' ? GREEN : CYAN;
-        const lift = pt.kind === 'deliver' ? 1.12 : 1.26;
-        const seg = [pt.a, ctrlR(pt.a, pt.b, lift), pt.b];
+        const col = pt.kind === 'in' ? BUY : GREEN;
+        const seg = [pt.a, ctrlR(pt.a, pt.b, 1.26), pt.b];
         if (pt.t >= 1) {
           if (pt.kind === 'in') fanOut(pt.ctr);
-          else if (pt.kind === 'out') { FLOATS.push({ p: pt.b, t: 0 }); deliverToUsers(pt.b); }   // server reached → fan letters to its users
-          else FLOATS.push({ p: pt.b, t: 0 });                                                     // a user received the letter
-          if (FLOATS.length > 60) FLOATS.shift();
+          else { FLOATS.push({ p: pt.b, t: 0 }); if (FLOATS.length > 40) FLOATS.shift(); startBurst(pt.b); }   // server reached → letters to every member
           PARTS.splice(i, 1); continue;
         }
         const v = rot(bez(seg[0], seg[1], seg[2], pt.t)), p = proj(v);
         if (pt.kind === 'out') drawArc(pt.a, pt.b, GREEN, 0.1, 1.26);
-        else if (pt.kind === 'deliver') drawArc(pt.a, pt.b, CYAN, 0.07, 1.12);
         if (v[2] > -0.05) {
           pt.trail.push([p[0], p[1]]); if (pt.trail.length > 9) pt.trail.shift();
           const tr = pt.trail; ctx.lineCap = 'round';
@@ -199,10 +214,16 @@
           if (v[2] > 0.15) { ctx.save(); ctx.globalAlpha = Math.min(1, (v[2] - 0.15) * 3); ctx.globalCompositeOperation = 'source-over';
             // Buyer -> hub carries money ($); hub -> server carries the broadcast (envelope).
             if (pt.kind === 'in') { ctx.font = '800 18px Roboto,system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col; ctx.fillText('$', p[0], p[1] - 13); }
-            else if (pt.kind === 'deliver') envelope(p[0], p[1] - 9, 9, col);
             else envelope(p[0], p[1] - 14, 13, col);
             ctx.restore(); ctx.globalAlpha = 1; }
         } else { pt.trail.length = 0; }
+      }
+      // Delivery bursts: one letter to EVERY member, drawn as batched bright dots (one fill/burst).
+      for (let bi = BURSTS.length - 1; bi >= 0; bi--) {
+        const bu = BURSTS[bi]; bu.t += bu.sp; if (bu.t >= 1) { BURSTS.splice(bi, 1); continue; }
+        const rr = 1.5 + 0.6 * bu.t; ctx.fillStyle = CYAN; ctx.globalAlpha = 0.85 * (1 - bu.t * 0.35); ctx.beginPath();
+        for (const s of bu.segs) { const v = rot(bez(s[0], s[1], s[2], bu.t)); if (v[2] <= -0.05) continue; const p = proj(v); ctx.moveTo(p[0] + rr, p[1]); ctx.arc(p[0], p[1], rr, 0, 7); }
+        ctx.fill();
       }
       ctx.restore(); ctx.globalAlpha = 1;
 
