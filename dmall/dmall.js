@@ -824,7 +824,8 @@
   /* ---- broadcast tasks: REAL runs from the operator (Active/Paused/Completed) ---- */
   const TASK_PAGE_SIZE = 10;
   let taskPage = 1, taskFilter = 'active', taskRuns = [];
-  function runGroup(s) { return (s === 'completed' || s === 'failed' || s === 'stopped') ? 'done' : (s === 'paused' ? 'paused' : 'active'); }
+  // Stopped-but-not-finished runs (user- or system-halted) belong under "Paused", not "Completed".
+  function runGroup(s) { return (s === 'completed' || s === 'failed') ? 'done' : (s === 'paused' || s === 'stopped') ? 'paused' : 'active'; }
   function runChip(s) {
     return ({ running: ['green', 'dm_active'], queued: ['green', 'dm_active'], completed: ['blue', 'dm_done'], failed: ['red', 'dm_error'], stopped: ['amber', 'dm_paused'], paused: ['amber', 'dm_paused'] })[s] || ['green', 'dm_active'];
   }
