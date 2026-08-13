@@ -51,7 +51,7 @@
       if (r.ok) {
         const d = await r.json();
         if (Array.isArray(d.servers) && d.servers.length) {
-          FEED = d.servers.map((s, i) => ({ name: s.name, id: s.id, img: s.icon || null, color: GLOBE_PAL[i % GLOBE_PAL.length], letter: (String(s.name || '?').trim()[0] || '?').toUpperCase() }));
+          FEED = d.servers.map((s, i) => ({ name: s.name, id: s.id, members: Number(s.members) || 0, img: s.icon || null, color: GLOBE_PAL[i % GLOBE_PAL.length], letter: (String(s.name || '?').trim()[0] || '?').toUpperCase() }));
           window.dispatchEvent(new Event('vemoni:feed'));
         }
       }
@@ -143,22 +143,38 @@
       const pPos = fibSphere(Math.max(1, all.length));
       const cPos = [ll(90, 0), ll(-90, 0), ll(0, 0), ll(0, 180)];
       const bPos = [ll(8, 26), ll(48, -66), ll(-28, 116), ll(64, 6), ll(-56, 44), ll(20, -174), ll(40, 168), ll(-6, -54), ll(30, -118), ll(-46, -20), ll(56, 128), ll(-18, 74)];
-      pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || iconUrl(s.id, s.icon); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null, letter: (s.letter || (s.name || '?').trim()[0] || '?').toUpperCase() }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
+      pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || iconUrl(s.id, s.icon); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null, members: Number(s.members) || 0, users: [], letter: (s.letter || (s.name || '?').trim()[0] || '?').toUpperCase() }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
       cPos.forEach((p) => CENTERS.push({ p }));
       bPos.forEach((p) => BUYERS.push({ p, center: null }));
       if (!USERS.length) clusteredUsers(700).forEach((p) => USERS.push({ p }));   // members clustered into continents/cities (built once)
+      assignUsers();
       BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
+    }
+    // Split the members among servers ∝ each server's member count — that's each server's audience.
+    function assignUsers() {
+      PARTNERS.forEach((p) => { p.users = []; });
+      if (!PARTNERS.length) return;
+      const cum = []; let acc = 0;
+      for (const p of PARTNERS) { acc += Math.max(1, p.members || 1); cum.push(acc); }
+      const tot = acc;
+      for (const u of USERS) { const r = Math.random() * tot; let idx = cum.findIndex((c) => r < c); if (idx < 0) idx = PARTNERS.length - 1; PARTNERS[idx].users.push(u.p); }
     }
 
     // Particles: order flows buyer -> hub (blue), then the hub fans the broadcast OUT
     // to catalog servers as letters (green). Nothing returns to the buyer.
     const PARTS = [], FLOATS = [];
     function spawn() { if (!BUYERS.length || !CENTERS.length) return; const bn = BUYERS[(Math.random() * BUYERS.length) | 0], c = bn.center; if (!c) return; PARTS.push({ kind: 'in', a: bn.p, b: c.p, ctr: c, t: 0, sp: 0.008 + Math.random() * 0.005, trail: [] }); }
-    function fanOut(c) { if (!PARTNERS.length) return; const k = Math.random() < 0.3 ? 2 + ((Math.random() * 3) | 0) : 1; for (let n = 0; n < k; n++) { const pn = PARTNERS[(Math.random() * PARTNERS.length) | 0]; PARTS.push({ kind: 'out', a: c.p, b: pn.p, t: 0, sp: 0.009 + Math.random() * 0.006, trail: [] }); } }
-    // A request reaching a server fans a letter out to EVERY member — one bright, brief burst
-    // (rendered as batched dots so "to everyone" stays cheap). Capped so bursts can't pile up.
-    const BURSTS = [];
-    function startBurst(o) { if (BURSTS.length >= 2 || !USERS.length) return; const segs = USERS.map((u) => [o, ctrlR(o, u.p, 1.1), u.p]); BURSTS.push({ segs, t: 0, sp: 0.015 + Math.random() * 0.006 }); }
+    function fanOut(c) { if (!PARTNERS.length) return; const k = Math.random() < 0.3 ? 2 + ((Math.random() * 3) | 0) : 1; for (let n = 0; n < k; n++) { const pn = PARTNERS[(Math.random() * PARTNERS.length) | 0]; PARTS.push({ kind: 'out', a: c.p, b: pn.p, pn, t: 0, sp: 0.009 + Math.random() * 0.006, trail: [] }); } }
+    // A request reaching a server delivers to a CHUNK of its own audience (sized ∝ the server's
+    // member count), each as its own thread — same style/animation as the hub→server letters.
+    function startDeliver(pn) {
+      if (!pn || !pn.users || !pn.users.length) return;
+      const k = Math.min(18, Math.max(3, Math.round(pn.users.length * 0.35)));
+      for (let n = 0; n < k && PARTS.length < 100; n++) {
+        const u = pn.users[(Math.random() * pn.users.length) | 0];
+        PARTS.push({ kind: 'deliver', a: pn.p, b: u, t: 0, sp: 0.013 + Math.random() * 0.008, trail: [] });
+      }
+    }
 
     function rot(v) { const cyw = Math.cos(rotY), syw = Math.sin(rotY); const x = v[0] * cyw + v[2] * syw, z1 = -v[0] * syw + v[2] * cyw, y = v[1]; const cp = Math.cos(rotX), sp = Math.sin(rotX); return [x, y * cp - z1 * sp, y * sp + z1 * cp]; }
     const proj = (v) => [cx + v[0] * R, cy - v[1] * R, v[2]];
@@ -196,15 +212,18 @@
 
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
       for (let i = PARTS.length - 1; i >= 0; i--) { const pt = PARTS[i]; pt.t += pt.sp;
-        const col = pt.kind === 'in' ? BUY : GREEN;
-        const seg = [pt.a, ctrlR(pt.a, pt.b, 1.26), pt.b];
+        const col = pt.kind === 'in' ? BUY : pt.kind === 'deliver' ? CYAN : GREEN;
+        const lift = pt.kind === 'deliver' ? 1.14 : 1.26;
+        const seg = [pt.a, ctrlR(pt.a, pt.b, lift), pt.b];
         if (pt.t >= 1) {
           if (pt.kind === 'in') fanOut(pt.ctr);
-          else { FLOATS.push({ p: pt.b, t: 0 }); if (FLOATS.length > 40) FLOATS.shift(); startBurst(pt.b); }   // server reached → letters to every member
+          else if (pt.kind === 'out') { FLOATS.push({ p: pt.b, t: 0 }); if (FLOATS.length > 40) FLOATS.shift(); startDeliver(pt.pn); }   // server reached → deliver to its audience chunk
+          else { FLOATS.push({ p: pt.b, t: 0 }); if (FLOATS.length > 40) FLOATS.shift(); }   // a member received the letter
           PARTS.splice(i, 1); continue;
         }
         const v = rot(bez(seg[0], seg[1], seg[2], pt.t)), p = proj(v);
         if (pt.kind === 'out') drawArc(pt.a, pt.b, GREEN, 0.1, 1.26);
+        else if (pt.kind === 'deliver') drawArc(pt.a, pt.b, CYAN, 0.08, 1.14);
         if (v[2] > -0.05) {
           pt.trail.push([p[0], p[1]]); if (pt.trail.length > 9) pt.trail.shift();
           const tr = pt.trail; ctx.lineCap = 'round';
@@ -217,13 +236,6 @@
             else envelope(p[0], p[1] - 14, 13, col);
             ctx.restore(); ctx.globalAlpha = 1; }
         } else { pt.trail.length = 0; }
-      }
-      // Delivery bursts: one letter to EVERY member, drawn as batched bright dots (one fill/burst).
-      for (let bi = BURSTS.length - 1; bi >= 0; bi--) {
-        const bu = BURSTS[bi]; bu.t += bu.sp; if (bu.t >= 1) { BURSTS.splice(bi, 1); continue; }
-        const rr = 1.5 + 0.6 * bu.t; ctx.fillStyle = CYAN; ctx.globalAlpha = 0.85 * (1 - bu.t * 0.35); ctx.beginPath();
-        for (const s of bu.segs) { const v = rot(bez(s[0], s[1], s[2], bu.t)); if (v[2] <= -0.05) continue; const p = proj(v); ctx.moveTo(p[0] + rr, p[1]); ctx.arc(p[0], p[1], rr, 0, 7); }
-        ctx.fill();
       }
       ctx.restore(); ctx.globalAlpha = 1;
 
