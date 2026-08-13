@@ -105,9 +105,14 @@
       const tw = continents.reduce((a, b) => a + b.w, 0), pts = [];
       for (const cont of continents) {
         const n = Math.max(1, Math.round(total * cont.w / tw));
-        const cityN = Math.round(n * 0.5);                 // half pack into the biggest city
-        const cityC = nearPoint(cont.c, 0.16);             // the city sits a bit off the continent centre
-        for (let i = 0; i < n; i++) pts.push(i < cityN ? nearPoint(cityC, 0.08) : nearPoint(cont.c, 0.34));
+        // Two dense "cities" per continent (the most populated cores) + a looser sprawl around it.
+        const cityA = nearPoint(cont.c, 0.16), cityB = nearPoint(cont.c, 0.20);
+        for (let i = 0; i < n; i++) {
+          const r = Math.random();
+          if (r < 0.4) pts.push(nearPoint(cityA, 0.055));
+          else if (r < 0.62) pts.push(nearPoint(cityB, 0.05));
+          else pts.push(nearPoint(cont.c, 0.30));
+        }
       }
       return pts;
     }
@@ -120,7 +125,7 @@
       pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || iconUrl(s.id, s.icon); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null, letter: (s.letter || (s.name || '?').trim()[0] || '?').toUpperCase() }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
       cPos.forEach((p) => CENTERS.push({ p }));
       bPos.forEach((p) => BUYERS.push({ p, center: null }));
-      if (!USERS.length) clusteredUsers(100).forEach((p) => USERS.push({ p }));   // members clustered into continents/cities (built once)
+      if (!USERS.length) clusteredUsers(300).forEach((p) => USERS.push({ p }));   // members clustered into continents/cities (built once)
       BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
     }
 
@@ -191,7 +196,7 @@
       all.forEach((it) => { it.v = rot(it.n.p); it.p = proj(it.v); it.n._sx = it.p[0]; it.n._sy = it.p[1]; it.n._dep = it.v[2]; });
       all.sort((a, b) => a.v[2] - b.v[2]);
       for (const it of all) { const n = it.n, p = it.p, dep = it.v[2]; if (dep < -0.2) continue; const fade = dep > 0 ? 1 : 0.32;
-        if (it.kind === 'u') { const rr = 8; ctx.globalAlpha = fade; ctx.fillStyle = '#bcd6ff'; ctx.beginPath(); ctx.arc(p[0], p[1] - rr * 0.26, rr * 0.32, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(p[0], p[1] + rr * 0.6, rr * 0.56, Math.PI, 2 * Math.PI); ctx.fill(); ctx.globalAlpha = 1; }
+        if (it.kind === 'u') { const rr = dep > 0 ? 2.4 : 1.6; ctx.globalAlpha = dep > 0 ? 0.95 : 0.3; ctx.fillStyle = '#cfe4ff'; ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
         else if (it.kind === 'b') { const rr = 8; ctx.globalAlpha = fade; if (buyerImgOk) { const s = rr * 2.64; ctx.drawImage(buyerImg, p[0] - s / 2, p[1] - s / 2, s, s); } else { ctx.fillStyle = BUY; ctx.beginPath(); ctx.arc(p[0], p[1] - rr * 0.26, rr * 0.32, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(p[0], p[1] + rr * 0.6, rr * 0.56, Math.PI, 2 * Math.PI); ctx.fill(); } ctx.globalAlpha = 1; }
         else if (it.kind === 'p') { const rr = 13; ctx.globalAlpha = fade; if (n.img) { ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.fillStyle = '#0e1a2c'; ctx.fillRect(p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore(); } else { ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = n.color; ctx.fill(); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 ' + Math.round(rr * 1.15) + 'px Roboto,system-ui,sans-serif'; ctx.fillText(n.letter || '?', p[0], p[1] + 0.5); } ctx.globalAlpha = 1; }
         else { const rr = 11, s = rr * 2.2; ctx.globalAlpha = fade; if (secureImgOk) ctx.drawImage(secureImg, p[0] - s / 2, p[1] - s / 2, s, s); else if (logoOk) ctx.drawImage(logo, p[0] - s / 2, p[1] - s / 2, s, s); ctx.globalAlpha = 1; }
