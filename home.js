@@ -92,26 +92,25 @@
       let x = c[0] + rx / len * s, y = c[1] + ry / len * s, z = c[2] + rz / len * s;
       const L = Math.hypot(x, y, z) || 1; return [x / L, y / L, z / L];
     }
-    // Members clustered into "continents", each with a dense "city" core + a looser sprawl.
+    // Members clustered into "continents" weighted by real population share, each with several
+    // dense "city" cores plus a looser sprawl — so the landmasses are clearly distinguishable and
+    // the geography roughly matches where people actually are (Asia densest, Oceania sparsest).
     function clusteredUsers(total) {
       const continents = [
-        { c: ll(42, -100), w: 22 },   // North America
-        { c: ll(-14, -58), w: 13 },   // South America
-        { c: ll(50, 12), w: 20 },     // Europe
-        { c: ll(3, 22), w: 16 },      // Africa
-        { c: ll(44, 100), w: 21 },    // Asia
-        { c: ll(-27, 134), w: 8 },    // Oceania
+        { c: ll(45, 90), w: 59, spread: 0.42, cities: 6 },     // Asia
+        { c: ll(2, 20), w: 18, spread: 0.34, cities: 3 },      // Africa
+        { c: ll(50, 14), w: 10, spread: 0.20, cities: 3 },     // Europe
+        { c: ll(42, -100), w: 8, spread: 0.34, cities: 2 },    // North America
+        { c: ll(-14, -58), w: 6, spread: 0.30, cities: 2 },    // South America
+        { c: ll(-27, 134), w: 1.2, spread: 0.18, cities: 1 },  // Oceania
       ];
       const tw = continents.reduce((a, b) => a + b.w, 0), pts = [];
       for (const cont of continents) {
-        const n = Math.max(1, Math.round(total * cont.w / tw));
-        // Two dense "cities" per continent (the most populated cores) + a looser sprawl around it.
-        const cityA = nearPoint(cont.c, 0.16), cityB = nearPoint(cont.c, 0.20);
+        const n = Math.max(3, Math.round(total * cont.w / tw));
+        const cores = []; for (let k = 0; k < cont.cities; k++) cores.push(nearPoint(cont.c, cont.spread * 0.6));
         for (let i = 0; i < n; i++) {
-          const r = Math.random();
-          if (r < 0.4) pts.push(nearPoint(cityA, 0.055));
-          else if (r < 0.62) pts.push(nearPoint(cityB, 0.05));
-          else pts.push(nearPoint(cont.c, 0.30));
+          if (Math.random() < 0.65) pts.push(nearPoint(cores[(Math.random() * cores.length) | 0], 0.05));   // packed into a city
+          else pts.push(nearPoint(cont.c, cont.spread));                                                    // continent sprawl
         }
       }
       return pts;
@@ -125,7 +124,7 @@
       pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || iconUrl(s.id, s.icon); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null, letter: (s.letter || (s.name || '?').trim()[0] || '?').toUpperCase() }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
       cPos.forEach((p) => CENTERS.push({ p }));
       bPos.forEach((p) => BUYERS.push({ p, center: null }));
-      if (!USERS.length) clusteredUsers(300).forEach((p) => USERS.push({ p }));   // members clustered into continents/cities (built once)
+      if (!USERS.length) clusteredUsers(800).forEach((p) => USERS.push({ p }));   // members clustered into continents/cities (built once)
       BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
     }
 
