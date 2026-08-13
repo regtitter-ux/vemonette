@@ -57,6 +57,9 @@
   }); }
   $$('.dm-mode', modebar).forEach((btn) => {
     btn.addEventListener('click', () => {
+      // In the admin Stays-embed the view is fixed to the Stays orders — ignore any mode switch
+      // (order.js may click the DMALL button after auth, which caused a Stays→DMALL flash).
+      if (document.documentElement.classList.contains('embed-stays')) return;
       const mode = btn.dataset.mode;
       // Stays (join-buying) and API are staff-only; the public gets DMALL + Cabinet.
       if ((mode === 'stays' || mode === 'api') && !window.__VEMONI_DM_STAFF__) return;
