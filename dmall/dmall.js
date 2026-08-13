@@ -126,6 +126,8 @@
       '</div>' + menu + '</button>';
   }
   function plusCell() {
+    // "Add a server" is a staff-only action (admins/owners); hidden for regular users.
+    if (!window.__VEMONI_DM_STAFF__) return '';
     return '<button class="dm-sp-card dm-sp-add" id="dm-sp-add"><div class="dm-sp-add-inner"><span class="dm-sp-plus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span><span data-dm="lot_add">Add a server</span></div></button>';
   }
   function renderLots(lots) {
