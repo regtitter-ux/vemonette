@@ -751,3 +751,14 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .tk-new-bar.dm-chat-form{ padding:0; border-top:0; }
 .tk-inbar .dm-chat-input{ min-height:24px; }
 .tk-new .tk-pend{ margin-top:-4px; }
+
+/* ---- admin Stays-embed (?embed=stays): show ONLY the Stays orders, hide the whole DMALL shell ---- */
+html.embed-stays #app{ display:block !important; }
+html.embed-stays main.wrap{ display:block !important; }
+html.embed-stays #dm-modebar,
+html.embed-stays #dmall,
+html.embed-stays #dmcab,
+html.embed-stays #dmtickets,
+html.embed-stays #dmapi,
+html.embed-stays .dm-chat-btn{ display:none !important; }
+html.embed-stays .dm-content{ display:block !important; max-width:none !important; }

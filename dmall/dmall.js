@@ -1461,11 +1461,13 @@
   updatePreview();
   // Default to DMALL on load so a refresh never lands on the Stays view. Self-sufficient — we
   // don't rely on order.js clicking the mode button (that can race with this script loading).
-  // In the admin Stays-embed (?embed=stays) order.js drives the view, so we leave it alone.
+  // In the admin Stays-embed (?embed=stays) we leave the Stays-orders view alone (order.js drives
+  // it); the whole DMALL app-shell (sidebar + panels) is neutralized via the embed-stays CSS.
+  if (/[?&]embed=stays(?:&|$)/.test(location.search || '')) document.documentElement.classList.add('embed-stays');
   if (!document.documentElement.classList.contains('embed-stays')) {
     const dmBtn = modebar.querySelector('.dm-mode[data-mode="dmall"]');
     if (dmBtn && dmall.hidden) dmBtn.click(); else loadLots();
-  } else { loadLots(); }
+  }
   dmStatusStream();   // live shared server-availability updates
   // Tickets unread badge: load on start, poll in the background, and refresh on tab focus so
   // staff see new tickets/replies and users see answers without reopening the panel.
