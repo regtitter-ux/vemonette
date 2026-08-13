@@ -169,7 +169,7 @@ main, .nav, .footer { position: relative; z-index: 1; }
 .hero-copy .pill { margin-bottom: 20px; }
 .hero-copy .hero-sub { margin: 20px 0 30px; max-width: 520px; text-align: left; }
 .hero-copy .hero-cta { justify-content: flex-start; }
-.viz { position: relative; height: 440px; background: none; border: none; touch-action: none; }
+.viz { position: relative; height: 484px; background: none; border: none; touch-action: none; }
 .viz canvas { display: block; width: 100%; height: 100%; }
 .viz-tip { position: absolute; transform: translate(-50%, -100%); z-index: 3; pointer-events: none; white-space: nowrap; padding: 4px 9px; border-radius: 7px; font-size: 12px; font-weight: 700; color: #eaf2ff; background: rgba(10, 16, 28, .92); border: 1px solid rgba(120, 160, 220, .28); box-shadow: 0 6px 18px rgba(0, 0, 0, .45); }
 .viz-tip[hidden] { display: none; }
@@ -181,7 +181,7 @@ main, .nav, .footer { position: relative; z-index: 1; }
   .hero-copy { align-items: center; text-align: center; }
   .hero-copy .hero-cta { justify-content: center; }
   .hero-copy .hero-sub { margin-left: auto; margin-right: auto; text-align: center; }
-  .viz { height: 330px; }
+  .viz { height: 363px; }
 }
 
 .hero-stats { display: flex; gap: 16px; margin-top: 54px; flex-wrap: wrap; justify-content: center; }
