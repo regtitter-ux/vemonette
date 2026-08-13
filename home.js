@@ -73,7 +73,7 @@
     const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = '/assets/logo.png';
     const buyerImg = new Image(); let buyerImgOk = false; buyerImg.onload = () => { buyerImgOk = true; }; buyerImg.src = '/assets/suit.png';
     const secureImg = new Image(); let secureImgOk = false; secureImg.onload = () => { secureImgOk = true; }; secureImg.src = '/assets/secure.png';
-    let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
+    let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf, visible = true;
     let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0, spinVel = velY;
 
     const NDOTS = 560, dots = [];
@@ -92,26 +92,31 @@
       let x = c[0] + rx / len * s, y = c[1] + ry / len * s, z = c[2] + rz / len * s;
       const L = Math.hypot(x, y, z) || 1; return [x / L, y / L, z / L];
     }
-    // Members clustered into "continents" weighted by real population share, each with several
-    // dense "city" cores plus a looser sprawl — so the landmasses are clearly distinguishable and
-    // the geography roughly matches where people actually are (Asia densest, Oceania sparsest).
+    // Members placed on ~60 land anchors that trace the real continents (rough world map),
+    // each weighted by population density, so the dot cloud reads as Earth's landmasses.
+    // [lat, lon, weight]. Sparse interiors (Sahara, Siberia) get few/no anchors on purpose.
+    const LAND = [
+      // North America
+      [63, -150, .3], [58, -125, .4], [54, -110, .4], [50, -97, .4], [45, -75, 1.0], [41, -74, 1.4],
+      [40, -88, 1.0], [39, -105, .7], [37, -120, 1.1], [29, -98, .8], [25, -100, 1.0], [19, -99, 1.2], [15, -90, .7], [28, -81, .7],
+      // South America
+      [8, -66, .8], [4, -74, .9], [-3, -60, .6], [-8, -48, .8], [-12, -47, .7], [-23, -46, 1.4], [-30, -60, .7], [-34, -58, 1.0], [-16, -68, .6], [-33, -71, .7], [-40, -72, .3],
+      // Europe
+      [55, -3, 1.1], [48, 2, 1.2], [40, -4, 1.0], [43, 12, 1.0], [52, 9, 1.4], [50, 20, 1.0], [60, 16, .5], [47, 28, .9], [55, 37, 1.0], [50, 31, .8],
+      // Africa
+      [33, -6, .6], [30, 31, 1.2], [15, 6, .5], [9, 8, 1.6], [6, 3, .8], [-1, 37, .9], [9, 39, 1.0], [-4, 15, .6], [-6, 35, .6], [-26, 28, 1.0], [-33, 19, .5],
+      // Asia
+      [39, 35, 1.0], [33, 44, .8], [30, 53, .9], [24, 47, .5], [28, 77, 2.6], [19, 73, 1.9], [13, 78, 1.7], [23, 90, 1.6], [31, 71, 1.2],
+      [39, 116, 1.9], [31, 121, 2.4], [23, 113, 1.7], [30, 104, 1.5], [45, 84, .5], [56, 60, .5], [55, 83, .4], [62, 100, .3], [55, 128, .4],
+      [14, 101, 1.2], [11, 107, 1.0], [-6, 107, 1.7], [-3, 120, .7], [14, 121, 1.1], [36, 138, 1.6], [37, 127, .9],
+      // Oceania
+      [-33, 151, .6], [-37, 145, .5], [-32, 116, .3], [-41, 175, .3],
+    ];
     function clusteredUsers(total) {
-      const continents = [
-        { c: ll(45, 90), w: 59, spread: 0.42, cities: 6 },     // Asia
-        { c: ll(2, 20), w: 18, spread: 0.34, cities: 3 },      // Africa
-        { c: ll(50, 14), w: 10, spread: 0.20, cities: 3 },     // Europe
-        { c: ll(42, -100), w: 8, spread: 0.34, cities: 2 },    // North America
-        { c: ll(-14, -58), w: 6, spread: 0.30, cities: 2 },    // South America
-        { c: ll(-27, 134), w: 1.2, spread: 0.18, cities: 1 },  // Oceania
-      ];
-      const tw = continents.reduce((a, b) => a + b.w, 0), pts = [];
-      for (const cont of continents) {
-        const n = Math.max(3, Math.round(total * cont.w / tw));
-        const cores = []; for (let k = 0; k < cont.cities; k++) cores.push(nearPoint(cont.c, cont.spread * 0.6));
-        for (let i = 0; i < n; i++) {
-          if (Math.random() < 0.65) pts.push(nearPoint(cores[(Math.random() * cores.length) | 0], 0.05));   // packed into a city
-          else pts.push(nearPoint(cont.c, cont.spread));                                                    // continent sprawl
-        }
+      const tw = LAND.reduce((a, l) => a + l[2], 0), pts = [];
+      for (const l of LAND) {
+        const c = ll(l[0], l[1]), n = Math.max(1, Math.round(total * l[2] / tw));
+        for (let i = 0; i < n; i++) pts.push(nearPoint(c, 0.045 + Math.random() * 0.03));
       }
       return pts;
     }
@@ -155,8 +160,19 @@
       const g = ctx.createRadialGradient(cx, cy, R * 0.15, cx, cy, R * 1.35); g.addColorStop(0, 'rgba(34,168,240,.12)'); g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.35, 0, 7); ctx.fill(); ctx.restore();
       if (logoOk) { ctx.save(); ctx.globalAlpha = 0.11; const s = R * 0.85; ctx.drawImage(logo, cx - s / 2, cy - s / 2, s, s); ctx.restore(); }
-      for (const d of dots) { const v = rot(d), p = proj(v), dep = v[2]; ctx.globalAlpha = dep > 0 ? (0.22 + 0.5 * dep) : (0.05 + 0.1 * (1 + dep)); ctx.fillStyle = dep > 0 ? 'rgb(122,192,255)' : 'rgb(64,104,152)'; ctx.beginPath(); ctx.arc(p[0], p[1], dep > 0 ? (0.7 + 1.0 * dep) : 0.6, 0, 7); ctx.fill(); }
+      // Planet dots — batched into a few depth bands (one fill per band instead of ~560 fills).
+      const BANDS = 6, front = Array.from({ length: BANDS }, () => []), back = [];
+      for (const d of dots) { const v = rot(d), p = proj(v); if (v[2] > 0) front[Math.min(BANDS - 1, (v[2] * BANDS) | 0)].push(p); else back.push(p); }
+      ctx.fillStyle = 'rgb(64,104,152)'; ctx.globalAlpha = 0.12; ctx.beginPath(); for (const p of back) { ctx.moveTo(p[0] + 0.6, p[1]); ctx.arc(p[0], p[1], 0.6, 0, 7); } ctx.fill();
+      ctx.fillStyle = 'rgb(122,192,255)';
+      for (let b = 0; b < BANDS; b++) { const m = (b + 0.5) / BANDS, r = 0.7 + 1.0 * m; ctx.globalAlpha = 0.22 + 0.5 * m; ctx.beginPath(); for (const p of front[b]) { ctx.moveTo(p[0] + r, p[1]); ctx.arc(p[0], p[1], r, 0, 7); } ctx.fill(); }
       ctx.globalAlpha = 1;
+      // Members — batched: front (bright) + back (faint), two fills for the whole population.
+      { const uf = [], ub = []; for (const u of USERS) { const v = rot(u.p); const p = proj(v); (v[2] > 0 ? uf : ub).push(p); }
+        ctx.fillStyle = '#cfe4ff';
+        ctx.globalAlpha = 0.95; ctx.beginPath(); for (const p of uf) { ctx.moveTo(p[0] + 2.4, p[1]); ctx.arc(p[0], p[1], 2.4, 0, 7); } ctx.fill();
+        ctx.globalAlpha = 0.3; ctx.beginPath(); for (const p of ub) { ctx.moveTo(p[0] + 1.6, p[1]); ctx.arc(p[0], p[1], 1.6, 0, 7); } ctx.fill();
+        ctx.globalAlpha = 1; }
       ctx.save(); ctx.lineCap = 'round'; BUYERS.forEach((b) => { if (b.center) drawArc(b.p, b.center.p, BUY, 0.13, 1.26); }); ctx.restore(); ctx.globalAlpha = 1;
 
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -191,18 +207,17 @@
       ctx.restore(); ctx.globalAlpha = 1;
 
       const all = [];
-      USERS.forEach((n) => all.push({ n, kind: 'u' })); BUYERS.forEach((n) => all.push({ n, kind: 'b' })); PARTNERS.forEach((n) => all.push({ n, kind: 'p' })); CENTERS.forEach((n) => all.push({ n, kind: 'c' }));
+      BUYERS.forEach((n) => all.push({ n, kind: 'b' })); PARTNERS.forEach((n) => all.push({ n, kind: 'p' })); CENTERS.forEach((n) => all.push({ n, kind: 'c' }));
       all.forEach((it) => { it.v = rot(it.n.p); it.p = proj(it.v); it.n._sx = it.p[0]; it.n._sy = it.p[1]; it.n._dep = it.v[2]; });
       all.sort((a, b) => a.v[2] - b.v[2]);
       for (const it of all) { const n = it.n, p = it.p, dep = it.v[2]; if (dep < -0.2) continue; const fade = dep > 0 ? 1 : 0.32;
-        if (it.kind === 'u') { const rr = dep > 0 ? 2.4 : 1.6; ctx.globalAlpha = dep > 0 ? 0.95 : 0.3; ctx.fillStyle = '#cfe4ff'; ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
-        else if (it.kind === 'b') { const rr = 8; ctx.globalAlpha = fade; if (buyerImgOk) { const s = rr * 2.64; ctx.drawImage(buyerImg, p[0] - s / 2, p[1] - s / 2, s, s); } else { ctx.fillStyle = BUY; ctx.beginPath(); ctx.arc(p[0], p[1] - rr * 0.26, rr * 0.32, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(p[0], p[1] + rr * 0.6, rr * 0.56, Math.PI, 2 * Math.PI); ctx.fill(); } ctx.globalAlpha = 1; }
+        if (it.kind === 'b') { const rr = 8; ctx.globalAlpha = fade; if (buyerImgOk) { const s = rr * 2.64; ctx.drawImage(buyerImg, p[0] - s / 2, p[1] - s / 2, s, s); } else { ctx.fillStyle = BUY; ctx.beginPath(); ctx.arc(p[0], p[1] - rr * 0.26, rr * 0.32, 0, 7); ctx.fill(); ctx.beginPath(); ctx.arc(p[0], p[1] + rr * 0.6, rr * 0.56, Math.PI, 2 * Math.PI); ctx.fill(); } ctx.globalAlpha = 1; }
         else if (it.kind === 'p') { const rr = 13; ctx.globalAlpha = fade; if (n.img) { ctx.save(); ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.clip(); ctx.fillStyle = '#0e1a2c'; ctx.fillRect(p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.drawImage(n.img, p[0] - rr, p[1] - rr, rr * 2, rr * 2); ctx.restore(); } else { ctx.beginPath(); ctx.arc(p[0], p[1], rr, 0, 7); ctx.fillStyle = n.color; ctx.fill(); ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = '800 ' + Math.round(rr * 1.15) + 'px Roboto,system-ui,sans-serif'; ctx.fillText(n.letter || '?', p[0], p[1] + 0.5); } ctx.globalAlpha = 1; }
         else { const rr = 11, s = rr * 2.2; ctx.globalAlpha = fade; if (secureImgOk) ctx.drawImage(secureImg, p[0] - s / 2, p[1] - s / 2, s, s); else if (logoOk) ctx.drawImage(logo, p[0] - s / 2, p[1] - s / 2, s, s); ctx.globalAlpha = 1; }
       }
       for (let i = FLOATS.length - 1; i >= 0; i--) { const fl = FLOATS[i]; fl.t += 0.018; if (fl.t >= 1) { FLOATS.splice(i, 1); continue; } drawFloat(fl); }
       if (!reduce && Math.random() < 0.09 && PARTS.length < 22) spawn();
-      raf = requestAnimationFrame(draw);
+      raf = visible ? requestAnimationFrame(draw) : 0;   // stop the loop entirely while off-screen
     }
 
     const rotBy = (dx, dy) => { const vx = dx * 0.006; rotY += vx; rotX += dy * 0.006; rotX = Math.max(-1.15, Math.min(1.15, rotX)); spinVel = Math.max(-0.15, Math.min(0.15, vx)); };
@@ -225,9 +240,13 @@
       tip.style.left = h._sx + 'px'; tip.style.top = (h._sy - 14) + 'px'; tip.hidden = false; wrap.style.cursor = 'pointer';
     });
     wrap.addEventListener('mouseleave', () => { tip.hidden = true; });
-    window.addEventListener('resize', () => { cancelAnimationFrame(raf); layout(); draw(); });
+    window.addEventListener('resize', () => { cancelAnimationFrame(raf); raf = 0; layout(); if (visible) draw(); });
     window.addEventListener('vemoni:feed', () => buildNodes());
-    requestAnimationFrame(() => { layout(); buildNodes(); for (let i = 0; i < 10; i++) spawn(); draw(); });
+    // Pause the whole render loop when the hero is scrolled off-screen (no wasted work).
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver((es) => { visible = es[0].isIntersecting; if (visible && !raf) draw(); }, { threshold: 0.01 }).observe(wrap);
+    }
+    requestAnimationFrame(() => { layout(); buildNodes(); for (let i = 0; i < 10; i++) spawn(); if (!raf) draw(); });
   })();
 
   /* ---------- i18n (EN captured from DOM, RU dict) ---------- */
