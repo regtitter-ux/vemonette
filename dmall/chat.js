@@ -589,4 +589,8 @@
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount);
   else mount();
+
+  // Shared toolkit so other features (tickets) can reuse the exact same emoji/sticker picker and
+  // message renderer as the chat — identical look + mechanics.
+  try { window.VemoniChatKit = { createPicker, renderBody }; } catch (_) {}
 })();
