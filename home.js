@@ -84,6 +84,33 @@
     const dist2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
     const nearest = (p, arr) => { let bi = 0, bd = Infinity; arr.forEach((n, i) => { const d = dist2(p, n.p); if (d < bd) { bd = d; bi = i; } }); return arr[bi]; };
     function fibSphere(n) { const pts = [], g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < n; i++) { const y = 1 - 2 * (i + 0.5) / n; const rr = Math.sqrt(Math.max(0, 1 - y * y)); const th = g * i; pts.push([Math.cos(th) * rr, y, Math.sin(th) * rr]); } return pts; }
+    // A point on the sphere within `spread` of center c (uniform over the little disk, sqrt for area).
+    function nearPoint(c, spread) {
+      let rx = Math.random() * 2 - 1, ry = Math.random() * 2 - 1, rz = Math.random() * 2 - 1;
+      const d = rx * c[0] + ry * c[1] + rz * c[2]; rx -= d * c[0]; ry -= d * c[1]; rz -= d * c[2];
+      const len = Math.hypot(rx, ry, rz) || 1, s = spread * Math.sqrt(Math.random());
+      let x = c[0] + rx / len * s, y = c[1] + ry / len * s, z = c[2] + rz / len * s;
+      const L = Math.hypot(x, y, z) || 1; return [x / L, y / L, z / L];
+    }
+    // Members clustered into "continents", each with a dense "city" core + a looser sprawl.
+    function clusteredUsers(total) {
+      const continents = [
+        { c: ll(42, -100), w: 22 },   // North America
+        { c: ll(-14, -58), w: 13 },   // South America
+        { c: ll(50, 12), w: 20 },     // Europe
+        { c: ll(3, 22), w: 16 },      // Africa
+        { c: ll(44, 100), w: 21 },    // Asia
+        { c: ll(-27, 134), w: 8 },    // Oceania
+      ];
+      const tw = continents.reduce((a, b) => a + b.w, 0), pts = [];
+      for (const cont of continents) {
+        const n = Math.max(1, Math.round(total * cont.w / tw));
+        const cityN = Math.round(n * 0.5);                 // half pack into the biggest city
+        const cityC = nearPoint(cont.c, 0.16);             // the city sits a bit off the continent centre
+        for (let i = 0; i < n; i++) pts.push(i < cityN ? nearPoint(cityC, 0.08) : nearPoint(cont.c, 0.34));
+      }
+      return pts;
+    }
     function buildNodes() {
       PARTNERS.length = CENTERS.length = BUYERS.length = 0;
       const all = (Array.isArray(FEED) ? FEED : []).filter((s) => s && s.name);
@@ -93,7 +120,7 @@
       pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || iconUrl(s.id, s.icon); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null, letter: (s.letter || (s.name || '?').trim()[0] || '?').toUpperCase() }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
       cPos.forEach((p) => CENTERS.push({ p }));
       bPos.forEach((p) => BUYERS.push({ p, center: null }));
-      USERS.length = 0; fibSphere(55).forEach((p) => USERS.push({ p }));   // members scattered over the planet
+      if (!USERS.length) clusteredUsers(100).forEach((p) => USERS.push({ p }));   // members clustered into continents/cities (built once)
       BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
     }
 
