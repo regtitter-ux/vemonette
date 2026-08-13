@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/dmall/order.css?v=48" />
-  <link rel="stylesheet" href="/dmall/dmall.css?v=60" />
+  <link rel="stylesheet" href="/dmall/dmall.css?v=61" />
   <link rel="stylesheet" href="/dmall/chat.css?v=8" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';
@@ -81,6 +81,7 @@
       <button class="dm-mode" data-mode="stays" hidden>Stays</button>
       <button class="dm-mode active" data-mode="dmall"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v10H8l-4 4V5Z"/></svg> <span data-dm="side_dmall">DMALL</span></button>
       <button class="dm-mode" data-mode="cab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 13h6V4H4v9Z"/><path d="M4 20h6v-4H4v4Z"/><path d="M14 20h6v-9h-6v9Z"/><path d="M14 8h6V4h-6v4Z"/></svg> <span data-dm="side_cabinet">Информация</span></button>
+      <button class="dm-mode dm-side-tk" data-mode="tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H6a2 2 0 0 1-2-2 2 2 0 0 0 0-4 2 2 0 0 1 0-4Z"/></svg> <span data-dm="side_tickets">Тикеты</span> <span class="dm-side-badge" id="dm-tk-badge" hidden></span></button>
       <button class="dm-mode dm-side-api" data-mode="api" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l-3 3 3 3"/><path d="M16 9l3 3-3 3"/><path d="M13 5l-2 14"/></svg> <span data-dm="side_api">API</span></button>
     </aside>
 
@@ -240,6 +241,19 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
     </div>
   </div>
 
+<!-- ============================ DMALL support tickets ============================ -->
+  <div id="dmtickets" hidden>
+    <div class="tk-head">
+      <div><h1 data-dm="tickets_title">Tickets</h1><p class="dmc-lead" id="tk-lead" data-dm="tickets_lead">Ask a question or report a problem — support will reply here.</p></div>
+      <button class="dm-btn primary" id="tk-new-btn" data-dm="tk_new">New ticket</button>
+    </div>
+    <div class="tk-filters" id="tk-filters" hidden></div>
+    <div class="tk-body">
+      <div class="tk-list" id="tk-list"></div>
+      <div class="tk-thread" id="tk-thread"></div>
+    </div>
+  </div>
+
 <!-- ============================ DMALL console (shell) ============================ -->
   <div id="dmall" hidden>
     <!-- server picker: choose a Discord server where you're an admin (shown before the settings) -->
@@ -353,7 +367,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
 
 <div id="toast" class="toast" hidden></div>
 <script src="/dmall/order.js?v=61"></script>
-<script src="/dmall/dmall.js?v=100"></script>
+<script src="/dmall/dmall.js?v=101"></script>
 <script src="/dmall/chat.js?v=6"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>

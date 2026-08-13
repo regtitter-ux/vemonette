@@ -20,6 +20,7 @@
   let dmServer = null, dmServerId = null, dmServerAv = '';   // the server the broadcast is configured for (from the picker)
   const apiEl = $('#dmapi');
   const cabEl = $('#dmcab');
+  const tkEl = $('#dmtickets');
   let apiDocsLoaded = false;
   async function loadApiDocs() {
     if (apiDocsLoaded) return; apiDocsLoaded = true;
@@ -59,14 +60,16 @@
       const mode = btn.dataset.mode;
       // Stays (join-buying) and API are staff-only; the public gets DMALL + Cabinet.
       if ((mode === 'stays' || mode === 'api') && !window.__VEMONI_DM_STAFF__) return;
-      const dm = mode === 'dmall', api = mode === 'api', cab = mode === 'cab';
+      const dm = mode === 'dmall', api = mode === 'api', cab = mode === 'cab', tk = mode === 'tickets';
       $$('.dm-mode', modebar).forEach((b) => b.classList.toggle('active', b === btn));
-      wrap.classList.toggle('dmall-on', dm || api || cab);   // hide the Stays view for all non-Stays modes
+      wrap.classList.toggle('dmall-on', dm || api || cab || tk);   // hide the Stays view for all non-Stays modes
       dmall.hidden = !dm;
       if (apiEl) apiEl.hidden = !api;
       if (cabEl) cabEl.hidden = !cab;
+      if (tkEl) tkEl.hidden = !tk;
       if (api) loadApiDocs();
       if (cab) loadCabinet();
+      if (tk) tkOpenPanel();
       if (dm) { loadLots(); loadTasks(); }                 // refresh real servers + broadcasts on open
       if (dm && !dmServer) dmall.classList.add('picking');   // choose a server first
       if (bell) bell.hidden = !dm || dmall.classList.contains('picking');
@@ -243,6 +246,120 @@
     b.disabled = false;
     if (window.toast) window.toast(r.ok ? dmT('cab_req_saved') : ((r.body && r.body.error) || dmT('cab_req_fail')), r.ok ? 'ok' : 'err');
   }); }
+
+  /* ---------- DMALL support tickets ---------- */
+  let tkStaff = false, tkList = [], tkFilter = 'all', tkOpen = null, tkPollT = null;
+  const tkBadge = $('#dm-tk-badge');
+  const TK_ST = { open: ['amber', 'tk_st_open'], answered: ['blue', 'tk_st_answered'], closed: ['dim', 'tk_st_closed'] };
+  const tkTime = (ts) => { if (!ts) return ''; try { return new Date(ts).toLocaleString(dmLang() === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'short', timeStyle: 'short' }); } catch (_) { return ''; } };
+
+  async function tkOpenPanel() {
+    await loadTickets();
+    clearInterval(tkPollT);
+    tkPollT = setInterval(() => {
+      if (!tkEl || tkEl.hidden) { clearInterval(tkPollT); return; }
+      loadTickets(); if (tkOpen) tkRefreshThread(tkOpen, true);
+    }, 12000);
+  }
+  async function loadTickets() {
+    const r = await dmApi('/order/dmall/tickets');
+    if (!r.ok || !r.body) return;
+    tkStaff = !!r.body.staff; tkList = Array.isArray(r.body.tickets) ? r.body.tickets : [];
+    tkSetBadge(r.body.unreadTotal || 0);
+    renderTicketFilters(); renderTicketList();
+  }
+  function tkSetBadge(n) { if (!tkBadge) return; if (n > 0) { tkBadge.textContent = n > 99 ? '99+' : String(n); tkBadge.hidden = false; } else tkBadge.hidden = true; }
+  function renderTicketFilters() {
+    const el = $('#tk-filters'); if (!el) return;
+    if (!tkStaff) { el.hidden = true; el.innerHTML = ''; return; }
+    el.hidden = false;
+    const fs = [['all', 'tk_f_all'], ['open', 'tk_f_open'], ['answered', 'tk_f_answered'], ['closed', 'tk_f_closed']];
+    el.innerHTML = fs.map(([f, k]) => '<button class="tk-fbtn' + (tkFilter === f ? ' on' : '') + '" data-tkf="' + f + '">' + esc(dmT(k)) + '</button>').join('');
+  }
+  function tkFiltered() { return (tkStaff && tkFilter !== 'all') ? tkList.filter((t) => t.status === tkFilter) : tkList.slice(); }
+  function ticketRow(t) {
+    const m = TK_ST[t.status] || TK_ST.open;
+    const who = tkStaff ? '<span class="tk-row-user">' + esc(t.userName || t.userId) + '</span>' : '';
+    return '<button class="tk-row' + (tkOpen === t.id ? ' on' : '') + (t.unread ? ' unread' : '') + '" data-tkrow="' + esc(t.id) + '">' +
+      '<div class="tk-row-top"><span class="tk-row-subj">' + esc(t.subject) + '</span><span class="tk-chip ' + m[0] + '">' + esc(dmT(m[1])) + '</span></div>' +
+      '<div class="tk-row-sub">' + who + '<span class="tk-row-time">' + esc(tkTime(t.updatedAt)) + '</span></div>' +
+      (t.unread ? '<span class="tk-row-dot"></span>' : '') + '</button>';
+  }
+  function renderTicketList() {
+    const el = $('#tk-list'); if (!el) return;
+    const arr = tkFiltered();
+    el.innerHTML = arr.length ? arr.map(ticketRow).join('') : '<div class="tk-empty">' + esc(dmT('tk_empty')) + '</div>';
+  }
+  function tkMsgRow(m) {
+    const name = esc(m.authorName || (m.staff ? dmT('tk_staff') : dmT('tk_you')));
+    const badge = m.staff ? ' <span class="tk-badge-staff">' + esc(dmT('tk_staff')) + '</span>' : '';
+    return '<div class="tk-msg' + (m.staff ? ' staff' : '') + '"><div class="tk-msg-head"><b>' + name + '</b>' + badge + '<span class="tk-msg-time">' + esc(tkTime(m.at)) + '</span></div><div class="tk-msg-body">' + esc(m.body).replace(/\n/g, '<br>') + '</div></div>';
+  }
+  function renderThread(t, canStaff, isOwner) {
+    const th = $('#tk-thread'); if (!th) return;
+    const m = TK_ST[t.status] || TK_ST.open, closed = t.status === 'closed';
+    const statusCtl = canStaff
+      ? (closed ? '<button class="dm-btn ghost sm" data-tkstatus="open" data-tkid="' + esc(t.id) + '">' + esc(dmT('tk_reopen')) + '</button>' : '<button class="dm-btn ghost sm" data-tkstatus="closed" data-tkid="' + esc(t.id) + '">' + esc(dmT('tk_close')) + '</button>')
+      : (isOwner && !closed ? '<button class="dm-btn ghost sm" data-tkstatus="closed" data-tkid="' + esc(t.id) + '">' + esc(dmT('tk_close')) + '</button>' : '');
+    th.innerHTML =
+      '<div class="tk-th-head"><button class="tk-back" data-tkback>‹</button>' +
+        '<div class="tk-th-title"><b>' + esc(t.subject) + '</b><span class="tk-chip ' + m[0] + '">' + esc(dmT(m[1])) + '</span>' + (tkStaff ? ' <span class="tk-th-user">' + esc(t.userName || t.userId) + '</span>' : '') + '</div>' +
+        statusCtl + '</div>' +
+      '<div class="tk-msgs" id="tk-msgs">' + (t.messages || []).map(tkMsgRow).join('') + '</div>' +
+      (closed ? '<div class="tk-closed-note">' + esc(dmT('tk_closed_note')) + '</div>' : '') +
+      '<div class="tk-reply"><textarea class="dm-textarea" id="tk-reply-ta" placeholder="' + esc(dmT('tk_reply_ph')) + '"></textarea><button class="dm-btn primary" id="tk-reply-send" data-tkid="' + esc(t.id) + '">' + esc(dmT('tk_send')) + '</button></div>';
+    const box = $('#tk-msgs'); if (box) box.scrollTop = box.scrollHeight;
+    th.classList.add('open');
+  }
+  function tkNewForm() {
+    tkOpen = null; renderTicketList();
+    const th = $('#tk-thread'); if (!th) return;
+    th.innerHTML = '<div class="tk-th-head"><button class="tk-back" data-tkback>‹</button><div class="tk-th-title"><b>' + esc(dmT('tk_new')) + '</b></div></div>' +
+      '<div class="tk-new"><input class="dm-input" id="tk-new-subj" maxlength="140" placeholder="' + esc(dmT('tk_subject')) + '"><textarea class="dm-textarea" id="tk-new-body" placeholder="' + esc(dmT('tk_message')) + '"></textarea><button class="dm-btn primary" id="tk-new-send">' + esc(dmT('tk_create')) + '</button><div class="tk-new-status" id="tk-new-status" hidden></div></div>';
+    th.classList.add('open');
+    const s = $('#tk-new-subj'); if (s) s.focus();
+  }
+  async function tkSelect(id) {
+    tkOpen = id; renderTicketList();
+    const th = $('#tk-thread'); if (th) { th.innerHTML = '<div class="tk-empty">…</div>'; th.classList.add('open'); }
+    await tkRefreshThread(id);
+  }
+  async function tkRefreshThread(id, quiet) {
+    const r = await dmApi('/order/dmall/tickets/' + encodeURIComponent(id));
+    if (tkOpen !== id) return;
+    if (!r.ok || !r.body || !r.body.ticket) { if (!quiet) { const th = $('#tk-thread'); if (th) th.innerHTML = '<div class="tk-empty">' + esc(dmT('tk_not_found')) + '</div>'; } return; }
+    renderThread(r.body.ticket, r.body.canStaff, r.body.isOwner);
+    loadTickets();   // refresh list unread state
+  }
+  function tkCloseThread() { tkOpen = null; const th = $('#tk-thread'); if (th) { th.innerHTML = ''; th.classList.remove('open'); } renderTicketList(); }
+
+  if (tkEl) tkEl.addEventListener('click', async (e) => {
+    if (e.target.closest('#tk-new-btn')) { tkNewForm(); return; }
+    const f = e.target.closest('[data-tkf]'); if (f) { tkFilter = f.dataset.tkf; renderTicketFilters(); renderTicketList(); return; }
+    const row = e.target.closest('[data-tkrow]'); if (row) { tkSelect(row.dataset.tkrow); return; }
+    if (e.target.closest('[data-tkback]')) { tkCloseThread(); return; }
+    const st = e.target.closest('[data-tkstatus]');
+    if (st) { st.disabled = true; const r = await dmApi('/order/dmall/tickets/' + encodeURIComponent(st.dataset.tkid) + '/status', { method: 'POST', body: { status: st.dataset.tkstatus } }); if (r.ok) { await tkRefreshThread(st.dataset.tkid); } else { st.disabled = false; if (window.toast) window.toast(dmT('tk_failed'), 'err'); } return; }
+    if (e.target.closest('#tk-reply-send')) {
+      const b = e.target.closest('#tk-reply-send'), ta = $('#tk-reply-ta'); const text = ta ? ta.value.trim() : '';
+      if (!text) return; b.disabled = true;
+      const r = await dmApi('/order/dmall/tickets/' + encodeURIComponent(b.dataset.tkid) + '/reply', { method: 'POST', body: { body: text } });
+      if (r.ok) { await tkRefreshThread(b.dataset.tkid); }
+      else { b.disabled = false; if (window.toast) window.toast((r.body && r.body.error) || dmT('tk_failed'), 'err'); }
+      return;
+    }
+    if (e.target.closest('#tk-new-send')) {
+      const subj = ($('#tk-new-subj') || {}).value, bodyv = ($('#tk-new-body') || {}).value;
+      const stEl = $('#tk-new-status');
+      if (!subj || !subj.trim() || !bodyv || !bodyv.trim()) { if (stEl) { stEl.hidden = false; stEl.textContent = dmT('tk_need_both'); } return; }
+      const btn = e.target.closest('#tk-new-send'); btn.disabled = true;
+      const r = await dmApi('/order/dmall/tickets', { method: 'POST', body: { subject: subj.trim(), body: bodyv.trim() } });
+      btn.disabled = false;
+      if (r.ok && r.body && r.body.ticket) { await loadTickets(); tkSelect(r.body.ticket.id); }
+      else if (stEl) { stEl.hidden = false; stEl.textContent = (r.body && r.body.error) || dmT('tk_failed'); }
+      return;
+    }
+  });
 
   function closeLotMenus() {
     $$('#dm-sp-grid .dm-lot-menu.open').forEach((m) => m.classList.remove('open'));
@@ -1145,7 +1262,7 @@
       poolbox:"<b>115</b> free of 3 755 in the pool<div class=\"dm-poolsub\">7 busy · 3 633 invalid · 3 294 in quarantine</div>",
       msg_count:"Message count", how_many:"How many messages to send", bots_needed:"Bots needed: <b>2</b>",
       sum_total:"Total messages:", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Exclusions:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
-      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" for 1000 messages", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", lot_menu:"Menu", lot_edit:"Edit", lot_make_private:"Make private", lot_make_public:"Make public", lot_delete:"Delete", lot_change_owner:"Change owner", owner_prompt:"Enter the new owner's Discord ID:", owner_bad:"Enter a valid Discord ID (17–20 digits)", owner_done:"Owner changed", lot_private:"private", lot_edit_title:"Edit lot", lot_save:"Save", lot_saving:"Saving…", lot_now_private:"Lot is now private — only you can see it", lot_now_public:"Lot is now public", side_dmall:"DMALL", side_cabinet:"Information", side_api:"API", cab_title:"Cabinet", cab_lead:"Your DMALL stats, order history and earnings.", cab_spent:"Spent", cab_sent:"Messages sent", cab_bought:"Messages bought", cab_sold:"Messages sold", cab_runs:"Broadcasts", cab_earn:"Earnings", cab_balance:"Balance", cab_orders:"Order history", cab_journal:"Earnings journal", cab_req_h:"Payout details", cab_req_sub:"Crypto address and network, e.g.: LTC (address). Withdrawal is not possible without details.", cab_req_ph:"LTC (address)", cab_req_save:"Save", cab_req_saved:"Payout details saved", cab_req_fail:"Could not save", cab_empty_orders:"No orders yet.", cab_empty_earn:"No earnings yet.", cab_st_active:"active", cab_st_settled:"settled", cab_refunded:"refunded", cab_delivered:"delivered", cab_lot_income:"lot income", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", why_incomplete:"Reason:", st_completed:"completed", st_failed:"failed", st_stopped:"stopped",
+      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" for 1000 messages", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", lot_menu:"Menu", lot_edit:"Edit", lot_make_private:"Make private", lot_make_public:"Make public", lot_delete:"Delete", lot_change_owner:"Change owner", owner_prompt:"Enter the new owner's Discord ID:", owner_bad:"Enter a valid Discord ID (17–20 digits)", owner_done:"Owner changed", lot_private:"private", lot_edit_title:"Edit lot", lot_save:"Save", lot_saving:"Saving…", lot_now_private:"Lot is now private — only you can see it", lot_now_public:"Lot is now public", side_dmall:"DMALL", side_cabinet:"Information", side_api:"API", side_tickets:"Tickets", tickets_title:"Support tickets", tickets_lead:"Ask a question or report a problem — support replies here.", tk_new:"New ticket", tk_subject:"Subject", tk_message:"Describe your question or problem…", tk_create:"Create ticket", tk_send:"Send", tk_reply_ph:"Write a reply…", tk_back:"Back", tk_close:"Close", tk_reopen:"Reopen", tk_closed_note:"This ticket is closed — replying reopens it.", tk_empty:"No tickets yet.", tk_not_found:"Ticket not found.", tk_staff:"Staff", tk_you:"You", tk_failed:"Something went wrong", tk_need_both:"Enter a subject and a message.", tk_f_all:"All", tk_f_open:"Open", tk_f_answered:"Answered", tk_f_closed:"Closed", tk_st_open:"Open", tk_st_answered:"Answered", tk_st_closed:"Closed", cab_title:"Cabinet", cab_lead:"Your DMALL stats, order history and earnings.", cab_spent:"Spent", cab_sent:"Messages sent", cab_bought:"Messages bought", cab_sold:"Messages sold", cab_runs:"Broadcasts", cab_earn:"Earnings", cab_balance:"Balance", cab_orders:"Order history", cab_journal:"Earnings journal", cab_req_h:"Payout details", cab_req_sub:"Crypto address and network, e.g.: LTC (address). Withdrawal is not possible without details.", cab_req_ph:"LTC (address)", cab_req_save:"Save", cab_req_saved:"Payout details saved", cab_req_fail:"Could not save", cab_empty_orders:"No orders yet.", cab_empty_earn:"No earnings yet.", cab_st_active:"active", cab_st_settled:"settled", cab_refunded:"refunded", cab_delivered:"delivered", cab_lot_income:"lot income", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", why_incomplete:"Reason:", st_completed:"completed", st_failed:"failed", st_stopped:"stopped",
       rs_queued:"queued", rs_running:"running", rs_completed:"completed", rs_failed:"failed", rs_stopped:"stopped",
       l_pick_server:"Choose a server to broadcast to first", l_count_req:"Enter the number of messages", l_need_content:"Add text or an embed", l_preparing:"Preparing…", l_creating_tpl:"Creating template…", l_tpl_err:"Template:", l_link_prompt:"The message contains {{LINK}} — paste the destination link (https://discord.gg/… or a URL):", l_link_req:"A destination link is required for {{LINK}}", l_launching:"Starting the broadcast…", l_need_funds:"Insufficient funds, need", l_balance:"balance", l_no_access:"No DMALL access", l_run_err:"Start:", l_started:"Broadcast started ✓", l_cooldown_all:"Server is at its 24h limit — all {n} messages are queued and will be sent automatically after cooldown", l_cooldown_part:"{n} messages exceed the server’s 24h limit — they’ll be sent automatically after cooldown", l_charged:"charged", l_net_err:"Network unavailable, please try again", l_stopping:"Stop requested…", sched_h:"Scheduled start", sched_now:"Immediately", sched_in:"In N minutes", sched_at:"At date/time", minutes_word:"minutes", sched_bad:"Pick a valid start time in the future", l_scheduled:"Broadcast scheduled for", settings_saved:"Settings saved", fail_notice:"The broadcast didn't go through — your funds were refunded. Try another server.", fail_notice_srv:"The broadcast to “{srv}” didn't go through — your funds were refunded. Try another server.", other_offers:"Other offers", srv_unavail:"Broadcasts to “{srv}” are temporarily unavailable — try another server.", unavail_badge:"Unavailable", checking_srv:"Checking whether DMALL works on “{srv}”…", copy_error:"Copy the error",
       ak_unset:"not set — click “Generate new”", ak_confirm:"Generate a new key? The old one stops working immediately — update it in the external service.", ak_fail:"Failed:", ak_net:"Network unavailable", ak_copied:"Copied ✓", ak_copy:"Copy",
@@ -1199,7 +1316,7 @@
       poolbox:"<b>115</b> свободных из 3 755 в пуле<div class=\"dm-poolsub\">7 занято · 3 633 инвалидных · 3 294 в карантине</div>",
       msg_count:"Количество сообщений", how_many:"Сколько сообщений отправить", bots_needed:"Ботов нужно: <b>2</b>",
       sum_total:"Суммарно сообщений:", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключения:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
-      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" за 1000 сообщений", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для покупателей:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", lot_menu:"Меню", lot_edit:"Редактировать", lot_make_private:"Сделать приватным", lot_make_public:"Сделать публичным", lot_delete:"Удалить", lot_change_owner:"Сменить владельца", owner_prompt:"Введите Discord ID нового владельца:", owner_bad:"Введите корректный Discord ID (17–20 цифр)", owner_done:"Владелец изменён", lot_private:"приватный", lot_edit_title:"Редактировать лот", lot_save:"Сохранить", lot_saving:"Сохранение…", lot_now_private:"Лот теперь приватный — виден только вам", lot_now_public:"Лот теперь публичный", side_dmall:"DMALL", side_cabinet:"Информация", side_api:"API", cab_title:"Кабинет", cab_lead:"Ваша статистика DMALL, история заказов и начисления.", cab_spent:"Потрачено", cab_sent:"Сообщений отправлено", cab_bought:"Купил сообщений", cab_sold:"Продал сообщений", cab_runs:"Рассылок", cab_earn:"Начислено", cab_balance:"Баланс", cab_orders:"История заказов", cab_journal:"Журнал начислений", cab_req_h:"Реквизиты для выплат", cab_req_sub:"Крипто-адрес и сеть, например: LTC (адрес). Без реквизитов вывод невозможен.", cab_req_ph:"LTC (адрес)", cab_req_save:"Сохранить", cab_req_saved:"Реквизиты сохранены", cab_req_fail:"Не удалось сохранить", cab_empty_orders:"Пока нет заказов.", cab_empty_earn:"Пока нет начислений.", cab_st_active:"активен", cab_st_settled:"завершён", cab_refunded:"возврат", cab_delivered:"доставлено", cab_lot_income:"доход с лота", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", why_incomplete:"Причина:", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена",
+      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" за 1000 сообщений", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для покупателей:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", lot_menu:"Меню", lot_edit:"Редактировать", lot_make_private:"Сделать приватным", lot_make_public:"Сделать публичным", lot_delete:"Удалить", lot_change_owner:"Сменить владельца", owner_prompt:"Введите Discord ID нового владельца:", owner_bad:"Введите корректный Discord ID (17–20 цифр)", owner_done:"Владелец изменён", lot_private:"приватный", lot_edit_title:"Редактировать лот", lot_save:"Сохранить", lot_saving:"Сохранение…", lot_now_private:"Лот теперь приватный — виден только вам", lot_now_public:"Лот теперь публичный", side_dmall:"DMALL", side_cabinet:"Информация", side_api:"API", side_tickets:"Тикеты", tickets_title:"Тикеты поддержки", tickets_lead:"Задайте вопрос или сообщите о проблеме — поддержка ответит здесь.", tk_new:"Новый тикет", tk_subject:"Тема", tk_message:"Опишите вопрос или проблему…", tk_create:"Создать тикет", tk_send:"Отправить", tk_reply_ph:"Написать ответ…", tk_back:"Назад", tk_close:"Закрыть", tk_reopen:"Открыть снова", tk_closed_note:"Тикет закрыт — ответ откроет его снова.", tk_empty:"Пока нет тикетов.", tk_not_found:"Тикет не найден.", tk_staff:"Поддержка", tk_you:"Вы", tk_failed:"Что-то пошло не так", tk_need_both:"Укажите тему и сообщение.", tk_f_all:"Все", tk_f_open:"Открытые", tk_f_answered:"Отвеченные", tk_f_closed:"Закрытые", tk_st_open:"Открыт", tk_st_answered:"Отвечен", tk_st_closed:"Закрыт", cab_title:"Кабинет", cab_lead:"Ваша статистика DMALL, история заказов и начисления.", cab_spent:"Потрачено", cab_sent:"Сообщений отправлено", cab_bought:"Купил сообщений", cab_sold:"Продал сообщений", cab_runs:"Рассылок", cab_earn:"Начислено", cab_balance:"Баланс", cab_orders:"История заказов", cab_journal:"Журнал начислений", cab_req_h:"Реквизиты для выплат", cab_req_sub:"Крипто-адрес и сеть, например: LTC (адрес). Без реквизитов вывод невозможен.", cab_req_ph:"LTC (адрес)", cab_req_save:"Сохранить", cab_req_saved:"Реквизиты сохранены", cab_req_fail:"Не удалось сохранить", cab_empty_orders:"Пока нет заказов.", cab_empty_earn:"Пока нет начислений.", cab_st_active:"активен", cab_st_settled:"завершён", cab_refunded:"возврат", cab_delivered:"доставлено", cab_lot_income:"доход с лота", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", why_incomplete:"Причина:", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена",
       rs_queued:"в очереди", rs_running:"идёт", rs_completed:"завершено", rs_failed:"ошибка", rs_stopped:"остановлено",
       l_pick_server:"Сначала выберите сервер рассылки", l_count_req:"Укажите количество сообщений", l_need_content:"Добавьте текст или эмбед", l_preparing:"Подготовка…", l_creating_tpl:"Создание шаблона…", l_tpl_err:"Шаблон:", l_link_prompt:"Сообщение содержит {{LINK}} — вставьте ссылку назначения (https://discord.gg/… или URL):", l_link_req:"Нужна ссылка назначения для {{LINK}}", l_launching:"Запуск рассылки…", l_need_funds:"Недостаточно средств, нужно", l_balance:"баланс", l_no_access:"Нет доступа к DMALL", l_run_err:"Запуск:", l_started:"Рассылка запущена ✓", l_cooldown_all:"Сервер достиг лимита 24ч — все {n} сообщений поставлены в очередь и отправятся автоматически после кулдауна", l_cooldown_part:"{n} сообщений превышают лимит сервера за 24ч — они отправятся автоматически после кулдауна", l_charged:"списано", l_net_err:"Сеть недоступна, попробуйте ещё раз", l_stopping:"Остановка запрошена…", sched_h:"Отложенный старт", sched_now:"Сразу", sched_in:"Через N минут", sched_at:"В дату/время", minutes_word:"минут", sched_bad:"Выберите корректное время старта в будущем", l_scheduled:"Рассылка запланирована на", settings_saved:"Настройки сохранены", fail_notice:"Рассылка не сработала — средства возвращены. Попробуйте другой сервер.", fail_notice_srv:"Рассылка на сервере «{srv}» не сработала — средства возвращены. Попробуйте другой сервер.", other_offers:"Другие предложения", srv_unavail:"Рассылка на «{srv}» временно недоступна — попробуйте другой сервер.", unavail_badge:"Недоступен", checking_srv:"Проверяем работоспособность dmall на сервере «{srv}»…", copy_error:"Скопировать ошибку",
       ak_unset:"не задан — нажмите «Сгенерировать новый»", ak_confirm:"Сгенерировать новый ключ? Старый перестанет работать сразу — обновите его во внешнем сервисе.", ak_fail:"Не удалось:", ak_net:"Сеть недоступна", ak_copied:"Скопировано ✓", ak_copy:"Копировать",
@@ -1253,5 +1370,7 @@
     if (dmBtn && dmall.hidden) dmBtn.click(); else loadLots();
   } else { loadLots(); }
   dmStatusStream();   // live shared server-availability updates
+  setTimeout(() => { loadTickets().catch(() => {}); }, 1200);   // populate the Tickets unread badge on load
+  setInterval(() => { if (tkEl && tkEl.hidden) loadTickets().catch(() => {}); }, 60000);   // keep the badge fresh in the background
   dmReady = true;   // from here on, user edits show the "settings saved" toast
 })();
