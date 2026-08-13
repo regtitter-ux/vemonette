@@ -51,7 +51,7 @@
       if (r.ok) {
         const d = await r.json();
         if (Array.isArray(d.servers) && d.servers.length) {
-          FEED = d.servers.map((s, i) => ({ name: s.name, id: s.id, members: Number(s.members) || 0, img: s.icon || null, color: GLOBE_PAL[i % GLOBE_PAL.length], letter: (String(s.name || '?').trim()[0] || '?').toUpperCase() }));
+          FEED = d.servers.map((s, i) => ({ name: s.name, id: s.id, img: s.icon || null, color: GLOBE_PAL[i % GLOBE_PAL.length], letter: (String(s.name || '?').trim()[0] || '?').toUpperCase() }));
           window.dispatchEvent(new Event('vemoni:feed'));
         }
       }
@@ -69,112 +69,38 @@
     const reduce = matchMedia('(prefers-reduced-motion:reduce)').matches;
     const cs = getComputedStyle(document.documentElement);
     const cvv = (v, f) => { const x = cs.getPropertyValue(v).trim(); return x || f; };
-    const GREEN = cvv('--green', '#57f287'), BUY = '#86b6ff', CYAN = '#8fdfff';
+    const GREEN = cvv('--green', '#57f287'), BUY = '#86b6ff';
     const logo = new Image(); let logoOk = false; logo.onload = () => { logoOk = true; }; logo.src = '/assets/logo.png';
     const buyerImg = new Image(); let buyerImgOk = false; buyerImg.onload = () => { buyerImgOk = true; }; buyerImg.src = '/assets/suit.png';
     const secureImg = new Image(); let secureImgOk = false; secureImg.onload = () => { secureImgOk = true; }; secureImg.src = '/assets/secure.png';
-    let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf, visible = true;
+    let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 0, raf;
     let rotY = 0.5, rotX = -0.32, velY = 0.0016, dragging = false, lastX = 0, lastY = 0, spinVel = velY;
 
     const NDOTS = 560, dots = [];
     (function () { const g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < NDOTS; i++) { const y = 1 - 2 * (i + 0.5) / NDOTS; const rr = Math.sqrt(1 - y * y); const th = g * i; dots.push([Math.cos(th) * rr, y, Math.sin(th) * rr]); } })();
     const ll = (la, lo) => { la = la * Math.PI / 180; lo = lo * Math.PI / 180; return [Math.cos(la) * Math.cos(lo), Math.sin(la), Math.cos(la) * Math.sin(lo)]; };
 
-    const PARTNERS = [], CENTERS = [], BUYERS = [], USERS = [];
+    const PARTNERS = [], CENTERS = [], BUYERS = [];
     const dist2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
     const nearest = (p, arr) => { let bi = 0, bd = Infinity; arr.forEach((n, i) => { const d = dist2(p, n.p); if (d < bd) { bd = d; bi = i; } }); return arr[bi]; };
     function fibSphere(n) { const pts = [], g = Math.PI * (3 - Math.sqrt(5)); for (let i = 0; i < n; i++) { const y = 1 - 2 * (i + 0.5) / n; const rr = Math.sqrt(Math.max(0, 1 - y * y)); const th = g * i; pts.push([Math.cos(th) * rr, y, Math.sin(th) * rr]); } return pts; }
-    // A point on the sphere within `spread` of center c (uniform over the little disk, sqrt for area).
-    function nearPoint(c, spread) {
-      let rx = Math.random() * 2 - 1, ry = Math.random() * 2 - 1, rz = Math.random() * 2 - 1;
-      const d = rx * c[0] + ry * c[1] + rz * c[2]; rx -= d * c[0]; ry -= d * c[1]; rz -= d * c[2];
-      const len = Math.hypot(rx, ry, rz) || 1, s = spread * Math.sqrt(Math.random());
-      let x = c[0] + rx / len * s, y = c[1] + ry / len * s, z = c[2] + rz / len * s;
-      const L = Math.hypot(x, y, z) || 1; return [x / L, y / L, z / L];
-    }
-    // Rough continent outlines as [lat, lon] rings (a simplified world map). Members are sampled
-    // INSIDE these polygons, so the dot cloud takes on Earth's landmass shapes; the same rings are
-    // stroked as a thin border. `w` weights population; `cities` seeds a few dense cores.
-    const CONTINENTS = [
-      { w: 9, cities: 2, poly: [[70, -158], [71, -128], [68, -95], [74, -80], [60, -64], [47, -53], [45, -66], [40, -74], [31, -81], [25, -97], [18, -95], [13, -87], [8, -78], [17, -97], [24, -110], [36, -122], [49, -125], [60, -140], [70, -158]] },   // North America
-      { w: 6, cities: 2, poly: [[12, -71], [10, -61], [4, -51], [-3, -44], [-9, -35], [-23, -41], [-34, -53], [-45, -66], [-53, -70], [-46, -74], [-30, -71], [-18, -70], [-5, -81], [2, -79], [8, -77], [12, -71]] },   // South America
-      { w: 12, cities: 3, poly: [[60, 5], [62, 26], [59, 31], [50, 40], [45, 40], [41, 29], [40, 19], [36, 15], [43, 6], [44, -2], [48, -5], [51, -6], [58, -5], [60, 5]] },   // Europe
-      { w: 17, cities: 3, poly: [[37, 10], [33, -6], [21, -17], [14, -17], [5, -8], [4, 9], [-6, 12], [-17, 12], [-29, 17], [-34, 19], [-34, 27], [-25, 33], [-15, 40], [-2, 42], [11, 51], [12, 44], [16, 39], [24, 37], [31, 32], [33, 22], [37, 10]] },   // Africa
-      { w: 40, cities: 6, poly: [[68, 45], [73, 75], [73, 110], [70, 140], [62, 150], [52, 142], [45, 135], [38, 128], [35, 120], [22, 110], [10, 104], [8, 98], [15, 89], [22, 90], [20, 73], [24, 66], [26, 56], [30, 48], [38, 47], [43, 50], [50, 50], [58, 58], [66, 58], [68, 45]] },   // Asia
-      { w: 3, cities: 2, poly: [[6, 95], [2, 100], [-6, 105], [-9, 116], [-8, 126], [-1, 131], [6, 126], [3, 110], [6, 95]] },   // SE Asia / Indonesia
-      { w: 1, cities: 1, poly: [[-11, 132], [-13, 142], [-20, 149], [-28, 153], [-37, 149], [-38, 140], [-35, 138], [-32, 116], [-22, 114], [-14, 126], [-11, 132]] },   // Australia
-    ];
-    const inPoly = (lon, lat, poly) => { let inside = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const yi = poly[i][0], xi = poly[i][1], yj = poly[j][0], xj = poly[j][1]; if (((yi > lat) !== (yj > lat)) && (lon < (xj - xi) * (lat - yi) / ((yj - yi) || 1e-9) + xi)) inside = !inside; } return inside; };
-    const bboxOf = (poly) => { let a = 90, b = -90, c = 180, d = -180; for (const [la, lo] of poly) { if (la < a) a = la; if (la > b) b = la; if (lo < c) c = lo; if (lo > d) d = lo; } return { sMin: Math.sin(a * Math.PI / 180), sMax: Math.sin(b * Math.PI / 180), loMin: c, loMax: d }; };
-    // A random lat/lon inside a polygon (area-correct latitude so high-lat land isn't over-dense).
-    function randInPoly(poly, bb) { for (let t = 0; t < 60; t++) { const la = Math.asin(bb.sMin + Math.random() * (bb.sMax - bb.sMin)) * 180 / Math.PI, lo = bb.loMin + Math.random() * (bb.loMax - bb.loMin); if (inPoly(lo, la, poly)) return ll(la, lo); } return null; }
-    function clusteredUsers(total) {
-      const tw = CONTINENTS.reduce((a, c) => a + c.w, 0), pts = [];
-      for (const cont of CONTINENTS) {
-        const bb = bboxOf(cont.poly), n = Math.max(6, Math.round(total * cont.w / tw)), cities = [];
-        for (let k = 0; k < cont.cities; k++) { const cc = randInPoly(cont.poly, bb); if (cc) cities.push(cc); }
-        for (let i = 0; i < n; i++) {
-          if (cities.length && Math.random() < 0.32) pts.push(nearPoint(cities[(Math.random() * cities.length) | 0], 0.045));   // dense city
-          else { const q = randInPoly(cont.poly, bb); if (q) pts.push(q); }   // fills the continent shape
-        }
-      }
-      return pts;
-    }
-    // Thin continent borders: subdivide each edge along the sphere, stroke the front-facing parts.
-    function drawBorders() {
-      ctx.save(); ctx.lineWidth = 1.1; ctx.strokeStyle = 'rgba(150,205,255,0.42)'; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.beginPath();
-      for (const cont of CONTINENTS) {
-        const poly = cont.poly, P = poly.length; let prev = null;
-        for (let i = 0; i <= P; i++) {
-          const a = poly[i % P], b = poly[(i + 1) % P], S = 6;
-          for (let s = 0; s < (i < P ? S : 1); s++) {
-            const f = s / S, la = a[0] + (b[0] - a[0]) * f, lo = a[1] + (b[1] - a[1]) * f, v = rot(ll(la, lo)), p = proj(v), front = v[2] > -0.02;
-            if (prev && prev.f && front) { ctx.moveTo(prev.p[0], prev.p[1]); ctx.lineTo(p[0], p[1]); }
-            prev = { p, f: front };
-          }
-        }
-        prev = null;
-      }
-      ctx.stroke(); ctx.restore();
-    }
     function buildNodes() {
       PARTNERS.length = CENTERS.length = BUYERS.length = 0;
       const all = (Array.isArray(FEED) ? FEED : []).filter((s) => s && s.name);
       const pPos = fibSphere(Math.max(1, all.length));
       const cPos = [ll(90, 0), ll(-90, 0), ll(0, 0), ll(0, 180)];
       const bPos = [ll(8, 26), ll(48, -66), ll(-28, 116), ll(64, 6), ll(-56, 44), ll(20, -174), ll(40, 168), ll(-6, -54), ll(30, -118), ll(-46, -20), ll(56, 128), ll(-18, 74)];
-      pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || iconUrl(s.id, s.icon); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null, members: Number(s.members) || 0, users: [], letter: (s.letter || (s.name || '?').trim()[0] || '?').toUpperCase() }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
+      pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || iconUrl(s.id, s.icon); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null, letter: (s.letter || (s.name || '?').trim()[0] || '?').toUpperCase() }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
       cPos.forEach((p) => CENTERS.push({ p }));
       bPos.forEach((p) => BUYERS.push({ p, center: null }));
-      if (!USERS.length) clusteredUsers(700).forEach((p) => USERS.push({ p }));   // members clustered into continents/cities (built once)
-      assignUsers();
       BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
-    }
-    // Split the members among servers ∝ each server's member count — that's each server's audience.
-    function assignUsers() {
-      PARTNERS.forEach((p) => { p.users = []; });
-      if (!PARTNERS.length) return;
-      const cum = []; let acc = 0;
-      for (const p of PARTNERS) { acc += Math.max(1, p.members || 1); cum.push(acc); }
-      const tot = acc;
-      for (const u of USERS) { const r = Math.random() * tot; let idx = cum.findIndex((c) => r < c); if (idx < 0) idx = PARTNERS.length - 1; PARTNERS[idx].users.push(u.p); }
     }
 
     // Particles: order flows buyer -> hub (blue), then the hub fans the broadcast OUT
     // to catalog servers as letters (green). Nothing returns to the buyer.
     const PARTS = [], FLOATS = [];
     function spawn() { if (!BUYERS.length || !CENTERS.length) return; const bn = BUYERS[(Math.random() * BUYERS.length) | 0], c = bn.center; if (!c) return; PARTS.push({ kind: 'in', a: bn.p, b: c.p, ctr: c, t: 0, sp: 0.008 + Math.random() * 0.005, trail: [] }); }
-    function fanOut(c) { if (!PARTNERS.length) return; const k = Math.random() < 0.3 ? 2 + ((Math.random() * 3) | 0) : 1; for (let n = 0; n < k; n++) { const pn = PARTNERS[(Math.random() * PARTNERS.length) | 0]; PARTS.push({ kind: 'out', a: c.p, b: pn.p, pn, t: 0, sp: 0.009 + Math.random() * 0.006, trail: [] }); } }
-    // A request reaching a server delivers to a CHUNK of its own audience (sized ∝ the server's
-    // member count), each as its own thread — same style/animation as the hub→server letters.
-    function startDeliver(pn) {
-      if (!pn || !pn.users || !pn.users.length) return;
-      const k = Math.min(18, Math.max(3, Math.round(pn.users.length * 0.35)));
-      for (let n = 0; n < k && PARTS.length < 100; n++) {
-        const u = pn.users[(Math.random() * pn.users.length) | 0];
-        PARTS.push({ kind: 'deliver', a: pn.p, b: u, t: 0, sp: 0.013 + Math.random() * 0.008, trail: [] });
-      }
-    }
+    function fanOut(c) { if (!PARTNERS.length) return; const k = Math.random() < 0.3 ? 2 + ((Math.random() * 3) | 0) : 1; for (let n = 0; n < k; n++) { const pn = PARTNERS[(Math.random() * PARTNERS.length) | 0]; PARTS.push({ kind: 'out', a: c.p, b: pn.p, t: 0, sp: 0.009 + Math.random() * 0.006, trail: [] }); } }
 
     function rot(v) { const cyw = Math.cos(rotY), syw = Math.sin(rotY); const x = v[0] * cyw + v[2] * syw, z1 = -v[0] * syw + v[2] * cyw, y = v[1]; const cp = Math.cos(rotX), sp = Math.sin(rotX); return [x, y * cp - z1 * sp, y * sp + z1 * cp]; }
     const proj = (v) => [cx + v[0] * R, cy - v[1] * R, v[2]];
@@ -194,36 +120,17 @@
       const g = ctx.createRadialGradient(cx, cy, R * 0.15, cx, cy, R * 1.35); g.addColorStop(0, 'rgba(34,168,240,.12)'); g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.35, 0, 7); ctx.fill(); ctx.restore();
       if (logoOk) { ctx.save(); ctx.globalAlpha = 0.11; const s = R * 0.85; ctx.drawImage(logo, cx - s / 2, cy - s / 2, s, s); ctx.restore(); }
-      // Planet dots — batched into a few depth bands (one fill per band instead of ~560 fills).
-      const BANDS = 6, front = Array.from({ length: BANDS }, () => []), back = [];
-      for (const d of dots) { const v = rot(d), p = proj(v); if (v[2] > 0) front[Math.min(BANDS - 1, (v[2] * BANDS) | 0)].push(p); else back.push(p); }
-      ctx.fillStyle = 'rgb(64,104,152)'; ctx.globalAlpha = 0.12; ctx.beginPath(); for (const p of back) { ctx.moveTo(p[0] + 0.6, p[1]); ctx.arc(p[0], p[1], 0.6, 0, 7); } ctx.fill();
-      ctx.fillStyle = 'rgb(122,192,255)';
-      for (let b = 0; b < BANDS; b++) { const m = (b + 0.5) / BANDS, r = 0.7 + 1.0 * m; ctx.globalAlpha = 0.22 + 0.5 * m; ctx.beginPath(); for (const p of front[b]) { ctx.moveTo(p[0] + r, p[1]); ctx.arc(p[0], p[1], r, 0, 7); } ctx.fill(); }
+      for (const d of dots) { const v = rot(d), p = proj(v), dep = v[2]; ctx.globalAlpha = dep > 0 ? (0.22 + 0.5 * dep) : (0.05 + 0.1 * (1 + dep)); ctx.fillStyle = dep > 0 ? 'rgb(122,192,255)' : 'rgb(64,104,152)'; ctx.beginPath(); ctx.arc(p[0], p[1], dep > 0 ? (0.7 + 1.0 * dep) : 0.6, 0, 7); ctx.fill(); }
       ctx.globalAlpha = 1;
-      // Members — batched: front (bright) + back (faint), two fills for the whole population.
-      { const uf = [], ub = []; for (const u of USERS) { const v = rot(u.p); const p = proj(v); (v[2] > 0 ? uf : ub).push(p); }
-        ctx.fillStyle = '#cfe4ff';
-        ctx.globalAlpha = 0.95; ctx.beginPath(); for (const p of uf) { ctx.moveTo(p[0] + 2.4, p[1]); ctx.arc(p[0], p[1], 2.4, 0, 7); } ctx.fill();
-        ctx.globalAlpha = 0.3; ctx.beginPath(); for (const p of ub) { ctx.moveTo(p[0] + 1.6, p[1]); ctx.arc(p[0], p[1], 1.6, 0, 7); } ctx.fill();
-        ctx.globalAlpha = 1; }
-      drawBorders();   // thin continent outlines over the member dots
       ctx.save(); ctx.lineCap = 'round'; BUYERS.forEach((b) => { if (b.center) drawArc(b.p, b.center.p, BUY, 0.13, 1.26); }); ctx.restore(); ctx.globalAlpha = 1;
 
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
       for (let i = PARTS.length - 1; i >= 0; i--) { const pt = PARTS[i]; pt.t += pt.sp;
-        const col = pt.kind === 'in' ? BUY : pt.kind === 'deliver' ? CYAN : GREEN;
-        const lift = pt.kind === 'deliver' ? 1.14 : 1.26;
-        const seg = [pt.a, ctrlR(pt.a, pt.b, lift), pt.b];
-        if (pt.t >= 1) {
-          if (pt.kind === 'in') fanOut(pt.ctr);
-          else if (pt.kind === 'out') { FLOATS.push({ p: pt.b, t: 0 }); if (FLOATS.length > 40) FLOATS.shift(); startDeliver(pt.pn); }   // server reached → deliver to its audience chunk
-          else { FLOATS.push({ p: pt.b, t: 0 }); if (FLOATS.length > 40) FLOATS.shift(); }   // a member received the letter
-          PARTS.splice(i, 1); continue;
-        }
+        const col = pt.kind === 'in' ? BUY : GREEN;
+        const seg = [pt.a, ctrlR(pt.a, pt.b, 1.26), pt.b];
+        if (pt.t >= 1) { if (pt.kind === 'in') fanOut(pt.ctr); else { FLOATS.push({ p: pt.b, t: 0 }); if (FLOATS.length > 40) FLOATS.shift(); } PARTS.splice(i, 1); continue; }
         const v = rot(bez(seg[0], seg[1], seg[2], pt.t)), p = proj(v);
         if (pt.kind === 'out') drawArc(pt.a, pt.b, GREEN, 0.1, 1.26);
-        else if (pt.kind === 'deliver') drawArc(pt.a, pt.b, CYAN, 0.08, 1.14);
         if (v[2] > -0.05) {
           pt.trail.push([p[0], p[1]]); if (pt.trail.length > 9) pt.trail.shift();
           const tr = pt.trail; ctx.lineCap = 'round';
@@ -250,7 +157,7 @@
       }
       for (let i = FLOATS.length - 1; i >= 0; i--) { const fl = FLOATS[i]; fl.t += 0.018; if (fl.t >= 1) { FLOATS.splice(i, 1); continue; } drawFloat(fl); }
       if (!reduce && Math.random() < 0.09 && PARTS.length < 22) spawn();
-      raf = visible ? requestAnimationFrame(draw) : 0;   // stop the loop entirely while off-screen
+      raf = requestAnimationFrame(draw);
     }
 
     const rotBy = (dx, dy) => { const vx = dx * 0.006; rotY += vx; rotX += dy * 0.006; rotX = Math.max(-1.15, Math.min(1.15, rotX)); spinVel = Math.max(-0.15, Math.min(0.15, vx)); };
@@ -273,13 +180,9 @@
       tip.style.left = h._sx + 'px'; tip.style.top = (h._sy - 14) + 'px'; tip.hidden = false; wrap.style.cursor = 'pointer';
     });
     wrap.addEventListener('mouseleave', () => { tip.hidden = true; });
-    window.addEventListener('resize', () => { cancelAnimationFrame(raf); raf = 0; layout(); if (visible) draw(); });
+    window.addEventListener('resize', () => { cancelAnimationFrame(raf); layout(); draw(); });
     window.addEventListener('vemoni:feed', () => buildNodes());
-    // Pause the whole render loop when the hero is scrolled off-screen (no wasted work).
-    if ('IntersectionObserver' in window) {
-      new IntersectionObserver((es) => { visible = es[0].isIntersecting; if (visible && !raf) draw(); }, { threshold: 0.01 }).observe(wrap);
-    }
-    requestAnimationFrame(() => { layout(); buildNodes(); for (let i = 0; i < 10; i++) spawn(); if (!raf) draw(); });
+    requestAnimationFrame(() => { layout(); buildNodes(); for (let i = 0; i < 10; i++) spawn(); draw(); });
   })();
 
   /* ---------- i18n (EN captured from DOM, RU dict) ---------- */
