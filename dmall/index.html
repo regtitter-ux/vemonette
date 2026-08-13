@@ -224,6 +224,12 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
       <div class="dmc-stat"><span class="dmc-k" data-dm="cab_earn">Earnings</span><b class="dmc-v" id="dmc-earn">$0</b></div>
       <div class="dmc-stat"><span class="dmc-k" data-dm="cab_balance">Balance</span><b class="dmc-v" id="dmc-balance">$0</b></div>
     </div>
+    <div class="dmc-sec" id="dmc-req-section">
+      <h3 data-dm="cab_req_h">Payout details</h3>
+      <p class="dmc-req-sub" data-dm="cab_req_sub">Crypto address and network, e.g.: LTC (address). Withdrawal is not possible without details.</p>
+      <textarea id="dmc-req" class="dm-textarea dmc-req-ta" data-dm-ph="cab_req_ph" placeholder="LTC (address)"></textarea>
+      <div class="dmc-req-actions"><button class="dm-btn primary" id="dmc-req-save" data-dm="cab_req_save">Save</button></div>
+    </div>
     <div class="dmc-sec">
       <h3 data-dm="cab_orders">Order history</h3>
       <div class="dmc-list" id="dmc-orders"></div>
@@ -231,12 +237,6 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
     <div class="dmc-sec">
       <h3 data-dm="cab_journal">Earnings journal</h3>
       <div class="dmc-list" id="dmc-earnings"></div>
-    </div>
-    <div class="dmc-sec" id="dmc-req-section">
-      <h3 data-dm="cab_req_h">Payout details</h3>
-      <p class="dmc-req-sub" data-dm="cab_req_sub">Crypto address and network, e.g.: LTC (address). Withdrawal is not possible without details.</p>
-      <textarea id="dmc-req" class="dm-textarea dmc-req-ta" data-dm-ph="cab_req_ph" placeholder="LTC (address)"></textarea>
-      <div class="dmc-req-actions"><button class="dm-btn primary" id="dmc-req-save" data-dm="cab_req_save">Save</button></div>
     </div>
   </div>
 
