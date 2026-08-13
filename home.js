@@ -93,7 +93,7 @@
       pPos.forEach((p, i) => { const s = all[i] || {}; const src = s.img || iconUrl(s.id, s.icon); const n = { p, color: s.color || GREEN, img: null, src, name: s.name || null, letter: (s.letter || (s.name || '?').trim()[0] || '?').toUpperCase() }; PARTNERS.push(n); if (src) { const im = new Image(); im.crossOrigin = 'anonymous'; im.onload = () => { n.img = im; }; im.src = src; } });
       cPos.forEach((p) => CENTERS.push({ p }));
       bPos.forEach((p) => BUYERS.push({ p, center: null }));
-      USERS.length = 0; fibSphere(42).forEach((p) => USERS.push({ p }));   // members scattered over the planet
+      USERS.length = 0; fibSphere(55).forEach((p) => USERS.push({ p }));   // members scattered over the planet
       BUYERS.forEach((bn) => { bn.center = nearest(bn.p, CENTERS); });
     }
 
