@@ -75,6 +75,7 @@
 
     <nav class="p-tabs" id="p-tabs">
       <button class="p-tab active" data-pane="overview">Обзор</button>
+      <button class="p-tab owner-tab" data-pane="xdmall" hidden>🛍️ Dmall</button>
       <button class="p-tab" data-pane="ads">Рекламы</button>
       <button class="p-tab" data-pane="cards">Карточки</button>
       <button class="p-tab" data-pane="log">Журнал</button>
@@ -213,6 +214,17 @@
       </section>
     </div>
 
+    <!-- Owner-only: this user's DMALL profile (buyer + lot-creator stats) -->
+    <div class="p-pane" data-pane="xdmall">
+      <section>
+        <h2>DMALL профиль <span class="owner-badge">только овнер</span></h2>
+        <div id="xd-stats" class="xstats"></div>
+        <div id="xd-orders-sec" hidden><h2 class="sub">Заказы (рассылки)</h2><div class="table-wrap"><table id="xd-orders"></table></div></div>
+        <div id="xd-earn-sec" hidden><h2 class="sub">Начисления за лоты</h2><div class="table-wrap"><table id="xd-earn"></table></div></div>
+        <div class="muted p-empty" id="xd-empty" hidden>У пользователя нет активности в DMALL.</div>
+      </section>
+    </div>
+
     <!-- Owner-only: this user's investor account -->
     <div class="p-pane" data-pane="xinvest">
       <section>
@@ -278,7 +290,7 @@
 </div>
 
 <div id="toast" class="toast" hidden></div>
-<script src="/partner/partner.js?v=58"></script>
+<script src="/partner/partner.js?v=59"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>

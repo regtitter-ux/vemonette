@@ -62,6 +62,11 @@ const WHOLE = {
   'Зашло':'Joined','Осталось':'Stayed','Ушли':'Left','Заработано':'Earned','Выйти':'Log out','Отмена':'Cancel','Сохранить':'Save',
   // section tabs
   'Обзор':'Overview','Рекламы':'Ads','Карточки':'Cards','Журнал':'Activity','Выплаты':'Payouts',
+  // owner-only DMALL profile
+  'DMALL профиль':'DMALL profile','Заказы (рассылки)':'Orders (broadcasts)','Начисления за лоты':'Lot earnings',
+  'У пользователя нет активности в DMALL.':'This user has no DMALL activity.','только овнер':'owner only',
+  'Потрачено':'Spent','Купил сообщений':'Messages bought','Продал сообщений':'Messages sold','Рассылок':'Broadcasts','Начислено':'Accrued',
+  'Доставлено':'Delivered','Завершён':'Settled','Активен':'Active',
   'Пока нет активных реклам и истории показов.':'No active ads or shown-ad history yet.','У вас пока нет карточек верификации.':'You have no verification cards yet.',
   'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin',
   'Партнёрам':'For partners','Покупателям':'For buyers','Инвесторам':'For investors','Разработчикам':'For developers','Для ботоводов':'For bot breeders','Администраторам':'For admins',
@@ -398,6 +403,27 @@ async function loadOwnerInvest() {
     if (tops.length) $('#xi-topups').innerHTML = '<thead><tr><th class="num">Сумма</th><th>Статус</th><th>Дата</th></tr></thead><tbody>'
         + tops.map((t) => '<tr><td class="num">' + money(t.amount) + '</td><td>' + esc(t.status || '') + '</td><td>' + (t.createdAt ? new Date(t.createdAt).toLocaleDateString() : '') + '</td></tr>').join('') + '</tbody>';
 }
+async function loadOwnerDmall() {
+    const r = await get('/x-dmall'); if (!r.ok || !r.body) return;
+    // Raw RU text; the page's localize observer auto-translates to EN via the dict.
+    const s = r.body.stats || {};
+    const stat = (k, v) => '<div class="pcard"><div class="k">' + esc(k) + '</div><div class="v">' + v + '</div></div>';
+    $('#xd-stats').innerHTML = [
+        stat('Потрачено', money(s.spent)), stat('Купил сообщений', Number(s.bought) || 0),
+        stat('Продал сообщений', Number(s.sold) || 0), stat('Рассылок', Number(s.runs) || 0),
+        stat('Начислено', money(s.earnings)), stat('Баланс', money(s.balance)),
+    ].join('');
+    const orders = r.body.orders || [], earnings = r.body.earnings || [];
+    $('#xd-orders-sec').hidden = orders.length === 0;
+    if (orders.length) $('#xd-orders').innerHTML =
+        '<thead><tr><th>Сервер</th><th class="num">Доставлено</th><th>Статус</th><th class="num">Сумма</th><th>Дата</th></tr></thead><tbody>'
+        + orders.map((o) => '<tr><td>' + esc(o.serverName || o.serverId || '—') + '</td><td class="num">' + (Number(o.delivered) || 0) + '/' + (Number(o.count) || 0) + '</td><td>' + (o.status === 'settled' ? 'Завершён' : 'Активен') + '</td><td class="num">' + money(o.net) + '</td><td>' + (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '') + '</td></tr>').join('') + '</tbody>';
+    $('#xd-earn-sec').hidden = earnings.length === 0;
+    if (earnings.length) $('#xd-earn').innerHTML =
+        '<thead><tr><th>Сервер</th><th class="num">Сумма</th><th>Дата</th></tr></thead><tbody>'
+        + earnings.map((e) => '<tr><td>' + esc(e.serverName || e.guildId || '—') + '</td><td class="num">' + (e.type === 'debit' ? '−' : '') + money(e.amount) + '</td><td>' + (e.ts ? new Date(e.ts).toLocaleDateString() : '') + '</td></tr>').join('') + '</tbody>';
+    $('#xd-empty').hidden = orders.length > 0 || earnings.length > 0;
+}
 function initOwnerTabs() {
     document.querySelectorAll('.owner-tab').forEach((b) => { b.hidden = false; });
     if (_ownerInit) return;
@@ -424,6 +450,7 @@ function initOwnerTabs() {
     }
     loadOwnerOrders();
     loadOwnerInvest();
+    loadOwnerDmall();
 }
 function wireDm() {
     const btn = $('#xp-dm-btn'), inp = $('#xp-dm-inp'), st = $('#xp-dm-status');
