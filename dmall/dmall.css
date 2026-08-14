@@ -749,7 +749,9 @@ a.dm-mlink:hover{ text-decoration:underline; }
 .tk-reply{ border-top:1px solid var(--dm-line); padding:12px 16px; display:flex; flex-direction:column; gap:8px; }
 .tk-reply .dm-chat-form{ padding:0; border-top:0; }
 .tk-new-bar.dm-chat-form{ padding:0; border-top:0; }
-.tk-inbar .dm-chat-input{ min-height:24px; }
+/* Match the default (placeholder) height so an empty, focused composer doesn't collapse:
+   one text line (14px × 1.5) + the .dm-chat-input padding (7px top+bottom) = 35px. */
+.tk-inbar .dm-chat-input{ min-height:35px; box-sizing:border-box; }
 .tk-new .tk-pend{ margin-top:-4px; }
 
 /* ---- admin Stays-embed (?embed=stays): neutralize the DMALL app-shell grid so the plain Stays
@@ -760,7 +762,6 @@ html.embed-stays main.wrap{ display:block !important; }
 
 /* ---- ticket message hover actions (delete own / staff restrict) ---- */
 .tk-inbar{ align-items:center; }
-.tk-inbar .dm-chat-input{ min-height:24px; }
 .tk-msg-actions{ display:inline-flex; align-items:center; gap:2px; opacity:0; transition:opacity .12s; }
 .tk-msg:hover .tk-msg-actions{ opacity:1; }
 @media (hover:none){ .tk-msg-actions{ opacity:1; } }
