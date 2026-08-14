@@ -260,7 +260,7 @@
   // Pending attachments for the currently-open reply/new form (File objects, uploaded on submit).
   let tkPend = [];
   function tkRenderPend() { const el = $('#tk-pend'); if (!el) return; el.innerHTML = tkPend.map((f, i) => '<span class="tk-attchip" data-tkrm="' + i + '">' + esc(f.name || 'file') + ' <b>✕</b></span>').join(''); }
-  function tkAddFiles(files) { for (const f of files) { if (tkPend.length >= 6) break; tkPend.push(f); } tkRenderPend(); }
+  function tkAddFiles(files) { for (const f of files) { if (tkPend.length >= 10) break; tkPend.push(f); } tkRenderPend(); }
   async function tkUpload(file) {
     if (file.size > 25 * 1024 * 1024) { if (window.toast) window.toast(dmT('tk_too_big'), 'err'); return null; }
     const dataUrl = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => res(null); r.readAsDataURL(file); });
@@ -299,7 +299,7 @@
       '</div>';
   }
   const tkActiveInput = () => document.querySelector('#dmtickets .tk-ce');
-  const tkReadInput = () => { const inp = tkActiveInput(); return (inp && KIT().readComposer) ? KIT().readComposer(inp).trim() : (inp ? (inp.textContent || '').trim() : ''); };
+  const tkReadInput = () => { const inp = tkActiveInput(); const v = (inp && KIT().readComposer) ? KIT().readComposer(inp).trim() : (inp ? (inp.textContent || '').trim() : ''); return v.slice(0, 2000); };
   function tkEmojiInsert(em) { const inp = tkActiveInput(), K = KIT(); if (inp && K.emojiChip && K.insertNodeAtCaret) K.insertNodeAtCaret(inp, K.emojiChip(em)); }
   // Two pickers: the reply picker has stickers (which send immediately); the new-ticket picker is
   // emoji-only (no sticker section) — so a sticker can't be pasted as text before a ticket exists.
@@ -518,8 +518,9 @@
     const files = [...(dt.files || [])];
     if (!files.length && dt.items) for (const it of dt.items) if (it.kind === 'file') { const f = it.getAsFile(); if (f) files.push(f); }
     if (files.length) { e.preventDefault(); tkAddFiles(files); return; }
-    const text = dt.getData('text/plain');
-    if (text != null) { e.preventDefault(); if (KIT().insertTextAtCaret) KIT().insertTextAtCaret(ce, text); else document.execCommand('insertText', false, text); }
+    const room = Math.max(0, 2000 - (KIT().readComposer ? KIT().readComposer(ce).length : (ce.textContent || '').length));
+    const text = (dt.getData('text/plain') || '').slice(0, room);
+    if (dt.getData('text/plain') != null) { e.preventDefault(); if (KIT().insertTextAtCaret) KIT().insertTextAtCaret(ce, text); else document.execCommand('insertText', false, text); }
   });
 
   function closeLotMenus() {

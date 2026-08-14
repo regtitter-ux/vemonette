@@ -16,11 +16,11 @@
 
   const lang = () => { try { const l = localStorage.getItem('vemoni_lang'); if (l === 'en' || l === 'ru') return l; } catch (_) {} return (navigator.language || '').startsWith('en') ? 'en' : 'ru'; };
   const TXT = {
-    en: { title: 'Chat', empty: 'No messages yet. Say hi 👋', placeholder: 'Message…', login: 'Sign in to chat', reply_to: 'Replying to', cancel: 'cancel', del_confirm: 'Delete this message?', failed: 'Something went wrong', member: 'member', del: 'Delete', attach: 'Attach a file', too_big: 'File is too large', photo: 'Photo', video: 'Video', file: 'File',
+    en: { title: 'Chat', empty: 'No messages yet. Say hi 👋', placeholder: 'Message…', login: 'Sign in to chat', reply_to: 'Replying to', cancel: 'cancel', del_confirm: 'Delete this message?', failed: 'Something went wrong', member: 'member', del: 'Delete', attach: 'Attach a file', too_big: 'File is too large', too_fast: 'Slow down a little', photo: 'Photo', video: 'Video', file: 'File',
       p_stickers: 'Stickers', p_emoji: 'Emoji', p_search: 'Search…', p_fav: 'Favorites', p_recent: 'Recent', p_favorite: 'Favorite', p_empty: 'Nothing found',
       typing_one: '{name} is typing…', typing_many: 'Several users are typing…',
       mute: 'Mute', mute10m: '10 minutes', mute1h: '1 hour', mute1d: '1 day', mutePerm: 'Forever', unmute: 'Unmute', purge: 'Delete all messages', muted: 'User muted', unmuted: 'User unmuted', purged: 'Messages deleted', you_muted: 'You are muted and cannot post' },
-    ru: { title: 'Чат', empty: 'Пока пусто. Поздоровайтесь 👋', placeholder: 'Сообщение…', login: 'Войдите, чтобы писать', reply_to: 'Ответ', cancel: 'отмена', del_confirm: 'Удалить сообщение?', failed: 'Что-то пошло не так', member: 'участник', del: 'Удалить', attach: 'Прикрепить файл', too_big: 'Файл слишком большой', photo: 'Фото', video: 'Видео', file: 'Файл',
+    ru: { title: 'Чат', empty: 'Пока пусто. Поздоровайтесь 👋', placeholder: 'Сообщение…', login: 'Войдите, чтобы писать', reply_to: 'Ответ', cancel: 'отмена', del_confirm: 'Удалить сообщение?', failed: 'Что-то пошло не так', member: 'участник', del: 'Удалить', attach: 'Прикрепить файл', too_big: 'Файл слишком большой', too_fast: 'Помедленнее', photo: 'Фото', video: 'Видео', file: 'Файл',
       p_stickers: 'Стикеры', p_emoji: 'Эмодзи', p_search: 'Поиск…', p_fav: 'Избранное', p_recent: 'Недавние', p_favorite: 'В избранное', p_empty: 'Ничего не найдено',
       typing_one: '{name} печатает…', typing_many: 'Несколько человек печатают…',
       mute: 'Замьютить', mute10m: '10 минут', mute1h: '1 час', mute1d: '1 день', mutePerm: 'Навсегда', unmute: 'Снять мьют', purge: 'Удалить все сообщения', muted: 'Пользователь замьючен', unmuted: 'Мьют снят', purged: 'Сообщения удалены', you_muted: 'Вы в мьюте и не можете писать' },
@@ -37,7 +37,7 @@
   const MUTE_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>';
 
   /* --------------------------- state --------------------------- */
-  let messages = [], overlay = null, es = null, unread = false, replyTarget = null, sending = false, mounted = false;
+  let messages = [], overlay = null, es = null, unread = false, replyTarget = null, sending = false, mounted = false, chatPend = [];
   let me = { id: '', staff: false, authed: false };
   let lastSeen = 0; try { lastSeen = Number(localStorage.getItem('dmChatSeen') || 0); } catch (_) {}
 
@@ -109,6 +109,13 @@
     const letter = (String(m.name || '?').trim()[0] || '?').toUpperCase();
     return '<span class="dm-chat-av"><span class="dm-chat-av-txt">' + esc(letter) + '</span></span>';
   }
+  // One attachment in a message ribbon (image → lightbox, video → player, else a download chip).
+  function attHTML(a) {
+    const url = base() + a.url;
+    if (a.kind === 'image') return '<img class="dm-chat-att-img" data-lb="' + esc(url) + '" src="' + esc(url) + '" alt="" loading="lazy">';
+    if (a.kind === 'video') return '<video class="dm-chat-att-vid" src="' + esc(url) + '" controls preload="metadata"></video>';
+    return '<a class="dm-chat-att-file" href="' + esc(url) + '" download="' + esc(a.name || t('file')) + '">' + FILE_ICO + '<span>' + esc(a.name || t('file')) + '</span></a>';
+  }
   function msgHTML(m) {
     const mine = me.id && me.id === String(m.userId);
     const canDel = mine || me.staff;
@@ -116,7 +123,7 @@
     const reply = m.reply
       ? '<div class="dm-chat-reply">' + REPLY_ICO + '<span class="dm-chat-reply-name">@' + esc(m.reply.name || t('member')) + '</span> <span class="dm-chat-reply-snip">' + renderBody(m.reply.text) + '</span></div>'
       : '';
-    return '<div class="dm-chat-msg" data-msg="' + esc(m.id) + '" data-uid="' + esc(m.userId) + '" data-name="' + esc(m.name || '') + '" data-snip="' + esc(snippet(m.body)) + '">' +
+    return '<div class="dm-chat-msg" data-msg="' + esc(m.id) + '" data-uid="' + esc(m.userId) + '" data-name="' + esc(m.name || '') + '" data-snip="' + esc(snippet(m.body) || (m.attachments && m.attachments.length ? t(m.attachments[0].kind === 'image' ? 'photo' : m.attachments[0].kind === 'video' ? 'video' : 'file') : '')) + '">' +
       avatarHTML(m) +
       '<div class="dm-chat-body">' +
         '<div class="dm-chat-head-line">' +
@@ -125,7 +132,8 @@
           (canMute ? '<button class="dm-chat-mute" data-mute="' + esc(m.userId) + '" data-mname="' + esc(m.name || '') + '" title="' + esc(t('mute')) + '">' + MUTE_ICO + '</button>' : '') +
           (canDel ? '<button class="dm-chat-del" data-del="' + esc(m.id) + '" title="' + esc(t('del')) + '">✕</button>' : '') +
         '</div>' + reply +
-        '<div class="dm-chat-text' + emojiScaleClass(m.body) + '">' + renderBody(m.body) + '</div>' +
+        (m.body ? '<div class="dm-chat-text' + emojiScaleClass(m.body) + '">' + renderBody(m.body) + '</div>' : '') +
+        ((m.attachments && m.attachments.length) ? '<div class="dm-chat-atts">' + m.attachments.map(attHTML).join('') + '</div>' : '') +
       '</div>' +
     '</div>';
   }
@@ -258,31 +266,34 @@
   }
 
   /* --------------------------- send --------------------------- */
-  async function sendText(text) {
-    if (sending || !text) return false;
+  const MAX_CHARS = 2000, MAX_FILES = 10;
+  async function sendText(text, attachments) {
+    text = (text || '').slice(0, MAX_CHARS);
+    const atts = attachments || [];
+    if (sending || (!text && !atts.length)) return false;
     sending = true;
     try {
       const reply = replyTarget ? { userId: replyTarget.userId, name: replyTarget.name, text: replyTarget.text } : null;
-      const r = await api('/order/dmall/chat', { method: 'POST', body: { text, reply } });
-      if (!r.ok) { toast(r.body && r.body.error === 'muted' ? t('you_muted') : ((r.body && r.body.error) || t('failed')), 'err'); return false; }
+      const r = await api('/order/dmall/chat', { method: 'POST', body: { text, reply, attachments: atts } });
+      if (!r.ok) { toast(r.body && r.body.error === 'muted' ? t('you_muted') : (r.body && r.body.error === 'too-fast' ? t('too_fast') : ((r.body && r.body.error) || t('failed'))), 'err'); return false; }
       return true;
     } finally { sending = false; }
   }
 
-  // Upload a file (image/video/file) then post it as an attachment message. No VIP gate.
-  async function uploadAndSend(file) {
-    if (!file) return;
-    if (file.size > 25 * 1024 * 1024) return toast(t('too_big'), 'err');
-    let dataUrl;
-    try { dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); }); }
-    catch (_) { return toast(t('failed'), 'err'); }
-    const r = await api('/order/dmall/chat/upload', { method: 'POST', body: { dataUrl, name: file.name } });
-    if (!r.ok || !r.body || !r.body.url) { toast((r.body && r.body.error) || t('failed'), 'err'); return; }
-    const up = r.body;
-    const token = up.kind === 'image' ? '[[img:' + up.url + ']]'
-      : up.kind === 'video' ? '[[vid:' + up.url + ']]'
-      : '[[file:' + up.url + '|' + encodeURIComponent(up.name || t('file')) + ']]';
-    if (await sendText(token)) setReply(null);
+  // Pending attachments: files (clip / Ctrl+V) queue above the input and are uploaded + published
+  // as ONE message on send (a ribbon when there are several). Cap at MAX_FILES.
+  function chatAddFiles(files) { for (const f of files) { if (chatPend.length >= MAX_FILES) break; chatPend.push(f); } chatRenderPend(); }
+  function chatRenderPend() { const el = overlay && $('[data-pend]', overlay); if (!el) return; el.innerHTML = chatPend.map((f, i) => '<span class="dm-chat-attchip" data-prm="' + i + '">' + esc(f.name || 'file') + ' <b>✕</b></span>').join(''); }
+  async function uploadPend() {
+    const out = [];
+    for (const f of chatPend) {
+      if (f.size > 25 * 1024 * 1024) { toast(t('too_big'), 'err'); continue; }
+      let dataUrl; try { dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); }); } catch (_) { continue; }
+      const r = await api('/order/dmall/chat/upload', { method: 'POST', body: { dataUrl, name: f.name } });
+      if (r.ok && r.body && r.body.url) out.push({ url: r.body.url, kind: r.body.kind, name: r.body.name });
+      else if (r.status === 429) toast(t('too_fast'), 'err');
+    }
+    return out;
   }
 
   /* ===================== emoji / sticker picker (ported) ===================== */
@@ -502,6 +513,7 @@
         (me.authed
           ? '<form class="dm-chat-form">' +
               '<input type="file" data-file multiple hidden>' +
+              '<div class="dm-chat-pend" data-pend></div>' +
               '<div class="dm-chat-inputbar">' +
                 '<button type="button" class="dm-chat-tool" data-attach title="' + esc(t('attach')) + '">' + CLIP_ICO + '</button>' +
                 '<div class="dm-chat-input empty" contenteditable="true" role="textbox" data-placeholder="' + esc(t('placeholder')) + '"></div>' +
@@ -522,9 +534,11 @@
     const form = $('.dm-chat-form', overlay);
     const fileInput = $('[data-file]', overlay);
 
+    chatPend = []; chatRenderPend();
+
     picker = createPicker({
       onEmoji: (em) => { if (input) insertNodeAtCaret(input, emojiChip(em)); },
-      onSticker: async (stk) => { if (await sendText('[[sticker:' + stk.id + ':' + stk.format + ']]')) setReply(null); },
+      onSticker: async (stk) => { if (await sendText('[[sticker:' + stk.id + ':' + stk.format + ']]', [])) setReply(null); },
     });
 
     overlay.addEventListener('click', async (e) => {
@@ -533,6 +547,8 @@
       const ep = e.target.closest('[data-ep-open]');
       if (ep) { e.preventDefault(); return picker.toggle(ep, ep.dataset.epOpen); }
       if (e.target.closest('[data-attach]')) { e.preventDefault(); return fileInput.click(); }
+      const prm = e.target.closest('[data-prm]');
+      if (prm) { e.preventDefault(); chatPend.splice(+prm.dataset.prm, 1); chatRenderPend(); return; }
       const mute = e.target.closest('[data-mute]');
       if (mute) { e.stopPropagation(); return openMuteMenu(mute, mute.dataset.mute, mute.dataset.mname); }
       const del = e.target.closest('[data-del]');
@@ -544,7 +560,7 @@
       if (row) setReply({ userId: row.dataset.uid, name: row.dataset.name, text: row.dataset.snip });
     });
 
-    if (fileInput) fileInput.addEventListener('change', async () => { const files = [...fileInput.files]; fileInput.value = ''; for (const f of files) await uploadAndSend(f); });
+    if (fileInput) fileInput.addEventListener('change', () => { const files = [...fileInput.files]; fileInput.value = ''; chatAddFiles(files); });
 
     if (input) {
       input.addEventListener('input', () => { refreshEmpty(input); if (!isEmptyComposer(input)) emitTyping(); });
@@ -552,22 +568,25 @@
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
         else if (e.key === 'Enter' && e.shiftKey) { e.preventDefault(); insertNodeAtCaret(input, document.createElement('br')); }
       });
-      // Paste: files/screenshots → upload (no VIP gate); plain text → insert as text (strip rich HTML).
+      // Paste: files/screenshots → queue above the input; plain text → insert as text (strip rich HTML, cap length).
       input.addEventListener('paste', (e) => {
         const dt = e.clipboardData; if (!dt) return;
         const files = [...(dt.files || [])];
         if (!files.length && dt.items) for (const it of dt.items) if (it.kind === 'file') { const f = it.getAsFile(); if (f) files.push(f); }
-        if (files.length) { e.preventDefault(); (async () => { for (const f of files) await uploadAndSend(f); })(); return; }
+        if (files.length) { e.preventDefault(); chatAddFiles(files); return; }
         e.preventDefault();
-        insertTextAtCaret(input, dt.getData('text/plain') || '');
+        const room = Math.max(0, MAX_CHARS - readComposer(input).length);
+        insertTextAtCaret(input, (dt.getData('text/plain') || '').slice(0, room));
       });
       input.focus();
     }
     if (form) form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const text = readComposer(input).trim();
-      if (!text) return;
-      if (await sendText(text)) { clearComposer(input); setReply(null); }
+      if (!text && !chatPend.length) return;
+      const attachments = await uploadPend();
+      if (!text && !attachments.length) return;   // all uploads failed and no text — keep the composer
+      if (await sendText(text, attachments)) { clearComposer(input); chatPend = []; chatRenderPend(); setReply(null); }
     });
   }
 
@@ -576,6 +595,7 @@
     if (overlay) overlay.remove();
     overlay = null;
     replyTarget = null;
+    chatPend = [];
   }
 
   /* --------------------------- mount --------------------------- */

@@ -186,7 +186,16 @@
 
 /* Input row (copied from the original): one flat pill holding clip + textarea +
    sticker + emoji, then a round send button on the right. NO blue focus ring. */
-.dm-chat-form { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--stroke, rgba(255, 255, 255, .07)); flex: none; }
+.dm-chat-form { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--stroke, rgba(255, 255, 255, .07)); flex: none; }
+/* Pending attachments queued above the input (uploaded + published on send, as a ribbon). */
+.dm-chat-pend { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px; }
+.dm-chat-pend:empty { display: none; }
+.dm-chat-attchip { display: inline-flex; align-items: center; gap: 4px; max-width: 200px; background: var(--inset, #0e131b); border: 1px solid var(--stroke, rgba(255, 255, 255, .07)); border-radius: 8px; padding: 5px 9px; font-size: 12.5px; color: var(--text, #e9edf5); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dm-chat-attchip b { color: var(--muted, #8a95a8); font-weight: 700; margin-left: 2px; }
+.dm-chat-attchip:hover b { color: #ff6b6b; }
+/* Several attachments in one message → a wrapped ribbon. */
+.dm-chat-atts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
+.dm-chat-atts .dm-chat-att-img, .dm-chat-atts .dm-chat-att-vid, .dm-chat-atts .dm-chat-att-file { margin-top: 0; }
 .dm-chat-inputbar {
   flex: 1; min-width: 0;
   display: flex; align-items: center; gap: 2px;
