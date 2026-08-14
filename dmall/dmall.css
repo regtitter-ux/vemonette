@@ -757,3 +757,18 @@ a.dm-mlink:hover{ text-decoration:underline; }
    DMALL in this mode, so the DMALL panels stay hidden and the Stays orders show. ---- */
 html.embed-stays #app{ display:block !important; }
 html.embed-stays main.wrap{ display:block !important; }
+
+/* ---- ticket message hover actions (delete own / staff restrict) ---- */
+.tk-inbar{ align-items:center; }
+.tk-inbar .dm-chat-input{ min-height:24px; }
+.tk-msg-actions{ display:inline-flex; align-items:center; gap:2px; opacity:0; transition:opacity .12s; }
+.tk-msg:hover .tk-msg-actions{ opacity:1; }
+@media (hover:none){ .tk-msg-actions{ opacity:1; } }
+.tk-msg-del, .tk-msg-mute{ background:transparent; border:0; color:var(--dm-dim); cursor:pointer; padding:1px 3px; border-radius:5px; line-height:1; font-size:12px; display:inline-flex; align-items:center; }
+.tk-msg-del:hover{ color:var(--dm-red); background:rgba(237,66,69,.12); }
+.tk-msg-mute:hover{ color:var(--dm-amber); background:rgba(245,179,0,.12); }
+.tk-msg-mute svg{ width:14px; height:14px; display:block; }
+.tk-del-ticket{ background:transparent; border:0; color:var(--dm-dim); cursor:pointer; padding:5px; border-radius:8px; display:inline-flex; }
+.tk-del-ticket svg{ width:17px; height:17px; display:block; }
+.tk-del-ticket:hover{ color:var(--dm-red); background:rgba(237,66,69,.12); }
+#tk-new-btn:disabled{ opacity:.5; cursor:not-allowed; }

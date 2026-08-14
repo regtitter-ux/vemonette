@@ -310,12 +310,13 @@
   }
 
   function createPicker(opts) {
+    const emojiOnly = !!(opts && opts.emojiOnly);
     const el = document.createElement('div');
-    el.className = 'dm-ep';
+    el.className = 'dm-ep' + (emojiOnly ? ' dm-ep-emojionly' : '');
     el.hidden = true;
     el.innerHTML =
       '<div class="dm-ep-tabs">' +
-        '<button class="dm-ep-tab" type="button" data-tab="sticker">' + esc(t('p_stickers')) + '</button>' +
+        (emojiOnly ? '' : '<button class="dm-ep-tab" type="button" data-tab="sticker">' + esc(t('p_stickers')) + '</button>') +
         '<button class="dm-ep-tab" type="button" data-tab="emoji">' + esc(t('p_emoji')) + '</button>' +
       '</div>' +
       '<div class="dm-ep-search"><input data-q type="text" placeholder="' + esc(t('p_search')) + '" spellcheck="false"></div>' +
@@ -388,7 +389,7 @@
       el.style.left = left + 'px'; el.style.top = top + 'px';
     }
     async function openTab(anchor, which) {
-      tab = which || 'emoji'; query = ''; qEl.value = '';
+      tab = emojiOnly ? 'emoji' : (which || 'emoji'); query = ''; qEl.value = '';
       el.querySelectorAll('.dm-ep-tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === tab));
       // Show the picker immediately; if the catalog isn't loaded yet, show a loading spinner.
       if (!catalog) { railEl.innerHTML = ''; gridEl.innerHTML = '<div class="dm-ep-loading"><span class="dm-ep-spinner"></span></div>'; }
@@ -592,5 +593,10 @@
 
   // Shared toolkit so other features (tickets) can reuse the exact same emoji/sticker picker and
   // message renderer as the chat — identical look + mechanics.
-  try { window.VemoniChatKit = { createPicker, renderBody }; } catch (_) {}
+  try {
+    window.VemoniChatKit = {
+      createPicker, renderBody, emojiScaleClass,
+      emojiChip, insertNodeAtCaret, insertTextAtCaret, readComposer, clearComposer, refreshEmpty, isEmptyComposer,
+    };
+  } catch (_) {}
 })();

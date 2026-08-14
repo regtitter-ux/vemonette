@@ -252,7 +252,9 @@
 
   /* ---------- DMALL support tickets ---------- */
   let tkStaff = false, tkList = [], tkFilter = 'all', tkOpen = null, tkPollT = null;
+  let tkMe = { id: '', staff: false }, tkMuted = false, tkMyOpen = 0, tkMaxOpen = 3;
   const tkBadge = $('#dm-tk-badge');
+  const KIT = () => window.VemoniChatKit || {};
   const TK_ST = { open: ['amber', 'tk_st_open'], answered: ['blue', 'tk_st_answered'], closed: ['dim', 'tk_st_closed'] };
   const tkTime = (ts) => { if (!ts) return ''; try { return new Date(ts).toLocaleString(dmLang() === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'short', timeStyle: 'short' }); } catch (_) { return ''; } };
   // Pending attachments for the currently-open reply/new form (File objects, uploaded on submit).
@@ -280,36 +282,39 @@
     document.body.appendChild(lb);
     lb.addEventListener('click', (e) => { if (!e.target.matches('img')) lb.remove(); });
   }
-  // Chat-style input bar (same look/mechanics as the chat): clip · textarea · sticker · emoji.
+  // Chat-style input bar (identical look/mechanics to the chat): clip · contenteditable · [sticker] · emoji.
   const TK_CLIP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.6 1.6 0 0 1-2.3-2.3l7.8-7.8"/></svg>';
   const TK_STICKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h6l7-7V7a3 3 0 0 0-3-3Z"/><path d="M13 20v-4a3 3 0 0 1 3-3h4"/></svg>';
   const TK_EMOJI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/><path d="M8.5 14.5a4 4 0 0 0 7 0"/></svg>';
   const TK_SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 5 16 12 9 19"/></svg>';
-  function tkInputBar(taId, ph) {
+  const TK_MUTE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>';
+  const TK_TRASH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>';
+  function tkInputBar(ph, withSticker) {
     return '<input type="file" id="tk-file" multiple hidden>' +
       '<div class="dm-chat-inputbar tk-inbar">' +
         '<button type="button" class="dm-chat-tool" data-tkclip title="' + esc(dmT('tk_attach')) + '">' + TK_CLIP + '</button>' +
-        '<textarea class="dm-chat-input" id="' + taId + '" rows="1" placeholder="' + esc(ph) + '"></textarea>' +
-        '<button type="button" class="dm-chat-tool" data-tkep="sticker" data-ep-open="sticker" title="' + esc(dmT('tk_stickers')) + '">' + TK_STICKER + '</button>' +
+        '<div class="dm-chat-input tk-ce empty" contenteditable="true" role="textbox" data-placeholder="' + esc(ph) + '"></div>' +
+        (withSticker ? '<button type="button" class="dm-chat-tool" data-tkep="sticker" data-ep-open="sticker" title="' + esc(dmT('tk_stickers')) + '">' + TK_STICKER + '</button>' : '') +
         '<button type="button" class="dm-chat-tool" data-tkep="emoji" data-ep-open="emoji" title="' + esc(dmT('tk_emoji')) + '">' + TK_EMOJI + '</button>' +
       '</div>';
   }
-  const tkActiveInput = () => document.querySelector('#dmtickets .dm-chat-input');
-  function tkAutosize(el) { if (!el) return; el.style.height = 'auto'; el.style.height = Math.min(120, el.scrollHeight) + 'px'; }
-  function tkInsert(str) { const inp = tkActiveInput(); if (!inp) return; const s = inp.selectionStart == null ? inp.value.length : inp.selectionStart, e = inp.selectionEnd == null ? s : inp.selectionEnd; inp.value = inp.value.slice(0, s) + str + inp.value.slice(e); const p = s + str.length; inp.selectionStart = inp.selectionEnd = p; inp.focus(); tkAutosize(inp); }
-  let tkPicker = null;
-  function tkGetPicker() {
-    if (tkPicker) return tkPicker;
-    if (!window.VemoniChatKit || !window.VemoniChatKit.createPicker) return null;
-    tkPicker = window.VemoniChatKit.createPicker({
-      onEmoji: (em) => tkInsert('<' + (em.animated ? 'a' : '') + ':' + em.name + ':' + em.id + '>'),
-      onSticker: (stk) => tkInsert('[[sticker:' + stk.id + ':' + stk.format + ']]'),
-    });
-    return tkPicker;
+  const tkActiveInput = () => document.querySelector('#dmtickets .tk-ce');
+  const tkReadInput = () => { const inp = tkActiveInput(); return (inp && KIT().readComposer) ? KIT().readComposer(inp).trim() : (inp ? (inp.textContent || '').trim() : ''); };
+  function tkEmojiInsert(em) { const inp = tkActiveInput(), K = KIT(); if (inp && K.emojiChip && K.insertNodeAtCaret) K.insertNodeAtCaret(inp, K.emojiChip(em)); }
+  // Two pickers: the reply picker has stickers (which send immediately); the new-ticket picker is
+  // emoji-only (no sticker section) — so a sticker can't be pasted as text before a ticket exists.
+  let tkPickerReply = null, tkPickerNew = null;
+  function tkGetPicker(kind) {
+    const K = KIT(); if (!K.createPicker) return null;
+    if (kind === 'new') { if (!tkPickerNew) tkPickerNew = K.createPicker({ emojiOnly: true, onEmoji: tkEmojiInsert }); return tkPickerNew; }
+    if (!tkPickerReply) tkPickerReply = K.createPicker({ onEmoji: tkEmojiInsert, onSticker: (stk) => { tkPostReply('[[sticker:' + stk.id + ':' + stk.format + ']]', []); } });
+    return tkPickerReply;
   }
-  const tkRenderMsgBody = (body) => (window.VemoniChatKit && window.VemoniChatKit.renderBody) ? window.VemoniChatKit.renderBody(body) : esc(body).replace(/\n/g, '<br>');
+  const tkRenderMsgBody = (body) => KIT().renderBody ? KIT().renderBody(body) : esc(body).replace(/\n/g, '<br>');
+  const tkScale = (body) => KIT().emojiScaleClass ? KIT().emojiScaleClass(body) : '';
 
   async function tkOpenPanel() {
+    if (!tkMe.id) { const w = await dmApi('/order/whoami'); if (w.ok && w.body && w.body.authed) tkMe = { id: String(w.body.userId || ''), staff: !!(w.body.isOwner || w.body.isAdmin) }; }
     await loadTickets();
     clearInterval(tkPollT);
     tkPollT = setInterval(() => {
@@ -321,10 +326,17 @@
     const r = await dmApi('/order/dmall/tickets');
     if (!r.ok || !r.body) return;
     tkStaff = !!r.body.staff; tkList = Array.isArray(r.body.tickets) ? r.body.tickets : [];
+    tkMuted = !!r.body.muted; tkMyOpen = Number(r.body.myOpen) || 0; tkMaxOpen = Number(r.body.maxOpen) || 3;
     tkSetBadge(r.body.unreadTotal || 0);
-    renderTicketFilters(); renderTicketList();
+    renderTicketFilters(); renderTicketList(); tkUpdateNewBtn();
   }
   function tkSetBadge(n) { if (!tkBadge) return; if (n > 0) { tkBadge.textContent = n > 99 ? '99+' : String(n); tkBadge.hidden = false; } else tkBadge.hidden = true; }
+  function tkUpdateNewBtn() {
+    const b = $('#tk-new-btn'); if (!b) return;
+    if (tkMuted) { b.disabled = true; b.title = dmT('tk_you_muted'); }
+    else if (!tkStaff && tkMyOpen >= tkMaxOpen) { b.disabled = true; b.title = dmT('tk_limit').replace('{n}', tkMaxOpen); }
+    else { b.disabled = false; b.title = ''; }
+  }
   function renderTicketFilters() {
     const el = $('#tk-filters'); if (!el) return;
     if (!tkStaff) { el.hidden = true; el.innerHTML = ''; return; }
@@ -347,11 +359,18 @@
     el.innerHTML = arr.length ? arr.map(ticketRow).join('') : '<div class="tk-empty">' + esc(dmT('tk_empty')) + '</div>';
   }
   function tkMsgRow(m) {
+    const mine = tkMe.id && String(m.authorId || '') === tkMe.id;
     const name = esc(m.authorName || (m.staff ? dmT('tk_staff') : dmT('tk_you')));
     const badge = m.staff ? ' <span class="tk-badge-staff">' + esc(dmT('tk_staff')) + '</span>' : '';
-    const bodyHtml = m.body ? '<div class="tk-msg-body">' + tkRenderMsgBody(m.body) + '</div>' : '';
+    const bodyHtml = m.body ? '<div class="tk-msg-body dm-chat-text' + tkScale(m.body) + '">' + tkRenderMsgBody(m.body) + '</div>' : '';
     const atts = (m.attachments || []).map(tkAtt).join('');
-    return '<div class="tk-msg' + (m.staff ? ' staff' : '') + '"><div class="tk-msg-head"><b>' + name + '</b>' + badge + '<span class="tk-msg-time">' + esc(tkTime(m.at)) + '</span></div>' + bodyHtml + (atts ? '<div class="tk-msg-atts">' + atts + '</div>' : '') + '</div>';
+    // Hover (or tap on mobile) actions: delete OWN messages; staff can restrict OTHER users.
+    const canMute = tkStaff && !mine && /^\d{17,20}$/.test(String(m.authorId || ''));
+    const acts = '<span class="tk-msg-actions">' +
+      (canMute ? '<button class="tk-msg-mute" data-tkmute="' + esc(m.authorId) + '" data-tkmname="' + esc(m.authorName || '') + '" title="' + esc(dmT('tk_restrict')) + '">' + TK_MUTE + '</button>' : '') +
+      (mine ? '<button class="tk-msg-del" data-tkdel="' + esc(m.id) + '" title="' + esc(dmT('tk_del_msg')) + '">✕</button>' : '') +
+      '</span>';
+    return '<div class="tk-msg' + (m.staff ? ' staff' : '') + '"><div class="tk-msg-head"><b>' + name + '</b>' + badge + '<span class="tk-msg-time">' + esc(tkTime(m.at)) + '</span>' + acts + '</div>' + bodyHtml + (atts ? '<div class="tk-msg-atts">' + atts + '</div>' : '') + '</div>';
   }
   // Quiet poll: refresh just the message list + status chip, so a typed reply / pending files survive.
   function tkUpdateMessages(t) {
@@ -370,26 +389,29 @@
     const statusCtl = canStaff
       ? (closed ? '<button class="dm-btn ghost sm" data-tkstatus="open" data-tkid="' + esc(t.id) + '">' + esc(dmT('tk_reopen')) + '</button>' : '<button class="dm-btn ghost sm" data-tkstatus="closed" data-tkid="' + esc(t.id) + '">' + esc(dmT('tk_close')) + '</button>')
       : (isOwner && !closed ? '<button class="dm-btn ghost sm" data-tkstatus="closed" data-tkid="' + esc(t.id) + '">' + esc(dmT('tk_close')) + '</button>' : '');
+    const delTicket = canStaff ? '<button class="tk-del-ticket" data-tkdelticket="' + esc(t.id) + '" title="' + esc(dmT('tk_del_ticket')) + '">' + TK_TRASH + '</button>' : '';
     th.innerHTML =
       '<div class="tk-th-head"><button class="tk-back" data-tkback>‹</button>' +
         '<div class="tk-th-title"><b>' + esc(t.subject) + '</b><span class="tk-chip ' + m[0] + '">' + esc(dmT(m[1])) + '</span>' + (tkStaff ? ' <span class="tk-th-user">' + esc(t.userName || t.userId) + '</span>' : '') + '</div>' +
-        statusCtl + '</div>' +
+        statusCtl + delTicket + '</div>' +
       '<div class="tk-msgs" id="tk-msgs">' + (t.messages || []).map(tkMsgRow).join('') + '</div>' +
       (closed ? '<div class="tk-closed-note">' + esc(dmT('tk_closed_note')) + '</div>' : '') +
-      '<div class="tk-reply"><div class="tk-pend" id="tk-pend"></div><div class="dm-chat-form">' + tkInputBar('tk-reply-ta', dmT('tk_reply_ph')) +
+      '<div class="tk-reply"><div class="tk-pend" id="tk-pend"></div><div class="dm-chat-form">' + tkInputBar(dmT('tk_reply_ph'), true) +
         '<button type="button" class="dm-chat-send" id="tk-reply-send" data-tkid="' + esc(t.id) + '" title="' + esc(dmT('tk_send')) + '">' + TK_SEND + '</button>' +
       '</div></div>';
     const box = $('#tk-msgs'); if (box) box.scrollTop = box.scrollHeight;
     th.classList.add('open');
   }
   function tkNewForm() {
+    if (tkMuted) { if (window.toast) window.toast(dmT('tk_you_muted'), 'err'); return; }
+    if (!tkStaff && tkMyOpen >= tkMaxOpen) { if (window.toast) window.toast(dmT('tk_limit').replace('{n}', tkMaxOpen), 'err'); return; }
     tkOpen = null; tkPend = []; renderTicketList();
     const th = $('#tk-thread'); if (!th) return;
     th.innerHTML = '<div class="tk-th-head"><button class="tk-back" data-tkback>‹</button><div class="tk-th-title"><b>' + esc(dmT('tk_new')) + '</b></div></div>' +
       '<div class="tk-new">' +
         '<input class="dm-input" id="tk-new-subj" maxlength="140" placeholder="' + esc(dmT('tk_subject')) + '">' +
         '<div class="tk-pend" id="tk-pend"></div>' +
-        '<div class="tk-new-bar dm-chat-form">' + tkInputBar('tk-new-body', dmT('tk_message')) + '</div>' +
+        '<div class="tk-new-bar dm-chat-form">' + tkInputBar(dmT('tk_message'), false) + '</div>' +
         '<div class="tk-new-row"><button class="dm-btn primary full" id="tk-new-send">' + esc(dmT('tk_create')) + '</button></div>' +
         '<div class="tk-new-status" id="tk-new-status" hidden></div>' +
       '</div>';
@@ -406,59 +428,98 @@
     if (tkOpen !== id) return;
     if (!r.ok || !r.body || !r.body.ticket) { if (!quiet) { const th = $('#tk-thread'); if (th) th.innerHTML = '<div class="tk-empty">' + esc(dmT('tk_not_found')) + '</div>'; } return; }
     // On a background poll, only refresh the messages so a half-typed reply / pending files survive.
-    if (quiet && $('#tk-msgs') && $('#tk-reply-ta')) { tkUpdateMessages(r.body.ticket); loadTickets(); return; }
+    if (quiet && $('#tk-msgs') && tkActiveInput()) { tkUpdateMessages(r.body.ticket); loadTickets(); return; }
     renderThread(r.body.ticket, r.body.canStaff, r.body.isOwner);
     loadTickets();   // refresh list unread state
   }
   function tkCloseThread() { tkOpen = null; const th = $('#tk-thread'); if (th) { th.innerHTML = ''; th.classList.remove('open'); } renderTicketList(); }
+  // Post a reply to the currently-open ticket (text may be a sticker token). Refreshes on success.
+  async function tkPostReply(text, attachments) {
+    if (!tkOpen) return false;
+    const r = await dmApi('/order/dmall/tickets/' + encodeURIComponent(tkOpen) + '/reply', { method: 'POST', body: { body: text, attachments: attachments || [] } });
+    if (r.ok) { tkPend = []; await tkRefreshThread(tkOpen); return true; }
+    if (window.toast) window.toast((r.body && r.body.error === 'muted') ? dmT('tk_you_muted') : ((r.body && r.body.error) || dmT('tk_failed')), 'err');
+    return false;
+  }
+  // Staff restrict menu (temporary / permanent / lift) — reuses the chat mute-menu styles.
+  function tkMuteMenu(btn, uid, name) {
+    document.querySelector('.dm-mute-menu')?.remove();
+    const menu = document.createElement('div'); menu.className = 'dm-mute-menu';
+    const opts = [[10, 'mute10m'], [60, 'mute1h'], [1440, 'mute1d'], [0, 'mutePerm']];
+    menu.innerHTML = '<div class="dm-mute-title">' + esc(name || '') + '</div>' +
+      opts.map(([mn, k]) => '<button type="button" data-min="' + mn + '">' + esc(dmT(k)) + '</button>').join('') +
+      '<button type="button" class="dm-mute-unmute" data-min="-1">' + esc(dmT('tk_unrestrict')) + '</button>';
+    document.body.append(menu);
+    const r = btn.getBoundingClientRect();
+    menu.style.top = (r.bottom + 4) + 'px'; menu.style.left = Math.max(8, Math.min(r.left, innerWidth - 200)) + 'px';
+    menu.addEventListener('click', async (ev) => {
+      const b = ev.target.closest('[data-min]'); if (!b) return; const min = Number(b.dataset.min); menu.remove();
+      const res = min === -1
+        ? await dmApi('/order/dmall/tickets/unmute', { method: 'POST', body: { userId: uid } })
+        : await dmApi('/order/dmall/tickets/mute', { method: 'POST', body: { userId: uid, minutes: min } });
+      if (window.toast) window.toast(res.ok ? (min === -1 ? dmT('tk_unrestricted') : dmT('tk_restricted')) : dmT('tk_failed'), res.ok ? 'ok' : 'err');
+    });
+    setTimeout(() => document.addEventListener('click', function off(ev) { if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener('click', off); } }), 0);
+  }
 
   if (tkEl) tkEl.addEventListener('click', async (e) => {
     if (e.target.closest('#tk-new-btn')) { tkNewForm(); return; }
     const f = e.target.closest('[data-tkf]'); if (f) { tkFilter = f.dataset.tkf; renderTicketFilters(); renderTicketList(); return; }
     const lb = e.target.closest('[data-tklb]'); if (lb) { tkLightbox(lb.getAttribute('data-tklb')); return; }
     if (e.target.closest('[data-tkclip]')) { const fi = $('#tk-file'); if (fi) fi.click(); return; }
-    const ep = e.target.closest('[data-tkep]'); if (ep) { e.preventDefault(); const p = tkGetPicker(); if (p) p.toggle(ep, ep.dataset.tkep); return; }
+    const ep = e.target.closest('[data-tkep]'); if (ep) { e.preventDefault(); const p = tkGetPicker(ep.closest('.tk-new') ? 'new' : 'reply'); if (p) p.toggle(ep, ep.dataset.tkep); return; }
     const rm = e.target.closest('[data-tkrm]'); if (rm) { tkPend.splice(+rm.dataset.tkrm, 1); tkRenderPend(); return; }
+    const mute = e.target.closest('[data-tkmute]'); if (mute) { e.stopPropagation(); tkMuteMenu(mute, mute.dataset.tkmute, mute.dataset.tkmname); return; }
+    const dmsg = e.target.closest('[data-tkdel]');
+    if (dmsg) { if (!confirm(dmT('tk_del_msg_confirm'))) return; const r = await dmApi('/order/dmall/tickets/' + encodeURIComponent(tkOpen) + '/delmsg', { method: 'POST', body: { messageId: dmsg.dataset.tkdel } }); if (r.ok) { await tkRefreshThread(tkOpen); } else if (window.toast) window.toast(dmT('tk_failed'), 'err'); return; }
+    const dtk = e.target.closest('[data-tkdelticket]');
+    if (dtk) { if (!confirm(dmT('tk_del_ticket_confirm'))) return; const r = await dmApi('/order/dmall/tickets/' + encodeURIComponent(dtk.dataset.tkdelticket), { method: 'DELETE' }); if (r.ok) { tkCloseThread(); await loadTickets(); } else if (window.toast) window.toast(dmT('tk_failed'), 'err'); return; }
     const row = e.target.closest('[data-tkrow]'); if (row) { tkSelect(row.dataset.tkrow); return; }
     if (e.target.closest('[data-tkback]')) { tkCloseThread(); return; }
     const st = e.target.closest('[data-tkstatus]');
     if (st) { st.disabled = true; const r = await dmApi('/order/dmall/tickets/' + encodeURIComponent(st.dataset.tkid) + '/status', { method: 'POST', body: { status: st.dataset.tkstatus } }); if (r.ok) { await tkRefreshThread(st.dataset.tkid); } else { st.disabled = false; if (window.toast) window.toast(dmT('tk_failed'), 'err'); } return; }
     if (e.target.closest('#tk-reply-send')) {
-      const b = e.target.closest('#tk-reply-send'), ta = $('#tk-reply-ta'); const text = ta ? ta.value.trim() : '';
+      const b = e.target.closest('#tk-reply-send'); const text = tkReadInput();
       if (!text && !tkPend.length) return; b.disabled = true;
       const attachments = await tkUploadAll();
-      if (!text && !attachments.length) { b.disabled = false; return; }   // uploads all failed
-      const r = await dmApi('/order/dmall/tickets/' + encodeURIComponent(b.dataset.tkid) + '/reply', { method: 'POST', body: { body: text, attachments } });
-      if (r.ok) { tkPend = []; await tkRefreshThread(b.dataset.tkid); }
-      else { b.disabled = false; if (window.toast) window.toast((r.body && r.body.error) || dmT('tk_failed'), 'err'); }
+      if (!text && !attachments.length) { b.disabled = false; return; }
+      const ok = await tkPostReply(text, attachments);
+      if (!ok) b.disabled = false;
       return;
     }
     if (e.target.closest('#tk-new-send')) {
-      const subj = ($('#tk-new-subj') || {}).value, bodyv = ($('#tk-new-body') || {}).value;
+      const subj = ($('#tk-new-subj') || {}).value, bodyv = tkReadInput();
       const stEl = $('#tk-new-status');
-      if (!subj || !subj.trim()) { if (stEl) { stEl.hidden = false; stEl.textContent = dmT('tk_need_both'); } return; }
-      if ((!bodyv || !bodyv.trim()) && !tkPend.length) { if (stEl) { stEl.hidden = false; stEl.textContent = dmT('tk_need_both'); } return; }
+      const fail = (msg) => { if (stEl) { stEl.hidden = false; stEl.textContent = msg; } };
+      if (!subj || !subj.trim()) { fail(dmT('tk_need_both')); return; }
+      if (!bodyv && !tkPend.length) { fail(dmT('tk_need_both')); return; }
       const btn = e.target.closest('#tk-new-send'); btn.disabled = true;
       if (stEl) stEl.hidden = true;
       const attachments = await tkUploadAll();
-      const r = await dmApi('/order/dmall/tickets', { method: 'POST', body: { subject: subj.trim(), body: (bodyv || '').trim(), attachments } });
+      const r = await dmApi('/order/dmall/tickets', { method: 'POST', body: { subject: subj.trim(), body: bodyv, attachments } });
       btn.disabled = false;
       if (r.ok && r.body && r.body.ticket) { tkPend = []; await loadTickets(); tkSelect(r.body.ticket.id); }
-      else if (stEl) { stEl.hidden = false; stEl.textContent = (r.body && r.body.error) || dmT('tk_failed'); }
+      else { const err = r.body && r.body.error; fail(err === 'too-many-open' ? dmT('tk_limit').replace('{n}', (r.body.max || tkMaxOpen)) : err === 'muted' ? dmT('tk_you_muted') : (err || dmT('tk_failed'))); }
       return;
     }
   });
-  // File picker + Ctrl+V paste of files/images/video in either the reply or the new-ticket form.
+  // File picker; refresh the placeholder as the composer changes.
   if (tkEl) tkEl.addEventListener('change', (e) => { if (e.target && e.target.id === 'tk-file') { const files = [...e.target.files]; e.target.value = ''; tkAddFiles(files); } });
-  if (tkEl) tkEl.addEventListener('input', (e) => { if (e.target && e.target.classList && e.target.classList.contains('dm-chat-input')) tkAutosize(e.target); });
-  if (tkEl) tkEl.addEventListener('keydown', (e) => { if (e.target && e.target.id === 'tk-reply-ta' && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); const b = $('#tk-reply-send'); if (b && !b.disabled) b.click(); } });
+  if (tkEl) tkEl.addEventListener('input', (e) => { if (e.target && e.target.classList && e.target.classList.contains('tk-ce') && KIT().refreshEmpty) KIT().refreshEmpty(e.target); });
+  // Enter sends a reply (Shift+Enter = newline); in the new-ticket form Enter is a normal newline.
+  if (tkEl) tkEl.addEventListener('keydown', (e) => {
+    const ce = e.target.closest && e.target.closest('.tk-ce'); if (!ce) return;
+    if (e.key === 'Enter' && !e.shiftKey && ce.closest('.tk-reply')) { e.preventDefault(); const b = $('#tk-reply-send'); if (b && !b.disabled) b.click(); }
+  });
+  // Ctrl+V: files → attachments; text → plain text (so the composer never gets pasted rich HTML).
   if (tkEl) tkEl.addEventListener('paste', (e) => {
-    if (!e.target || !e.target.matches || !e.target.matches('textarea')) return;
+    const ce = e.target.closest && e.target.closest('.tk-ce'); if (!ce) return;
     const dt = e.clipboardData; if (!dt) return;
     const files = [...(dt.files || [])];
     if (!files.length && dt.items) for (const it of dt.items) if (it.kind === 'file') { const f = it.getAsFile(); if (f) files.push(f); }
-    if (!files.length) return;
-    e.preventDefault(); tkAddFiles(files);
+    if (files.length) { e.preventDefault(); tkAddFiles(files); return; }
+    const text = dt.getData('text/plain');
+    if (text != null) { e.preventDefault(); if (KIT().insertTextAtCaret) KIT().insertTextAtCaret(ce, text); else document.execCommand('insertText', false, text); }
   });
 
   function closeLotMenus() {
@@ -1362,7 +1423,7 @@
       poolbox:"<b>115</b> free of 3 755 in the pool<div class=\"dm-poolsub\">7 busy · 3 633 invalid · 3 294 in quarantine</div>",
       msg_count:"Message count", how_many:"How many messages to send", bots_needed:"Bots needed: <b>2</b>",
       sum_total:"Total messages:", sum_hint:"Bots are counted by the backend automatically", sum_server:"Server:", sum_exclude:"Exclusions:", not_set:"not set", sum_bots:"Bots (estimate):", sum_aud:"Audience:", sum_online:"Online:",
-      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" for 1000 messages", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", lot_menu:"Menu", lot_edit:"Edit", lot_make_private:"Make private", lot_make_public:"Make public", lot_delete:"Delete", lot_change_owner:"Change owner", owner_prompt:"Enter the new owner's Discord ID:", owner_bad:"Enter a valid Discord ID (17–20 digits)", owner_done:"Owner changed", lot_private:"private", lot_edit_title:"Edit lot", lot_save:"Save", lot_saving:"Saving…", lot_now_private:"Lot is now private — only you can see it", lot_now_public:"Lot is now public", side_dmall:"DMALL", side_cabinet:"Information", side_api:"API", side_tickets:"Tickets", tickets_title:"Support tickets", tickets_lead:"Ask a question or report a problem — support replies here.", tk_new:"New ticket", tk_subject:"Subject", tk_message:"Describe your question or problem…", tk_create:"Create ticket", tk_send:"Send", tk_attach:"Attach", tk_stickers:"Stickers", tk_emoji:"Emoji", tk_too_big:"File too large (max 25 MB)", tk_reply_ph:"Write a reply…", tk_back:"Back", tk_close:"Close", tk_reopen:"Reopen", tk_closed_note:"This ticket is closed — replying reopens it.", tk_empty:"No tickets yet.", tk_not_found:"Ticket not found.", tk_staff:"Staff", tk_you:"You", tk_failed:"Something went wrong", tk_need_both:"Enter a subject and a message.", tk_f_all:"All", tk_f_open:"Open", tk_f_answered:"Answered", tk_f_closed:"Closed", tk_st_open:"Open", tk_st_answered:"Answered", tk_st_closed:"Closed", cab_title:"Cabinet", cab_lead:"Your DMALL stats, order history and earnings.", cab_spent:"Spent", cab_sent:"Messages sent", cab_bought:"Messages bought", cab_sold:"Messages sold", cab_runs:"Broadcasts", cab_earn:"Earnings", cab_balance:"Balance", cab_orders:"Order history", cab_journal:"Earnings journal", cab_req_h:"Payout details", cab_req_sub:"Crypto address and network, e.g.: LTC (address). Withdrawal is not possible without details.", cab_req_ph:"LTC (address)", cab_req_save:"Save", cab_req_saved:"Payout details saved", cab_req_fail:"Could not save", cab_empty_orders:"No orders yet.", cab_empty_earn:"No earnings yet.", cab_st_active:"active", cab_st_settled:"settled", cab_refunded:"refunded", cab_delivered:"delivered", cab_lot_income:"lot income", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", why_incomplete:"Reason:", st_completed:"completed", st_failed:"failed", st_stopped:"stopped",
+      start_broadcast:"Start broadcast", stop_broadcast:"Stop broadcast", no_admin_servers:"You have no servers where you are an owner or admin. Connect Discord so we can load your servers.", connect_discord:"Connect Discord", viewas_lbl:"Test: act as account", viewas_go:"Act as", viewas_clear:"Reset", viewas_now:"Testing as:", viewas_bad:"Enter a valid Discord ID (17-20 digits).", viewas_empty:"No captured servers for account", viewas_empty2:"That account must log in via Discord (Connect Discord) once so we can see its servers.", lot_add:"Add a server", lot_mine:"yours", per1k:" for 1000 messages", lot_title:"Add a server", lot_desc:"Add the bot to your server and give it admin rights — it connects DMALL. Then enter the server ID and your price per 1000 messages.", lot_invite:"＋ Add the bot to your server", lot_server:"Server ID", lot_price:"Your price per 1000 messages, $", lot_create:"Check & create", lot_foot_total:"Final price for users:", lot_foot_per1k:" per 1000 messages", lot_foot_yours:"yours", lot_foot_service:"service", lot_foot_note:"You (the lot creator) pay only the service fee ({fee}/1000) if you run DMALL on your own server.", lot_bad_id:"Enter a valid server ID (17-20 digits).", lot_checking:"Checking the bot on the server…", lot_no_bot:"The bot is not on this server. Add it (with admin) first.", lot_fail:"Could not create the lot.", lot_del_confirm:"Remove this server?", lot_menu:"Menu", lot_edit:"Edit", lot_make_private:"Make private", lot_make_public:"Make public", lot_delete:"Delete", lot_change_owner:"Change owner", owner_prompt:"Enter the new owner's Discord ID:", owner_bad:"Enter a valid Discord ID (17–20 digits)", owner_done:"Owner changed", lot_private:"private", lot_edit_title:"Edit lot", lot_save:"Save", lot_saving:"Saving…", lot_now_private:"Lot is now private — only you can see it", lot_now_public:"Lot is now public", side_dmall:"DMALL", side_cabinet:"Information", side_api:"API", side_tickets:"Tickets", tickets_title:"Support tickets", tickets_lead:"Ask a question or report a problem — support replies here.", tk_new:"New ticket", tk_subject:"Subject", tk_message:"Describe your question or problem…", tk_create:"Create ticket", tk_send:"Send", tk_attach:"Attach", tk_stickers:"Stickers", tk_emoji:"Emoji", mute10m:"10 minutes", mute1h:"1 hour", mute1d:"1 day", mutePerm:"Forever", tk_restrict:"Restrict user", tk_unrestrict:"Lift restriction", tk_restricted:"User restricted", tk_unrestricted:"Restriction lifted", tk_del_msg:"Delete message", tk_del_msg_confirm:"Delete this message?", tk_del_ticket:"Delete ticket", tk_del_ticket_confirm:"Delete this ticket permanently?", tk_you_muted:"You can’t create tickets or reply (restricted by staff).", tk_limit:"You already have {n} open tickets — close one to open a new.", tk_too_big:"File too large (max 25 MB)", tk_reply_ph:"Write a reply…", tk_back:"Back", tk_close:"Close", tk_reopen:"Reopen", tk_closed_note:"This ticket is closed — replying reopens it.", tk_empty:"No tickets yet.", tk_not_found:"Ticket not found.", tk_staff:"Staff", tk_you:"You", tk_failed:"Something went wrong", tk_need_both:"Enter a subject and a message.", tk_f_all:"All", tk_f_open:"Open", tk_f_answered:"Answered", tk_f_closed:"Closed", tk_st_open:"Open", tk_st_answered:"Answered", tk_st_closed:"Closed", cab_title:"Cabinet", cab_lead:"Your DMALL stats, order history and earnings.", cab_spent:"Spent", cab_sent:"Messages sent", cab_bought:"Messages bought", cab_sold:"Messages sold", cab_runs:"Broadcasts", cab_earn:"Earnings", cab_balance:"Balance", cab_orders:"Order history", cab_journal:"Earnings journal", cab_req_h:"Payout details", cab_req_sub:"Crypto address and network, e.g.: LTC (address). Withdrawal is not possible without details.", cab_req_ph:"LTC (address)", cab_req_save:"Save", cab_req_saved:"Payout details saved", cab_req_fail:"Could not save", cab_empty_orders:"No orders yet.", cab_empty_earn:"No earnings yet.", cab_st_active:"active", cab_st_settled:"settled", cab_refunded:"refunded", cab_delivered:"delivered", cab_lot_income:"lot income", no_tasks:"No broadcasts yet.", no_notifs:"No notifications yet.", bcast_word:"Broadcast", why_incomplete:"Reason:", st_completed:"completed", st_failed:"failed", st_stopped:"stopped",
       rs_queued:"queued", rs_running:"running", rs_completed:"completed", rs_failed:"failed", rs_stopped:"stopped",
       l_pick_server:"Choose a server to broadcast to first", l_count_req:"Enter the number of messages", l_need_content:"Add text or an embed", l_preparing:"Preparing…", l_creating_tpl:"Creating template…", l_tpl_err:"Template:", l_link_prompt:"The message contains {{LINK}} — paste the destination link (https://discord.gg/… or a URL):", l_link_req:"A destination link is required for {{LINK}}", l_launching:"Starting the broadcast…", l_need_funds:"Insufficient funds, need", l_balance:"balance", l_no_access:"No DMALL access", l_run_err:"Start:", l_started:"Broadcast started ✓", l_cooldown_all:"Server is at its 24h limit — all {n} messages are queued and will be sent automatically after cooldown", l_cooldown_part:"{n} messages exceed the server’s 24h limit — they’ll be sent automatically after cooldown", l_charged:"charged", l_net_err:"Network unavailable, please try again", l_stopping:"Stop requested…", sched_h:"Scheduled start", sched_now:"Immediately", sched_in:"In N minutes", sched_at:"At date/time", minutes_word:"minutes", sched_bad:"Pick a valid start time in the future", l_scheduled:"Broadcast scheduled for", settings_saved:"Settings saved", fail_notice:"The broadcast didn't go through — your funds were refunded. Try another server.", fail_notice_srv:"The broadcast to “{srv}” didn't go through — your funds were refunded. Try another server.", other_offers:"Other offers", srv_unavail:"Broadcasts to “{srv}” are temporarily unavailable — try another server.", unavail_badge:"Unavailable", checking_srv:"Checking whether DMALL works on “{srv}”…", copy_error:"Copy the error",
       ak_unset:"not set — click “Generate new”", ak_confirm:"Generate a new key? The old one stops working immediately — update it in the external service.", ak_fail:"Failed:", ak_net:"Network unavailable", ak_copied:"Copied ✓", ak_copy:"Copy",
@@ -1416,7 +1477,7 @@
       poolbox:"<b>115</b> свободных из 3 755 в пуле<div class=\"dm-poolsub\">7 занято · 3 633 инвалидных · 3 294 в карантине</div>",
       msg_count:"Количество сообщений", how_many:"Сколько сообщений отправить", bots_needed:"Ботов нужно: <b>2</b>",
       sum_total:"Суммарно сообщений:", sum_hint:"Ботов посчитает бэкенд автоматически", sum_server:"Сервер:", sum_exclude:"Исключения:", not_set:"не задано", sum_bots:"Ботов (оценка):", sum_aud:"Аудитория:", sum_online:"Онлайн:",
-      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" за 1000 сообщений", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для покупателей:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", lot_menu:"Меню", lot_edit:"Редактировать", lot_make_private:"Сделать приватным", lot_make_public:"Сделать публичным", lot_delete:"Удалить", lot_change_owner:"Сменить владельца", owner_prompt:"Введите Discord ID нового владельца:", owner_bad:"Введите корректный Discord ID (17–20 цифр)", owner_done:"Владелец изменён", lot_private:"приватный", lot_edit_title:"Редактировать лот", lot_save:"Сохранить", lot_saving:"Сохранение…", lot_now_private:"Лот теперь приватный — виден только вам", lot_now_public:"Лот теперь публичный", side_dmall:"DMALL", side_cabinet:"Информация", side_api:"API", side_tickets:"Тикеты", tickets_title:"Тикеты поддержки", tickets_lead:"Задайте вопрос или сообщите о проблеме — поддержка ответит здесь.", tk_new:"Новый тикет", tk_subject:"Тема", tk_message:"Опишите вопрос или проблему…", tk_create:"Создать тикет", tk_send:"Отправить", tk_attach:"Прикрепить", tk_stickers:"Стикеры", tk_emoji:"Эмодзи", tk_too_big:"Файл слишком большой (макс. 25 МБ)", tk_reply_ph:"Написать ответ…", tk_back:"Назад", tk_close:"Закрыть", tk_reopen:"Открыть снова", tk_closed_note:"Тикет закрыт — ответ откроет его снова.", tk_empty:"Пока нет тикетов.", tk_not_found:"Тикет не найден.", tk_staff:"Поддержка", tk_you:"Вы", tk_failed:"Что-то пошло не так", tk_need_both:"Укажите тему и сообщение.", tk_f_all:"Все", tk_f_open:"Открытые", tk_f_answered:"Отвеченные", tk_f_closed:"Закрытые", tk_st_open:"Открыт", tk_st_answered:"Отвечен", tk_st_closed:"Закрыт", cab_title:"Кабинет", cab_lead:"Ваша статистика DMALL, история заказов и начисления.", cab_spent:"Потрачено", cab_sent:"Сообщений отправлено", cab_bought:"Купил сообщений", cab_sold:"Продал сообщений", cab_runs:"Рассылок", cab_earn:"Начислено", cab_balance:"Баланс", cab_orders:"История заказов", cab_journal:"Журнал начислений", cab_req_h:"Реквизиты для выплат", cab_req_sub:"Крипто-адрес и сеть, например: LTC (адрес). Без реквизитов вывод невозможен.", cab_req_ph:"LTC (адрес)", cab_req_save:"Сохранить", cab_req_saved:"Реквизиты сохранены", cab_req_fail:"Не удалось сохранить", cab_empty_orders:"Пока нет заказов.", cab_empty_earn:"Пока нет начислений.", cab_st_active:"активен", cab_st_settled:"завершён", cab_refunded:"возврат", cab_delivered:"доставлено", cab_lot_income:"доход с лота", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", why_incomplete:"Причина:", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена",
+      start_broadcast:"Запустить рассылку", stop_broadcast:"Остановить рассылку", no_admin_servers:"У вас нет серверов, где вы владелец или админ. Подключите Discord, чтобы мы подтянули ваши серверы.", connect_discord:"Подключить Discord", viewas_lbl:"Тест: войти как аккаунт", viewas_go:"Войти как", viewas_clear:"Сбросить", viewas_now:"Тестируешь как:", viewas_bad:"Введите корректный Discord ID (17–20 цифр).", viewas_empty:"Нет захваченных серверов у аккаунта", viewas_empty2:"Этот аккаунт должен один раз войти через Discord (Connect Discord), чтобы мы увидели его серверы.", lot_add:"Добавить сервер", lot_mine:"ваш", per1k:" за 1000 сообщений", lot_title:"Добавить сервер", lot_desc:"Добавьте бота на свой сервер и дайте ему админ-права — он подключит DMALL. Затем укажите ID сервера и вашу цену за 1000 сообщений.", lot_invite:"＋ Добавить бота на сервер", lot_server:"ID сервера", lot_price:"Ваша цена за 1000 сообщений, $", lot_create:"Проверить и создать", lot_foot_total:"Итоговая цена для покупателей:", lot_foot_per1k:" за 1000 сообщений", lot_foot_yours:"ваша", lot_foot_service:"сервис", lot_foot_note:"Вы (создатель лота) платите только сервисный сбор ({fee}/1000), если сами запускаете DMALL на своём сервере.", lot_bad_id:"Введите корректный ID сервера (17–20 цифр).", lot_checking:"Проверяю бота на сервере…", lot_no_bot:"Бота нет на этом сервере. Сначала добавьте его (с админ-правами).", lot_fail:"Не удалось создать лот.", lot_del_confirm:"Убрать этот сервер?", lot_menu:"Меню", lot_edit:"Редактировать", lot_make_private:"Сделать приватным", lot_make_public:"Сделать публичным", lot_delete:"Удалить", lot_change_owner:"Сменить владельца", owner_prompt:"Введите Discord ID нового владельца:", owner_bad:"Введите корректный Discord ID (17–20 цифр)", owner_done:"Владелец изменён", lot_private:"приватный", lot_edit_title:"Редактировать лот", lot_save:"Сохранить", lot_saving:"Сохранение…", lot_now_private:"Лот теперь приватный — виден только вам", lot_now_public:"Лот теперь публичный", side_dmall:"DMALL", side_cabinet:"Информация", side_api:"API", side_tickets:"Тикеты", tickets_title:"Тикеты поддержки", tickets_lead:"Задайте вопрос или сообщите о проблеме — поддержка ответит здесь.", tk_new:"Новый тикет", tk_subject:"Тема", tk_message:"Опишите вопрос или проблему…", tk_create:"Создать тикет", tk_send:"Отправить", tk_attach:"Прикрепить", tk_stickers:"Стикеры", tk_emoji:"Эмодзи", mute10m:"10 минут", mute1h:"1 час", mute1d:"1 день", mutePerm:"Навсегда", tk_restrict:"Ограничить пользователя", tk_unrestrict:"Снять ограничение", tk_restricted:"Пользователь ограничен", tk_unrestricted:"Ограничение снято", tk_del_msg:"Удалить сообщение", tk_del_msg_confirm:"Удалить это сообщение?", tk_del_ticket:"Удалить тикет", tk_del_ticket_confirm:"Удалить этот тикет навсегда?", tk_you_muted:"Вы не можете создавать тикеты и отвечать (ограничение от поддержки).", tk_limit:"У вас уже {n} открытых тикета — закройте один, чтобы создать новый.", tk_too_big:"Файл слишком большой (макс. 25 МБ)", tk_reply_ph:"Написать ответ…", tk_back:"Назад", tk_close:"Закрыть", tk_reopen:"Открыть снова", tk_closed_note:"Тикет закрыт — ответ откроет его снова.", tk_empty:"Пока нет тикетов.", tk_not_found:"Тикет не найден.", tk_staff:"Поддержка", tk_you:"Вы", tk_failed:"Что-то пошло не так", tk_need_both:"Укажите тему и сообщение.", tk_f_all:"Все", tk_f_open:"Открытые", tk_f_answered:"Отвеченные", tk_f_closed:"Закрытые", tk_st_open:"Открыт", tk_st_answered:"Отвечен", tk_st_closed:"Закрыт", cab_title:"Кабинет", cab_lead:"Ваша статистика DMALL, история заказов и начисления.", cab_spent:"Потрачено", cab_sent:"Сообщений отправлено", cab_bought:"Купил сообщений", cab_sold:"Продал сообщений", cab_runs:"Рассылок", cab_earn:"Начислено", cab_balance:"Баланс", cab_orders:"История заказов", cab_journal:"Журнал начислений", cab_req_h:"Реквизиты для выплат", cab_req_sub:"Крипто-адрес и сеть, например: LTC (адрес). Без реквизитов вывод невозможен.", cab_req_ph:"LTC (адрес)", cab_req_save:"Сохранить", cab_req_saved:"Реквизиты сохранены", cab_req_fail:"Не удалось сохранить", cab_empty_orders:"Пока нет заказов.", cab_empty_earn:"Пока нет начислений.", cab_st_active:"активен", cab_st_settled:"завершён", cab_refunded:"возврат", cab_delivered:"доставлено", cab_lot_income:"доход с лота", no_tasks:"Пока нет рассылок.", no_notifs:"Пока нет уведомлений.", bcast_word:"Рассылка", why_incomplete:"Причина:", st_completed:"завершена", st_failed:"ошибка", st_stopped:"остановлена",
       rs_queued:"в очереди", rs_running:"идёт", rs_completed:"завершено", rs_failed:"ошибка", rs_stopped:"остановлено",
       l_pick_server:"Сначала выберите сервер рассылки", l_count_req:"Укажите количество сообщений", l_need_content:"Добавьте текст или эмбед", l_preparing:"Подготовка…", l_creating_tpl:"Создание шаблона…", l_tpl_err:"Шаблон:", l_link_prompt:"Сообщение содержит {{LINK}} — вставьте ссылку назначения (https://discord.gg/… или URL):", l_link_req:"Нужна ссылка назначения для {{LINK}}", l_launching:"Запуск рассылки…", l_need_funds:"Недостаточно средств, нужно", l_balance:"баланс", l_no_access:"Нет доступа к DMALL", l_run_err:"Запуск:", l_started:"Рассылка запущена ✓", l_cooldown_all:"Сервер достиг лимита 24ч — все {n} сообщений поставлены в очередь и отправятся автоматически после кулдауна", l_cooldown_part:"{n} сообщений превышают лимит сервера за 24ч — они отправятся автоматически после кулдауна", l_charged:"списано", l_net_err:"Сеть недоступна, попробуйте ещё раз", l_stopping:"Остановка запрошена…", sched_h:"Отложенный старт", sched_now:"Сразу", sched_in:"Через N минут", sched_at:"В дату/время", minutes_word:"минут", sched_bad:"Выберите корректное время старта в будущем", l_scheduled:"Рассылка запланирована на", settings_saved:"Настройки сохранены", fail_notice:"Рассылка не сработала — средства возвращены. Попробуйте другой сервер.", fail_notice_srv:"Рассылка на сервере «{srv}» не сработала — средства возвращены. Попробуйте другой сервер.", other_offers:"Другие предложения", srv_unavail:"Рассылка на «{srv}» временно недоступна — попробуйте другой сервер.", unavail_badge:"Недоступен", checking_srv:"Проверяем работоспособность dmall на сервере «{srv}»…", copy_error:"Скопировать ошибку",
       ak_unset:"не задан — нажмите «Сгенерировать новый»", ak_confirm:"Сгенерировать новый ключ? Старый перестанет работать сразу — обновите его во внешнем сервисе.", ak_fail:"Не удалось:", ak_net:"Сеть недоступна", ak_copied:"Скопировано ✓", ak_copy:"Копировать",
