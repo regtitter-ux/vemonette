@@ -8,7 +8,7 @@
   <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>Vemoni · Купить рекламу</title>
   <link rel="stylesheet" href="/dmall/order.css?v=48" />
-  <link rel="stylesheet" href="/dmall/dmall.css?v=69" />
+  <link rel="stylesheet" href="/dmall/dmall.css?v=70" />
   <link rel="stylesheet" href="/dmall/chat.css?v=9" />
   <script>
     window.__VEMONI_API_BASE__ = 'https://api.vemoni.info';
@@ -260,7 +260,17 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
     <div id="dm-serverpick">
       <div class="dm-sp-head"><span data-dm="pick_a">Choose a</span> <svg class="dm-sp-logo" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.3 4.4A19.8 19.8 0 0 0 15.9 3l-.3.6a18.3 18.3 0 0 0-5.5 0L9.8 3A19.7 19.7 0 0 0 5.4 4.4C1.9 9.6 1 14.6 1.6 19.5A19.9 19.9 0 0 0 7.7 22.6c.5-.7 1-1.4 1.3-2.1-.7-.3-1.4-.6-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1 .4.7.8 1.4 1.3 2.1a19.9 19.9 0 0 0 6.1-3.1c.7-5.7-.9-10.6-3.8-15.1ZM8.5 16.4c-1.2 0-2.2-1.1-2.2-2.5s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.5-2.2 2.5Zm7 0c-1.2 0-2.2-1.1-2.2-2.5s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.5-2.2 2.5Z"/></svg> <b>Discord</b> <span data-dm="pick_b">server</span></div>
       <p class="dm-sp-sub" data-dm="pick_sub">Pick a server to broadcast to, or add your own.</p>
-      <div class="dm-sp-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="dm-sp-q" type="text" data-dm-ph="search_ph" placeholder="Search…" /></div>
+      <div class="dm-sp-controls">
+        <div class="dm-sp-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="dm-sp-q" type="text" data-dm-ph="search_ph" placeholder="Search…" /></div>
+        <div class="dm-sp-filters" id="dm-sp-filters">
+          <button type="button" class="dm-sp-chip active" data-sort="popular" data-dm="f_popular">Popular</button>
+          <button type="button" class="dm-sp-chip" data-sort="cheap" data-dm="f_cheap">Cheapest</button>
+          <button type="button" class="dm-sp-chip" data-sort="expensive" data-dm="f_expensive">Priciest</button>
+          <button type="button" class="dm-sp-chip" data-sort="members" data-dm="f_members">Members</button>
+          <button type="button" class="dm-sp-chip" data-sort="new" data-dm="f_new">Newest</button>
+          <button type="button" class="dm-sp-chip dm-sp-chip-tgl" data-toggle="avail" data-dm="f_avail">Available only</button>
+        </div>
+      </div>
       <div class="dm-sp-grid" id="dm-sp-grid"></div>
     </div>
 
@@ -367,7 +377,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
 
 <div id="toast" class="toast" hidden></div>
 <script src="/dmall/order.js?v=61"></script>
-<script src="/dmall/dmall.js?v=110"></script>
+<script src="/dmall/dmall.js?v=111"></script>
 <script src="/dmall/chat.js?v=9"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
