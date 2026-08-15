@@ -4,11 +4,12 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/partner';
 // Admin "view / edit as another partner": ?as=<userId> makes the whole cabinet
 // operate on that user (the backend enforces admin-only). ?card=<messageId> opens
 // straight to that server's card. Both survive across requests here.
-let ACT_AS = ''; let OPEN_CARD = '';
+let ACT_AS = ''; let OPEN_CARD = ''; let OPEN_TAB = '';
 try {
     const q = new URLSearchParams(location.search);
     if (/^\d{17,20}$/.test(q.get('as') || '')) ACT_AS = q.get('as');
     if (/^\d{17,20}$/.test(q.get('card') || '')) OPEN_CARD = q.get('card');
+    if (/^[a-z]{2,20}$/.test(q.get('tab') || '')) OPEN_TAB = q.get('tab');   // deep-link to a tab (e.g. xdmall)
 } catch (_) {}
 
 // Session token (localStorage) — alternative to the cross-site cookie that some
@@ -1093,6 +1094,7 @@ function render(d) {
     window.__PARTNER_ID__ = d.userId || window.__PARTNER_ID__;
     renderViewBanner(d.actingAs);
     if (ACT_AS) initOwnerTabs();   // owner viewing another profile → extra tabs + balance editing
+    if (OPEN_TAB) { const tb = document.querySelector('#p-tabs .p-tab[data-pane="' + OPEN_TAB + '"]'); if (tb && !tb.hidden) { tb.click(); OPEN_TAB = ''; } }
     $('#top-balance').textContent = money(d.balance);
     const boost = d.boosted ? ` <span class="chip amber">🔥 буст ${fmtBoost(d.boostLeftMs)}</span>` : '';
     const cards = [
