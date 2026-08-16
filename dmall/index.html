@@ -369,6 +369,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
         <a class="dm-btn ghost sm dm-lot-invite" id="dm-lot-invite" href="#" target="_blank" rel="noopener" data-dm="lot_invite">＋ Добавить бота на сервер</a>
         <div class="dm-field"><label class="dm-label" data-dm="lot_server">ID сервера</label><input class="dm-input" id="dm-lot-server" type="text" inputmode="numeric" autocomplete="off" placeholder="123456789012345678" /></div>
         <div class="dm-field"><label class="dm-label" data-dm="lot_price">Ваша цена за 1000 сообщений, $</label><input class="dm-input" id="dm-lot-price" type="number" min="0" step="0.5" value="0" /></div>
+        <div class="dm-field"><label class="dm-label" data-dm="lot_min">Минимум сообщений для покупки (0 — без ограничения)</label><input class="dm-input" id="dm-lot-min" type="number" min="0" step="1" value="0" placeholder="0" /></div>
         <div class="dm-lot-foot" id="dm-lot-foot"></div>
         <div class="dm-lot-status" id="dm-lot-status" hidden></div>
         <button class="dm-btn primary full" id="dm-lot-create" data-dm="lot_create">Проверить и создать</button>
@@ -377,7 +378,7 @@ curl -X POST -H "Authorization: Bearer $KEY" -H "Content-Type: application/json"
 
 <div id="toast" class="toast" hidden></div>
 <script src="/dmall/order.js?v=61"></script>
-<script src="/dmall/dmall.js?v=118"></script>
+<script src="/dmall/dmall.js?v=119"></script>
 <script src="/dmall/chat.js?v=9"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
