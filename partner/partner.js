@@ -69,7 +69,8 @@ const WHOLE = {
   'Потрачено':'Spent','Купил сообщений':'Messages bought','Продал сообщений':'Messages sold','Рассылок':'Broadcasts','Начислено':'Accrued',
   'Доставлено':'Delivered','Завершён':'Settled','Активен':'Active',
   // Owner DMALL order-history + detail modal
-  'История заказов':'Order history','Детали заказа':'Order details','Заказчик':'Orderer','Владелец лота':'Lot creator','Сводка':'Summary',
+  'История заказов':'Order history','Продажи (заказы на ваш сервер)':'Sales (orders on your server)','Заработано':'Earned',
+  'Детали заказа':'Order details','Заказчик':'Orderer','Владелец лота':'Lot creator','Сводка':'Summary',
   'Создан':'Created','Доставлено / запрошено':'Delivered / requested','Списано':'Charged','Возврат':'Refunded','Итого':'Net','Сервисный сбор':'Service fee',
   'Цена лота':'Lot price','Выплачено создателю':'Paid to creator','Настройки рассылки':'Broadcast settings','Лимит сообщений':'Message limit','Приоритет онлайн':'Online priority',
   'Исключено ID':'Excluded IDs','Кулдаун (ч)':'Recency cooldown (h)','Пропускать участников назначения':'Skip destination members','Ссылка назначения':'Destination link','ID шаблона':'Template ID',
@@ -422,15 +423,32 @@ async function loadOwnerDmall() {
     ].join('');
     const earnings = r.body.earnings || [];
     xdOrders = r.body.orders || []; xdOrdersPage = 1; renderXdOrders();
+    xdSales = r.body.sales || []; xdSalesPage = 1; renderXdSales();
     $('#xd-earn-sec').hidden = earnings.length === 0;
     if (earnings.length) $('#xd-earn').innerHTML =
         '<thead><tr><th>Сервер</th><th class="num">Сумма</th><th>Дата</th></tr></thead><tbody>'
         + earnings.map((e) => '<tr><td>' + esc(e.serverName || e.guildId || '—') + '</td><td class="num">' + (e.type === 'debit' ? '−' : '') + money(e.amount) + '</td><td>' + (e.ts ? new Date(e.ts).toLocaleDateString() : '') + '</td></tr>').join('') + '</tbody>';
-    $('#xd-empty').hidden = xdOrders.length > 0 || earnings.length > 0;
+    $('#xd-empty').hidden = xdOrders.length > 0 || xdSales.length > 0 || earnings.length > 0;
 }
-/* ---- Owner DMALL: order history (clickable rows + pagination) + detail modal ---- */
-let xdOrders = [], xdOrdersPage = 1;
+/* ---- Owner DMALL: order history + sales (clickable rows + pagination) + detail modal ---- */
+let xdOrders = [], xdOrdersPage = 1, xdSales = [], xdSalesPage = 1;
 const XD_PAGE = 10;
+// Sales: orders OTHERS placed on the viewed user's servers (they're the lot owner). Same
+// clickable detail modal; the "Заказчик" in the modal is the buyer. Amount = what they earned.
+function renderXdSales() {
+    const sec = $('#xd-sales-sec'), tbl = $('#xd-sales'), pager = $('#xd-sales-pager');
+    if (!sec) return;
+    sec.hidden = xdSales.length === 0;
+    if (!xdSales.length) { if (tbl) tbl.innerHTML = ''; if (pager) pager.innerHTML = ''; return; }
+    const pages = Math.max(1, Math.ceil(xdSales.length / XD_PAGE));
+    const p = Math.min(Math.max(1, xdSalesPage), pages);
+    const rows = xdSales.slice((p - 1) * XD_PAGE, p * XD_PAGE);
+    tbl.innerHTML = '<thead><tr><th>Сервер</th><th class="num">Доставлено</th><th>Статус</th><th class="num">Заработано</th><th>Дата</th></tr></thead><tbody>'
+        + rows.map((o) => '<tr class="xd-row" data-xdorder="' + esc(o.id) + '"><td>' + esc(o.serverName || o.serverId || '—') + '</td><td class="num">' + (Number(o.delivered) || 0) + '/' + (Number(o.count) || 0) + '</td><td>' + (o.status === 'settled' ? 'Завершён' : 'Активен') + '</td><td class="num">' + money(o.earned) + '</td><td>' + (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '') + '</td></tr>').join('') + '</tbody>';
+    if (pager) pager.innerHTML = pages > 1
+        ? '<button class="xd-pg" data-xdspg="' + (p - 1) + '"' + (p <= 1 ? ' disabled' : '') + '>‹</button><span class="xd-pg-info">' + p + ' / ' + pages + '</span><button class="xd-pg" data-xdspg="' + (p + 1) + '"' + (p >= pages ? ' disabled' : '') + '>›</button>'
+        : '';
+}
 const xdDate = (ts) => { if (!ts) return ''; try { return new Date(ts).toLocaleString(partnerLang === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'short', timeStyle: 'short' }); } catch (_) { return ''; } };
 function renderXdOrders() {
     const sec = $('#xd-orders-sec'), tbl = $('#xd-orders'), pager = $('#xd-pager');
@@ -533,6 +551,8 @@ function initOwnerTabs() {
     // Order-history: clickable rows → detail modal; pager buttons → page change.
     const ot = $('#xd-orders'); if (ot) ot.addEventListener('click', (e) => { const row = e.target.closest('[data-xdorder]'); if (row) openXdOrder(row.dataset.xdorder); });
     const pg = $('#xd-pager'); if (pg) pg.addEventListener('click', (e) => { const b = e.target.closest('[data-xdpg]'); if (b && !b.disabled) { xdOrdersPage = +b.dataset.xdpg; renderXdOrders(); } });
+    const sl = $('#xd-sales'); if (sl) sl.addEventListener('click', (e) => { const row = e.target.closest('[data-xdorder]'); if (row) openXdOrder(row.dataset.xdorder); });
+    const spg = $('#xd-sales-pager'); if (spg) spg.addEventListener('click', (e) => { const b = e.target.closest('[data-xdspg]'); if (b && !b.disabled) { xdSalesPage = +b.dataset.xdspg; renderXdSales(); } });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeXdOrder(); });
 }
 function wireDm() {
