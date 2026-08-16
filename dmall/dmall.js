@@ -1638,7 +1638,7 @@
     en: {
       tab_templates:"Setup", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats", for_word:"for",
       pick_a:"Choose a", pick_b:"server", pick_sub:"Pick a server to broadcast to, or add your own.", search_ph:"Search…", f_popular:"Popular", f_cheap:"Cheapest", f_expensive:"Priciest", f_members:"Members", f_new:"Newest", f_avail:"Available only", online_members:"Members online:", members_word:"members", runs_done_word:"dmall", delivered_word:"messages delivered", invite_caps:"INVITE", change_server:"Change server",
-      sp_members:"members", sp_bcasts:"broadcasts", sp_delivered:"delivered", reviews_word:"Reviews", reviews_none:"No reviews yet",
+      sp_members:"members", sp_bcasts:"dmalls", sp_delivered:"delivered", reviews_word:"Reviews", reviews_none:"No reviews yet",
       rev_count_word:"reviews", rev_be_first:"Be the first to review.", rev_you:"you", rev_edited:"edited", rev_owner_reply:"Owner reply", rev_reply:"Reply", rev_edit:"Edit", rev_delete:"Delete", rev_reply_send:"Reply", rev_reply_ph:"Write a reply…",
       rev_leave:"Leave a review", rev_your_review:"Your review", rev_placeholder:"Share your experience…", rev_post:"Post", rev_save:"Save", rev_locked:"Only buyers who broadcast to this server can leave a review.",
       rev_need_stars:"Please pick a star rating", rev_saved:"Review saved", rev_del_confirm:"Delete this?",
@@ -1696,7 +1696,7 @@
     ru: {
       tab_templates:"Setup", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика", for_word:"за",
       pick_a:"Выберите", pick_b:"сервер", pick_sub:"Выберите сервер для рассылки или добавьте свой.", search_ph:"Поиск…", f_popular:"Популярные", f_cheap:"Дешевле", f_expensive:"Дороже", f_members:"Участники", f_new:"Новые", f_avail:"Только доступные", online_members:"Участников в сети:", members_word:"участников", runs_done_word:"рассылок", delivered_word:"сообщений доставлено", invite_caps:"ПРИГЛАСИТЬ", change_server:"Сменить сервер",
-      sp_members:"участников", sp_bcasts:"рассылок", sp_delivered:"доставлено", reviews_word:"Отзывы", reviews_none:"Пока нет отзывов",
+      sp_members:"участников", sp_bcasts:"dmalls", sp_delivered:"доставлено", reviews_word:"Отзывы", reviews_none:"Пока нет отзывов",
       rev_count_word:"отзывов", rev_be_first:"Оставьте первый отзыв.", rev_you:"вы", rev_edited:"изменён", rev_owner_reply:"Ответ владельца", rev_reply:"Ответить", rev_edit:"Изменить", rev_delete:"Удалить", rev_reply_send:"Ответить", rev_reply_ph:"Напишите ответ…",
       rev_leave:"Оставить отзыв", rev_your_review:"Ваш отзыв", rev_placeholder:"Поделитесь впечатлением…", rev_post:"Отправить", rev_save:"Сохранить", rev_locked:"Оставить отзыв могут только те, кто заказывал рассылку на этот сервер.",
       rev_need_stars:"Пожалуйста, выберите оценку", rev_saved:"Отзыв сохранён", rev_del_confirm:"Удалить?",
