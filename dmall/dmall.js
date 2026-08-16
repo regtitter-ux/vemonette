@@ -93,6 +93,19 @@
 
   // Picker = a "+" cell (add a server) + one card per lot. Clicking a lot selects it as
   // the broadcast target; clicking "+" opens the create-lot modal.
+  // Small inline icons for the product-card meta row + rating stars.
+  const ICO_PEOPLE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-7 2c-3 0-6 1.5-6 4.2V20h12v-2.8C15 14.5 12 13 9 13Zm7 0c-.5 0-1 0-1.5.1 1.3 1 2.1 2.3 2.1 4.1V20h6v-2.8C22.6 14.5 19 13 16 13Z"/></svg>';
+    const ICO_BCAST = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 10v4a1 1 0 0 0 1 1h2l4 4V5L6 9H4a1 1 0 0 0-1 1Zm12.5 2a3.5 3.5 0 0 0-2-3.2v6.4a3.5 3.5 0 0 0 2-3.2Zm-2-7v2.1a5.5 5.5 0 0 1 0 9.8V21c3.5-1 6-4.2 6-9s-2.5-8-6-9Z"/></svg>';
+    const ICO_CHECK = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4Z"/></svg>';
+    const ICO_COMMENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.6 9.6 0 0 1-2.8-.4L4 21l1.4-4.1A8.2 8.2 0 0 1 3 11.5a8.4 8.4 0 0 1 9-8.4 8.4 8.4 0 0 1 9 8.4Z"/></svg>';
+  const DM_STAR = '<svg viewBox="0 0 24 24" class="dm-star-svg" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.8l5.9-.9Z"/></svg>';
+  // Average as 5 stars with half-step rounding (4.7 → 4½, 4.8 → 5).
+  function dmStars(avg) {
+    const v = Math.round((Number(avg) || 0) * 2) / 2;
+    let h = '';
+    for (let i = 0; i < 5; i++) { const cls = v >= i + 1 ? ' on' : v >= i + 0.5 ? ' half' : ''; h += '<span class="dm-star' + cls + '">' + DM_STAR + '</span>'; }
+    return h;
+  }
   function lotCard(l) {
     const name = l.serverName || l.serverId;
     const av = (String(name).trim()[0] || '?').toUpperCase();
@@ -113,23 +126,30 @@
         '<span class="dm-lot-mi dm-lot-mi-del" data-lot-del="' + esc(l.id) + '" data-dm="lot_delete">Delete</span>' +
       '</span>'
     ) : '';
-    // Members and the price are each an unbreakable unit; the price wraps to its own line as a
-    // WHOLE ("$5.00 / 1000 messages") instead of splitting mid-phrase when the card is narrow.
-    const memPart = l.memberCount ? '<span class="dm-sp-mem">' + Number(l.memberCount).toLocaleString() + ' <span data-dm="members_word">members</span> ·</span>' : '';
-    const pricePart = '<span class="dm-sp-price">$' + Number(l.userPricePer1k || 0).toFixed(2) + '<span data-dm="per1k"> / 1000 messages</span></span>';
     // Real server icon/banner when available; letter tile / gradient otherwise.
     const bannerStyle = l.banner ? "background-image:url('" + esc(l.banner) + "');background-size:cover;background-position:center" : 'background:linear-gradient(120deg,#3a3f6b,#20242e)';
     const avInner = l.icon ? '<img src="' + esc(l.icon) + '" alt="" loading="lazy">' : esc(av);
     const avStyle = l.icon ? '' : ' style="background:#3a4256"';
-    // Lifetime per-server stats (successful broadcasts · delivered) — always shown, zeros until
-    // the server has history.
+    // Product-card meta: price (prominent) + rating, a compact stat row (members · broadcasts ·
+    // delivered) with icons, and a reviews button. Lifetime stats are zero until the server runs.
     const runsDone = Number(l.runsDone) || 0, delivered = Number(l.delivered) || 0;
-    const statsHtml = '<div class="dm-sp-stats"><span class="dm-sp-mem">' + runsDone.toLocaleString() + ' <span data-dm="runs_done_word">broadcasts</span> ·</span> <span class="dm-sp-mem">' + delivered.toLocaleString() + ' <span data-dm="delivered_word">messages delivered</span></span></div>';
+    const rate = l.rating || { count: 0, average: 0 };
+    const ratingHtml = rate.count
+      ? '<span class="dm-sp-rate"><span class="dm-stars" title="' + rate.average + '">' + dmStars(rate.average) + '</span><b>' + rate.average.toFixed(1) + '</b><i>(' + rate.count + ')</i></span>'
+      : '<span class="dm-sp-rate dm-sp-rate-none" data-dm="reviews_none">No reviews yet</span>';
+    const chip = (ico, val, dm) => '<span class="dm-sp-chip">' + ico + '<b>' + val + '</b><span data-dm="' + dm + '">' + dm + '</span></span>';
+    const metaHtml = '<div class="dm-sp-meta">' +
+      (l.memberCount ? chip(ICO_PEOPLE, Number(l.memberCount).toLocaleString(), 'sp_members') : '') +
+      chip(ICO_BCAST, runsDone.toLocaleString(), 'sp_bcasts') +
+      chip(ICO_CHECK, delivered.toLocaleString(), 'sp_delivered') + '</div>';
+    const reviewsBtn = '<span class="dm-sp-reviews" role="button" tabindex="0" data-reviews="' + esc(l.serverId) + '" data-name="' + esc(name) + '">' + ICO_COMMENT + '<span data-dm="reviews_word">Reviews</span>' + (rate.count ? '<em>' + rate.count + '</em>' : '') + '</span>';
     return '<button class="dm-sp-card dm-lot-card' + (unavail ? ' dm-lot-unavail' : '') + '" data-lot="' + esc(l.id) + '" data-server="' + esc(l.serverId) + '" data-name="' + esc(name) + '" data-price="' + Number(l.userPricePer1k || 0) + '" data-mine="' + (l.mine ? '1' : '') + '">' +
       '<div class="dm-sp-banner" style="' + bannerStyle + '"><div class="dm-sp-scrim"></div><div class="dm-sp-topline"><div class="dm-sp-title">' + esc(name) + '</div>' + (badges ? '<div class="dm-sp-badges">' + badges + '</div>' : '') + '</div></div>' +
       '<div class="dm-sp-body"><div class="dm-sp-av"' + avStyle + '>' + avInner + '</div>' +
-        '<div class="dm-sp-foot"><span class="dm-sp-online">' + memPart + pricePart + '</span></div>' +
-        statsHtml +
+        '<div class="dm-sp-info">' +
+          '<div class="dm-sp-priceline"><span class="dm-sp-price"><b>$' + Number(l.userPricePer1k || 0).toFixed(2) + '</b><span data-dm="per1k"> / 1000 messages</span></span>' + ratingHtml + '</div>' +
+          metaHtml + reviewsBtn +
+        '</div>' +
       '</div>' + menu + '</button>';
   }
   function plusCell() {
@@ -332,6 +352,124 @@
     dmApplyLang();
   }
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeOrderModal(); });
+
+  /* ---------- Server reviews (product-card comments, keyed by serverId) ---------- */
+  const DM_STAR2 = '<svg viewBox="0 0 24 24" class="dm-star-svg" aria-hidden="true"><path d="m12 3.6 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.8l5.9-.9Z"/></svg>';
+  let rev = { serverId: '', name: '', data: null, pickStars: 0 };
+  function revStarsStatic(n) { let h = ''; for (let i = 1; i <= 5; i++) h += '<span class="dm-star' + (i <= n ? ' on' : '') + '">' + DM_STAR2 + '</span>'; return h; }
+  function revTime(ts) { if (!ts) return ''; try { return new Date(ts).toLocaleString(dmLang() === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'short', timeStyle: 'short' }); } catch (_) { return ''; } }
+  function revAv(name, avatar) {
+    const letter = (String(name || '?').trim()[0] || '?').toUpperCase();
+    return avatar ? '<span class="dm-rev-av"><img src="' + esc(avatar) + '" alt="" loading="lazy" onerror="this.remove()"></span>' : '<span class="dm-rev-av dm-rev-av-txt">' + esc(letter) + '</span>';
+  }
+  function reviewHTML(r, d) {
+    const canReplyRow = d.isOwner || d.isAdmin;
+    const reply = r.reply
+      ? '<div class="dm-rev-reply"><div class="dm-rev-reply-head"><b data-dm="rev_owner_reply">Owner reply</b>' + (canReplyRow ? '<button type="button" class="dm-rev-mini" data-rev-reply="' + esc(r.id) + '" data-dm="rev_edit">Edit</button><button type="button" class="dm-rev-mini dm-rev-mini-del" data-rev-reply-del="' + esc(r.id) + '" data-dm="rev_delete">Delete</button>' : '') + '</div><div class="dm-rev-reply-text">' + esc(r.reply.text).replace(/\n/g, '<br>') + '</div></div>'
+      : (canReplyRow ? '<button type="button" class="dm-rev-mini dm-rev-reply-add" data-rev-reply="' + esc(r.id) + '" data-dm="rev_reply">Reply</button>' : '');
+    return '<div class="dm-rev-item" data-rev-item="' + esc(r.id) + '">' +
+      '<div class="dm-rev-head">' + revAv(r.name, r.avatar) +
+        '<div class="dm-rev-who"><div class="dm-rev-name">' + esc(r.name || r.userId || '—') + (r.own ? ' <span class="dm-rev-you" data-dm="rev_you">you</span>' : '') + '</div>' +
+        '<div class="dm-rev-stars">' + revStarsStatic(r.stars) + '<span class="dm-rev-time">' + esc(revTime(r.editedAt || r.at)) + (r.editedAt ? ' · <span data-dm="rev_edited">edited</span>' : '') + '</span></div></div>' +
+        (r.canDelete ? '<button type="button" class="dm-rev-del" data-rev-del="' + esc(r.id) + '" title="delete">✕</button>' : '') +
+      '</div>' +
+      (r.text ? '<div class="dm-rev-text">' + esc(r.text).replace(/\n/g, '<br>') + '</div>' : '') +
+      reply +
+      '<div class="dm-rev-replybox" data-rev-replybox="' + esc(r.id) + '" hidden></div>' +
+    '</div>';
+  }
+  function renderReviews() {
+    const box = $('#dm-rev-modal .dm-rev-body'); if (!box || !rev.data) return;
+    const d = rev.data, s = d.summary || { count: 0, average: 0 };
+    const head = '<div class="dm-rev-summary">' + (s.count
+      ? '<span class="dm-rev-avg"><b>' + s.average.toFixed(1) + '</b><span class="dm-stars">' + dmStars(s.average) + '</span></span><span class="dm-rev-count">' + s.count + ' <span data-dm="rev_count_word">reviews</span></span>'
+      : '<span class="dm-rev-count" data-dm="reviews_none">No reviews yet</span>') + '</div>';
+    const list = (d.reviews && d.reviews.length) ? d.reviews.map((r) => reviewHTML(r, d)).join('') : '<div class="dm-rev-empty" data-dm="rev_be_first">Be the first to review.</div>';
+    // Compose form: only for buyers of this server. Prefill when the user already has a review.
+    let form = '';
+    if (d.canReview) {
+      const mine = d.mine; rev.pickStars = mine ? mine.stars : 0;
+      form = '<div class="dm-rev-form">' +
+        '<div class="dm-rev-form-h" data-dm="' + (mine ? 'rev_your_review' : 'rev_leave') + '">' + (mine ? 'Your review' : 'Leave a review') + '</div>' +
+        '<div class="dm-rev-pick" data-rev-pick>' + revPickHTML(rev.pickStars) + '</div>' +
+        '<textarea class="dm-rev-input" id="dm-rev-text" maxlength="1000" rows="3" data-dm-ph="rev_placeholder" placeholder="Share your experience…">' + esc(mine ? mine.text : '') + '</textarea>' +
+        '<div class="dm-rev-form-btns"><button type="button" class="dm-btn primary" id="dm-rev-submit" data-dm="' + (mine ? 'rev_save' : 'rev_post') + '">' + (mine ? 'Save' : 'Post') + '</button>' +
+          (mine ? '<button type="button" class="dm-btn" id="dm-rev-delete" data-dm="rev_delete">Delete</button>' : '') + '</div>' +
+      '</div>';
+    } else {
+      form = '<div class="dm-rev-locked" data-dm="rev_locked">Only buyers who broadcast to this server can leave a review.</div>';
+    }
+    box.innerHTML = head + '<div class="dm-rev-list">' + list + '</div>' + form;
+    dmApplyLang();
+  }
+  function revPickHTML(sel) { let h = ''; for (let i = 1; i <= 5; i++) h += '<span class="dm-rev-pstar' + (i <= sel ? ' on' : '') + '" data-star="' + i + '" role="button" tabindex="0">' + DM_STAR2 + '</span>'; return h; }
+  async function revReload() { const r = await dmApi('/order/dmall/reviews?serverId=' + encodeURIComponent(rev.serverId)); rev.data = (r.ok && r.body) ? r.body : { reviews: [], summary: { count: 0, average: 0 }, canReview: false }; renderReviews(); }
+  function closeReviews() { const m = $('#dm-rev-modal'); if (m) m.remove(); }
+  async function openReviews(serverId, name) {
+    closeReviews();
+    rev = { serverId: serverId, name: name || '', data: null, pickStars: 0 };
+    const wrap = document.createElement('div'); wrap.className = 'dm-rev-modal'; wrap.id = 'dm-rev-modal';
+    wrap.innerHTML = '<div class="dm-rev-boxwrap"><div class="dm-rev-box">' +
+      '<div class="dm-rev-topbar"><div class="dm-rev-handle"></div><b class="dm-rev-title"><span data-dm="reviews_word">Reviews</span>' + (name ? ' · ' + esc(name) : '') + '</b><button type="button" class="dm-rev-x" data-rev-close aria-label="close">✕</button></div>' +
+      '<div class="dm-rev-body"><div class="dm-ord-loading">…</div></div></div></div>';
+    document.body.appendChild(wrap);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-rev-close]')) closeReviews(); });
+    // Delegated actions inside the panel.
+    wrap.addEventListener('click', async (e) => {
+      const pstar = e.target.closest('[data-star]');
+      if (pstar) { rev.pickStars = Number(pstar.dataset.star); const pick = $('[data-rev-pick]', wrap); if (pick) pick.innerHTML = revPickHTML(rev.pickStars); return; }
+      const submit = e.target.closest('#dm-rev-submit');
+      if (submit) {
+        if (!rev.pickStars) { if (window.toast) window.toast(dmT('rev_need_stars'), 'err'); return; }
+        submit.disabled = true;
+        const text = ($('#dm-rev-text', wrap) || {}).value || '';
+        const r = await dmApi('/order/dmall/reviews', { method: 'POST', body: { serverId: rev.serverId, stars: rev.pickStars, text } });
+        submit.disabled = false;
+        if (r.ok) { if (window.toast) window.toast(dmT('rev_saved'), 'ok'); await revReload(); loadLots(); }
+        else if (window.toast) window.toast(dmT(r.body && r.body.error === 'not-a-buyer' ? 'rev_locked' : 'tk_failed'), 'err');
+        return;
+      }
+      const delBtn = e.target.closest('#dm-rev-delete') || e.target.closest('[data-rev-del]');
+      if (delBtn) {
+        const id = delBtn.dataset.revDel || (rev.data && rev.data.mine && rev.data.mine.id);
+        if (!id) return;
+        if (!confirm(dmT('rev_del_confirm'))) return;
+        const r = await dmApi('/order/dmall/reviews', { method: 'DELETE', body: { serverId: rev.serverId, reviewId: id } });
+        if (r.ok) { await revReload(); loadLots(); } else if (window.toast) window.toast(dmT('tk_failed'), 'err');
+        return;
+      }
+      // Owner: open an inline reply editor under the review.
+      const replyBtn = e.target.closest('[data-rev-reply]');
+      if (replyBtn) {
+        const id = replyBtn.dataset.revReply;
+        const rowR = (rev.data.reviews || []).find((x) => x.id === id);
+        const editor = $('[data-rev-replybox="' + id + '"]', wrap); if (!editor) return;
+        if (!editor.hidden) { editor.hidden = true; editor.innerHTML = ''; return; }
+        editor.hidden = false;
+        editor.innerHTML = '<textarea class="dm-rev-input" maxlength="1000" rows="2" data-dm-ph="rev_reply_ph" placeholder="Write a reply…">' + esc(rowR && rowR.reply ? rowR.reply.text : '') + '</textarea>' +
+          '<div class="dm-rev-form-btns"><button type="button" class="dm-btn primary" data-rev-reply-save="' + esc(id) + '" data-dm="rev_reply_send">Reply</button></div>';
+        dmApplyLang(); const ta = editor.querySelector('textarea'); if (ta) ta.focus();
+        return;
+      }
+      const replySave = e.target.closest('[data-rev-reply-save]');
+      if (replySave) {
+        const id = replySave.dataset.revReplySave;
+        const editor = $('[data-rev-replybox="' + id + '"]', wrap); const ta = editor && editor.querySelector('textarea');
+        const r = await dmApi('/order/dmall/reviews/reply', { method: 'POST', body: { serverId: rev.serverId, reviewId: id, text: ta ? ta.value : '' } });
+        if (r.ok) { await revReload(); } else if (window.toast) window.toast(dmT('tk_failed'), 'err');
+        return;
+      }
+      const replyDel = e.target.closest('[data-rev-reply-del]');
+      if (replyDel) {
+        if (!confirm(dmT('rev_del_confirm'))) return;
+        const r = await dmApi('/order/dmall/reviews/reply', { method: 'POST', body: { serverId: rev.serverId, reviewId: replyDel.dataset.revReplyDel, text: '' } });
+        if (r.ok) await revReload();
+        return;
+      }
+    });
+    await revReload();
+  }
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeReviews(); });
 
   /* ---------- DMALL support tickets ---------- */
   let tkStaff = false, tkList = [], tkFilter = 'all', tkOpen = null, tkPollT = null;
@@ -663,6 +801,8 @@
     window.scrollTo(0, 0);
   }
   if (dmGrid) dmGrid.addEventListener('click', async (e) => {
+    const rev = e.target.closest('[data-reviews]');
+    if (rev) { e.preventDefault(); e.stopPropagation(); openReviews(rev.dataset.reviews, rev.dataset.name || ''); return; }
     const menuBtn = e.target.closest('[data-lot-menu]');
     if (menuBtn) { e.preventDefault(); e.stopPropagation(); toggleLotMenu(menuBtn.dataset.lotMenu); return; }
     const edit = e.target.closest('[data-lot-edit]');
@@ -1485,6 +1625,10 @@
     en: {
       tab_templates:"Setup", tab_launch:"Launch", tab_tasks:"Tasks", tab_stats:"Stats", for_word:"for",
       pick_a:"Choose a", pick_b:"server", pick_sub:"Pick a server to broadcast to, or add your own.", search_ph:"Search…", f_popular:"Popular", f_cheap:"Cheapest", f_expensive:"Priciest", f_members:"Members", f_new:"Newest", f_avail:"Available only", online_members:"Members online:", members_word:"members", runs_done_word:"dmall", delivered_word:"messages delivered", invite_caps:"INVITE", change_server:"Change server",
+      sp_members:"members", sp_bcasts:"broadcasts", sp_delivered:"delivered", reviews_word:"Reviews", reviews_none:"No reviews yet",
+      rev_count_word:"reviews", rev_be_first:"Be the first to review.", rev_you:"you", rev_edited:"edited", rev_owner_reply:"Owner reply", rev_reply:"Reply", rev_edit:"Edit", rev_delete:"Delete", rev_reply_send:"Reply", rev_reply_ph:"Write a reply…",
+      rev_leave:"Leave a review", rev_your_review:"Your review", rev_placeholder:"Share your experience…", rev_post:"Post", rev_save:"Save", rev_locked:"Only buyers who broadcast to this server can leave a review.",
+      rev_need_stars:"Please pick a star rating", rev_saved:"Review saved", rev_del_confirm:"Delete this?",
       new_tpl:"Configure message", example:"Example", f_name:"Name", recipient:"Recipient:", link_lbl:"Link:", embed_h:"Embed",
       fields:"Fields", add_field:"＋ Add field", inline:"Inline", field_name:"Field name", field_value:"Field value",
       embeds_h:"Embeds", add_embed:"＋ Add Embed", embed_n:"Embed", sec_author:"Author", sec_body:"Body", sec_images:"Images", sec_footer:"Footer",
@@ -1539,6 +1683,10 @@
     ru: {
       tab_templates:"Setup", tab_launch:"Запуск", tab_tasks:"Задачи", tab_stats:"Статистика", for_word:"за",
       pick_a:"Выберите", pick_b:"сервер", pick_sub:"Выберите сервер для рассылки или добавьте свой.", search_ph:"Поиск…", f_popular:"Популярные", f_cheap:"Дешевле", f_expensive:"Дороже", f_members:"Участники", f_new:"Новые", f_avail:"Только доступные", online_members:"Участников в сети:", members_word:"участников", runs_done_word:"рассылок", delivered_word:"сообщений доставлено", invite_caps:"ПРИГЛАСИТЬ", change_server:"Сменить сервер",
+      sp_members:"участников", sp_bcasts:"рассылок", sp_delivered:"доставлено", reviews_word:"Отзывы", reviews_none:"Пока нет отзывов",
+      rev_count_word:"отзывов", rev_be_first:"Оставьте первый отзыв.", rev_you:"вы", rev_edited:"изменён", rev_owner_reply:"Ответ владельца", rev_reply:"Ответить", rev_edit:"Изменить", rev_delete:"Удалить", rev_reply_send:"Ответить", rev_reply_ph:"Напишите ответ…",
+      rev_leave:"Оставить отзыв", rev_your_review:"Ваш отзыв", rev_placeholder:"Поделитесь впечатлением…", rev_post:"Отправить", rev_save:"Сохранить", rev_locked:"Оставить отзыв могут только те, кто заказывал рассылку на этот сервер.",
+      rev_need_stars:"Пожалуйста, выберите оценку", rev_saved:"Отзыв сохранён", rev_del_confirm:"Удалить?",
       new_tpl:"Настроить сообщение", example:"Пример", f_name:"Название", recipient:"Получатель:", link_lbl:"Ссылка:", embed_h:"Эмбед",
       fields:"Поля", add_field:"＋ Добавить поле", inline:"В строку", field_name:"Название поля", field_value:"Значение поля",
       embeds_h:"Эмбеды", add_embed:"＋ Добавить эмбед", embed_n:"Эмбед", sec_author:"Автор", sec_body:"Основное", sec_images:"Изображения", sec_footer:"Подвал",
