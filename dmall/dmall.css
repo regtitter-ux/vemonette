@@ -852,13 +852,18 @@ html.embed-stays main.wrap{ display:block !important; }
 .dm-sp-rate-none{ color:var(--dm-mut); font-size:12.5px; }
 .dm-stars{ display:inline-flex; gap:1px; }
 .dm-star-svg{ width:14px; height:14px; display:block; }
+/* Bigger stars where they matter: card rating badge, review rows, and the summary average. */
+.dm-sp-rate .dm-star-svg{ width:16px; height:16px; }
+.dm-rev-stars .dm-star-svg{ width:18px; height:18px; }
+.dm-rev-avg .dm-star-svg{ width:22px; height:22px; }
 .dm-star svg path{ fill:#40454f; }
 .dm-star.on svg path{ fill:#f5b301; }
 .dm-star.half svg path{ fill:#f5b301; opacity:.5; }
-.dm-sp-meta{ display:flex; flex-wrap:wrap; gap:6px; }
-.dm-sp-chip{ display:inline-flex; align-items:center; gap:5px; background:var(--dm-inset); border:1px solid var(--dm-line); border-radius:8px; padding:4px 9px; font-size:12px; color:var(--dm-mut); }
-.dm-sp-chip svg{ width:14px; height:14px; opacity:.8; }
-.dm-sp-chip b{ color:var(--dm-txt); font-weight:700; }
+/* Minimalist stat line (no boxes): icon + number + muted label, spaced. */
+.dm-sp-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:7px 16px; color:var(--dm-mut); font-size:12.5px; }
+.dm-sp-stat{ display:inline-flex; align-items:center; gap:6px; }
+.dm-sp-stat svg{ width:16px; height:16px; opacity:.55; }
+.dm-sp-stat b{ color:var(--dm-txt); font-weight:700; }
 .dm-sp-reviews{ display:inline-flex; align-items:center; gap:6px; align-self:flex-start; background:var(--dm-inset); border:1px solid var(--dm-line-2); border-radius:9px; padding:7px 12px; font-size:13px; font-weight:600; color:var(--dm-txt); cursor:pointer; transition:.12s; }
 .dm-sp-reviews:hover{ border-color:var(--dm-mut); background:var(--dm-card); }
 .dm-sp-reviews svg{ width:16px; height:16px; }

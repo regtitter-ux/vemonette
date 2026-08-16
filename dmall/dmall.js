@@ -137,11 +137,11 @@
     const ratingHtml = rate.count
       ? '<span class="dm-sp-rate"><span class="dm-stars" title="' + rate.average + '">' + dmStars(rate.average) + '</span><b>' + rate.average.toFixed(1) + '</b><i>(' + rate.count + ')</i></span>'
       : '<span class="dm-sp-rate dm-sp-rate-none" data-dm="reviews_none">No reviews yet</span>';
-    const chip = (ico, val, dm) => '<span class="dm-sp-chip">' + ico + '<b>' + val + '</b><span data-dm="' + dm + '">' + dm + '</span></span>';
+    const stat = (ico, val, dm) => '<span class="dm-sp-stat">' + ico + '<b>' + val + '</b> <span data-dm="' + dm + '">' + dm + '</span></span>';
     const metaHtml = '<div class="dm-sp-meta">' +
-      (l.memberCount ? chip(ICO_PEOPLE, Number(l.memberCount).toLocaleString(), 'sp_members') : '') +
-      chip(ICO_BCAST, runsDone.toLocaleString(), 'sp_bcasts') +
-      chip(ICO_CHECK, delivered.toLocaleString(), 'sp_delivered') + '</div>';
+      (l.memberCount ? stat(ICO_PEOPLE, Number(l.memberCount).toLocaleString(), 'sp_members') : '') +
+      stat(ICO_BCAST, runsDone.toLocaleString(), 'sp_bcasts') +
+      stat(ICO_CHECK, delivered.toLocaleString(), 'sp_delivered') + '</div>';
     const reviewsBtn = '<span class="dm-sp-reviews" role="button" tabindex="0" data-reviews="' + esc(l.serverId) + '" data-name="' + esc(name) + '">' + ICO_COMMENT + '<span data-dm="reviews_word">Reviews</span>' + (rate.count ? '<em>' + rate.count + '</em>' : '') + '</span>';
     return '<button class="dm-sp-card dm-lot-card' + (unavail ? ' dm-lot-unavail' : '') + '" data-lot="' + esc(l.id) + '" data-server="' + esc(l.serverId) + '" data-name="' + esc(name) + '" data-price="' + Number(l.userPricePer1k || 0) + '" data-mine="' + (l.mine ? '1' : '') + '">' +
       '<div class="dm-sp-banner" style="' + bannerStyle + '"><div class="dm-sp-scrim"></div><div class="dm-sp-topline"><div class="dm-sp-title">' + esc(name) + '</div>' + (badges ? '<div class="dm-sp-badges">' + badges + '</div>' : '') + '</div></div>' +
@@ -370,7 +370,7 @@
     return '<div class="dm-rev-item" data-rev-item="' + esc(r.id) + '">' +
       '<div class="dm-rev-head">' + revAv(r.name, r.avatar) +
         '<div class="dm-rev-who"><div class="dm-rev-name">' + esc(r.name || r.userId || '—') + (r.own ? ' <span class="dm-rev-you" data-dm="rev_you">you</span>' : '') + '</div>' +
-        '<div class="dm-rev-stars">' + revStarsStatic(r.stars) + '<span class="dm-rev-time">' + esc(revTime(r.editedAt || r.at)) + (r.editedAt ? ' · <span data-dm="rev_edited">edited</span>' : '') + '</span></div></div>' +
+        '<div class="dm-rev-stars"><span class="dm-stars">' + revStarsStatic(r.stars) + '</span><span class="dm-rev-time">' + esc(revTime(r.editedAt || r.at)) + (r.editedAt ? ' · <span data-dm="rev_edited">edited</span>' : '') + '</span></div></div>' +
         (r.canDelete ? '<button type="button" class="dm-rev-del" data-rev-del="' + esc(r.id) + '" title="delete">✕</button>' : '') +
       '</div>' +
       (r.text ? '<div class="dm-rev-text">' + esc(r.text).replace(/\n/g, '<br>') + '</div>' : '') +
