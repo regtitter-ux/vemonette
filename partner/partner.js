@@ -68,6 +68,12 @@ const WHOLE = {
   'У пользователя нет активности в DMALL.':'This user has no DMALL activity.','только овнер':'owner only',
   'Потрачено':'Spent','Купил сообщений':'Messages bought','Продал сообщений':'Messages sold','Рассылок':'Broadcasts','Начислено':'Accrued',
   'Доставлено':'Delivered','Завершён':'Settled','Активен':'Active',
+  // Owner DMALL order-history + detail modal
+  'История заказов':'Order history','Детали заказа':'Order details','Заказчик':'Orderer','Владелец лота':'Lot creator','Сводка':'Summary',
+  'Создан':'Created','Доставлено / запрошено':'Delivered / requested','Списано':'Charged','Возврат':'Refunded','Итого':'Net','Сервисный сбор':'Service fee',
+  'Цена лота':'Lot price','Выплачено создателю':'Paid to creator','Настройки рассылки':'Broadcast settings','Лимит сообщений':'Message limit','Приоритет онлайн':'Online priority',
+  'Исключено ID':'Excluded IDs','Кулдаун (ч)':'Recency cooldown (h)','Пропускать участников назначения':'Skip destination members','Ссылка назначения':'Destination link','ID шаблона':'Template ID',
+  'Сообщение рассылки':'Broadcast message','Сообщение не сохранено для этого заказа.':'Message not stored for this order.','Не удалось загрузить заказ.':'Could not load the order.',
   'Пока нет активных реклам и истории показов.':'No active ads or shown-ad history yet.','У вас пока нет карточек верификации.':'You have no verification cards yet.',
   'Главная':'Home','Заказы':'Orders','Партнёр':'Partner','Инвест':'Invest','Админка':'Admin',
   'Партнёрам':'For partners','Покупателям':'For buyers','Инвесторам':'For investors','Разработчикам':'For developers','Для ботоводов':'For bot breeders','Администраторам':'For admins',
@@ -414,16 +420,88 @@ async function loadOwnerDmall() {
         stat('Продал сообщений', Number(s.sold) || 0), stat('Рассылок', Number(s.runs) || 0),
         stat('Начислено', money(s.earnings)), stat('Баланс', money(s.balance)),
     ].join('');
-    const orders = r.body.orders || [], earnings = r.body.earnings || [];
-    $('#xd-orders-sec').hidden = orders.length === 0;
-    if (orders.length) $('#xd-orders').innerHTML =
-        '<thead><tr><th>Сервер</th><th class="num">Доставлено</th><th>Статус</th><th class="num">Сумма</th><th>Дата</th></tr></thead><tbody>'
-        + orders.map((o) => '<tr><td>' + esc(o.serverName || o.serverId || '—') + '</td><td class="num">' + (Number(o.delivered) || 0) + '/' + (Number(o.count) || 0) + '</td><td>' + (o.status === 'settled' ? 'Завершён' : 'Активен') + '</td><td class="num">' + money(o.net) + '</td><td>' + (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '') + '</td></tr>').join('') + '</tbody>';
+    const earnings = r.body.earnings || [];
+    xdOrders = r.body.orders || []; xdOrdersPage = 1; renderXdOrders();
     $('#xd-earn-sec').hidden = earnings.length === 0;
     if (earnings.length) $('#xd-earn').innerHTML =
         '<thead><tr><th>Сервер</th><th class="num">Сумма</th><th>Дата</th></tr></thead><tbody>'
         + earnings.map((e) => '<tr><td>' + esc(e.serverName || e.guildId || '—') + '</td><td class="num">' + (e.type === 'debit' ? '−' : '') + money(e.amount) + '</td><td>' + (e.ts ? new Date(e.ts).toLocaleDateString() : '') + '</td></tr>').join('') + '</tbody>';
-    $('#xd-empty').hidden = orders.length > 0 || earnings.length > 0;
+    $('#xd-empty').hidden = xdOrders.length > 0 || earnings.length > 0;
+}
+/* ---- Owner DMALL: order history (clickable rows + pagination) + detail modal ---- */
+let xdOrders = [], xdOrdersPage = 1;
+const XD_PAGE = 10;
+const xdDate = (ts) => { if (!ts) return ''; try { return new Date(ts).toLocaleString(partnerLang === 'ru' ? 'ru-RU' : 'en-US', { dateStyle: 'short', timeStyle: 'short' }); } catch (_) { return ''; } };
+function renderXdOrders() {
+    const sec = $('#xd-orders-sec'), tbl = $('#xd-orders'), pager = $('#xd-pager');
+    sec.hidden = xdOrders.length === 0;
+    if (!xdOrders.length) { tbl.innerHTML = ''; if (pager) pager.innerHTML = ''; return; }
+    const pages = Math.max(1, Math.ceil(xdOrders.length / XD_PAGE));
+    const p = Math.min(Math.max(1, xdOrdersPage), pages);
+    const rows = xdOrders.slice((p - 1) * XD_PAGE, p * XD_PAGE);
+    tbl.innerHTML = '<thead><tr><th>Сервер</th><th class="num">Доставлено</th><th>Статус</th><th class="num">Сумма</th><th>Дата</th></tr></thead><tbody>'
+        + rows.map((o) => '<tr class="xd-row" data-xdorder="' + esc(o.id) + '"><td>' + esc(o.serverName || o.serverId || '—') + '</td><td class="num">' + (Number(o.delivered) || 0) + '/' + (Number(o.count) || 0) + '</td><td>' + (o.status === 'settled' ? 'Завершён' : 'Активен') + '</td><td class="num">' + money(o.net) + '</td><td>' + (o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '') + '</td></tr>').join('') + '</tbody>';
+    if (pager) pager.innerHTML = pages > 1
+        ? '<button class="xd-pg" data-xdpg="' + (p - 1) + '"' + (p <= 1 ? ' disabled' : '') + '>‹</button><span class="xd-pg-info">' + p + ' / ' + pages + '</span><button class="xd-pg" data-xdpg="' + (p + 1) + '"' + (p >= pages ? ' disabled' : '') + '>›</button>'
+        : '';
+}
+// Message preview (content + embeds + buttons) — mirrors the DMALL cabinet order modal.
+function xdEmbed(e) {
+    if (!e) return '';
+    const bar = (typeof e.color === 'number') ? '#' + (e.color & 0xffffff).toString(16).padStart(6, '0') : (typeof e.color === 'string' && e.color ? e.color : '#4b5563');
+    const author = e.author && e.author.name ? '<div class="xdo-em-author">' + (e.author.icon_url ? '<img src="' + esc(e.author.icon_url) + '" alt="">' : '') + esc(e.author.name) + '</div>' : '';
+    const title = e.title ? '<div class="xdo-em-title">' + esc(e.title) + '</div>' : '';
+    const desc = e.description ? '<div class="xdo-em-desc">' + esc(e.description).replace(/\n/g, '<br>') + '</div>' : '';
+    const fields = Array.isArray(e.fields) && e.fields.length ? '<div class="xdo-em-fields">' + e.fields.map((f) => '<div class="xdo-em-field"><div class="xdo-em-fname">' + esc(f.name || '') + '</div><div class="xdo-em-fval">' + esc(f.value || '').replace(/\n/g, '<br>') + '</div></div>').join('') + '</div>' : '';
+    const img = e.image ? '<img class="xdo-em-img" src="' + esc(e.image) + '" alt="">' : '';
+    return '<div class="xdo-embed" style="border-left-color:' + esc(bar) + '">' + author + title + desc + fields + img + '</div>';
+}
+function xdMessage(m) {
+    if (!m || (!String(m.content || '').trim() && !(m.embeds || []).length && !(m.components || []).length)) return '<div class="xdo-none">Сообщение не сохранено для этого заказа.</div>';
+    const content = String(m.content || '').trim() ? '<div class="xdo-msg-text">' + esc(m.content).replace(/\n/g, '<br>') + '</div>' : '';
+    const embeds = (m.embeds || []).map(xdEmbed).join('');
+    const btns = (m.components || []).filter((c) => c && c.label).map((c) => '<a class="xdo-btn" href="' + esc(c.url || '#') + '" target="_blank" rel="noopener">' + esc(c.label) + '</a>').join('');
+    return content + embeds + (btns ? '<div class="xdo-btns">' + btns + '</div>' : '');
+}
+function xdAv(name, avatar) {
+    const letter = (String(name || '?').trim()[0] || '?').toUpperCase();
+    return avatar ? '<span class="xdo-av"><img src="' + esc(avatar) + '" alt=""></span>' : '<span class="xdo-av xdo-av-txt">' + esc(letter) + '</span>';
+}
+function closeXdOrder() { const m = $('#xdo-modal'); if (m) m.remove(); }
+async function openXdOrder(id) {
+    closeXdOrder();
+    const wrap = document.createElement('div'); wrap.className = 'xdo-modal'; wrap.id = 'xdo-modal';
+    wrap.innerHTML = '<div class="xdo-box"><div class="xdo-head"><b>Детали заказа</b><button type="button" class="xdo-x" data-xdo-close aria-label="close">✕</button></div><div class="xdo-body"><div class="xdo-loading">…</div></div></div>';
+    document.body.appendChild(wrap);
+    wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-xdo-close]')) closeXdOrder(); });
+    const r = await get('/x-dmall-order?id=' + encodeURIComponent(id));
+    const body = wrap.querySelector('.xdo-body'); if (!body) return;
+    if (!r.ok || !r.body || !r.body.order) { body.innerHTML = '<div class="xdo-none">Не удалось загрузить заказ.</div>'; return; }
+    const o = r.body.order, s = o.settings || {}, tg = s.targeting || {}, op = s.options || {};
+    const row = (k, v) => (v == null || v === '') ? '' : '<div class="xdo-row"><span class="xdo-k">' + esc(k) + '</span><span class="xdo-v">' + v + '</span></div>';
+    const sec = (title, html) => '<div class="xdo-sec"><div class="xdo-sec-h">' + esc(title) + '</div>' + html + '</div>';
+    const excl = Array.isArray(tg.exclude_ids) ? tg.exclude_ids.length : 0;
+    body.innerHTML =
+        '<div class="xdo-top">' + xdAv(o.server && o.server.name, o.server && o.server.icon) +
+            '<div><div class="xdo-srv">' + esc((o.server && o.server.name) || (o.server && o.server.id) || '') + '</div>' +
+            '<div class="xdo-badge">' + (o.status === 'settled' ? 'Завершён' : 'Активен') + (o.finalStatus ? ' · ' + esc(o.finalStatus) : '') + '</div></div></div>' +
+        sec('Заказчик', '<div class="xdo-user">' + xdAv(o.orderer && o.orderer.name, o.orderer && o.orderer.avatar) + '<div><div class="xdo-uname">' + esc((o.orderer && o.orderer.name) || (o.orderer && o.orderer.id) || '—') + '</div><div class="xdo-uid">' + esc((o.orderer && o.orderer.id) || '') + '</div></div></div>' +
+            (o.creator ? row('Владелец лота', esc(o.creator.name || o.creator.id)) : '')) +
+        sec('Сводка',
+            row('Создан', esc(xdDate(o.createdAt))) + (o.settledAt ? row('Завершён', esc(xdDate(o.settledAt))) : '') +
+            row('Доставлено / запрошено', (Number(o.delivered) || 0) + ' / ' + (Number(o.requested) || 0)) +
+            row('Списано', money(o.charge)) + ((Number(o.refunded) || 0) > 0 ? row('Возврат', money(o.refunded)) : '') +
+            row('Итого', money(o.net)) + row('Сервисный сбор', money(o.fee)) +
+            (o.creator ? row('Цена лота', money(o.creatorPrice)) + row('Выплачено создателю', money(o.creatorPaid)) : '')) +
+        sec('Настройки рассылки',
+            row('Лимит сообщений', (Number(s.messageLimit) || 0).toLocaleString()) +
+            (tg.online_priority ? row('Приоритет онлайн', esc(String(tg.online_priority))) : '') +
+            (excl ? row('Исключено ID', String(excl)) : '') +
+            (op.recency_cooldown_hours ? row('Кулдаун (ч)', String(op.recency_cooldown_hours)) : '') +
+            (op.exclude_destination_duplicates ? row('Пропускать участников назначения', '✓') : '') +
+            (s.destinationLink ? row('Ссылка назначения', '<a href="' + esc(s.destinationLink) + '" target="_blank" rel="noopener">' + esc(s.destinationLink) + '</a>') : '') +
+            (s.templateId ? row('ID шаблона', '<code>' + esc(s.templateId) + '</code>') : '')) +
+        sec('Сообщение рассылки', '<div class="xdo-msg">' + xdMessage(o.message) + '</div>');
 }
 function initOwnerTabs() {
     document.querySelectorAll('.owner-tab').forEach((b) => { b.hidden = false; });
@@ -452,6 +530,10 @@ function initOwnerTabs() {
     loadOwnerOrders();
     loadOwnerInvest();
     loadOwnerDmall();
+    // Order-history: clickable rows → detail modal; pager buttons → page change.
+    const ot = $('#xd-orders'); if (ot) ot.addEventListener('click', (e) => { const row = e.target.closest('[data-xdorder]'); if (row) openXdOrder(row.dataset.xdorder); });
+    const pg = $('#xd-pager'); if (pg) pg.addEventListener('click', (e) => { const b = e.target.closest('[data-xdpg]'); if (b && !b.disabled) { xdOrdersPage = +b.dataset.xdpg; renderXdOrders(); } });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeXdOrder(); });
 }
 function wireDm() {
     const btn = $('#xp-dm-btn'), inp = $('#xp-dm-inp'), st = $('#xp-dm-status');
