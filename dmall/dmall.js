@@ -414,6 +414,19 @@
       '<div class="dm-rev-body"><div class="dm-ord-loading">…</div></div></div></div>';
     document.body.appendChild(wrap);
     wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-rev-close]')) closeReviews(); });
+    // Hover preview: pointing at a star fills it and every star to its left (desktop only).
+    wrap.addEventListener('mouseover', (e) => {
+      const pick = $('[data-rev-pick]', wrap); if (!pick) return;
+      const st = e.target.closest('[data-star]');
+      if (st && pick.contains(st)) {
+        const n = Number(st.dataset.star);
+        pick.classList.add('previewing');
+        pick.querySelectorAll('.dm-rev-pstar').forEach((s) => s.classList.toggle('hover', Number(s.dataset.star) <= n));
+      } else if (pick.classList.contains('previewing')) {
+        pick.classList.remove('previewing');
+        pick.querySelectorAll('.dm-rev-pstar.hover').forEach((s) => s.classList.remove('hover'));
+      }
+    });
     // Delegated actions inside the panel.
     wrap.addEventListener('click', async (e) => {
       const pstar = e.target.closest('[data-star]');

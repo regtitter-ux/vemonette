@@ -910,7 +910,10 @@ html.embed-stays main.wrap{ display:block !important; }
 .dm-rev-pstar .dm-star-svg{ width:28px; height:28px; }
 .dm-rev-pstar svg path{ fill:#40454f; transition:fill .1s; }
 .dm-rev-pstar.on svg path{ fill:#f5b301; }
-.dm-rev-pstar:hover svg path{ fill:#ffc93c; }
+/* Hover preview: while pointing at the picker, show only the hover fill (left-to-current),
+   overriding the currently-selected stars until the pointer leaves. */
+.dm-rev-pick.previewing .dm-rev-pstar svg path{ fill:#40454f; }
+.dm-rev-pick.previewing .dm-rev-pstar.hover svg path{ fill:#ffc93c; }
 .dm-rev-input{ width:100%; background:var(--dm-inset); border:1px solid var(--dm-line-2); color:var(--dm-txt); font:inherit; font-size:14px; padding:10px 12px; border-radius:10px; resize:vertical; box-sizing:border-box; }
 .dm-rev-input:focus{ outline:none; border-color:var(--dm-blurple); }
 .dm-rev-form-btns{ display:flex; gap:8px; margin-top:10px; }
