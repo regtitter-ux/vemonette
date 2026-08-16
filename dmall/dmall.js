@@ -392,7 +392,7 @@
       form = '<div class="dm-rev-form">' +
         '<div class="dm-rev-form-h" data-dm="' + (mine ? 'rev_your_review' : 'rev_leave') + '">' + (mine ? 'Your review' : 'Leave a review') + '</div>' +
         '<div class="dm-rev-pick" data-rev-pick>' + revPickHTML(rev.pickStars) + '</div>' +
-        '<textarea class="dm-rev-input" id="dm-rev-text" maxlength="1000" rows="3" data-dm-ph="rev_placeholder" placeholder="Share your experience…">' + esc(mine ? mine.text : '') + '</textarea>' +
+        '<textarea class="dm-rev-input" id="dm-rev-text" maxlength="200" rows="3" data-dm-ph="rev_placeholder" placeholder="Share your experience…">' + esc(mine ? mine.text : '') + '</textarea>' +
         '<div class="dm-rev-form-btns"><button type="button" class="dm-btn primary" id="dm-rev-submit" data-dm="' + (mine ? 'rev_save' : 'rev_post') + '">' + (mine ? 'Save' : 'Post') + '</button>' +
           (mine ? '<button type="button" class="dm-btn" id="dm-rev-delete" data-dm="rev_delete">Delete</button>' : '') + '</div>' +
       '</div>';
@@ -404,7 +404,8 @@
   }
   function revPickHTML(sel) { let h = ''; for (let i = 1; i <= 5; i++) h += '<span class="dm-rev-pstar' + (i <= sel ? ' on' : '') + '" data-star="' + i + '" role="button" tabindex="0">' + DM_STAR2 + '</span>'; return h; }
   async function revReload() { const r = await dmApi('/order/dmall/reviews?serverId=' + encodeURIComponent(rev.serverId)); rev.data = (r.ok && r.body) ? r.body : { reviews: [], summary: { count: 0, average: 0 }, canReview: false }; renderReviews(); }
-  function closeReviews() { const m = $('#dm-rev-modal'); if (m) m.remove(); }
+  let revOutside = null;
+  function closeReviews() { const m = $('#dm-rev-modal'); if (m) m.remove(); if (revOutside) { document.removeEventListener('pointerdown', revOutside); revOutside = null; } }
   async function openReviews(serverId, name) {
     closeReviews();
     rev = { serverId: serverId, name: name || '', data: null, pickStars: 0 };
@@ -414,6 +415,10 @@
       '<div class="dm-rev-body"><div class="dm-ord-loading">…</div></div></div></div>';
     document.body.appendChild(wrap);
     wrap.addEventListener('click', (e) => { if (e.target === wrap || e.target.closest('[data-rev-close]')) closeReviews(); });
+    // Close on a click anywhere outside the panel (works on the desktop side-dock too, whose
+    // transparent overlay lets clicks through). Registered next tick so the opening click can't self-close.
+    revOutside = (e) => { if (e.target.closest('.dm-rev-box') || e.target.closest('[data-reviews]')) return; closeReviews(); };
+    setTimeout(() => { if (revOutside) document.addEventListener('pointerdown', revOutside); }, 0);
     // Hover preview: pointing at a star fills it and every star to its left (desktop only).
     wrap.addEventListener('mouseover', (e) => {
       const pick = $('[data-rev-pick]', wrap); if (!pick) return;
@@ -459,7 +464,7 @@
         const editor = $('[data-rev-replybox="' + id + '"]', wrap); if (!editor) return;
         if (!editor.hidden) { editor.hidden = true; editor.innerHTML = ''; return; }
         editor.hidden = false;
-        editor.innerHTML = '<textarea class="dm-rev-input" maxlength="1000" rows="2" data-dm-ph="rev_reply_ph" placeholder="Write a reply…">' + esc(rowR && rowR.reply ? rowR.reply.text : '') + '</textarea>' +
+        editor.innerHTML = '<textarea class="dm-rev-input" maxlength="500" rows="2" data-dm-ph="rev_reply_ph" placeholder="Write a reply…">' + esc(rowR && rowR.reply ? rowR.reply.text : '') + '</textarea>' +
           '<div class="dm-rev-form-btns"><button type="button" class="dm-btn primary" data-rev-reply-save="' + esc(id) + '" data-dm="rev_reply_send">Reply</button></div>';
         dmApplyLang(); const ta = editor.querySelector('textarea'); if (ta) ta.focus();
         return;
