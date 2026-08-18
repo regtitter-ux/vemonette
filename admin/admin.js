@@ -4,8 +4,8 @@ const API = (window.__VEMONI_API_BASE__ || '').replace(/\/+$/, '') + '/admin';
 
 // ---------- i18n (navigation + login chrome; deeper content is RU) ----------
 const I18N = {
-    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_activity: 'Активность', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_lots: 'Лоты', tab_system: 'Система', tab_settings: 'Настройки', tab_calib: 'Калибровка', tab_stays: 'Stays', tab_admins: 'Админы', tab_breeders: 'Юзер-боты', tab_oldvemoni: 'Old Vemoni', stays_title: 'Stays — заказы заходов', stays_desc: 'Покупка живых заходов на сервер (реклама в сети, оплата за подтверждённые заходы). Раздел доступен только админам и владельцам. Открывается в кабинете заказов.', stays_open: 'Открыть заказы Stays →', calib_title: 'CPC-калибровка', calib_subtitle: 'Серверы с включённой калибровкой. Часть показов на них проходит без проверки захода — оплата за клик считается по личной конверсии сервера. Здесь — сводка, конверсия, ставки и управление.', bf_title: 'Юзер-боты для проверки заходов', bf_subtitle: 'Подключай личные аккаунты-«селф-боты» для проверки заходов на серверах без обычного бота. Каждая карточка — отдельный аккаунт: статус и статистика проверенных заходов.', bf_token_ph: 'Токен юзер-бота', bf_add: 'Добавить', bf_add_hint: 'Токен проверяется у Discord при добавлении — нерабочий добавить нельзя. Токен нигде не показывается обратно.', bf_access_title: 'Доп. доступ к разделу', bf_access_hint: 'Владельцы и админы уже имеют доступ. Здесь можно выдать доступ и другим Discord-аккаунтам (они увидят только эту вкладку).', bf_grant: 'Выдать доступ', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', nav_dev: 'Разработчикам', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
-    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_activity: 'Activity', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_lots: 'Lots', tab_system: 'System', tab_settings: 'Settings', tab_calib: 'Calibration', tab_stays: 'Stays', tab_admins: 'Admins', tab_breeders: 'User-bots', tab_oldvemoni: 'Old Vemoni', stays_title: 'Stays — join orders', stays_desc: 'Buy live joins to a server (network ads, pay per confirmed join). Admins and owners only. Opens in the orders cabinet.', stays_open: 'Open Stays orders →', calib_title: 'CPC calibration', calib_subtitle: 'Servers with calibration on. Some shows there run without a join check — the pay-per-click rate is derived from the server\'s own conversion. Here: summary, conversion, rates and controls.', bf_title: 'User-bots for join verification', bf_subtitle: 'Connect personal "self-bot" accounts to verify joins on servers without a normal bot. Each card is one account: its status and the join stats it verified.', bf_token_ph: 'User-bot token', bf_add: 'Add', bf_add_hint: 'The token is checked with Discord on add — a dead one can\'t be added. The token is never shown back.', bf_access_title: 'Extra access to this section', bf_access_hint: 'Owners and admins already have access. Here you can grant access to other Discord accounts (they see only this tab).', bf_grant: 'Grant access', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', nav_dev: 'Developers', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
+    ru: { tab_bi: 'Обзор', tab_stats: 'Статистика', tab_adstats: 'Стата рекламы', tab_activity: 'Активность', tab_shares: 'Доли', tab_balances: 'Балансы', tab_templates: 'Шаблоны', tab_toggle: 'Экстренно', tab_feed: 'Лента', tab_lots: 'Лоты', tab_system: 'Система', tab_settings: 'Настройки', tab_calib: 'Калибровка', tab_stays: 'Stays', tab_admins: 'Админы', tab_breeders: 'Юзер-боты', tab_allan: 'AllanService', tab_oldvemoni: 'Old Vemoni', stays_title: 'Stays — заказы заходов', stays_desc: 'Покупка живых заходов на сервер (реклама в сети, оплата за подтверждённые заходы). Раздел доступен только админам и владельцам. Открывается в кабинете заказов.', stays_open: 'Открыть заказы Stays →', calib_title: 'CPC-калибровка', calib_subtitle: 'Серверы с включённой калибровкой. Часть показов на них проходит без проверки захода — оплата за клик считается по личной конверсии сервера. Здесь — сводка, конверсия, ставки и управление.', bf_title: 'Юзер-боты для проверки заходов', bf_subtitle: 'Подключай личные аккаунты-«селф-боты» для проверки заходов на серверах без обычного бота. Каждая карточка — отдельный аккаунт: статус и статистика проверенных заходов.', bf_token_ph: 'Токен юзер-бота', bf_add: 'Добавить', bf_add_hint: 'Токен проверяется у Discord при добавлении — нерабочий добавить нельзя. Токен нигде не показывается обратно.', bf_access_title: 'Доп. доступ к разделу', bf_access_hint: 'Владельцы и админы уже имеют доступ. Здесь можно выдать доступ и другим Discord-аккаунтам (они увидят только эту вкладку).', bf_grant: 'Выдать доступ', nav_home: 'Главная', nav_orders: 'Заказы', nav_partner: 'Партнёр', nav_investor: 'Инвест', nav_dev: 'Разработчикам', logout: 'Выйти', login_hint: 'Войдите через Discord, чтобы получить доступ к панели.', login_btn: 'Войти через Discord' },
+    en: { tab_bi: 'Overview', tab_stats: 'Statistics', tab_adstats: 'Ad stats', tab_activity: 'Activity', tab_shares: 'Shares', tab_balances: 'Balances', tab_templates: 'Templates', tab_toggle: 'Emergency', tab_feed: 'Feed', tab_lots: 'Lots', tab_system: 'System', tab_settings: 'Settings', tab_calib: 'Calibration', tab_stays: 'Stays', tab_admins: 'Admins', tab_breeders: 'User-bots', tab_allan: 'AllanService', tab_oldvemoni: 'Old Vemoni', stays_title: 'Stays — join orders', stays_desc: 'Buy live joins to a server (network ads, pay per confirmed join). Admins and owners only. Opens in the orders cabinet.', stays_open: 'Open Stays orders →', calib_title: 'CPC calibration', calib_subtitle: 'Servers with calibration on. Some shows there run without a join check — the pay-per-click rate is derived from the server\'s own conversion. Here: summary, conversion, rates and controls.', bf_title: 'User-bots for join verification', bf_subtitle: 'Connect personal "self-bot" accounts to verify joins on servers without a normal bot. Each card is one account: its status and the join stats it verified.', bf_token_ph: 'User-bot token', bf_add: 'Add', bf_add_hint: 'The token is checked with Discord on add — a dead one can\'t be added. The token is never shown back.', bf_access_title: 'Extra access to this section', bf_access_hint: 'Owners and admins already have access. Here you can grant access to other Discord accounts (they see only this tab).', bf_grant: 'Grant access', nav_home: 'Home', nav_orders: 'Orders', nav_partner: 'Partner', nav_investor: 'Invest', nav_dev: 'Developers', logout: 'Log out', login_hint: 'Log in with Discord to access the panel.', login_btn: 'Log in with Discord' }
 };
 let adminLang = localStorage.getItem('vemoni_lang') || ((navigator.language || '').startsWith('en') ? 'en' : 'ru');
 if (!I18N[adminLang]) adminLang = 'ru';
@@ -3107,4 +3107,143 @@ async function checkBotKeeper() {
     if (await checkAuth()) { enterApp(); return; }
     const bk = await checkBotKeeper();
     if (bk) enterKeeperApp(bk);
+})();
+
+/* ==================== AllanService (member-monitor) admin panel ====================
+   Talks to the Python microservice through the Vemoni backend proxy at /admin/allan/*
+   (URL + secret stay server-side, set in Настройки → AllanService). Owner-only. */
+(() => {
+  const alEsc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const alPill = (s) => `<span class="al-pill ${alEsc(s)}">${alEsc(s)}</span>`;
+  const alFmt = (ts) => { if (!ts) return '—'; try { return new Date(ts).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'medium' }); } catch (_) { return String(ts); } };
+  const alAgo = (ts) => { if (!ts) return ''; const s = Math.floor((Date.now() - new Date(ts)) / 1000); if (s < 60) return s + 'с'; if (s < 3600) return Math.floor(s / 60) + 'м'; if (s < 86400) return Math.floor(s / 3600) + 'ч'; return Math.floor(s / 86400) + 'д'; };
+  let alConfigured = true, alTimer = null, alSub = 'orders';
+
+  // All AllanService calls go through the owner-gated backend proxy.
+  async function alApi(sub, opts = {}) {
+    const r = await api('/allan/' + sub, opts);
+    if (r.status === 503 && r.body && r.body.error === 'allan-not-configured') {
+      alConfigured = false;
+      const el = $('#al-cfg'); if (el) { el.hidden = false; el.innerHTML = 'AllanService не настроен. Задай <b>ALLAN_URL</b> и <b>ALLAN_SECRET</b> в разделе <a href="#" id="al-goto-cfg" style="color:#8ea0ff">Настройки → AllanService</a> (сервис должен быть публично задеплоен).'; const g = $('#al-goto-cfg'); if (g) g.onclick = (e) => { e.preventDefault(); const t = document.querySelector('.tab[data-tab="settings"]'); if (t) t.click(); }; }
+      const st = $('#al-stats'); if (st) st.innerHTML = '';
+      throw new Error('not-configured');
+    }
+    if (r.status === 502) { throw new Error((r.body && r.body.detail) || 'сервис недоступен'); }
+    if (!r.ok) { throw new Error((r.body && (r.body.detail || r.body.error)) || ('HTTP ' + r.status)); }
+    alConfigured = true; const el = $('#al-cfg'); if (el) el.hidden = true;
+    return r.body;
+  }
+
+  async function alStatus() {
+    try {
+      const s = await alApi('status');
+      $('#al-stats').innerHTML = [['Токены', s.tokens_total], ['Свободны', s.tokens_free], ['Заняты', s.tokens_busy], ['Невалид', s.tokens_invalid], ['Актив. заказы', s.orders_active], ['Ожидают', s.orders_pending], ['Онлайн', s.workers_online]]
+        .map(([l, n]) => `<div class="al-stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+    } catch (e) { /* keep quiet on transient / not-configured */ }
+  }
+
+  async function alOrders() {
+    if (!alConfigured) return;
+    try {
+      const f = $('#al-o-filter').value;
+      const rows = await alApi('orders' + (f ? ('?status=' + f) : ''));
+      $('#al-orders tbody').innerHTML = rows.length ? rows.map((o) => `
+        <tr><td class="al-mono">${o.id}</td><td class="al-mono">${alEsc(o.external_id || '—')}</td>
+        <td>${alEsc(o.guild_name || ('gg/' + (o.invite_code || '')))}${o.guild_id ? ` <span class="al-dim al-mono">${alEsc(o.guild_id)}</span>` : ''}${o.error_message ? `<div class="al-dim" style="font-size:11px">${alEsc(o.error_message)}</div>` : ''}</td>
+        <td>${alPill(o.status)}</td><td class="al-mono al-mut">${o.token_id ?? '—'}</td>
+        <td class="al-mut" title="${alEsc(alFmt(o.created_at))}">${alAgo(o.created_at)} назад</td>
+        <td>${['active', 'pending', 'joining'].includes(o.status) ? `<button class="al-btn warn sm" data-alstop="${o.id}">Стоп</button>` : ''}</td></tr>`).join('') : `<tr><td class="al-empty" colspan="7">Заказов нет</td></tr>`;
+      $$('#al-orders [data-alstop]').forEach((b) => b.onclick = async () => { b.disabled = true; try { await alApi('orders/' + b.dataset.alstop + '/stop', { method: 'POST' }); toast('Заказ остановлен'); alOrders(); alStatus(); } catch (e) { toast(e.message, 'err'); b.disabled = false; } });
+    } catch (e) { if (e.message !== 'not-configured') toast(e.message, 'err'); }
+  }
+
+  async function alTokens() {
+    if (!alConfigured) return;
+    try {
+      const f = $('#al-t-filter').value;
+      const rows = await alApi('tokens' + (f ? ('?status=' + f) : ''));
+      $('#al-tokens tbody').innerHTML = rows.length ? rows.map((t) => `
+        <tr><td class="al-mono">${t.id}</td><td>${alEsc(t.label || '—')}</td><td>${alPill(t.status)}</td>
+        <td>${alEsc(t.discord_username || '—')}${t.discord_user_id ? ` <span class="al-dim al-mono">${alEsc(t.discord_user_id)}</span>` : ''}</td>
+        <td class="al-mono al-mut">${t.proxy ? `${alEsc(t.proxy_ip || 'set')} ${t.proxy_ok === true ? '<span class="al-pill ok">ok</span>' : t.proxy_ok === false ? '<span class="al-pill no">bad</span>' : ''}` : '<span class="al-dim">нет</span>'}</td>
+        <td class="al-mono">${t.guild_count}</td><td class="al-dim" style="font-size:11px;max-width:160px">${alEsc(t.last_error || '')}</td>
+        <td class="al-row" style="gap:4px">${t.proxy ? `<button class="al-btn ghost sm" data-alcp="${t.id}">Прокси</button>` : ''}${t.status === 'disabled' ? `<button class="al-btn ok sm" data-alen="${t.id}">Вкл</button>` : `<button class="al-btn warn sm" data-aldis="${t.id}">Выкл</button>`}<button class="al-btn danger sm" data-aldel="${t.id}">✕</button></td></tr>`).join('') : `<tr><td class="al-empty" colspan="8">Токенов нет</td></tr>`;
+      const act = async (sub, method, ok) => { try { await alApi(sub, { method }); toast(ok); alTokens(); alStatus(); } catch (e) { toast(e.message, 'err'); } };
+      $$('#al-tokens [data-alcp]').forEach((b) => b.onclick = async () => { b.disabled = true; try { const r = await alApi('tokens/' + b.dataset.alcp + '/check-proxy', { method: 'POST' }); toast(r.ok ? ('Прокси OK: ' + (r.ip || '')) : ('Прокси не работает: ' + (r.error || '')), r.ok ? 'ok' : 'err'); alTokens(); } catch (e) { toast(e.message, 'err'); } finally { b.disabled = false; } });
+      $$('#al-tokens [data-alen]').forEach((b) => b.onclick = () => act('tokens/' + b.dataset.alen + '/enable', 'POST', 'Токен включён'));
+      $$('#al-tokens [data-aldis]').forEach((b) => b.onclick = () => act('tokens/' + b.dataset.aldis + '/disable', 'POST', 'Токен выключен'));
+      $$('#al-tokens [data-aldel]').forEach((b) => b.onclick = () => { if (confirm('Удалить токен #' + b.dataset.aldel + '?')) act('tokens/' + b.dataset.aldel, 'DELETE', 'Токен удалён'); });
+    } catch (e) { if (e.message !== 'not-configured') toast(e.message, 'err'); }
+  }
+
+  async function alEvents() {
+    if (!alConfigured) return;
+    try {
+      const qs = []; const oid = $('#al-e-order').value.trim(); const ty = $('#al-e-type').value;
+      if (oid) qs.push('order_id=' + encodeURIComponent(oid)); if (ty) qs.push('event_type=' + ty);
+      const rows = await alApi('events' + (qs.length ? ('?' + qs.join('&')) : ''));
+      $('#al-events tbody').innerHTML = rows.length ? rows.map((e) => { const k = e.event_type === 'member_join' ? 'join' : 'leave'; return `
+        <tr><td class="al-mut" title="${alEsc(alFmt(e.created_at))}">${alAgo(e.created_at)} назад</td><td><span class="al-pill ${k}">${k}</span></td>
+        <td class="al-mono">${e.order_id}</td><td class="al-mono al-mut">${alEsc(e.guild_id)}</td>
+        <td>${alEsc(e.global_name || e.username || e.user_id)} <span class="al-dim al-mono">${alEsc(e.user_id)}</span></td>
+        <td>${e.delivered ? '<span class="al-pill ok">да</span>' : '<span class="al-pill no">нет</span>'}</td></tr>`; }).join('') : `<tr><td class="al-empty" colspan="6">Событий пока нет</td></tr>`;
+    } catch (e) { if (e.message !== 'not-configured') toast(e.message, 'err'); }
+  }
+
+  async function alCaptcha() {
+    if (!alConfigured) return;
+    try { const c = await alApi('captcha/status'); $('#al-cap-out').innerHTML = `
+      <div class="al-kv"><b>Включено</b>${alPill(c.enabled ? 'ok' : 'stopped')}</div>
+      <div class="al-kv"><b>Ключ задан</b>${alPill(c.configured ? 'ok' : 'no')}</div>
+      <div class="al-kv"><b>Баланс</b><span class="al-mono">${c.balance != null ? ('$' + c.balance) : '—'}</span></div>
+      ${c.error ? `<div class="al-kv"><b>Ошибка</b><span class="al-mut">${alEsc(c.error)}</span></div>` : ''}`;
+    } catch (e) { $('#al-cap-out').innerHTML = '<span class="al-mut">' + alEsc(e.message) + '</span>'; }
+  }
+
+  function alLoadSub() { ({ orders: alOrders, tokens: alTokens, events: alEvents, tools: alCaptcha }[alSub] || (() => {}))(); }
+  function alRefresh() { alStatus(); alLoadSub(); }
+
+  $$('#al-tabs .al-t').forEach((t) => t.onclick = () => {
+    alSub = t.dataset.alt;
+    $$('#al-tabs .al-t').forEach((x) => x.classList.toggle('on', x === t));
+    $$('[data-alpane]').forEach((p) => { p.hidden = p.dataset.alpane !== alSub; });
+    alLoadSub();
+  });
+  const _g = (id) => document.getElementById(id);
+  if (_g('al-refresh')) _g('al-refresh').onclick = alRefresh;
+  if (_g('al-o-filter')) _g('al-o-filter').onchange = alOrders;
+  if (_g('al-t-filter')) _g('al-t-filter').onchange = alTokens;
+  if (_g('al-e-type')) _g('al-e-type').onchange = alEvents;
+  if (_g('al-e-refresh')) _g('al-e-refresh').onclick = alEvents;
+  if (_g('al-e-order')) _g('al-e-order').addEventListener('keydown', (e) => { if (e.key === 'Enter') alEvents(); });
+  if (_g('al-o-create')) _g('al-o-create').onclick = async () => {
+    const invite = _g('al-o-invite').value.trim(); if (!invite) return toast('Укажите инвайт', 'err');
+    const b = _g('al-o-create'); b.disabled = true;
+    try { const o = await alApi('orders', { method: 'POST', body: JSON.stringify({ invite, external_id: _g('al-o-ext').value.trim() || null, note: _g('al-o-note').value.trim() || null, leave_on_stop: _g('al-o-leave').value === 'true' }) }); toast('Заказ #' + o.id + ' создан (' + o.status + ')'); _g('al-o-invite').value = _g('al-o-ext').value = _g('al-o-note').value = ''; alOrders(); alStatus(); }
+    catch (e) { toast(e.message, 'err'); } finally { b.disabled = false; }
+  };
+  if (_g('al-t-add')) _g('al-t-add').onclick = async () => {
+    const token = _g('al-t-token').value.trim(); if (token.length < 20) return toast('Токен слишком короткий', 'err');
+    const b = _g('al-t-add'); b.disabled = true;
+    try { await alApi('tokens', { method: 'POST', body: JSON.stringify({ token, proxy: _g('al-t-proxy').value.trim() || null, label: _g('al-t-label').value.trim() || null }) }); toast('Токен добавлен'); _g('al-t-token').value = _g('al-t-proxy').value = _g('al-t-label').value = ''; alTokens(); alStatus(); }
+    catch (e) { toast(e.message, 'err'); } finally { b.disabled = false; }
+  };
+  if (_g('al-t-bulk-add')) _g('al-t-bulk-add').onclick = async () => {
+    const lines = _g('al-t-bulk').value.split('\n').map((x) => x.trim()).filter(Boolean); if (!lines.length) return toast('Пусто', 'err');
+    const b = _g('al-t-bulk-add'); b.disabled = true;
+    try { const r = await alApi('tokens/bulk', { method: 'POST', body: JSON.stringify({ tokens: lines, label_prefix: _g('al-t-prefix').value.trim() || null }) }); toast('Добавлено токенов: ' + (r ? r.length : 0)); _g('al-t-bulk').value = ''; alTokens(); alStatus(); }
+    catch (e) { toast(e.message, 'err'); } finally { b.disabled = false; }
+  };
+  if (_g('al-px-check')) _g('al-px-check').onclick = async () => {
+    const proxy = _g('al-px').value.trim(); if (!proxy) return; const b = _g('al-px-check'); b.disabled = true;
+    try { const r = await alApi('proxy/check', { method: 'POST', body: JSON.stringify({ proxy }) }); _g('al-px-out').innerHTML = `<div class="al-kv"><b>Результат</b>${alPill(r.ok ? 'ok' : 'no')}</div><div class="al-kv"><b>IP</b><span class="al-mono">${alEsc(r.ip || '—')}</span></div>${r.error ? `<div class="al-kv"><b>Ошибка</b><span class="al-mut">${alEsc(r.error)}</span></div>` : ''}`; }
+    catch (e) { toast(e.message, 'err'); } finally { b.disabled = false; }
+  };
+
+  // Load when the AllanService tab opens; light auto-refresh only while its pane is visible.
+  const alTab = document.querySelector('.tab[data-tab="allan"]');
+  if (alTab) alTab.addEventListener('click', () => {
+    alRefresh();
+    if (!alTimer) alTimer = setInterval(() => { const pane = document.querySelector('.pane[data-pane="allan"]'); if (pane && !pane.hidden) { alStatus(); if (alSub === 'events') alEvents(); else if (alSub === 'orders') alOrders(); } }, 8000);
+  });
 })();

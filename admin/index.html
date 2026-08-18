@@ -91,6 +91,7 @@
       <button data-tab="calibration" class="tab" data-owner-only data-i18n="tab_calib">Калибровка</button>
       <button data-tab="stays" class="tab" data-i18n="tab_stays">Stays</button>
       <button data-tab="breeders" class="tab" data-botkeeper data-i18n="tab_breeders">Юзер-боты</button>
+      <button data-tab="allan" class="tab" data-owner-only data-i18n="tab_allan">AllanService</button>
       <button data-tab="admins" class="tab" data-owner-only data-i18n="tab_admins">Админы</button>
       <button data-tab="oldvemoni" class="tab" data-i18n="tab_oldvemoni">Old Vemoni</button>
     </nav>
@@ -434,6 +435,115 @@
       <iframe id="oldvemoni-frame" class="stays-frame" title="Old Vemoni" src="/old-vemoni/" loading="lazy"></iframe>
     </section>
 
+    <section class="pane" data-pane="allan" hidden>
+      <style>
+        .al-wrap{--al-line:#242b36;--al-card:#151a22;--al-c2:#11151c;--al-mut:#8b93a4;--al-dim:#5f6b80}
+        .al-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+        .al-note{background:rgba(250,166,26,.1);border:1px solid #6b551f;color:#ffcf7a;border-radius:10px;padding:11px 14px;margin:10px 0}
+        .al-cards{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));margin:8px 0 4px}
+        .al-stat{background:var(--al-card);border:1px solid var(--al-line);border-radius:11px;padding:12px}
+        .al-stat .n{font-size:22px;font-weight:800;line-height:1.1}.al-stat .l{color:var(--al-mut);font-size:12px;margin-top:2px}
+        .al-tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--al-line);margin:12px 0}
+        .al-t{background:transparent;color:var(--al-mut);border:0;border-radius:8px 8px 0 0;padding:8px 14px;cursor:pointer;font:inherit;font-weight:600;font-size:13px}
+        .al-t.on{background:var(--al-card);color:#e7eaf0;border:1px solid var(--al-line);border-bottom-color:var(--al-card)}
+        .al-card{background:var(--al-card);border:1px solid var(--al-line);border-radius:12px;padding:14px;margin:12px 0}
+        .al-card h4{margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--al-mut)}
+        .al-grid{display:grid;gap:9px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+        .al-wrap input,.al-wrap select,.al-wrap textarea{width:100%;background:var(--al-c2);border:1px solid var(--al-line);color:#e7eaf0;border-radius:8px;padding:8px 10px;font:inherit;font-size:13px}
+        .al-wrap textarea{min-height:70px;resize:vertical;font-family:ui-monospace,Consolas,monospace}
+        .al-wrap label{display:block;font-size:12px;color:var(--al-mut);margin:0 0 4px}
+        .al-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+        .al-btn{cursor:pointer;border:0;border-radius:8px;padding:8px 13px;font:inherit;font-weight:600;font-size:13px;background:#5865F2;color:#fff}
+        .al-btn.ghost{background:#232838;color:#e7eaf0}.al-btn.sm{padding:6px 10px;font-size:12px}
+        .al-btn.warn{background:#3a2f16;color:#ffcf7a}.al-btn.danger{background:#3a1f24;color:#ff8a8a}.al-btn.ok{background:#173a2b;color:#7ee2b0}
+        .al-scroll{overflow-x:auto}.al-wrap table{width:100%;border-collapse:collapse;font-size:12.5px}
+        .al-wrap th,.al-wrap td{text-align:left;padding:8px 7px;border-bottom:1px solid var(--al-line);vertical-align:middle}
+        .al-wrap th{color:var(--al-mut);font-size:11px;text-transform:uppercase;white-space:nowrap}
+        .al-mono{font-family:ui-monospace,Consolas,monospace;font-size:12px}
+        .al-pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+        .al-pill.free,.al-pill.active,.al-pill.ok,.al-pill.join{background:rgba(67,181,129,.15);color:#43b581}
+        .al-pill.busy,.al-pill.joining,.al-pill.pending{background:rgba(74,163,255,.15);color:#4aa3ff}
+        .al-pill.invalid,.al-pill.failed,.al-pill.no,.al-pill.leave{background:rgba(240,71,71,.15);color:#ff8a8a}
+        .al-pill.disabled,.al-pill.stopped{background:#232838;color:var(--al-mut)}
+        .al-mut{color:var(--al-mut)}.al-dim{color:var(--al-dim)}.al-empty{color:var(--al-mut);text-align:center;padding:14px}
+        .al-kv{display:flex;gap:8px;padding:3px 0;font-size:13px}.al-kv b{color:var(--al-mut);min-width:150px;font-weight:600}
+      </style>
+      <div class="al-wrap">
+        <div class="al-head">
+          <h1 style="margin:0">AllanService — мониторинг заходов</h1>
+          <button class="al-btn ghost sm" id="al-refresh">Обновить</button>
+        </div>
+        <p class="al-mut" style="margin:0 0 8px">Пул user-токенов → заход на сервер по инвайту → отслеживание входа/выхода участников → webhook в бота. Запросы идут через бэкенд Vemoni (ключ хранится на сервере).</p>
+        <div id="al-cfg" class="al-note" hidden></div>
+        <div class="al-cards" id="al-stats"></div>
+
+        <div class="al-tabs" id="al-tabs">
+          <button class="al-t on" data-alt="orders">Заказы</button>
+          <button class="al-t" data-alt="tokens">Токены</button>
+          <button class="al-t" data-alt="events">События</button>
+          <button class="al-t" data-alt="tools">Инструменты</button>
+        </div>
+
+        <div data-alpane="orders">
+          <div class="al-card">
+            <h4>Новый заказ (мониторинг сервера)</h4>
+            <div class="al-grid">
+              <div><label>Инвайт *</label><input id="al-o-invite" class="al-mono" placeholder="https://discord.gg/xxxx"></div>
+              <div><label>external_id (id сделки)</label><input id="al-o-ext" class="al-mono" placeholder="deal-42"></div>
+              <div><label>Заметка</label><input id="al-o-note" placeholder="клиент X"></div>
+              <div><label>При остановке</label><select id="al-o-leave"><option value="true">выйти с сервера</option><option value="false">остаться</option></select></div>
+            </div>
+            <div style="margin-top:10px"><button class="al-btn" id="al-o-create">Создать заказ</button></div>
+          </div>
+          <div class="al-card">
+            <div class="al-head"><h4 style="margin:0">Заказы</h4>
+              <div class="al-row"><select id="al-o-filter" class="sm" style="width:auto"><option value="">все</option><option>active</option><option>pending</option><option>joining</option><option>failed</option><option>stopped</option></select></div></div>
+            <div class="al-scroll"><table id="al-orders"><thead><tr><th>ID</th><th>external_id</th><th>Сервер / инвайт</th><th>Статус</th><th>Токен</th><th>Создан</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+
+        <div data-alpane="tokens" hidden>
+          <div class="al-card">
+            <h4>Добавить токен</h4>
+            <div class="al-grid">
+              <div><label>User token *</label><input id="al-t-token" class="al-mono" placeholder="YOUR.USER.TOKEN"></div>
+              <div><label>Прокси (residential)</label><input id="al-t-proxy" class="al-mono" placeholder="ip:port:user:pass"></div>
+              <div><label>Метка</label><input id="al-t-label" placeholder="acc1"></div>
+            </div>
+            <div style="margin-top:10px" class="al-row"><button class="al-btn" id="al-t-add">Добавить</button></div>
+          </div>
+          <div class="al-card">
+            <h4>Пачкой</h4>
+            <label>По строке: <code>token</code> или <code>token|прокси</code></label>
+            <textarea id="al-t-bulk" placeholder="TOKEN1|1.2.3.4:8080:u:p"></textarea>
+            <div class="al-row" style="margin-top:8px"><input id="al-t-prefix" placeholder="префикс меток" style="width:180px"><button class="al-btn" id="al-t-bulk-add">Добавить пачкой</button></div>
+          </div>
+          <div class="al-card">
+            <div class="al-head"><h4 style="margin:0">Токены</h4>
+              <select id="al-t-filter" class="sm" style="width:auto"><option value="">все</option><option>free</option><option>busy</option><option>invalid</option><option>disabled</option></select></div>
+            <div class="al-scroll"><table id="al-tokens"><thead><tr><th>ID</th><th>Метка</th><th>Статус</th><th>Аккаунт</th><th>Прокси</th><th>Серв.</th><th>Ошибка</th><th></th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+
+        <div data-alpane="events" hidden>
+          <div class="al-card">
+            <div class="al-head"><h4 style="margin:0">События (вход / выход)</h4>
+              <div class="al-row"><input id="al-e-order" class="al-mono sm" style="width:100px" placeholder="order_id"><select id="al-e-type" class="sm" style="width:auto"><option value="">все</option><option value="member_join">join</option><option value="member_leave">leave</option></select><button class="al-btn ghost sm" id="al-e-refresh">Обновить</button></div></div>
+            <div class="al-scroll"><table id="al-events"><thead><tr><th>Время</th><th>Тип</th><th>Заказ</th><th>Сервер</th><th>Пользователь</th><th>Достав.</th></tr></thead><tbody></tbody></table></div>
+          </div>
+        </div>
+
+        <div data-alpane="tools" hidden>
+          <div class="al-card">
+            <h4>Проверка прокси</h4>
+            <div class="al-row"><input id="al-px" class="al-mono" style="flex:1;min-width:200px" placeholder="http://user:pass@1.2.3.4:8080"><button class="al-btn" id="al-px-check">Проверить</button></div>
+            <div id="al-px-out" style="margin-top:8px"></div>
+          </div>
+          <div class="al-card"><h4>Captcha (2captcha)</h4><div id="al-cap-out" class="al-mut">—</div></div>
+        </div>
+      </div>
+    </section>
+
   </main>
 </div>
 
@@ -483,7 +593,7 @@
 
 <div id="toast" class="toast" hidden></div>
 
-<script src="/admin/admin.js?v=122"></script>
+<script src="/admin/admin.js?v=123"></script>
   <script src="/assets/owner-search.js?v=2" defer></script>
 </body>
 </html>
